@@ -31,7 +31,21 @@ namespace LunarCoffee.Areas.Admin.Controllers
             db.SaveChanges();
             return Json(new { Success = true });
         }
+        [HttpPost]
+        public ActionResult UpdateImage(int productId,string url)
 
+        {
+            var item = db.ProductImages.Find(productId);
+            if (item != null)
+            {
+                db.ProductImages.Attach(item);
+                item.Image = url;
+                item.IsDefault = !item.IsDefault;
+
+                db.SaveChanges();
+            }
+            return Json(new { Success = true });
+        }
         [HttpPost]
         public ActionResult Delete (int id)
         {
