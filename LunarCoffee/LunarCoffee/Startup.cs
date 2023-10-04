@@ -10,5 +10,7 @@ namespace LunarCoffee
         {
             ConfigureAuth(app);
         }
+
+
     }
 }
