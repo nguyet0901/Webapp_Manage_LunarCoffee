@@ -1,21 +1,21 @@
 ﻿
 //#region // Abort Ajax
 var Global_AjaxLoad = {};
-function AjaxLoad_XhrIsExist(url) {
+function API_XhrIsExist(url) {
     if (url == undefined || url == '') return;
     if (Global_AjaxLoad[url] != undefined) {
         if (Global_AjaxLoad[url].readyState != 4)
             Global_AjaxLoad[url].abort();
-        AjaxLoad_XhrDelete(url);
+        API_XhrDelete(url);
     }
 }
-function AjaxLoad_XhrPush(url, xhr) {
+function API_XhrPush(url, xhr) {
     if (url == undefined || url == '') return;
     if (Global_AjaxLoad[url] == undefined) {
         Global_AjaxLoad[url] = xhr;
     }
 }
-function AjaxLoad_XhrDelete(url) { 
+function API_XhrDelete(url) { 
     if (url == undefined || url == '') return;
     if (Global_AjaxLoad[url] != undefined) {
         delete Global_AjaxLoad[url];
@@ -34,12 +34,12 @@ function AjaxLoad(url, data, async, error, success, sender, before, complete) {
             if (error != undefined && error != null && error.length != 0) error();
         },
         success: function (result) {
-            AjaxLoad_XhrDelete(url);
+            API_XhrDelete(url);
             if (result != undefined)
                 if (success != undefined && success != null && success.length != 0) success(result);
         },
         beforeSend: function (xhr) {
-            AjaxLoad_XhrIsExist(url);
+            API_XhrIsExist(url);
             xhr.setRequestHeader("XSRF-TOKEN",
                 $('input:hidden[name="__RequestVerificationToken"]').val());
             if (before != undefined && before != null && before.length != 0) before();
@@ -52,7 +52,7 @@ function AjaxLoad(url, data, async, error, success, sender, before, complete) {
                 sender.css('pointer-events', 'auto');
         }
     });
-    AjaxLoad_XhrPush(url, xhrequest);
+    API_XhrPush(url, xhrequest);
     return xhrequest;
 }
 
@@ -127,7 +127,7 @@ function AjaxUpload (url, inputid, success, error) {
         );
     })
 }
-function AjaxUpload_Multi (url, inputid, success, error, before, complete, funmaxrange) {
+function API_UploadMulti (url, inputid, success, error, before, complete, funmaxrange) {
     $('#' + inputid).unbind("change");
     $('#' + inputid).change(function () {
         var promises = [];
@@ -139,13 +139,13 @@ function AjaxUpload_Multi (url, inputid, success, error, before, complete, funma
         }
         else {
             for (let i = 0; i != files.length; i++) {
-                promises.push(AjaxUpload_MultiExe(url, files[i], files[i].name, success, error, before));
+                promises.push(API_UploadMultiExe(url, files[i], files[i].name, success, error, before));
             }
             Promise.all(promises).then((values) => { });
         }
     });
 }
-function AjaxUpload_MultiExe (url, file, namefile, success, error, before) {
+function API_UploadMultiExe (url, file, namefile, success, error, before) {
     return new Promise(resolve => {
         let formData = new FormData();
         formData.append("files", file);
@@ -236,7 +236,7 @@ function AjaxSendEmailMulti(url, formData, async, success, error, before, comple
     });
 }
 
-function AjaxUpload_Image (url, inputid) {
+function API_UploadImage (url, inputid) {
     return new Promise((resolve, reject) => {
         let input = document.getElementById(inputid);
         let files = input.files;
