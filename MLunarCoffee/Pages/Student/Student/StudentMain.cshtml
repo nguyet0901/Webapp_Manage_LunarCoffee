@@ -1,0 +1,965 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Student.StudentMainModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        <div class="card" id="smain_contentMain">
+            <div class="card-header pb-0">
+                <div class="list-group-item border-0 d-flex px-0 mb-2">
+                    <div class="avatar avatar-xl position-relative">
+                        <img id="smain_avatar" src="/default.png"
+                             alt="profile_image" class="w-100 border-radius-lg shadow-sm">
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <div class=" ps-3 h-100">
+                            <div class="d-inline-flex">
+                                <h6 data-bs-toggle="tooltip" title="" id="smain_code" class="mb-0 text-sm text-primary fw-bold" data-bs-original-title="MSHV"></h6>
+                                <span data-bs-toggle="tooltip" title="" id="smain_custcode" class="cursor-pointer letter-spacing-1 text-sm text-primary fw-bold ms-1" data-bs-original-title="MSKH"></span>
+                            </div>
+                            <h6 class="text-sm fw-bold mb-0 text-dark text-uppercase" id="smain_name"></h6>
+                            <span class="text-sm fw-bold  text-dark text-uppercase" id="smain_phone"></span>
+                        </div>
+                    </div>
+                    <div class=" pe-3 ps-0 mb-0 ms-auto">
+                        <div class="text-end">
+                            <button class="btn btn-sm bg-gradient-primary mb-0" type="button" name="button" onclick="event.preventDefault(); return smain_stuPayment();">Thanh toán</button>
+                        </div>
+                        <div class="row px-2">
+                            <div class="col-auto">
+                                <div class="py-1">
+                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Phát sinh"]</p>
+                                    <h6 id="smain_raise" class="text-primary fw-bold p-1 mb-0 mt-0">0</h6>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="py-1">
+                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Thanh toán"]</p>
+                                    <h6 id="smain_paid" class="text-primary fw-bold p-1 mb-0 mt-0">0</h6>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="py-1">
+                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Còn lại"]</p>
+                                    <h6 id="smain_left" class="text-primary fw-bold p-1 mb-0 mt-0">0</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body pt-2 ">
+                <div class="d-flex">
+                    <ul class=" nav nav-pills p-1 ps-1 my-3 mt-0 bg-transparent" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="linkgroup nav-link cursor-pointer active"
+                               data-bs-toggle="pill" role="tab" data-bs-target="#smain_tabcourse">
+                                <i class="text-gradient text-danger fas fa-registered pe-2"></i>
+                                @Local["Khóa học đã đăng ký"]
+                            </a>
+                        </li>
+                        <li class="nav-item " role="presentation">
+                            <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab"
+                               data-bs-target="#smain_tabpay">
+                                <i class="text-gradient text-primary fas fa-receipt pe-2"></i>
+                               @Local["Danh sách thanh toán"]
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-wrapper position-relative end-0">
+                    <div class="tab-content">
+                        <div class="tab-pane fade active show" role="tabpanel" id="smain_tabcourse">
+                            <div class="h-100">
+                                <div class="card-header px-0 pt-0 pb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="align-items-center">
+                                            <ul id="smain_course" class="nav nav-pills p-1 bg-transparent" role="tablist">
+                                            </ul>
+                                        </div>
+                                        <div class="ms-auto my-auto d-flex align-items-center me-3">
+                                            <div class="icon-hover mx-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Đánh giá"]">
+                                                <i class="fas fa-graduation-cap text-lg text-primary cursor-pointer" data-bs-toggle="collapse" onclick="event.preventDefault(); return smain_evaluateCourse();"></i>
+                                            </div>
+                                            <div class="icon-hover mx-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Tải lại"]">
+                                                <i class="fas fa-sync-alt text-lg text-primary cursor-pointer" onclick="event.preventDefault(); return smain_Loadcourse()"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="horizontal dark mt-2 mb-1">
+                                </div>
+                                <div id="smain_nonecourse" class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg d-none">
+                                    <h6 class="text-danger">@Local["Chưa đăng ký khóa"]</h6>
+                                </div>
+                                <div id="smain_havecourse" class="row px-2 d-none">
+                                    <div class="col-12 col-sm-6 col-xl-8 p-1 h-100">
+                                        <div class="p-3 pt-0 position-relative h-100 px-0">
+                                            <div id="smain_cdetailwait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x"
+                                                 style="display: none;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                            </div>
+                                            <ul class="list-group mh-100 overflow-y" id="smain_cdetaillist"></ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                        <div class="text-dark card mb-3">
+                                            <div class="card-header pb-0">
+                                                <div class="d-flex">
+                                                    <div>
+                                                        <h6 class="mb-0 ">@Local["Khoá học"]</h6>
+                                                        <p class="text-dark text-sm">@Local["Thông tin khóa học"]</p>
+                                                    </div>
+                                                    <div class="ms-auto">
+                                                        <div class="btn-group">
+                                                            <a class="btn btn-dark btn-sm px-3 py-2 pe-none">@Local["Gửi lịch học"]</a>
+                                                            <a class="btn btn-dark border-start border-light btn-sm px-3  py-2" id="smain_btnScheMail">
+                                                                <i class="fas fa-at" style="font-size: 14px;"></i>
+                                                            </a>
+                                                            <a class="btn btn-dark border-start border-light btn-sm px-3  py-2" id="smain_btnSchePrint">
+                                                                <i class="fas fa-print" style="font-size: 14px;"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg">
+                                                <div class="my-auto">
+                                                    <div class="h-100">
+                                                        <h6 id="smain_coursecode" class="text-primary mb-0"></h6>
+                                                        <p id="smain_coursename" class="mb-0 text-sm">  </p>
+                                                    </div>
+                                                </div>
+                                                <div class="ps-1 pt-0 text-dark text-sm">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Thời gian"]</p>
+                                                    <p id="smain_coursedate" class="text-sm font-weight-bold my-auto"></p>
+                                                    <hr class="horizontal dark">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Chi nhánh"]</p>
+                                                    <p id="smain_coursebranch" class="text-sm font-weight-bold my-auto"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card text-dark">
+                                            <div class="card-header pb-0 d-flex">
+                                                <div>
+                                                    <h6 class="mb-0">@Local["Chứng chỉ"]</h6>
+                                                    <p class="text-sm">@Local["Chứng chỉ học viên tại khóa học"]</p>
+                                                </div>
+                                                <div class="ms-auto">
+                                                    <div id="smain_btngroupcer" class="btn-group">
+                                                        <a class="btn btn-dark btn-sm px-2 py-2 pe-none">@Local["Gửi chứng chỉ"]</a>
+                                                        <a class="btn btn-dark border-start border-light px-3 py-2" style="font-size:8px;" id="smain_btnCerMail">
+                                                            <i class="fas fa-at" style="font-size: 14px;"></i>
+                                                        </a>
+                                                        <a class="btn btn-dark border-start border-light btn-sm px-3  py-2" id="smain_btnCerPrint">
+                                                            <i class="fas fa-print" style="font-size: 14px;"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="smain_nonecer" class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg d-none">
+                                                <h6 class="text-danger">@Local["Chưa được cấp"]</h6>
+                                            </div>
+                                            <div id="smain_havecer" class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg d-none ">
+                                                <div class="d-flex ">
+                                                    <img id="smain_ceravatar" class="rounded-3 avatar avatar-sm width-48-px" src="/default.png">
+                                                    <div class="my-auto ms-3">
+                                                        <div class="h-100">
+                                                            <h6 id="smain_cername" class="mb-0 text-primary"></h6>
+                                                            <p id="smain_cernote" class="mb-0 text-sm">  </p>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="ps-1 pt-0 ms-5 text-dark text-sm">                                                    
+                                                    <p id="smain_status" class="mb-0 text-sm mt-1"></p>
+                                                    <hr class="horizontal dark">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Ngày cấp<"]/p>
+                                                    <p id="smain_cerdate" class="text-sm font-weight-bold my-auto"></p>
+                                                    <p id="smain_nameexe" class="text-sm font-weight-bold my-auto"></p>
+                                                    <p id="smain_levelexe" class="mb-0 text-sm mt-3"></p>
+                                                    <hr class="horizontal dark">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Chữ ký học viên"]</p>
+                                                    <p id="smain_sign" class="text-sm font-weight-bold my-auto"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="" id="smain_areaSubject" style="display: none;">
+                                    <div class="">
+                                        <div class="col-auto my-auto">
+                                            <div class="h-100">
+                                                <h6 id="smain_subjectName" class="fw-bold d-inline text-primary mb-0"></h6>
+                                                <div class="text-dark text-sm">
+                                                    Thời gian :
+                                                    <p id="smain_subjectTime" class="d-inline text-sm fw-bold my-auto">09/11/2022 - 09/01/2023</p>
+                                                    <span> - </span>
+                                                    <p id="smain_subjectNumber" class="d-inline text-sm fw-bold text-primary">30</p>
+                                                    <span class="fw-bold">buổi</span>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div id="smain_classwait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x d-none">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="sr-only">Loading...</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row px-2" id="smain_classScheduler">
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ hai"]</span>
+                                                        <div class="content week1"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ hai"]</span>
+                                                        <div class="content week2"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ tư"]</span>
+                                                        <div class="content week3"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ tư"]</span>
+                                                        <div class="content week4"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ sáu"]</span>
+                                                        <div class="content week5"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Thứ bảy"]</span>
+                                                        <div class="content week6"></div>
+                                                    </div>
+                                                    <div class="week col-auto px-1 text-sm text-dark text-normal m-0">
+                                                        <span class="title fw-bold text-dark ">@Local["Chủ nhật"]</span>
+                                                        <div class="content week0"></div>
+                                                    </div>
+                                                </div>
+
+                                                <div class=" my-3" id="smain_classAttend">
+                                                    <div class="">
+                                                        <h6 class="fw-bold text-primary mb-2">@Local["Tình trạng đào tạo"]</h6>
+                                                    </div>
+                                                    <table class="table vt-table mb-0">
+                                                        <thead class="hiddenCollapse">
+                                                            <tr role="row">
+                                                                <th class="d-none">ID</th>
+                                                                <th style="width: 40px;">#</th>
+                                                                <th style="width:180px;min-width: 180px">@Local["Ngày"]</th>
+                                                                <th style="min-width:130px">@Local["Điểm danh"]</th>
+                                                                <th style="min-width:130px">@Local["Đánh giá"]</th>
+                                                                <th style="min-width:130px">@Local["Ghi chú"]</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="smain_classAttendBody">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" role="tabpanel" id="smain_tabpay">
+                            <div id="smain_nonepay" class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg d-none">
+                                <h6 class="text-danger">@Local["Chưa có thanh toán"]</h6>
+                            </div>
+                            <div id="smain_havepay" class="row px-2 ">
+                                <div class="col-12 col-md-6 col-xl-5 p-1">
+                                    <div class="h-100">
+                                        <div class="p-3 pt-0 position-relative px-0">
+                                            <ul class="list-group max-height-vh-50 overflow-y" id="smain_tablist"></ul>
+                                            <div id="smain_tabpopup" class="position-absolute collapse" style="z-index: 2000">
+                                                <div class="col-w-200 rounded-3 shadow-lg">
+                                                    <ul class="nav nav-pills flex-column bg-white border-radius-lg py-3 px-2">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="text-sm nav-link cursor-pointer">@Local["In hóa đơn"]</a>
+                                                        </li>
+                                                        <hr class="horizontal dark my-0 opacity-2">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="text-sm nav-link cursor-pointer">Email</a>
+                                                        </li>
+                                                        <hr class="horizontal dark my-0 opacity-2">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="text-sm nav-link cursor-pointer">SMS</a>
+                                                        </li>
+                                                        <hr class="horizontal dark my-0 opacity-2">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="text-sm nav-link cursor-pointer">@Local["Xóa hóa đơn"]</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 col-xl-7 p-1">
+                                    <div class="bg-gray-100 card card-plain mt-0 pt-0 pt-sm-3">
+                                        <div class="card-header text-center bg-gray-100 ">
+                                            <div class="row justify-content-md-between">
+                                                <div class="col-md-4 mt-auto">
+                                                    <h6 class="text-sm mb-0 text-start text-secondary">
+                                                        @Local["Số hóa đơn"]
+                                                    </h6>
+                                                    <h5 id="smain_paydcode" class="text-start mb-0"></h5>
+                                                </div>
+                                                <div class="col-lg-7 col-md-8 ms-auto mt-0 text-end">
+                                                    <h6 class="text-sm text-secondary mb-1">@Local["Ngày tạo"]</h6>
+                                                    <h6 id="smain_payddate" class="text-dark mb-0"></h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="table-responsive">
+                                                        <table class="smain table mb-0 text-right">
+                                                            <tbody id="smain_paydetaillist">
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <td class="border-bottom-0 border-top"></td>
+                                                                    <td class="border-bottom-0 border-top"></td>
+                                                                    <td class="text-start h5 ps-4 text-sm fw-bold border-bottom-0 border-top" colspan="2">@Local["Tổng"]</td>
+                                                                    <td id="smain_paydtotal" colspan="1" class="text-right h5 ps-4 text-sm fw-bold border-bottom-0 border-top"></td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer mt-md-5 mt-4">
+                                            <div class="row">
+                                                <div class="col-lg-12 text-left">
+                                                    <h5 id="smain_paydbranch" class=mb-1></h5>
+                                                    <p id="smain_paydnote" class="text-secondary text-sm"></p>
+                                                    <h6 class="text-secondary mb-0">
+                                                        @Local["Người lập"] :
+                                                        <span id="smain_paydemp" class="text-dark"></span>
+                                                    </h6>
+                                                </div>
+                                                <div class="text-md-end mt-md-0 mt-3 mt-lg-7">
+                                                    <button class="btn btn-sm bg-gradient-danger mb-0" type="button" name="button" onclick="event.preventDefault(); return smain_invoiceDelete();">@Local["Xóa hóa đơn"]</button>
+                                                    <button class="btn btn-sm bg-dark mb-0 text-white" type="button" name="button" onclick="event.preventDefault(); return smain_invoiceEmail();">Email</button>
+                                                    <button class="btn btn-sm bg-dark mb-0 text-white" type="button" name="button" onclick="event.preventDefault(); return smain_invoiceSMS();">SMS</button>
+                                                    <button class="btn btn-sm bg-dark mb-0 text-white" type="button" name="button" onclick="event.preventDefault(); return smain_invoicePrint();">@Local["In hóa đơn"]</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="smain_contentDetail" style="display: none;"></div>
+    </div>
+</div>
+<script type="text/javascript">
+    let smain_studentid = Number("@Model._studentid");
+    let smain_paymentid = 0;
+    let smain_stucourseid = 0;
+    var smain_stupaidid = 0;
+    let smain_dataClass = {};
+    $(document).ready(function () {
+        ToolPopper();
+        smain_eventEmail();
+        smain_Loadinfo();
+        smain_Loadcourse();
+        smain_Loadpayment();
+    })
+    //#region info and course
+    function smain_Loadinfo() {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadInfo"
+            , data = { "Studentid": smain_studentid }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        let custcode = item.CustCode != '' ? `<a href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}" target="_blank" class="mb-0 text-sm fw-bold border-primary">[${item.CustCode}]</a>` : '';
+                        $('#smain_code').html(item.Code);
+                        $('#smain_custcode').html(custcode);
+                        $('#smain_phone').html(item.Phone);
+                        $('#smain_name').html(item.Name);
+                        if (item.Avatar != "") $('#smain_avatar').attr('src', item.Avatar);
+                        $('#smain_raise').html(formatNumber(item.TotalRaise));
+                        $('#smain_paid').html(formatNumber(item.TotalPaid));
+                        $('#smain_left').html(formatNumber(item.TotalLeft));
+                    }
+                }
+            }
+        );
+    }
+    function smain_Loadcourse() {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadCourse"
+            , data = { "Studentid": smain_studentid }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        $('#smain_nonecourse').addClass('d-none');
+                        $('#smain_havecourse').removeClass('d-none');
+                        smain_courseRender(data, "smain_course", function () {
+                            smain_courseEvent();
+                            $('#smain_course a:first').tab('show');
+                            $('#smain_course a:first').trigger('click');
+
+                        });
+                    }
+                    else {
+                        $('#smain_nonecourse').removeClass('d-none');
+                        $('#smain_havecourse').addClass('d-none');
+                    }
+
+                }
+            }
+        );
+    }
+    async function smain_courseRender(data, id, calback) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                myNode.innerHTML = "";
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                            <li class="text-dark  nav-item">
+                                                <a data-id="${item.ID}" data-course="${item.CourseID}" class="cousre nav-link px-2 text-dark mb-0 px-0 py-1 " data-bs-toggle="tab"  role="tab" aria-selected="false">
+                                                    ${item.Code}
+                                                </a>
+                                            </li>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                calback();
+                resolve();
+            }, 100)
+        })
+    }
+    function smain_courseEvent() {
+        $("#smain_course .cousre").unbind().click(function (e) {
+            let id = $(this).attr('data-id');
+            let course = $(this).attr('data-course');
+            smain_stucourseid = course;
+            smain_Loadcoursedetail(id, course);
+            $("#smain_areaSubject").hide();
+        });
+    }
+    //#endregion
+
+    //#region // class and course info
+    function smain_Loadcoursedetail(id, course) {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadCourseDetail"
+            , data = { "Studentid": smain_studentid, "Courseid": course, "StuCourseid": id }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let datainfo = data.Table;
+                    let datacer = data.Table1;
+                    let dataclass = data.Table2;
+                    if (datacer != undefined && datacer.length == 1) {
+                        if (datacer[0].CerID != 0) {
+                            let cer = datacer[0];
+                            let strSign = cer.SignValue !='' 
+                                        ? `<img data-id="${id}"src="${cer.SignValue}" title="${ConvertDateTimeToStringDMY_HM(cer.SignDate)}" class="avatar avatar-xl smain_Cert_btnSign"/>`
+                                        : `<a  data-id="${id}" class="text-sm smain_Cert_btnSign text-primary d-block">@Local["Ký tên"]</a>`;
+                            let strStatus = cer.LevelStatus != ""
+                                ? cer.ReviStatus + " - " + cer.LevelStatus 
+                                : cer.LevelStatus
+                                $('#smain_cername').html(cer.CerName);
+                            $('#smain_cernote').html(cer.CerNote);
+                            $('#smain_cerdate').html(ConvertDateTimeUTC_DMY(cer.CerDate));
+                            if (cer.CerAvatar != "") $('#smain_ceravatar').attr('src', cer.CerAvatar);
+                            $('#smain_nameexe').html(cer.CerNameExe);
+                            $('#smain_levelexe').html(cer.CerLevelExe);
+                            $('#smain_sign').html(strSign);
+                            $('#smain_status').html(strStatus);
+                            //if (cer.CerNameAvatar != "") $('#smain_nameavatar').attr('src', cer.CerNameAvatar);
+                            $('#smain_btngroupcer').removeClass('d-none');
+                            $('#smain_nonecer').addClass('d-none');
+                            $('#smain_havecer').removeClass('d-none');
+                            smain_certcourse_event();
+                        }
+                        else {
+                            $('#smain_btngroupcer').addClass('d-none');
+                            $('#smain_nonecer').removeClass('d-none');
+                            $('#smain_havecer').addClass('d-none');
+                        }
+                    }
+                    if (datainfo != undefined && datainfo.length == 1) {
+                        let info = datainfo[0];
+                        // if (info.Avatar != "") $('#smain_courseavatar').attr('src', info.Avatar);
+                        $('#smain_coursecode').html(info.Code);
+                        $('#smain_coursename').html(info.Name);
+                        $('#smain_coursebranch').html(info.BranchName);
+                        $('#smain_coursedate').html(ConvertBetweenYMDInt_ToDate(info.TimeBegin, info.TimeEnd));
+
+                    }
+                    smain_dataClass = dataclass.reduce((pre, arr) => { if (arr.ID) pre[arr.ID] = arr; return pre; }, {})
+                    smain_cdetailRender(dataclass, "smain_cdetaillist");
+                }
+            }, sender = null
+            , before = function (e) {
+                $('#smain_cdetailwait').show();
+            }
+            , complete = function (e) {
+                $('#smain_cdetailwait').hide();
+            }
+        );
+    }
+    async function smain_cdetailRender(data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = "";
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = smain_cdetailItem(item);
+                        myNode.innerHTML = myNode.innerHTML + tr;
+                    }
+                }
+            }
+            smain_cdetailEvent();
+            resolve();
+        })
+    }
+    function smain_cdetailItem(item) {
+        let tr = `<li id="smain_stucourse${item.ID}" class="smain_stucourseItem list-group-item border-0 justify-content-between ps-0 pb-0 border-radius-lg list-group-item px-0 border-0">
+                                <div class="row px-3">
+                                    <div class="col">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex flex-column">
+                                                <h6 data-id="${item.ID}" class="mb-0 text-primary border-bottom border-primary text-sm cursor-pointer detail">${item.SubjectName != "" ? item.SubjectName : '-'}</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-6 col-xl-3 p-1">
+                                            <h6 class="mb-0 text-secondary text-sm">@Local["Giá tiền"]</h6>
+                                        <span class="text-sm text-dark fw-bold">${formatNumber(item.Price)}</span>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-6 col-xl-3 p-1">
+                                            <h6 class="mb-0 text-secondary text-sm">@Local["Ngày tham gia"]</h6>
+                                        <span class="text-sm text-dark fw-bold">${ConvertDateTimeUTC_DMY(item.Created)}</span>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-6 col-xl-3 p-1">
+                                        <h6 class="mb-0 text-secondary text-sm">@Local["Ghi chú"]</h6>
+                                        <span class="text-sm text-dark fw-bold">${item.Note}</span>
+                                    </div>
+                                </div>
+                                <hr class="horizontal dark mt-2 mb-1">
+                            </li>`;
+        return tr;
+    }
+
+    function smain_cdetailEvent() {
+
+        $("#smain_cdetaillist .detail").unbind('click').click(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $("#smain_areaSubject").fadeIn(200);
+            let _id = $(this).attr('data-id');
+
+            if (smain_dataClass[_id] != undefined) {
+                let item = smain_dataClass[_id];
+                $("#smain_subjectName").html(item.SubjectName);
+                $("#smain_subjectTime").html(ConvertBetweenYMDInt_ToDate(item.TimeBegin, item.TimeEnd));
+                $("#smain_subjectNumber").html(item.TimeTeach);
+            }
+            if (_id && !isNaN(_id) && _id != 0) {
+                $([document.documentElement, document.body]).animate({
+                    scrollTop: $("#smain_classScheduler").offset().top
+                }, 500);
+                $(this).closest('.smain_stucourseItem').addClass('active').siblings('.smain_stucourseItem').removeClass('active');
+                smain_ClassDetail(_id)
+            }
+        })
+    }
+
+    function smain_certcourse_event(){
+        $("#smain_havecer .smain_Cert_btnSign").unbind('click').on('click', function (event)
+        {
+            let stuid = Number($(this).attr('data-id'));
+            smain_Executed_CertSign(stuid);
+        });
+    }
+
+    async function smain_Executed_CertSign(id)
+    {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/Student/Student/StudentMain/?handler=UpdateSign"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation,
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result)
+                {
+                    if (result != "0") {
+                        smain_Loadcourse();
+                    }
+                }
+            );
+        }
+    }
+    //#endregion
+
+    //#region // render scheduler class
+
+    function smain_ClassDetail(clsStudentID) {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadClassTimeDetail"
+            , data = {
+                "ClassStudentID": clsStudentID,
+                "StudentID": smain_studentid
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataClass = data.Table;
+                    let dataAttend = data.Table1;
+                    smain_ClassTime_Render(dataClass, 'smain_classScheduler');
+                    smain_ClassAttend_Render(dataAttend, 'smain_classAttendBody');
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#smain_classwait").show();
+            }
+            , before = function (e) {
+                $("#smain_classwait").hide();
+            }
+        );
+    }
+
+    async function smain_ClassTime_Render(data, id) {
+        return new Promise((resolve) => {
+            $('#' + id + ' .content').html('');
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    $('#' + id + ' .week' + item.DOW)
+                        .append(
+                            `<a data-id="${item.ID}" class="scheduler badge text-normal my-2 p-2 w-100 bg-gray-100 text-start">
+                                        <span class="text-dark text-sm">${ConvertTimeInt_ToTime(item.TimeStart)}</span>
+                                        <span> - </span>
+                                        <span class="text-dark text-sm">${ConvertTimeInt_ToTime(item.TimeEnd)}</span>
+                                        <span class="text-primary fw-bold text-sm">${ConvertYMDInt_ToDM(item.Dayint)}</span>
+                                        <div class="d-block">
+                                            <span class="text-dark text-sm">${item.ManuClass}</span>
+                                            <span> - </span>
+                                            <span class="text-dark text-sm">${item.Teacher}</span>
+                                        </div>
+                                    </a>`);
+                }
+            }
+            resolve();
+        });
+
+    }
+
+    async function smain_ClassAttend_Render(data, id) {
+        return new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = "";
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = `
+                            <tr class="vt-number">
+                                <td class="vt-number-order"></td>
+                                <td>${BigIntToDate(item.DayInt)}</td>
+                                <td>${item.StatusAttend}</td>
+                                <td>${item.StatusRating}</td>
+                                <td>${item.Note}</td>
+                            </tr>
+                            `
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+            }
+            resolve();
+        });
+
+    }
+    //#endregion
+
+    //#region // payment
+
+    async function smain_Loadpayment() {
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadPaid"
+                    , data = { "Studentid": smain_studentid }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            if (data != undefined && data.length != 0) {
+                                $('#smain_nonepay').addClass('d-none');
+                                $('#smain_havepay').removeClass('d-none');
+                                smain_cpaymentRender(data, "smain_tablist", function () {
+                                    smain_cpaymentEvent();
+                                    $('#smain_tablist li:first').trigger('click');
+                                });
+
+                            }
+                            else {
+                                $('#smain_nonepay').removeClass('d-none');
+                                $('#smain_havepay').addClass('d-none');
+                            }
+
+                        }
+                    }
+                );
+                resolve()
+            }, 500)
+        })
+    }
+
+    async function smain_cpaymentRender(data, id, callback) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = "";
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = smain_cpaymentItem(item);
+                        myNode.innerHTML = myNode.innerHTML + tr;
+                    }
+                }
+            }
+            callback();
+            resolve();
+        })
+    }
+
+    function smain_cpaymentItem(item) {
+        let tr = `<li id="smain_payment${item.ID}" data-id="${item.ID}"
+                                class="payitem list-group-item border-0 justify-content-between ps-0 pb-0 border-radius-lg list-group-item px-0 border-0">
+                                <div class="row px-3">
+                                    <div class="col p-1">
+                                        <div class="d-flex align-items-center">
+
+                                            <div class="d-flex flex-column">
+                                                <h6 class="mb-0 text-primary text-sm">@Local["Mã hoá đơn"]</h6>
+                                                <span class="text-sm text-dark">${item.Code != "" ? item.Code : "-"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-6 col-xl-3 p-1">
+                                        <h6 class="mb-0 text-secondary text-sm">${item.MethodName}</h6>
+                                        <span class="text-sm text-dark fw-bold ">${formatNumber(item.Amount)}</span>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-6 col-xl-3 p-1">
+                                        <h6 class="mb-0 text-secondary text-sm">${item.BranchName}</h6>
+                                        <span class="text-sm text-dark fw-bold ">${ConvertDateTimeUTC_DMY(item.Created)}</span>
+                                    </div>
+                                </div>
+                                <hr class="horizontal dark mt-2 mb-1">
+                            </li>`;
+        return tr;
+    }
+
+    function smain_cpaymentEvent() {
+
+        $('#smain_tablist .payitem').unbind('click').click(function (event) {
+            event.preventDefault();
+            event.stopPropagation()
+            $(this).addClass('active').siblings().removeClass('active');
+            let _id = $(this).attr('data-id');
+            smain_paymentid = _id;
+            smain_Loadpaymentdetail(_id);
+        });
+
+    }
+
+    function smain_Loadpaymentdetail(id) {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=LoadPaidDetai"
+            , data = { "Paymentid": id }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let info = datas.Table;
+                    $('#smain_paydtotal').html(formatNumber(info[0].Amount))
+                    $('#smain_payddate').html(ConvertDateTimeUTC_DMY(info[0].Created))
+                    $('#smain_paydcode').html(info[0].Code);
+                    $('#smain_paydbranch').html(info[0].BranchName);
+                    $('#smain_paydnote').html(info[0].Note);
+                    $('#smain_paydemp').html(info[0].EmpName);
+
+                    smain_pdetailRender(datas.Table1, "smain_paydetaillist");
+                }
+            }
+        );
+    }
+
+    async function smain_pdetailRender(data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = "";
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `<td class="text-start vt-number-order text-sm"></td>
+                                             <td class="ps-4 text-sm">${item.SubName}</td>
+                                             <td class="ps-4 text-sm" colspan="2" >${item.MethodName}</td>
+                                             <td class="ps-4 text-right text-sm">${formatNumber(item.Amount)}</td>
+                                            `;
+
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML
+                            + `<tr class="vt-number">` + tr + `</tr>`;
+
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    //#endregion
+
+    //#region // other
+
+    function smain_invoiceDelete() {
+        if (!isNaN(smain_paymentid)) {
+            const promise = notiConfirm();
+            promise.then(function () { smain_invoiceDeleteExecute(smain_paymentid); }, function () { });
+        }
+    }
+
+    function smain_invoiceDeleteExecute(id) {
+        AjaxLoad(url = "/Student/Student/StudentMain/?handler=DeleteItem"
+            , data = { "CurrentID": id }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result == "1") {
+                    $("#smain_payment" + id).remove();
+                    notiSuccess();
+                }
+                else notiError_SW();
+            }
+        );
+    }
+
+    function smain_invoiceEmail() {
+        if (!isNaN(smain_paymentid)) {
+            smain_MailTemplate('ST_Email_AfterPayment', 0, smain_paymentid);
+        }
+    }
+
+    function smain_invoiceSMS() {
+        if (!isNaN(smain_paymentid)) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Sms/SmsDetail?Type=" + "SMSContentAfterPaymentStudent" + "&PaymentStudentID=" + smain_paymentid + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+        }
+    }
+
+    function smain_invoicePrint() {
+        if (!isNaN(smain_paymentid)) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=invoice_student&DetailID=' + smain_paymentid);
+            $('#DetailModal').modal('show');
+        }
+    }
+
+    function smain_MailTemplate(type = "", studentid = 0, masterid = 0) {
+        $("#MainSendMail_Content").empty();
+        $("#MainSendMail_Content").load('/Student/Email/EmailTemplate?&ver=' + versionofWebApplication
+            , function (responseTxt, statusTxt, xhr) {
+                if (statusTxt == "success") {
+                    $("#MainSendMail").addClass('active');
+                    if (typeof ETemp_SendMailStu === 'function')
+                        ETemp_SendMailStu(type, studentid, masterid);
+                }
+                if (statusTxt == "error") {
+
+                }
+            })
+    }
+
+    function smain_eventEmail() {
+        $('#smain_btnScheMail').unbind('click').click(function () {
+            smain_MailTemplate('ST_Email_Scheduler', smain_studentid, smain_stucourseid);
+        });
+        $('#smain_btnCerMail').unbind('click').click(function () {
+            smain_MailTemplate('ST_Email_Certificate', smain_studentid, smain_stucourseid);
+        })
+        $('#smain_btnSchePrint').unbind('click').click(function () {
+            let str = smain_studentid.toString() + ";" + smain_stucourseid.toString();
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=student_schedule&DetailID=' + str);
+            $('#DetailModal').modal('show');
+        })
+        $('#smain_btnCerPrint').unbind('click').click(function () {
+            let str = smain_studentid.toString() + ";" + smain_stucourseid.toString();
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=student_certificate&DetailID=' + str);
+            $('#DetailModal').modal('show');
+        })
+    }
+
+    function smain_stuPayment() {
+        if (smain_studentid != '0') {
+            $("#smain_contentMain").hide();
+            $("#smain_contentDetail").show();
+            $("#smain_contentDetail").load('/Student/Payment/PaymentClassStudent?StudentID=' + smain_studentid + '&ver=' + versionofWebApplication)
+        }
+    }
+
+    function smain_evaluateCourse(){
+        if (smain_studentid != '0') {
+            $("#smain_contentMain").hide();
+            $("#smain_contentDetail").show();
+            $("#smain_contentDetail").load('/Student/Student/StudentEvaluateCourse?StudentID=' + smain_studentid + '&ver=' + versionofWebApplication)
+        }
+    }
+    // USING PAGE PAYMENT STUDENT
+    function smain_closeDetailDiv() {
+        $("#smain_contentMain").show();
+        $("#smain_contentDetail").hide().empty();
+    }
+
+                //#endreigon
+                //#endreigon
+
+</script>
+<style>
+    .smain.table tbody .vt-number-order:after {
+        content: counter(vt-num-sections);
+    }
+
+    .smain.table tbody > .vt-number {
+        counter-increment: vt-num-sections;
+    }
+
+    #smain_classScheduler .week {
+        width: 14%;
+        text-align: center;
+    }
+
+        #smain_classScheduler .week .scheduler:hover {
+            font-weight: 600;
+        }
+</style>

@@ -1,0 +1,115 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Todo.TodoTemplateDetailModel
+@{ Layout=null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <div class="header">
+        Template Detail
+    </div>
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+                    <div class="two fields">
+                        <div class="field">
+                            <label>Name</label>
+                            <input id="TemplateName" name="name" type="text" />
+                        </div>
+                        <div class="field">
+                            <label>Color</label>
+                            <input id="ColorCodeDetail" name="fillCode" type="text" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Mô Tả</label>
+                        <textarea id="TemplateDescript" rows="2" />
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <div style="font-size: 13px; color: red; float: left" id="textShowMessage"></div>
+        <div style="float: right">
+            <button class="ui teal button saveButton setting_projectclosure" form="form3" type="submit" onclick="return ExcuteData()">Save</button>
+        </div>
+        <div style="float: right">
+            <button class="ui grey button cancelButton" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var ser_TodoTemplateID = (@Model._TodoTemlateID);
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#TemplateName').val() ? $('#TemplateName').val() : "";
+            data.Descript = $('#TemplateDescript').val() ? $('#TemplateDescript').val() : "";
+            data.ColorCode = $("#ColorCodeDetail").spectrum('get').toHexString()
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Setting/Todo/TodoTemplateDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_TodoTemplateID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            LoadDataTodoTemplateAjax();
+                            CloseModal();
+                        } else {
+                            document.getElementById("textShowMessage").innerHTML = "Trùng dữ liệu";
+                        }
+                    });
+
+            }
+            return false;
+        }
+
+        $(document).ready(function () {
+            $("#ColorCodeDetail").spectrum({
+                showPaletteOnly: true,
+                togglePaletteOnly: true,
+                showInput: true,
+                color: '#ffffff',
+                palette: [
+                    ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                    ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                    ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                    ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                    ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                    ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                    ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+                ]
+            });
+            Load_Data_Todo_Template_Detail();
+        });
+        function Load_Data_Todo_Template_Detail() {
+            AjaxLoad(url = "/Setting/Todo/TodoTemplateDetail/?handler=LoaDataUpdate"
+                , data = {
+                    id: ser_TodoTemplateID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataColor = JSON.parse(result);
+                    if (dataColor && dataColor.length > 0) {
+                        $('#TemplateName').val((dataColor[0].Name));
+                        $('#TemplateDescript').val((dataColor[0].Descript));
+                        $("#ColorCodeDetail").spectrum("set", dataColor[0].ColorCode);
+                    }
+                });
+            return false;
+        }
+    </script>
+    <script>js_require('/js/comon/initialize_setting.js')</script>
+    <script>js_require('/js/main.js')</script>
+    <script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+</body>
+</html>

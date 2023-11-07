@@ -1,0 +1,736 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.ReportGeneralModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row mt-n1" id="ReportGeneral_ContainerDiv">
+    <div class="col-12 px-1">
+        <div class="card card-plain">
+            <div class="card-header px-3 pb-0">
+                <div class="d-lg-flex gap-1">
+                    <div class="col-w-250 col-auto my-auto  z-index-3">
+                        <div class="position-relative">
+                            <div class="input-group flex-nowrap rounded-0" id="ReportGeneral_Sort">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <div class="spinner-border spinner-border-sm d-none"></div>
+                                </div>
+                                <input id="searching_report" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]" autocomplete="off">
+                                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                <div class="input-group-text rounded-0 rounded-end border-end"><i class="btn_close fas fa-times cursor-pointer"></i></div>
+                            </div>
+                            <div id="ReportGeneral_Result" class="position-absolute top-100 start-0 w-100 bg-white z-index-3">
+                                <div class="max-height-400 overflow-y shadow rounded-2">
+                                    <ul class="nav nav-pills flex-column bg-white border-radius-lg pt-1 px-0" id="report_group">
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ms-3 filter-bar">
+                        <ul class="nav navbar-nav navbar-new-categories navbar-right flex-row gap-2 bg-transparent" data-turbolinks="false" id="report_parent">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body  px-3  pt-0 ">
+                <div class="text-center text-lg fw-bold text-gradient text-uppercase text-primary d-flex justify-content-center mb-2 py-2">
+                    <div class="d-flex" id="divReportName"></div>
+                    <a id="divReportHelp" class="d-none d-flex ms-2" data-bs-toggle="collapse" href="#divReportDescription" aria-expanded="false">
+                        <i class="text-lg fas fa-sort-down"></i>
+                    </a>
+                </div>
+                <div id="divReportDescription" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-3 mb-4 mt-2 collapse multi-collapse"></div>
+                <div id="divReportViewDetail" class="mx-0">
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    //#region // DECLARE  AND INITIALIZE DATA
+
+    var dataReportMain;
+
+    var data_GroupRerport;
+    //let data_TimerOnchange;
+    var data_CurrentID_Sheet = 0;
+    var RP_DataBranch = {}; var RP_DataWarehouse = {};
+    var RP_DataServiceCare = []; var RP_DataCustomerSource = {}; var RP_DataCustomerSourceCat = {}; var RP_DataCustomerGroup = {};
+    var RP_DataServiceCat = {}, RP_DataService = {}, RP_DataServiceSource = {}, RP_DataCard = {}, RP_DataMedicine = {}, RP_DataProduct = {};
+    var RP_DataCity = {}, RP_DataDistrict = {}, RP_DataCareStatus = {};
+    var RP_DataStaff = {}, RP_DataGroupStaff = {};
+    var data_Sheet;
+    var DataTeeth, RP_DataUser = {}, RP_DataEmployee = {};
+    var data_TimerReport;
+    let AllowGroupReport = "@Model._AllowGroup";
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Teeth, _Session_City, _Session_District,_Session_Commune]
+            , function (data) {
+                DataTeeth = data[0];
+                RP_DataCity = data[1];
+                RP_DataDistrict = data[2];
+                RP_DataCommune = data[3];
+                ReportGeneral_Ini();
+
+            })
+
+    });
+
+    async function ReportGeneral_Ini() {
+        new Promise((resolve) => {
+            AjaxLoad(url = "/Report/ReportGeneral/?handler=InitializeCombo"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+
+                        RP_DataUser = (data.User).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataEmployee = (data.Employee).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+
+                        RP_DataBranch = (data.Branch).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerSource = (data.Source).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerSourceCat = (data.SourceCat).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerGroup = (data.GroupCustomer).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataServiceCat = (data.ServiceCat).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataService = (data.Service).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataServiceSource = (data.ServiceSource).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCard = (data.Card).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataMedicine = (data.Medicine).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataProduct = (data.Product).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+
+                        RP_DataServiceCareObj = (data.ServiceCare).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataPaymentMethod = (data.PaymentMethod).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataPaymentMethodDetail = (data.PaymentMethodDetail).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCareStatus = (data.CusCareStatus).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        
+                        RP_DataGroupStaff = (data.GroupStaff).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataStaff = (data.Staff).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataWarehouse = (data.Warehouse).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+
+                        RP_DataServiceCare = data.ServiceCare;
+                        DataFacebookTag = data.FacebookTag;
+                    }
+                    ReportGeneral_EventHandle();
+                    ReportGeneral_GetData();
+                }
+            );
+        })
+    }
+
+    async function ReportGeneral_GetData() {
+        new Promise((resolve) => {
+            AjaxLoad(url = "/Report/ReportGeneral/?handler=LoadataReport"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        dataReportMain = JSON.parse(result)["Table"];
+                        data_GroupRerport = ReportGeneral_AllowGroup(JSON.parse(result)["Table1"]);
+
+                        ReportGeneral_Render_Parent(data_GroupRerport, dataReportMain, "report_parent");
+                        ReportGeneral_Render_All(dataReportMain, "report_group");
+                        ReportGeneral_FirstPage();
+                        data_Sheet = {};
+                        let _data_Sheet = JSON.parse(result)["Table2"];
+                        for (i = 0; i < _data_Sheet.length; i++) {
+                            let e = {};
+                            e.ID = _data_Sheet[i].ID;
+                            e.Tag = _data_Sheet[i].Tag;
+                            e.Name = _data_Sheet[i].Name;
+                            e.Value = _data_Sheet[i].Value;
+                            e.Description = _data_Sheet[i].Description;
+                            e.Description_Code = _data_Sheet[i].Description_Code;
+                            let _d = [];
+                            _d.push(e);
+                            data_Sheet[_data_Sheet[i].ID] = _d;
+                        }
+                    }
+                }
+            );
+        })
+    }
+
+    function ReportGeneral_AllowGroup(data) {
+        try {
+            var dataGroup = [];
+            AllowGroupReport = AllowGroupReport.trim();
+            if (AllowGroupReport != '') {
+                let dataGroupByID = AllowGroupReport.split(',');
+                if (dataGroupByID && dataGroupByID.length != 0) {
+                    dataGroup = data.reduce((pre, arr) => {
+                        if (arr.GroupID) {
+                            let dtFilter = dataGroupByID.filter((item) => { return Number(item) === Number(arr.GroupID) });
+                            if (dtFilter && dtFilter.length != 0) pre.push(arr);
+                        }
+                        return pre;
+                    }, [])
+                }
+            }
+            else dataGroup = data;
+            return dataGroup;
+        }
+        catch (ex) {
+            return [];
+        }
+    }
+
+    //#endregion
+
+
+    //#region // EVENT HANDLE
+
+    function ReportGeneral_EventHandle() {
+
+        $("#report_parent .linkgroup").unbind('click').click(function (event) {
+            $("#Report_Filterall").removeClass('active');
+            let id = $(this).attr("data-id");
+            let data = dataReportMain.filter(word => {
+                return (word["GroupID"] == id);
+            });
+            if (data != undefined) {
+                ReportGeneral_Render_All(data, "report_group");
+                $('#report_group a:first').trigger('click');
+                $('#report_group a:first').tab('show');
+            }
+
+        });
+
+        $("#Report_Filterall").unbind('click').click(function (event) {
+            ReportGeneral_Render_All(dataReportMain, "report_group");
+            $("#report_parent .linkgroup").removeClass('active');
+        });
+
+        $('#searching_report').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#ReportGeneral_Sort .fa-search").hide();
+            $("#ReportGeneral_Sort .spinner-border").removeClass('d-none');
+            clearTimeout(data_TimerReport);
+            data_TimerReport = setTimeout(function (e) {
+                Reportpara_Filter("report_group");
+            }, 500);
+        });
+
+        $('#searching_report').focus(function () {
+            $("#ReportGeneral_Result").addClass('active');
+            $("#ReportGeneral_Sort .btn_close").addClass("text-danger");
+        });
+
+        $("#ReportGeneral_Sort .btn_clear").on('click', function (e) {
+            $('#searching_report').val('');
+            $(this).addClass('opacity-1');
+            Reportpara_Filter("report_group");
+        });
+
+        $("#ReportGeneral_Sort .btn_close").on('click', function (e) {
+            $(this).removeClass("text-danger");
+            $("#ReportGeneral_Result").removeClass('active');
+        });
+    }
+
+    //#endregion
+
+
+    //#region // Master
+
+    async function ReportGeneral_Render_Parent(data, dataMain, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let dataChild = dataMain.filter((group) => {
+                                return group.GroupID == item.GroupID
+                            });
+                            if (dataChild && dataChild.length != 0) {
+                                let child = ReportGeneral_Render_ParentChild(dataChild);
+                                let groupText = item.LangKeyGroup != "" ? Outlang[item.LangKeyGroup] : item.GroupText;
+                                let tr = `
+                                         <li class="dropdown dropdown-small dropdown-categories me-3 dropdown-hover" data-turbolinks="false" data-groupid="${item.GroupID}">
+                                            <a href="#" data-turbolinks="false" data-toggle="dropdown">
+                                                <p class="d-flex fw-bold align-items-center mb-0">
+                                                    ${groupText} <i class="fa fa-angle-down ml-5 ms-1 arrow" aria-hidden="true"></i>
+                                                </p>
+                                            </a>
+                                            <div class="dropdown-menu top-100 py-0 rounded-2 col-w-300" style="    margin-top: -8px;">
+                                                <div class="dropdown-wrapper py-2">
+                                                    <h6 class="dropdown-header text-capitalize technology-size mt-0 fw-bold">
+                                                        <a href="#">${groupText}</a>
+                                                    </h6>
+                                                    <hr class="horizontal dark my-0" />
+                                                    <div class="overflow-y max-height-700 py-2" style="min-width: 230px;">
+                                                        <ul class="mt-2 block-horizontal max-height-300 overflow-y">
+                                                            ${child}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    `
+                                myNode.insertAdjacentHTML('beforeend', tr);
+                            }
+                        }
+                    }
+                    ReportGeneral_EventRedirectParent();
+                }
+            }, 10)
+        })
+    }
+
+    function ReportGeneral_Render_ParentChild(child) {
+        try {
+            let result = '';
+            result = child.map((item) => {
+                return `
+                        <li class="nav-item w-100 me-0">
+                            <a class="report_parent_item ellipsis_two_line fw-bold text-dark dropdown-item bg-transparent py-2 rounded-0 text-wrap" href="?page=${item.ID}" data-id="${item.ID}" data-hover>
+                                    ${Outlang[item["LangKey"]] != undefined ? Outlang[item["LangKey"]] : item["Text"]}
+                            </a>
+                        </li>
+                        <hr class="horizontal dark my-0 opacity-2" data-id="${item.ID}"/>
+                    `
+            }).join("");
+            return result;
+        }
+        catch (ex) {
+            return ''
+        }
+    }
+
+    function ReportGeneral_EventRedirectParent() {
+        $("#report_parent .report_parent_item").unbind('click').click(function (event) {
+            event.preventDefault();
+            let id = Number($(this).attr('data-id'));
+            $("#ReportGeneral_Result").removeClass('active');
+            ReportGeneral_Redirect(id);
+        })
+    }
+
+    function ReportGeneral_FirstPage() {
+        let URLSearch = new URLSearchParams(window.location.search);
+        if (URLSearch.has('page')) {
+            let pageID = URLSearch.get('page');
+            $(`#report_group a.detail[data-id="${pageID}"]`).trigger('click');
+        }
+        else {
+            let pageFirst = $(`#report_group a.detail[data-id="17"]`);
+            if (pageFirst.length > 0) pageFirst.trigger('click');
+            else {
+                $('#report_group a:first').trigger('click');
+                $('#report_group a:first').tab('show');
+            }
+        }
+    }
+    function ReportGeneral_SetPage(id) {
+        let URLSearch = new URL(window.location.href);
+        if (!URLSearch.searchParams.has('page')) URLSearch.searchParams.append('page', id);
+        else URLSearch.searchParams.set('page', id);
+        window.history.replaceState(URLSearch.href, 'Title', URLSearch.href);
+    }
+
+    async function Reportpara_Filter(id) {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let textsearch = $('#searching_report').val().trim();
+                    let search = xoa_dau(textsearch.toLowerCase());
+                    if (search == "") {
+                        ReportGeneral_Render_All(dataReportMain, id);
+                    }
+                    else {
+                        let data = dataReportMain.filter(word => {
+                            let NameSearch = Outlang[word["LangKey"]] != undefined ? Outlang[word["LangKey"]] : word["Text"];
+                            return (xoa_dau(NameSearch.toLowerCase()).includes(search));
+                        });
+                        ReportGeneral_Render_All(data, id);
+                    }
+                    $("#ReportGeneral_Sort .fa-search").show();
+                    $("#ReportGeneral_Sort .spinner-border").addClass('d-none');
+                    resolve()
+                }
+            )
+        })
+    }
+    //#endregion
+
+
+    //#region // MENU ALL
+
+    function ReportGeneral_Render_All(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = `
+                            <li class="nav-item" role="presentation">
+                                <a data-id="${item.ID}" class="text-sm detail nav-link cursor-pointer rounded-0" href="?page=${item.ID}" >
+                                        ${Outlang[item["LangKey"]] != undefined ? Outlang[item["LangKey"]] : item["Text"]}
+                                </a>
+                            </li>
+                            <hr class="horizontal dark my-0 opacity-2">
+                        `
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+            }
+        }
+        ReportGeneral_EventRedirect();
+    }
+
+    function ReportGeneral_EventRedirect() {
+        $("#report_group .detail").unbind('click').click(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $('#report_group .detail').removeClass('active');
+            $(this).addClass('active');
+            let id = Number($(this).attr("data-id"));
+            $("#ReportGeneral_Result").removeClass('active');
+            ReportGeneral_Redirect(id);
+        });
+    }
+
+    function ReportGeneral_Redirect(id) {
+        if (id && id != 0) {
+            ReportGeneral_SetPage(id);
+            data_CurrentID_Sheet = id;
+            let dataSheet = "";
+            let filterRow = dataReportMain.filter(word => word["ID"] == id)[0];
+            let teamplate = JSON.parse(filterRow.Teamplate);
+            let UseBranch = JSON.parse(filterRow.UseBranch);
+            let UseDate = JSON.parse(filterRow.UseDate);
+            let UseTypeDate = JSON.parse(filterRow.UseTypeDate);
+            let UseWare = JSON.parse(filterRow.UseWare);
+            let UseAllWare = JSON.parse(filterRow.UseAllWare);
+            let UseMultiBranch = JSON.parse(filterRow.UseMultiBranch);
+            let UseAllBranch = JSON.parse(filterRow.UseAllBranch);
+            let UseSource = JSON.parse(filterRow.UseSource);
+            let UseStaff = JSON.parse(filterRow.UseStaff);
+            let UseGroupStaff = JSON.parse(filterRow.UseGroupStaff);
+            let UseMultiGroupStaff = JSON.parse(filterRow.UseMultiGroupStaff);
+            let UsePage = JSON.parse(filterRow.UsePage);
+            let UseServiceCare = JSON.parse(filterRow.UseServiceCare);
+            let UseTag = JSON.parse(filterRow.UseTag);
+            $("#divReportName").html(Outlang[filterRow["LangKey"]] != undefined ? Outlang[filterRow["LangKey"]] : filterRow["Text"]);
+            let AllowRangeDate = JSON.parse(filterRow.AllowRangeDate);
+            if (teamplate != undefined) {
+                let frame = teamplate.frame;
+                let sheet = teamplate.sheet;
+                for (i = 0; i < sheet.length; i++) {
+                    let idSheet = Number(sheet[i].value);
+                    dataSheet = dataSheet + idSheet + ",";
+                }
+                ReportGeneral_Description(sheet);
+                $("#divReportViewDetail").load("/Report/Template?ver=" + versionofWebApplication
+                    + "&UseBranch=" + UseBranch
+                    + "&UseDate=" + UseDate
+                    + "&UseTypeDate=" + UseTypeDate
+                    + "&UseWare=" + UseWare
+                    + "&UseAllWare=" + UseAllWare
+                    + "&UseSource=" + UseSource
+                    + "&UseStaff=" + UseStaff
+                    + "&UseGroupStaff=" + UseGroupStaff
+                    + "&UseMultiGroupStaff=" + UseMultiGroupStaff
+                    + "&UsePage=" + UsePage
+                    + "&UseTag=" + UseTag
+                    + "&UseServiceCare=" + UseServiceCare
+                    + "&UseMultiBranch=" + UseMultiBranch
+                    + "&UseAllBranch=" + UseAllBranch
+                    + "&AllowRangeDate=" + AllowRangeDate
+                    + "&Data=" + JSON.stringify(dataSheet), function () {
+                        $("#divReportViewDetail").show();
+                    });
+                // }
+            }
+        }
+    }
+    //#endregion
+
+    //#region // Description
+    function ReportPie_Description(data, name, number, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let TotalPaid = 0;
+            let TotalPer = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    TotalPaid += Number(data[i][number]);
+                }
+
+                for (let j = 0; j < data.length; j++) {
+                    let item = data[j];
+                    let percent = (j != data.length - 1) ? ((TotalPaid != 0) ? (Number(item[number]) * 100 / TotalPaid).toFixed(2) : 0) : (100 - TotalPer).toFixed(2);
+                    TotalPer += !isNaN(Number(percent)) ? Number(percent) : 0;
+                    let _color = colorChart[j % colorChart.length];
+                    let tr = '<td>'
+                        + '<div class="d-flex px-2 py-0">'
+                        + '<span class="badge me-3" style="padding: 10px;border: 2px solid ' + _color +';background-color:' + _color + '78"> </span>'
+                        + '<div class="d-flex flex-column justify-content-center">'
+                        + '<h6 class="mb-0 text-sm fw-bold">' + item[name] + '</h6>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        + '<td class="align-middle text-end text-dark text-sm ">'
+                        + '<span class="pe-2 fw-bold">' + formatNumberToMilion(item[number]) + ' </span>'
+                        + '<span class="fw-normal"> ' + percent + ' % </span>'
+                        + '</td>'
+
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    async function ReportGeneral_Description(_strkey) {
+        await new Promise((resolve, reject) => {
+            try {
+                let sheets = _strkey;
+                let result = '';
+                for (let j = 0; j < _strkey.length; j++) {
+                    let des = data_Sheet[_strkey[j].value][0].Description;
+                    let name = data_Sheet[_strkey[j].value][0].Name;
+                    if (des != '' && name != '')
+                        result = result
+                            + '<span class="badge bg-gradient-warning">' + name + '</span>'
+                            + '<div class="report_hint_des">' + des + '</div>';
+                    else result = ''
+                }
+                if (result != '') $("#divReportHelp").removeClass('d-none');
+                else if (!$("#divReportHelp").hasClass('d-none')) $("#divReportHelp").addClass('d-none');
+                $("#divReportDescription").html(result);
+            }
+            catch (e) {
+            }
+        })
+    }
+    function ReportGeneral_SortNum(tableid, n, valuename, isasc) {
+        try {
+            var table, rows, switching, i, x, y, shouldSwitch, switchcount = 0;
+            table = document.getElementById(tableid);
+            switching = true;
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    if (isasc) {
+                        if (Number(x.attributes[valuename].value) > Number(y.attributes[valuename].value)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (isasc == false) {
+                        if (Number(x.attributes[valuename].value) < Number(y.attributes[valuename].value)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && isasc) {
+                        isasc = false;
+                        switching = true;
+                    }
+                }
+            }
+        }
+        catch (ex) {
+
+        }
+
+    }
+    //#endregion
+
+</script>
+<style>
+
+    .dropdown-menu {
+        position: absolute !important;
+        /*  top: 100%;
+            left: 0;
+            z-index: 1000;
+            display: none;
+            float: left;
+            min-width: 160px;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            font-size: 14px;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ccc;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 4px;
+            -webkit-box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
+            box-shadow: 0 6px 12px rgb(0 0 0 / 18%);*/
+    }
+
+    .filter-bar .dropdown-menu {
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+        top: 100%;
+        border-radius: 3px;
+    }
+
+    .filter-bar #report_parent.navbar-nav > li > a {
+        padding: 5px 0;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    #report_parent.navbar-nav > li > .dropdown-menu:not(.inner) {
+        padding: 0;
+        z-index: 9000;
+        box-shadow: 0 13px 27px -5px rgb(50 50 93 / 25%), 0 8px 16px -8px rgb(0 0 0 / 30%), 0 -6px 16px -6px rgb(0 0 0 / 3%);
+        border-radius: 16px;
+        -webkit-transform: perspective(999px) rotateX(-10deg) translateZ(0) translate3d(-50%,15px,0);
+        transform: perspective(999px) rotateX(-10deg) translateZ(0) translate3d(-50%,15px,0);
+        -webkit-transition: visibility .25s,opacity .25s,transform .25s;
+        transition: visibility .25s,opacity .25s,transform .25s;
+        -webkit-backface-visibility: hidden;
+        display:none;
+    }
+
+    #report_parent.navbar .dropdown-categories .dropdown-menu .dropdown-wrapper {
+        padding: 20px;
+    }
+
+    #report_parent.navbar .dropdown-categories .dropdown-footer {
+        background-color: #f6f9fc;
+        border-bottom-right-radius: 16px;
+        border-bottom-left-radius: 16px;
+        padding: 20px;
+    }
+
+    #report_parent.navbar .dropdown-categories:hover .dropdown-menu {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+
+
+    #report_parent.nav .dropdown-categories:hover .dropdown-menu,
+    #report_parent.nav .dropdown-categories:focus .dropdown-menu {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: rotateX(0deg) translateZ(0px) translate3d(-40%,0,0px) !important;
+        display: block;
+        width: auto !important;
+    }
+
+
+    .dropdown.dropdown-hover:hover > .dropdown-menu:before {
+        left: 50%;
+        transform: translateX(-50%)
+    }
+
+
+    #ReportGeneral_Result {
+        opacity: 0;
+        display: none;
+    }
+
+        #ReportGeneral_Result.active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+
+    @@media only screen and (max-width: 767px) {
+        #report_parent {
+            display: none !important;
+        }
+    }
+
+    #report_parent li::marker {
+        color: rgb(var(--bs-primary));
+    }
+</style>
+
+<script>js_require_notasync('/assets/js/plugins/countup.min.js', true);</script>
+<script>js_require_notasync('/assets/js/plugins/chartjs.min.js', true);</script>
+<script src="/assets/js/core/popper.min.js"></script>

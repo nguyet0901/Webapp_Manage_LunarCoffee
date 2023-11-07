@@ -1,0 +1,433 @@
+﻿@page
+@model SourceMain.Pages.ToDo.WorkingProject.ProjectOptionModel
+@{ Layout = null;
+}
+<div class="card">
+    <div class="card-header pb-0 bg-transparent">
+        <div class="d-lg-flex">
+            <div class="w-50 col-auto my-auto">
+                <div class="h-100">
+                    <h6 data-languagestatic="" id="headerProject" class="mb-0">Project</h6>
+                    <p data-languagestatic="" class="text-sm mb-0">Some text of detail sub</p>
+                </div>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <button class="btn bg-gradient-primary btn-sm mt-1" onclick="addNewTodoList()">Add Work Group</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-2">
+        <div id="list_Task" class="noselect overflow-auto d-flex">
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var Todo_Project_Detail;
+    var Todo_Alram_Detail;
+    var Todo_List_Detail;
+    var Todo_list_ID;
+    var ProjectID = (@Model._projectID);
+    var Todo_Staffs;
+    var CurrentFlagDragDrop_List = 0;
+    var CurrentFlagDragDrop_Task = 1;
+    var sortablelist;
+    var sortabletask;
+    $(document).ready(function () {
+        document.getElementById('headerProject').innerHTML = projectName;
+        ProjectOption_LoadData();
+
+    });
+
+    function ProjectOption_LoadData() {
+        AjaxLoad(url = "/ToDo/WorkingProject/ProjectOption/?handler=LoadDataInitialize"
+            , data = { id: ProjectID }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                Todo_Alram_Detail = data.Alram;
+                Todo_Staffs = data.Staffs;
+                ProjectOption_LoadDataDetail();
+                EventClickElement_All();
+            });
+    }
+    function ProjectOption_LoadDataDetail() {
+        AjaxLoad(url = "/ToDo/WorkingProject/ProjectOption/?handler=LoadProjectDetail"
+            , data = { id: ProjectID }, async = true, error = null
+            , success = function (result) {
+                Todo_Project_Detail = JSON.parse(result);
+                RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+            });
+    }
+
+    function RenderProjectDetail(data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    if (item.state == 1) {
+                        // load todo list
+
+                        let listTask = '<div class="kanban-board mx-2 column todolist noselect" style="width:380px; flex: 0 0 auto;">';
+                        let title = '<header class="kanban-board-header pb-0 pt-2 d-flex">'
+                            + '<div class="titleMenu kanban-title-board w-95"> <span title="' + item.name + '">' + ((item.name.length > 25) ? (item.name.substr(0, 22) + '...') : (item.name)) + '</span></div>'
+                            + '<i class="vtt-icon vttech-icon-dot setting_todolist float-end" data-id="' + item.id + '" title="Setting"></i>'
+                            + '<hr class="m-1"/>'
+                            + '</header>'
+                        listTask = listTask + title;
+                        listTask = listTask + '<main class="kanban-drag p-0 overflow-auto">';
+                        // load tast in todoList
+                        let tasks = item.tasks;
+                        let innerTask = '<div data-id="' + item.id + '" id="divTaskInGroup_' + i + '" class="ui segment divTaskInGroup noselect divScroll">';
+                        if (tasks && tasks.length > 0) {
+                            for (var k = 0; k < tasks.length; k++) {
+                                let temp = tasks[k];
+                                if (temp.state == 1) {
+                                    let status = 0; let numbermess = 0; let lastem_com = 0;
+                                    let resulf = CompareStatusList_ToAlram(temp.id);
+                                    if (resulf != undefined && resulf.length == 1) {
+                                        status = resulf[0].status;
+                                        numbermess = resulf[0].numbermess;
+                                        lastem_com = resulf[0].lastem_com;
+                                    }
+                                    let idDetail = item.id + ',' + temp.id;
+                                    let td = '<div class="ui card cardDetail m-2 p-3 pt-2" data-id="' + item.id + '">'
+                                        + ((Number(status) == 1) ? '<a title="Done" class="ui red right corner label"><i class="check icon"></i></a>' : '')
+                                        + '<div class="content" style="cursor:pointer;padding-bottom: 5px;">'
+
+                                    var staff = Todo_Staffs.filter(word => word["ID"] == temp.staffid); // load ten thanh vien duoc giao viec
+                                    let dataCheckList = temp.checklists;
+                                    var checkLists = dataCheckList;//dataCheckList.filter(word => word["state"] != 0);
+                                    td +=
+                                        '<div class="titleDetail_Task text-primary"  onclick="goToTaskDetail(' + idDetail + ')" title="' + temp.name + '">' + ((temp.name.length > 40) ? (temp.name.substr(0, 40) + '...') : (temp.name)) + '</div>'
+                                        + '<div class="description text-sm" title="' + temp.description + '">'
+                                        + ((temp.description.length > 100) ? (temp.description.substr(0, 100) + '...') : (temp.description))
+                                        + '</div>'
+                                        + '<div class="meta" style="font-size: 11px;padding-top: 3px;">'
+                                        + '<span class="date createdDateTodo">' + ConvertDateTimeUTC_Time(temp.created) + '</span>'
+                                        + '</div>';
+                                    td = td + '</div>'
+                                        + '<div class="extra content contentTask rounded-2 border">'
+                                        + '<span style="font-size: 13px;" class="totalchecklist" onclick="showCheckListDetail(' + idDetail + ')"><i class="vtt-icon vttech-icon-task fs-6"></i>' + checkLists.length + '</span >'
+                                        + '<span style="font-size: 13px;" class="totalNumberMess"><i class="vtt-icon vttech-icon-messenger fs-6"></i>' + numbermess + '</span>'
+                                        + '<span style="font-size: 13px;">' + ((Number(lastem_com) == Number(sys_employeeID_Main) || Number(lastem_com) == 0)
+                                            ? ''
+                                            : '<a><i class="vtt-icon vttech-icon-no-reply fs-6" ></i></a>') + '</span>'
+                                        + '<span class="right float-end pt-1 pe-1" style="font-size: 13px;"><i class="fas fa-user pe-1 fs-6"></i>' + ((staff.length > 0) ? staff[0].Name : 'No staff') + '</span>'
+                                        + '</div>';
+                                    // load checklist
+                                    let innerCheckList = '<div class="ui list checkListInTask divScroll" id="checkListInTaskContent_' + item.id + "_" + temp.id + '" style="padding:10px; margin: 0;display:none">';
+                                    if (checkLists && checkLists.length > 0) {
+                                        for (var h = checkLists.length - 1; h >= 0; h--) {
+                                            let checkItem = checkLists[h];
+                                            let isChecked = CompareCheckList_ToAlram(temp.id, checkItem.id);
+                                            checkLists[h].state = isChecked;
+                                            innerCheckList = innerCheckList
+                                                + '<div class="item checklist_item" style="padding-left: 4px" title="' + checkItem.name + '">'
+                                                + ((Number(isChecked) == 1) ? '<i title="Done" style="margin-top: 0px;" class="bookmark icon"></i>' : '<i style="margin-top: 0px;" class="bookmark outline icon"></i>')
+                                                + ((checkItem.name.length > 35) ? (checkItem.name.substr(0, 35) + '...') : (checkItem.name))
+                                                + '</div>';
+
+                                        }
+                                    }
+                                    innerCheckList = innerCheckList + '</div>';
+
+                                    td = td + innerCheckList + '</div>';
+                                    innerTask += td;
+                                }
+
+                            }
+                        }
+
+                        let btnaddtask = '';
+                        innerTask += btnaddtask;
+                        innerTask += '</div>';
+                        listTask += innerTask;
+
+                        listTask += '</main></div>';
+                        stringContent += listTask;
+                    }
+                }
+
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        EventLinkClick_DetailTodoList();
+        EventClickElement_All();
+    }
+    function CompareStatusList_ToAlram(idtask) {
+        let resulf = [];
+        for (j = 0; j < Todo_Alram_Detail.length; j++) {
+            if (idtask == Todo_Alram_Detail[j].TaskID) {
+                let e = {};
+                e.status = Todo_Alram_Detail[j].Status;
+                e.numbermess = Todo_Alram_Detail[j].NumberMess;
+                e.lastem_com = Todo_Alram_Detail[j].EmpComment;
+                resulf.push(e);
+                break;
+            }
+        }
+        return resulf
+    }
+
+    function CompareCheckList_ToAlram(idtask, idcheck) {
+        let resulf = 0;
+        for (j = 0; j < Todo_Alram_Detail.length; j++) {
+            if (idtask == Todo_Alram_Detail[j].TaskID) {
+                let dataCheck = (Todo_Alram_Detail[j].DataCheckList == "") ? '[]' : JSON.parse(Todo_Alram_Detail[j].DataCheckList);
+                for (k = 0; k < dataCheck.length; k++) {
+                    if (dataCheck[k].id == idcheck) {
+                        resulf = dataCheck[k].state;
+                        break;
+                    }
+                }
+            }
+        }
+        return resulf
+    }
+    function EventLinkClick_DetailTodoList() {
+        $(".setting_todolist").on('click', function (event) {
+            event.preventDefault();
+            Todo_list_ID = $(this).attr("data-id");
+            $("#popupExecute_TodoList").css({ left: (event.pageX - 265) });
+            $("#popupExecute_TodoList").css({ top: (event.pageY - 187) });
+            $("#popupExecute_TodoList").show();
+        });
+
+    }
+
+    // SAVE PROJECT
+    function ExcuteDataTodoProject(idTaskDetail, idList, isDelete) {
+        let _idTaskDetail = (idTaskDetail != undefined) ? idTaskDetail : -1;
+        let _idList = (idList != undefined) ? idList : -1;
+        let _isDelete = (isDelete != undefined) ? isDelete : -1;
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/ToDo/WorkingProject/ProjectOption/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(Todo_Project_Detail)
+                    , idTask: _idTaskDetail
+                    , idList: _idList
+                    , isDelete: _isDelete
+                    , projectID: ProjectID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                });
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+        }
+        EventClickElement_All();
+        return false
+    }
+    function showCheckListDetail(listid, taskid) {
+        let idCheckList = 'checkListInTaskContent_' + listid + '_' + taskid;
+        document.getElementById(idCheckList).classList.toggle("show_checklist_detail");
+    }
+    function addNewTodoList() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoListDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    function editTodoList() {
+        if (Todo_list_ID) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoListDetail?CurrentID=" + Todo_list_ID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+    }
+    function deleteTodoList() {
+        if (Todo_list_ID) {
+            const promise = notiConfirm();
+            promise.then(function () { ExecuteDeleteTodoList(Todo_list_ID); }, function () { });
+        }
+    }
+    function addNewTodoTask() {
+        if (Todo_list_ID) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoTaskDetail" + "?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+    }
+    function ExecuteDeleteTodoList(id) {
+        for (let i = Todo_Project_Detail.length - 1; i >= 0; i--) {
+            if (Todo_Project_Detail[i].id == id) {
+                Todo_Project_Detail.splice(i, 1);
+                break;
+            }
+        }
+        RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+        ExcuteDataTodoProject();
+
+    }
+    function goToTaskDetail(ListID, TastID) {
+        if (TastID) {
+            Todo_list_ID = ListID;
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoTaskDetail?CurrentID=" + TastID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+    }
+
+
+
+
+    function Initilize_DragDropObject_List() {
+        return new Sortable.default(document.querySelector('#list_Task'), {
+            draggable: '.todolist'
+        });
+    }
+    function Initilize_DragDropObject_Task() {
+        return new Sortable.default(document.querySelectorAll('.divTaskInGroup'), {
+            draggable: '.cardDetail'
+        });
+    }
+    function Event_DragDrop() {
+        if (sortablelist) {
+            sortablelist.destroy();
+            sortablelist = null;
+        }
+        if (sortabletask) {
+            sortabletask.destroy();
+            sortabletask = null;
+        }
+        sortablelist = Initilize_DragDropObject_List();
+        sortablelist.on('drag:start', (e) => {
+            if (CurrentFlagDragDrop_List == 0) e.cancel();
+            else $(e)[0].data.source.className = "column todolist bg-gray-200 rounded-3 border transform";
+        });
+
+        sortablelist.on('sortable:stop', (event) => {
+            ChangeElement_Dropdrag_List(event.oldIndex, event.newIndex)
+        });
+        sortabletask = Initilize_DragDropObject_Task();
+        sortabletask.on('drag:start', (e) => {
+            if (CurrentFlagDragDrop_Task == 0) e.cancel();
+            else $(e)[0].data.source.className = "ui card cardDetail bg-gray-200 rounded border";
+        });
+        sortabletask.on('sortable:stop', (event) => {
+            ChangeElement_Dropdrag_Task(event.oldIndex, event.newIndex, event.oldContainer.dataset.id, event.newContainer.dataset.id)
+        });
+    }
+    function EventClickElement_All() {
+        Event_DragDrop();
+        $(".titleMenu").mouseenter(function () {
+            CurrentFlagDragDrop_List = 1;
+        });
+        $(".titleMenu").mouseleave(function () {
+            CurrentFlagDragDrop_List = 0;
+        });
+
+
+        $(".totalchecklist").mouseenter(function () {
+            CurrentFlagDragDrop_Task = 0;
+        });
+        $(".titleDetail_Task").mouseleave(function () {
+            CurrentFlagDragDrop_Task = 1;
+        });
+
+        $(".titleDetail_Task").mouseenter(function () {
+            CurrentFlagDragDrop_Task = 0;
+        });
+        $(".totalchecklist").mouseleave(function () {
+            CurrentFlagDragDrop_Task = 1;
+        });
+
+        $(".totalNumberMess").mouseenter(function () {
+            CurrentFlagDragDrop_Task = 0;
+        });
+        $(".totalNumberMess").mouseleave(function () {
+            CurrentFlagDragDrop_Task = 1;
+        });
+
+    }
+    function ChangeElement_Dropdrag_Task(oldindex, newindex, oldparentid, newparentid) {
+
+        let noteMove;
+        for (i = 0; i < Todo_Project_Detail.length; i++) {
+            if (Number(Todo_Project_Detail[i].id) == Number(oldparentid)) {
+                noteMove = JSON.parse(JSON.stringify(Todo_Project_Detail[i].tasks[oldindex]));
+                Todo_Project_Detail[i].tasks.splice(oldindex, 1);
+            }
+        }
+        for (i = 0; i < Todo_Project_Detail.length; i++) {
+            if (Number(Todo_Project_Detail[i].id) == Number(newparentid)) {
+                Todo_Project_Detail[i].tasks.splice(newindex, 0, noteMove);
+            }
+        }
+        ExcuteDataTodoProject();
+
+    }
+    function ChangeElement_Dropdrag_List(oldindex, newindex) {
+        let noteMove = JSON.parse(JSON.stringify(Todo_Project_Detail[oldindex]));
+        Todo_Project_Detail.splice(oldindex, 1);
+        Todo_Project_Detail.splice(newindex, 0, noteMove);
+        ExcuteDataTodoProject();
+
+    }
+</script>
+
+<style type="text/css">
+    .transform {
+        width:380px !important;
+        padding: 10px 10px 10px 10px;
+    }
+    .show_checklist_detail {
+        display: block !important;
+        max-height: 100px !important;
+        overflow-y: auto;
+    }
+
+    .totalchecklist:hover {
+        color: #324ef6;
+    }
+
+    .totalchecklist {
+        cursor: pointer;
+    }
+
+    .totalNumberMess {
+        cursor: pointer;
+        padding-left: 5px;
+    }
+
+        .totalNumberMess:hover {
+            color: #324ef6;
+        }
+
+
+    .createdDateTodo {
+        float: right;
+    }
+
+    .headerMenu {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .setting_ {
+        background: #066eba !important;
+    }
+
+
+    .checkListInTask {
+        padding: 0 0px 0px 0px;
+        margin: 3px;
+        background: #a333c80d;
+    }
+
+    .contentTask {
+        color: #044c81 !important;
+        background: #044c8114 !important;
+    }
+</style>

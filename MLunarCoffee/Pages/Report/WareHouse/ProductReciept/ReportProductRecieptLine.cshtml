@@ -1,0 +1,92 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.WareHouse.ProductReciept.ReportProductRecieptLineModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#RL_Div" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return RLine_Load()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="RL_Div">
+        <div class="card-body px-0 pt-0">
+            <div class="row px-2">
+                <div class="col-12 col-sm-12 col-md-6 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Nhà cung cấp"]:
+                        <span id="RL_Total" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3 mb-2" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="RL_Pie" class="chart-canvas" height="200"></canvas>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-12 col-sm-12 col-md-6 col-xl-8 p-1">
+                    <div class="mt-2  table-responsive">
+                        <div class="mt-2  table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="RL_List">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+
+    $(document).ready(function () {
+        RLine_Load();
+    })
+    function RLine_Load () {
+        AjaxLoad(url = "/Report/WareHouse/ProductReciept/ReportProductRecieptLine/?handler=Loadata"
+            , data = {
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let Data = JSON.parse(result);
+                    let Total = 0;
+                    for (let i = 0; i < Data.length; i++) {
+                        if (Data[i].IDSupp == 0) {
+                            Data[i].NameSupp = "Chuyển kho"
+                        }
+                        Total += Number(Data[i]['Amount']);
+                    }
+                    ReportPie_Description(Data, 'NameSupp', 'Amount', 'RL_List');
+                    rp_pie("RL_Pie", Data, 'NameSupp', 'Amount')
+
+                    $('#RL_Total').html(formatNumberToMilion(Number(Total)));
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+</script>

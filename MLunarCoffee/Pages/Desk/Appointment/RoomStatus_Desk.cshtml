@@ -1,0 +1,743 @@
+﻿@page
+@model MLunarCoffee.Pages.Desk.Appointment.RoomStatus_DeskModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/Calendar_Custom/datetime.js', true)</script>
+<script>js_require_notasync('/js/WorkScheduler/workscheduler.js', true)</script>
+
+<div class="card card-plain">
+
+    <div class="card-body p-0 pt-2 ">
+        <div class="vtcondition mx-0 mx-lg-3">
+            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+            <div class="fulllap collapse collapsesticky show">
+                <div class="row px-1">
+                    <div class="field col-12 col-md-12 col-lg-4 px-1 pb-1">
+                        <div class="ui fluid search selection dropdown form-control disabled" id="RSBranchID" onchange="RSD_ComboFloorRoom()">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="cbbRSBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field col-12 col-md-6 col-lg-3 px-1 pb-1">
+                        <div class="input-group w-100">
+                            <span class="input-group-text w-30">
+                                @Local["Tầng"]
+                            </span>
+                            <div class="input-group-text p-0  w-70">
+                                <div class="ui fluid search selection dropdown border-0 form-control" onchange="RSD_FilterRoom()" id="RS_floor">
+                                    <input type="hidden" name="floor" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="cbbRS_floor" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field col-12 col-md-6 col-lg-3 px-1 pb-1">
+                        <div class="input-group w-100">
+                            <span class="input-group-text w-30">
+                                @Local["Phòng"]
+                            </span>
+                            <div class="input-group-text p-0  w-70">
+                                <div class="ui fluid search selection border-0 dropdown form-control" id="RS_room">
+                                    <input type="hidden" name="room" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg . @Local["Phòng"]</div>
+                                    <div id="cbRS_room" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-2 col-md-6 col-lg-2 px-1 pb-1">
+                        <button type="button" class="btn bg-gradient-primary" onclick="RSD_LoadStatusRoom(0)">@Local["OK"]</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="d-sm-flex position-relative">
+            <div class="flex-grow-1 px-0 " style="transition: 0.3s all">
+                <div class="overflow-auto mt-0" style="height: calc(100vh - 220px);">
+                    <div class="card-body p-3 pt-2 position-relative">
+                        <div id="RS_waiting" class="position-absolute top-0 start-50 translate-middle-x z-index-3 waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]</span>
+                            </div>
+                        </div>
+                        <div class="timeline timeline-one-side" id="RSRoomArea">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="rd_tabdetail" class="card card-plain  col-w-400 d-none">
+                
+                <div class="text-dark card mb-3 card-plain position-relative ">
+                    <div id="rdd_waiting" class="position-absolute top-0 start-50 translate-middle-x z-index-3 waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">@Local["Đang tải"]</span>
+                        </div>
+                    </div>
+                    <div class="card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg position-relative">
+                   
+                        <div class="d-lg-none text-dark d-flex align-items-center ms-2 mb-2 text-sm cursor-pointer" style="transition: 0.5s all;" onclick="event.preventDefault(); return RSD_DetailClose();">
+                            <i class="fas fa-caret-left text-primary pe-2"></i>
+                            @Local["Quay lại"]
+                        </div>
+
+                        <div class="ps-1 pt-0 text-dark text-sm">
+                            <p class="mb-0 text-sm mt-0  mb-1">@Local["Phòng"]</p>
+                            <div class="d-flex">
+                                <p id="rd_roomname" class="text-sm text-primary font-weight-bold my-auto">-</p>
+                                <p id="rd_chairname" class="text-sm ps-2 my-auto">-</p>
+                            </div>
+                            <hr class="horizontal dark my-2">
+                            <p class="mb-0 text-sm mt-2  mb-1">@Local["Khách hàng"]</p>
+                            <p id="rd_roomcust" class="text-sm font-weight-bold my-auto ">-</p>
+                            <hr class="horizontal dark my-2">
+                            <p class="mb-0 text-sm mt-2 mb-1">@Local["Bác sĩ"]</p>
+                            <p id="rd_roomdoc" class="text-sm font-weight-bold my-auto">-</p>
+                            <hr class="horizontal dark my-2">
+                            <p class="mb-0 text-sm mt-2 mb-1">@Local["Kỹ thuật viên"]</p>
+                            <p id="rd_roomass" class="text-sm font-weight-bold my-auto">-</p>
+                            <hr class="horizontal dark my-2">
+                            <p class="mb-0 text-sm mt-2 mb-1">@Local["Thời gian vào"]</p>
+                            <p id="rd_goingtime" class="text-sm font-weight-bold my-auto">-</p>
+                            <hr class="horizontal dark my-2">
+                            <p class="mb-0 text-sm mt-2 mb-1">@Local["Thời gian dự kiến"]</p>
+                            <p id="rd_roomforetime" class="text-sm font-weight-bold my-auto">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-plain">
+                    <div class="card-body pt-2 ps-2">
+                        <ul class="bg-transparent nav nav-horizontal nav-pills pb-1  pt-0">
+                            <li class="nav-item" role="presentation">
+                                <a class="rd_roomtab nav-link cursor-pointer py-1 active" data-id="next_schedule" role="tab" aria-selected="true">
+                                    @Local["Kế tiếp"]
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="rd_roomtab nav-link cursor-pointer py-1" data-id="inday_schedule" role="tab" aria-selected="true">
+                                    @Local["Đã vào"]
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="rd_roomtab nav-link cursor-pointer py-1" data-id="workschedule" role="tab" aria-selected="true">
+                                    @Local["Lịch làm việc"]
+                                </a>
+                            </li>
+                        </ul>
+ 
+                        <div id="rd_roomtabdetail" class="card-body py-2 ps-3 overflow-auto" style="max-height:350px;">
+                            <div class="text-dark" data-id="next_schedule">
+                                <div id="rd_nextschedule" class="mt-3"></div>
+                            </div>
+                            <div class="text-dark" style="display: none;" data-id="inday_schedule">
+                                <div id="rd_indayschedule" class="mt-3"></div>
+                            </div>
+                            <div class="text-dark" style="display: none;" data-id="workschedule">
+                                <div id="rd_empwork" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+    let LevelTreeMaster = [];
+    var Current_Room = 0;
+    var data_manu_app = {};
+    var RS_Flag = 0;
+    let RS_DataEmployee = {};
+    var drRoomSelected = {};
+    let ser_CurrentFloor = @Model._CurrentFloor;
+    let ser_CurrentRoom = @Model._CurrentRoom;
+    let ser_BranchID =@Model._BranchID;
+    let rs_floordata = [], rs_roomdata = [], rs_chairdata = [];
+
+
+    $(document).ready(function () {
+        initNavs();
+        $('.detailroom a:first').tab('show');
+        let _Type =@Model._Type;
+        if (_Type == "1") $("#RSBranchID").removeClass('disabled');
+        else $("#RSBranchID").addClass('disabled');
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee, _Session_City, _Session_District]
+            , function (data) {
+                RS_DataEmployee = data[0];
+                RSD_LoadCombo();
+
+            }
+        )
+    });
+    //#region // Load ini
+    function RSD_LoadCombo () {
+        AjaxLoad(url = "/Desk/Appointment/RoomStatus_Desk/?handler=LoadComboMain"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data.length > 0) {
+                        Load_Combo(data, "cbbRSBranch", true)
+                        $("#RSBranchID").dropdown("refresh");
+                        $("#RSBranchID").dropdown("set selected", ser_BranchID);
+                        RSD_ComboFloorRoom();
+                    }
+                }
+            }
+        )
+    };
+    function RSD_ComboFloorRoom () {
+        ser_BranchID = Number($('#RSBranchID').dropdown('get value')) ? Number($('#RSBranchID').dropdown('get value')) : 0;
+        AjaxLoad(url = "/Desk/Appointment/RoomStatus_Desk/?handler=LoadRoom"
+            , data = {'branchid': ser_BranchID}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    rs_floordata = datas.Floor;
+                    rs_roomdata = datas.Room;
+                    rs_chairdata = datas.ChairBed;
+                    Load_Combo(rs_floordata, "cbbRS_floor", true,'@Local["Tất cả"]')
+                    $("#RS_floor").dropdown("refresh");
+                    $("#RS_floor").dropdown("clear");
+                    $("#RS_floor").dropdown("set selected", ser_CurrentFloor);
+                    RSD_FilterRoom();
+                    RS_Flag = 1;
+                    RSD_LoadStatusRoom(0);
+                    RS_WorkSheduler();
+                }
+            }
+        )
+    };
+    function RSD_FilterRoom () {
+        let floor = Number($('#RS_floor').dropdown('get value')) ? Number($('#RS_floor').dropdown('get value')) : 0;
+        let _dataroom = [];
+        if (floor != 0) _dataroom = rs_roomdata.filter(word => {return word["LevelID"] == floor});
+        else _dataroom = rs_roomdata;
+        Load_Combo(_dataroom, "cbRS_room", true,'@Local["Tất cả"]')
+        $("#RS_room").dropdown("refresh");
+        $("#RS_room").dropdown("clear");
+        $("#RS_room").dropdown("set selected", ser_CurrentRoom);
+    }
+    function RSD_LoadStatusRoom (appid) {
+        if (RS_Flag == 1) {
+            let branch = Number($('#RSBranchID').dropdown('get value')) ? Number($('#RSBranchID').dropdown('get value')) : 0;
+            let floor = Number($('#RS_floor').dropdown('get value')) ? Number($('#RS_floor').dropdown('get value')) : 0;
+            let room = Number($('#RS_room').dropdown('get value')) ? Number($('#RS_room').dropdown('get value')) : 0;
+            AjaxLoad(url = "/Desk/Appointment/RoomStatus_Desk/?handler=LoadataRoom"
+                , data = {"Branchid": branch, "floorID": floor, "roomID": room, "Appid": appid }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+                        let dtSchedule = data.Table;
+                        if (appid == 0) {
+                            let _dataroom = [], _datafloor = [];
+                            if (floor != 0) _datafloor = rs_floordata.filter(word => {return word["ID"] == floor});
+                            else _datafloor = rs_floordata;
+                            if (room != 0) _dataroom = rs_roomdata.filter(word => {return word["ID"] == room});
+                            else _dataroom = rs_roomdata;
+
+                            RSD_RoomRender(_datafloor, _dataroom, "RSRoomArea");
+                            for (let i = 0; i < dtSchedule.length; i++) {
+                                let data = [];
+                                let e = {};
+                                if (dtSchedule[i].RoomID != 0) {
+                                    e.SchedulerID = dtSchedule[i].SchedulerID;
+                                    e.NameRoom = dtSchedule[i].NameRoom;
+                                    e.CustID = dtSchedule[i].CustID;
+                                    e.CustName = dtSchedule[i].CustName;
+                                    e.CustCode = dtSchedule[i].CustCode;
+                                    e.LastTime = dtSchedule[i].LastTime;
+                                    e.DoctorID = dtSchedule[i].DoctorID;
+                                    e.ChairID = dtSchedule[i].ChairID;
+                                    e.NameChair = dtSchedule[i].NameChair;
+                                    data.push(e);
+                                    data_manu_app[dtSchedule[i].RoomID + '-' + dtSchedule[i].ChairID] = data;
+                                }
+                            }
+
+                            RSD_FillBusy(data_manu_app);
+                            RSD_CreateRealtime();
+                            RSD_CreateTimer();
+                            RSD_RoomEvent();
+                        }
+                    }
+                    , sender = null
+                    , before = function (e) {
+                        $("#RS_waiting").show();
+                    }
+                    , complete = function (e) {
+                        $("#RS_waiting").hide();
+                    },
+                );
+        }
+    }
+    //#endregion
+
+    //#region // Render
+    function RSD_RoomRender (Level, Room, id) {
+
+        var myNode = document.getElementById(id);
+        let stringContent = '';
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            for (let i = 0; i < Level.length; i++) {
+                let listroom = '';
+                let item_level = Level[i];
+                let item_room = Room.filter(word => word["LevelID"] == item_level.ID);
+                for (let ii = 0; ii < item_room.length; ii++) {
+                    let _datachair = rs_chairdata.filter(word => {return word["RoomID"] == item_room[ii].ID});
+                    if (_datachair.length == 0) {
+                        listroom = listroom + RSD_RoomRender_Each(0, '', item_room[ii]);
+                    }
+                    else {
+                        for (let j = 0; j < _datachair.length; j++) {
+                            listroom = listroom + RSD_RoomRender_Each(_datachair[j].ID, _datachair[j].Name, item_room[ii]);
+                        }
+                    }
+                }
+
+                let tr =
+                    `<div class="timeline-block mb-3">
+                        <span class="timeline-step">
+                            <div class="icon icon-shape icon-sm ms-n2 me-0 bg-gradient-dark shadow text-center">
+                                <i class="text-lg vtt-icon vttech-icon-phong"></i>
+                            </div>
+                        </span>
+                        <div class="timeline-content" style="max-width:100%;">
+                            <h6 class="text-dark font-weight-bold mb-2"><a class="text-sm fw-bold">${item_level.Name}</a></h6>
+                            <div class="row gap-3 w-100 mx-auto">
+                                ${listroom}
+                            </div>
+                        </div>
+                    </div>`;
+                stringContent = stringContent + tr;
+
+
+            }
+        }
+        document.getElementById(id).innerHTML = stringContent;
+    }
+    function RSD_RoomRender_Each (chairid, chairname, item) {
+        let chair = '';
+        if (chairname != '')
+            chair = `<span class="ps-2 text-sm">${chairname}</span>`;
+        let res =
+            `<div class="roomDetail text-dark col mt-lg-0 px-0 position-relative" data-id="${item.ID}" data-chairid="${chairid}" id="room_${item.ID}-${chairid}" style="flex:1 3 200px;">
+                    <i class="fas fa-caret-down select"></i>
+                    <div class="roomContent cursor-pointer p-2 w-100 bg-gray-200 border border-1 border-secondary border-radius-md h-100">
+                       <div class="d-flex align-items-center justify-content-center">
+                           <p class="mb-0 opacity-10 text-xs  ellipsis_one_line">
+                                <span class="fw-bold">${item.Name}</span>
+                                ${chair}
+                            </p>
+                            <i class="roomlight ms-auto text-white text-lg fas fa-lightbulb opacity-0" style="" aria-hidden="true"></i>
+                            <span class="busy opacity-0 badge ps-1 badge-lg pb-0 badge-dot position-absolute end-0 top-0  me-2">
+                                    <i class="bg-success"></i>
+                            </span>
+                        </div>
+                        <hr class="my-1 dark opacity-1" />
+                        <span class="text-sm fw-bold ellipsis_two_line mt-2 mb-1" id="room_cust_${item.ID}-${chairid}"></span>
+                       <div class="author align-items-center" style="display:none;">
+                           <div class="name ps-0">
+                               <div class="stats">
+                                   <span class="d-block text-sm" id="room_doctor_name_${item.ID}-${chairid}"></span>
+                                    <span class="text-lowercase room_time text-secondary fst-italic" id="room_time_${item.ID}-${chairid}"> </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        return res;
+    }
+
+    //#endregion
+
+
+    //#region // Fill Room & Timer
+    function RSD_FillBusy (_data) {
+
+        let idroom = '', idcust = '', idtime = '';
+        for ([key, value] of Object.entries(_data)) {
+            idroom = 'room_' + key;
+            idcust = 'room_cust_' + key;
+            idtime = 'room_time_' + key;
+
+            if ($('#' + idroom).length) {
+
+                if (!$('#' + idroom).hasClass('roombusy')) {
+                    $('#' + idroom).addClass('roombusy');
+                    $('#' + idroom).attr('title', );
+                }
+
+
+                if (value != undefined && value.length > 0) {
+                    $('#' + idcust).html(`<a class="text-primary" href="/Customer/MainCustomer?CustomerID=${value[0].CustID}" target="_blank">${value[0].CustName}</a>`);
+                    $('#' + idtime).html(GetDateTime_String_HHMM(value[0].LastTime) +" @Local["Phút"]");
+                    $('#' + idtime).attr('data-time', GetDateTime_String_HHMM(value[0].LastTime));
+                }
+
+            }
+        }
+    }
+    async function RSD_CreateTimer() {
+
+        await new Promise((resolve, reject) => {
+            setInterval(
+                () => {
+                    RSD_CreateRealtime();
+                },
+                60000
+            )
+        });
+    }
+    function RSD_CreateRealtime() {
+        let _timenow = DateNowHHMM();
+        let _x = document.getElementsByClassName('room_time');
+        let _time = '';
+        if (_x != undefined && _x.length != 0) {
+            for (_i = 0; _i < _x.length; _i++) {
+                _time = _x[_i].dataset.time;
+                if (_time != '') {
+                    _timeago = HHMM_Distance_HHMM(_time, _timenow);
+                    $('#' + _x[_i].id).html( _timeago +  " @Local["Phút"]");
+                }
+            }
+        }
+    }
+    //#endregion
+
+    //#region // RealTime Call
+    function RealTime_Remove(roomid,chairid) {
+        let idroom = 'room_' + roomid + '-' + chairid;
+        let idcust = 'room_cust_' + + roomid + '-' + chairid;
+        let idtime = 'room_time_' + + roomid + '-' + chairid;
+        let iddotor = 'room_doctor_' + + roomid + '-' + chairid;
+        if ($('#' + idroom).length) {
+            if ($('#' + idroom).hasClass('roombusy')) {
+                $('#' + idroom).removeClass('roombusy')
+                $('#' + idroom).removeAttr('title')
+            }
+            if ($('#' + iddotor).length) {
+                $('#' + iddotor).html('');
+            }
+            if ($('#' + idcust).length) {
+                $('#' + idcust).html('');
+            }
+            if ($('#' + idtime).length) {
+                $('#' + idtime).html('');
+                $('#' + idtime).attr('data-time', '');
+            }
+        }
+
+
+    }
+    function RealTime_Add (roomid, chairid, _custid, _custname, _current_doctor, _lasttime) {
+        let idroom = 'room_' +  roomid + '-' + chairid;
+        let idcust = 'room_cust_' + roomid + '-' + chairid;
+        let idtime = 'room_time_' + roomid + '-' + chairid;
+
+
+        if ($('#' + idroom).length) {
+            if (!$('#' + idroom).hasClass('roombusy')) {
+                $('#' + idroom).addClass('roombusy')
+            }
+
+            if ($('#' + idcust).length) {
+                $('#' + idcust).html(`<a class="text-primary" href="/Customer/MainCustomer?CustomerID=${_custid}" target="_blank">${_custname}</a>`);
+            }
+            if ($('#' + idtime).length) {
+                let _timenow = DateNowHHMM();
+                $('#' + idtime).html('now');
+                $('#' + idtime).attr('data-time', _timenow);
+            }
+
+            RSD_CreateTimer();
+
+        }
+    }
+    //#endregion
+
+    //#region // Detail
+    function RSD_DetailClose () {
+        $("#rd_tabdetail").addClass('d-none');
+    }
+    function RSD_RoomEvent() {
+        $("#RSRoomArea .roomDetail").unbind().click(function (event) {
+            let _id = $(this).attr("data-id");
+            let _chairid = $(this).attr("data-chairid");
+            $(".roomDetail").removeClass("roomselected");
+            $(this).addClass("roomselected");
+            RSD_DetailLoad(_id, _chairid, ser_BranchID);
+            $("#rd_tabdetail").removeClass('d-none')
+        });
+        $(".rd_roomtab").unbind('click').on('click', function () {
+            let _id = $(this).attr('data-id');
+            $(".rd_roomtab").removeClass("active");
+            $(this).addClass("active");
+
+            let _tabActive = $("#rd_roomtabdetail").children('div[data-id="' + _id + '"]');
+            let _tabHide = _tabActive.siblings();
+            _tabHide.hide();
+            _tabActive.fadeIn(300);
+        })
+    }
+    function RSD_DetailLoad (RoomID, Chairid, BranchID = 0) {
+        AjaxLoad(url = "/Desk/Appointment/RoomStatus_Desk/?handler=LoadDetailRoom"
+            , data = {
+                "RoomID": RoomID,
+                "ChairID": Chairid,
+                "BranchID": BranchID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let data_header = data.Table;
+                let data_body = data.Table1;
+                let _stay = data_body.filter(word => Number(word["IsStay"]) == 1);
+                let _incoming = data_body.filter(word => Number(word["IsStay"]) == 0 && Number(word["IsPass"]) == 0);
+                let _passed = data_body.filter(word => Number(word["IsStay"]) == 0 && Number(word["IsPass"]) ==1);
+                RSD_DRenderInfo(data_header, _stay);
+                RSD_DRenderNext(_incoming, "rd_nextschedule", ispass=0);
+                RSD_DRenderNext(_passed, "rd_indayschedule", ispass = 1);
+            }
+            , sender = null
+            ,
+            before = function (e) {
+                $("#rdd_waiting").show();
+
+            },
+            complete = function (e) {
+                $("#rdd_waiting").hide();
+
+            }
+        );
+
+    }
+
+    async function RSD_DRenderNext (data, id,ispass) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let _time = '';
+                    if (ispass == 1)
+                        _time = `<span class="pe-2">@Local["Thời gian vào"]</span><span class="text-dark">${ConvertDateTimeToHHMMSS(item.PassTime)}</span>`;
+                    else _time = `<span class="pe-2">@Local["Thời gian"]</span><span class="text-dark">${item.Time}</span>`;
+                    let tr = `
+                    <div class="d-flex w-100 flex-column">
+                        <div class="ellipsis_one_line">
+                            <a href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}" target="_blank" class="mb-0 fw-bold text-sm border-bottom border-primary">${item.CustomerName}</a>
+                        </div>
+                        <div class="text-sm text-secondary my-1">
+                            ${_time}
+                        </div>
+                    </div>
+                    <hr class="horizontal dark mt-2 mb-1" />
+                    `
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+    function RSD_DRenderInfo (roominfo, data) {
+
+        $("#rd_roomname").html(roominfo[0].RoomName);
+        $("#rd_chairname").html(roominfo[0].ChairName);
+        if (data && data.length != 0) {
+            let item = data[0];
+            let _timenow = DateNowHHMM();
+            let _timeago = HHMM_Distance_HHMM(GetHHMM_FromDateTime(item.InComingTime), _timenow);
+            $("#rd_goingtime").html(ConvertDateTimeToHHMMSS(item.InComingTime) + `<span class="ps-2 text-lowercase fw-normal text-secondary fst-italic">${_timeago + " @Local["Phút"]"}</span>`);
+            $("#rd_roomcust").html(`<a class="text-primary" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}" target="_blank">${item.CustCode}</a>` + ' - ' + item.CustomerName);
+            $("#rd_roomdoc").html(item.DoctorName != "" ? item.DoctorName:"-" );
+            $("#rd_roomass").html(item.AssName != "" ? item.AssName : "-");
+            $("#rd_roomforetime").html(formatNumber(item.ForecastTime) + ' ' + "@Local["Phút"]");
+        }
+        else {
+            $("#rd_goingtime").html('');
+            $("#rd_roomcust").html('');
+            $("#rd_roomdoc").html('');
+            $("#rd_roomass").html('');
+            $("#rd_roomforetime").html('');
+        }
+    }
+    //#endregion
+
+    //#region // LOAD WORK SCHEDULER
+
+    async function RS_WorkSheduler (){
+        AjaxLoad(url = "/Desk/Appointment/RoomStatus_Desk/?handler=LoadEmpWork"
+            , data = {
+                "BranchID": ser_BranchID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let _data = JSON.parse(result);
+                let _dataNow = new Date();
+                let _employee = _data.Employee;
+                let _work = Work_Scheduler_Get_From_TokenDoc(ser_BranchID, _dataNow, _dataNow, _data.Table, _data.Table1, _data.Table2, _data.Table3);
+                RE_Render_Room_EmpWork(_employee, _work, 'rd_empwork');
+
+            }
+            , sender = null
+        );
+    }
+
+    async function RE_Render_Room_EmpWork(data, datawork, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = `
+                        <div class="d-flex w-100 flex-column">
+                            <div class="ellipsis_one_line">
+                                <span class="badge badge-dot">
+                                    <i class="${RE_EmpIsWork(item.ID, datawork)}"></i>
+                                </span>
+                                <a href="#" class="mb-0 fw-bold text-sm text-dark">${item.Name}</a>
+                            </div>
+                        </div>
+                        <hr class="horizontal dark mt-2 mb-1" />
+                    `
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    function RE_EmpIsWork(empid, datawork) {
+        let _dataNow = Convert_DateTime_To_YMD_Int(new Date());
+        let _status = 'bg-success';
+        if(datawork && datawork.length != 0){
+            let _isWork = datawork.find((item) => {
+                return ((item.Date) == _dataNow && item.IsWork == 0 && item.EmpID == empid)
+            });
+            if(_isWork){
+                _status = 'bg-secondary'
+            }
+        }
+
+        return _status;
+    }
+    //#endregion
+
+    //#region // OTHER
+
+    function RE_ToogleShowTab(){
+
+        if ($("#rd_tabdetail").hasClass('d-none')) {
+            $("#rd_tabdetail").removeClass('d-none')
+        }
+        else {
+            $("#rd_tabdetail").addClass('d-none')
+           // $("#rd_btncollapse").removeClass('rotate-180');
+           // $("#rd_tabdetail").addClass("tabhidden");
+        }
+
+    }
+
+    //#endregion
+</script>
+
+<script>js_require('/js/main.js')</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<style>
+
+    @@media (max-width: 768px) {
+        #rd_tabdetail {
+            position: absolute;
+            top: 0;
+            background: #ffffff;
+            z-index: 1;
+            left: 0;
+            border-radius: 0;
+            height: 85vh;
+            width:100% !important;
+        }
+    }
+
+    .floor.active {
+        background-image: linear-gradient( 310deg, #ffffff, #d6edff);
+    }
+
+    .roombusy .author {
+        display: flex !important;
+    }
+
+    .roombusy .horizontal {
+        display: block !important;
+    }
+
+    .roombusy .roomContent {
+        background-color: white !important;
+    }
+
+        .roombusy .roomContent .busy {
+            opacity: 1 !important;
+        }
+
+    .roomDetail {
+        position: relative;
+    }
+
+        .roomDetail .select {
+            position: absolute;
+            right: 2px;
+            bottom: -10px;
+            font-size: 44px;
+            transform: rotate( 315deg);
+            display: none;
+        }
+
+    .roombusy.roomselected .select {
+        color: white;
+        display: block;
+    }
+
+    .roomselected .roomContent {
+        border: 1px dashed #ea0606 !important;
+    }
+
+    .rd_roomtab.active {
+        border: 0;
+        border-bottom: 2px;
+        border-color: rgb(var(--bs-primary));
+        border-style: solid;
+    }
+
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+</style>

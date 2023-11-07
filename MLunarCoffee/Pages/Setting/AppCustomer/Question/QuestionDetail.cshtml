@@ -1,0 +1,120 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Question.QuestionDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Câu hỏi"]</h6>
+                                <p class="text-sm mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formQuestionDetail">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Câu hỏi"]</label>
+                            <input id="QuestionName" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea id="QuestionContent" name="" type="text" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formQuestionDetail" onclick="event.preventDefault();return QuestionDetailCloseModel()">@Local["Đóng"]</button>
+                        <button form="formQuestionDetail" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault(); return QuestionDetailExcute();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let ser_QuestionDetailID = Number("@Model._QuestionCurrentID");
+
+    $(document).ready(function () {
+        QuestionDetailLoadUpdate();
+    });
+
+
+    function QuestionDetailLoadUpdate() {
+        if (ser_QuestionDetailID != "0") {
+            AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionDetail/?handler=Loadata"
+                , data = {
+                    id: ser_QuestionDetailID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (data && data.length > 0) {
+                            let item = data[0];
+                            $('#QuestionName').val(item.Question);
+                            $('#QuestionContent').val(item.Content);
+                        }
+                    }
+                }
+            );
+        }
+
+        return false;
+    }
+
+
+    function QuestionDetailExcute() {
+        $('#formQuestionDetail').form('validate form');
+        if ($('#formQuestionDetail').form('is valid')) {
+            let question = $('#QuestionName').val() ? $('#QuestionName').val() : "";
+            let content = $('#QuestionContent').val() ? $('#QuestionContent').val() : "";
+            AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionDetail/?handler=ExcuteData"
+                , data = {
+                    Question: question,
+                    content: content,
+                    CurrentID: ser_QuestionDetailID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        CloseModal();
+                        if (typeof QuestionLoad === 'function') QuestionLoad();
+
+                        syslog_mob(ser_QuestionDetailID == 0 ? "i" : "u", "FAQ");
+                    }
+                    else if (result == "-1") {
+                        notiWarning('@Local["Trùng dũ liệu"]')
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                });
+
+        }
+        return false;
+    }
+    function QuestionDetailCloseModel(){
+        QuestionLoad();
+        CloseModal();
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+

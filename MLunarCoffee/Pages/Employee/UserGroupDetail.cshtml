@@ -1,0 +1,218 @@
+﻿@page
+@model MLunarCoffee.Pages.Employee.UserGroupDetailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+</head>
+<body>
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Nhóm"] User</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết"] @Local["Nhóm"] User</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="form3">
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label>@Local["Tên nhóm"]</label>
+                            <input id="Group" name="name" class="form-control" placeholder="eg .@Local["Tên nhóm"]" type="text" />
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-3 px-1 mt-2">
+                            <label>@Local["Khởi tạo một nhóm mới từ nhóm này"]</label>
+                            <div class="ui fluid search selection dropdown" id="GroupHeritanceID">
+                                <input type="hidden" name="branch" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chọn nhóm user"]</div>
+                                <div id="cbbGroupHeritanceID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-3 px-1 mt-2">
+                            <label>@Local["Thời gian nghỉ"]</label>
+                            <div class="ui fluid search selection dropdown" id="UG_TimeOut">
+                                <input type="hidden" name="branch" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Thời gian nghỉ"]</div>
+                                <div id="UG_CbbTimeOut" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field px-1 mt-2">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="NoteGroup" name="content" class="form-control" rows="3" placeholder="eg .@Local["Ghi chú"]" type="text" />
+                        </div>
+                        <div class="field px-1 mt-2">
+                            <label>@Local["Tham gia nhóm thông báo"]</label>
+                            <div class="ui fluid multiple search selection dropdown" id="tokenTopic">
+                                <input type="hidden" name="" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchtokenBranch" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg . @Local["Topic"]</div>
+                                <div id="cbbtokenTopic" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <button class="btn btn-secondary" form="form3" onclick="CloseModal()">@Local["Đóng"]</button>
+                        <button id="UG_btnDelete" type="button" class="btn bg-gradient-danger mt-2 me-2 d-none" onclick="event.preventDefault();return UG_Delete();">@Local["Xóa"]</button>
+                        <button id="UG_btnSave" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                onclick="ExcuteData()">
+                            @Local["Lưu"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var CurrentID = @Model._CurrentID;
+        let UG_DataCbbTimeOut = [
+            {"ID": 5, "Name": "5 Phút"},
+            {"ID": 10, "Name": "10 Phút"},
+            {"ID": 15, "Name": "15 Phút"},
+            {"ID": 20, "Name": "20 Phút"},
+            {"ID": 25, "Name": "25 Phút"},
+            {"ID": 30, "Name": "30 Phút"},
+            {"ID": 35, "Name": "35 Phút"},
+            { "ID": 40, "Name": "40 Phút" },
+        ];
+
+        $(document).ready(function() {
+            Load_Combo(datagroupTopic, "cbbtokenTopic", false);
+            UserGroup_Load_DataInit();
+            Checking_TabControl_Permission();
+        });
+
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#Group').val() ? $('#Group').val() : "";
+            data.Note = $('#NoteGroup').val() ? $('#NoteGroup').val() : "";
+            document.getElementById("textShowMessage").innerHTML = "";
+            data.GroupID = Number($('#GroupHeritanceID').dropdown('get value')) ? Number($('#GroupHeritanceID').dropdown('get value')) : 0;
+            data.TokenTopic = $('#tokenTopic').dropdown('get value');
+            data.TimeOut = $("#UG_TimeOut").dropdown('get value') ? $("#UG_TimeOut").dropdown('get value') : 0;
+
+
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Employee/UserGroupDetail/?handler=ExcuteData"
+                    , data = { data: JSON.stringify(data), CurrentID: CurrentID }, async = true, error = null
+                    , success = function(result) {
+                        let data = JSON.parse(result);
+                        let r = data[0]?.Result;
+                        let name = data[0]?.Name;
+                        let oldName = data[0]?.OldName;
+                        if (r == "1") {
+                            notiSuccess();
+                            if (typeof UserGroup_Load !== 'undefined' && $.isFunction(UserGroup_Load)) UserGroup_Load();
+                            CloseModal();
+                            oldName = (oldName != '' && name != oldName) ? `[${decodeHtml('@Local["Dữ liệu cũ"]')} ${oldName}]` : '';
+                            syslog_usr((CurrentID != '0' ? 'u' : 'i'), `${name} ${oldName}`);
+                        } else if (r == "-1") {
+                            document.getElementById("textShowMessage").innerHTML = "@Local["Tên nhóm user đã tồn tại"]";
+                        } else {
+                            notiError_SW();
+                        }
+
+                    });
+            }
+            return false;
+        }
+
+        function UserGroup_Load_DataInit() {
+            AjaxLoad(url = "/Employee/UserGroupDetail/?handler=LoadGroupMainDataBase"
+                , data = {}, async = true, error = null
+                , success = function(result) {
+                    if (result != "") {
+                        let AllGroupMainDataBase = JSON.parse(result);
+                        Load_Combo([AllGroupMainDataBase[0]], "cbbGroupHeritanceID", true);
+                        $("#GroupHeritanceID").dropdown("refresh");
+                        $("#GroupHeritanceID").dropdown("set selected", 1);
+                        Load_Combo(UG_DataCbbTimeOut, "UG_CbbTimeOut", true, "@Local["Mặc định"]");
+                        $("#UG_TimeOut").dropdown("refresh");
+                        $("#UG_TimeOut").dropdown("set selected", "0");
+                    }
+                    if (CurrentID != "0") {
+                        UserGroup_Load_DataUpdate();
+                    }
+                });
+        }
+
+      function UserGroup_Load_DataUpdate() {
+            AjaxLoad(url = "/Employee/UserGroupDetail/?handler=Loadata"
+                , data = { id: CurrentID }, async = true, error = null
+                , success = function(result) {
+                    if (result != "") {
+                        let dataGroupUser = JSON.parse(result);
+                        $('#Group').val((dataGroupUser[0].Name));
+                        $('#NoteGroup').val((dataGroupUser[0].Note));
+                        $("#GroupHeritanceID").dropdown("refresh");
+                        $("#GroupHeritanceID").dropdown("set selected", dataGroupUser[0].GroupID);
+                        if (dataGroupUser[0].TokenTopic != undefined && dataGroupUser[0].TokenTopic != null && dataGroupUser[0].TokenTopic != "") {
+                            $('#tokenTopic').dropdown('refresh');
+                            $('#tokenTopic').dropdown('set selected', dataGroupUser[0].TokenTopic.split(','));
+                        }
+                        $("#UG_TimeOut").dropdown("refresh");
+                        $("#UG_TimeOut").dropdown("set selected", dataGroupUser[0].TimeOut);
+
+                        let HavingExtension = Number(dataGroupUser[0].HavingExtension);
+                        if (HavingExtension != 0) {
+                            $('#GroupHeritanceID').addClass("disabled");
+                        }
+                        if (Number(dataGroupUser[0].DeleteButton == 1)) $('#UG_btnDelete').removeClass('d-none');
+                        if (Number(dataGroupUser[0].EditButton == 0)) $('#UG_btnSave').addClass('disabled');
+                    }
+                });
+        }
+    function UG_Delete (id) {
+        const promise = notiConfirm();
+        promise.then(function () {UG_DeleteExe(CurrentID);}, function () { });
+    }
+     function UG_DeleteExe (id) {
+         AjaxLoad(url = "/Employee/UserGroupDetail/?handler=DeleteTypeItem"
+            , data = {id: id}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                let groupName = data[0]?.Name;
+                if (r == "1") {
+                    notiSuccess();
+                    $("#usergroup_" + id).remove();
+                    syslog_usr('d', groupName);
+                    CloseModal();
+                } else if(r == "-1") {
+                    notiWarning(decodeHtml('@Local["Không thể xóa"]'));
+                }
+                else {
+                    notiError_SW();
+                }
+            });
+    }
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+
+</html>
+

@@ -1,0 +1,242 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Course.CourseClassTimedow
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Xếp lịch"]</h6>
+                                <p class="text-sm mb-0">@Local["Xếp lịch theo tuần"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="ccto_form">
+                        <div class="d-lg-flex">
+                            <div class="col-w-350  mt-lg-3">
+                                <div class=" justify-content-center">
+                                    <div class="row">
+                                        <a class="mt-0  ps-2 text-primary text-sm fw-bold ">@Local["Từ ngày"]</a>
+                                        <hr class="horizontal dark mt-1 mb-1">
+                                        <input id="cct_datefrom" class="form-control flatpickr d-none" type="text" onchange="cctime_ChangeDate()" />
+                                        <a class="mt-4  ps-2 text-primary text-sm fw-bold ">@Local["Đến ngày"]</a>
+                                        <hr class="horizontal dark mt-1 mb-1">
+                                        <input id="cct_dateto" class="form-control flatpickr d-none" type="text" onchange="cctime_ChangeDate()" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 px-3">
+                                <div class="row mt-3">
+                                    <div class="field col-12 col-sm-12 col-lg-6 p-1">
+                                        <label>Giảng Viên</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="cco_TeacherID">
+                                            <input type="hidden" name="teacher" />
+                                            <i class="dropdown icon"></i>
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">eg .Teacher</div>
+                                            <div id="cbbcco_Teacher" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-sm-12 col-lg-6 p-1">
+                                        <label>Phòng</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="cco_ClassManuID">
+                                            <input type="hidden" name="manuclass" />
+                                            <i class="dropdown icon"></i>
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">eg .Manufactory</div>
+                                            <div id="cbbcco_ManuClass" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-sm-12 p-1 position-relative">
+                                    <div id="cctime_wait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x d-none">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div id="cctime_list" class="row">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();CloseModal()">@Local["Hủy"]</button>
+                        <button type="button" form="ccto_form" class="btn bg-gradient-primary mt-2 me-2" onclick="return cctime_Execute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cco_ID = '@Model.ID';
+    let cco_Mindate = '@Model.Mindate';
+    let cco_Maxdate = '@Model.Maxdate';
+        let cco_MainTeacher = '@Model.MainTeacher';
+    let cco_data = [];
+    let cco_Begindate, cco_Enddate;
+    $(document).ready(function () {
+        $("#cct_datefrom").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            inline: true,
+            defaultDate: ConvertYMDInt_ToDateTime(cco_Mindate),
+            minDate: ConvertYMDInt_ToDateTime(cco_Mindate),
+            maxDate: ConvertYMDInt_ToDateTime(cco_Maxdate)
+        });
+        $("#cct_dateto").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            inline: true,
+            defaultDate: ConvertYMDInt_ToDateTime(cco_Maxdate),
+            minDate: ConvertYMDInt_ToDateTime(cco_Mindate),
+            maxDate: ConvertYMDInt_ToDateTime(cco_Maxdate)
+        });
+        if (CD_DataKeyTeacher != undefined) Load_Combo(Object.values(CD_DataKeyTeacher), 'cbbcco_Teacher', true);
+        if (CD_DataKeyManuClass != undefined) Load_Combo(Object.values(CD_DataKeyManuClass), 'cbbcco_ManuClass', true);
+        $("#cco_TeacherID").dropdown("refresh")
+        $("#cco_TeacherID").dropdown("set selected", cco_MainTeacher);
+
+        cco_data = [];
+        for (let i = 0; i < 7; i++) {
+            let e = {};
+            e.dow = i;
+            e.selected = 0;
+            cco_data.push(e);
+        }
+        cctime_Render(cco_data, "cctime_list");
+        cctime_ChangeDate();
+    })
+    function cctime_ChangeDate () {
+        cco_Begindate = formatDMY_To_Date($("#cct_datefrom").val());
+        cco_Enddate = formatDMY_To_Date($("#cct_dateto").val());
+    }
+    async function cctime_Render (data, id) {
+        return new Promise((resolve) => {
+            $("#cctime_wait").removeClass('d-none');
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let stringContent = '';
+                    for ([key, item] of Object.entries(data)) {
+                        let tr = `
+                            <div class="col-12 d-flex align-items-center py-2 ${item.selected == 1 ? `` : `disabled`} ">
+                                <div class="form-check mb-0">
+                                    <input class="check form-check-input" data-id="0" type="checkbox" id="classtimecheck_${item.dow}" ${item.selected == 1 ? `checked` : ``}>
+                                        <label class=" col-w-120 pt-1 text-dark font-weight-bold d-block text-sm mb-0">
+                                            ${CD_Dow[item.dow]}
+                                        </label>
+                                </div>
+                                <input id="classtimefrom_${item.dow}" type="text" class="classtime from flatpickr form-control d-none" placeholder="eg.begin">
+                                    <div class="align-items-center d-flex px-2"> - </div>
+                                    <input id="classtimeto_${item.dow}" type="text" class="classtime to flatpickr form-control d-none" placeholder="eg.end">
+                                    </div>
+                           `
+                        stringContent += tr;
+                    }
+                    myNode.innerHTML = stringContent;
+                }
+                cctime_Event();
+                $("#cctime_wait").addClass('d-none');
+            }, 100);
+        });
+    }
+    function cctime_Event () {
+        let _ddatef = new Date(new Date().toDateString());
+        let _ddatet = new Date(new Date().toDateString());
+
+        $("#cctime_list .classtime.from").flatpickr({
+            enableTime: true,
+            inline: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minTime: "06:30",
+            maxTime: "23:00",
+            defaultDate: (_ddatef.addHours(7)).addMinutes(0),
+            defaultHour: 7,
+            defaultMinute: 0 
+        });
+        $("#cctime_list .classtime.to").flatpickr({
+            enableTime: true,
+            inline: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minTime: "06:30",
+            maxTime: "23:00",
+            defaultDate: (_ddatet.addHours(8)).addMinutes(0),
+            defaultHour: 8,
+            defaultMinute: 0 
+        });
+        $("#cctime_list .check").unbind('change').on('change', function () {
+            if ($(this).is(":checked")) $(this).parent().parent().removeClass('disabled');
+            else $(this).parent().parent().addClass('disabled');
+        });
+        $("#cctime_list .classtime.from").val(ConvertTimeInt_ToTime('0700'));
+        $("#cctime_list .classtime.to").val(ConvertTimeInt_ToTime('0800'));
+
+    }
+    function cctime_Execute () {
+        $('#ccto_form').form('validate form');
+        if ($('#ccto_form').form('is valid')) {
+            let result = {};
+            let manuclass = $("#cco_ClassManuID").dropdown('get value') ? Number($("#cco_ClassManuID").dropdown('get value')) : 0;
+            let teacher = $("#cco_TeacherID").dropdown('get value') ? Number($("#cco_TeacherID").dropdown('get value')) : 0;
+            for (let i = 0; i < cco_data.length; i++) {
+                if ($('#classtimecheck_' + i).is(":checked")) {
+                    let _start = $('#classtimefrom_' + i).val();
+                    let _end = $('#classtimeto_' + i).val();
+                    if (_start != "" && _end != "" && _end > _start) {
+                        let e = {};
+                        e.dow = i;
+                        e.timestart = _start;
+                        e.timeend = _end;
+                        e.teacher = teacher;
+                        e.manuclass = manuclass;
+                        result[i] = e;
+                    }
+
+                }
+            }
+
+            CourseTime_CreateDow(cco_Begindate, cco_Enddate, result);
+            CloseModal();
+        }
+        return false;
+    }
+</script>
+<style>
+    #ccto_form .flatpickr-calendar {
+        box-shadow: none;
+        border: none;
+    }
+
+        #ccto_form .flatpickr-calendar.hasTime {
+            width: 150px;
+        }
+
+    #ccto_form .disabled .flatpickr-calendar {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+</style>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

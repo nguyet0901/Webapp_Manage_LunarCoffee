@@ -1,0 +1,204 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.ImageNewFolderModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+</head>
+
+<body>
+    <div class="container-fluid py-3 px-0 form3" id="formfolder">
+        <div class="row">
+            <div class="col-12">
+                <!--Master-->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="d-lg-flex">
+                            <div class="col-auto my-auto">
+                                <div class="h-100">
+                                    <h6 class="mb-0">@Local["Tạo folder"]</h6>
+                                    <p class="text-sm mb-0">@Local["Chi tiết tạo folder"]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2 ">
+                        <div class="row px-1 ">
+                            <div class="field col-12 col-xl-12 px-1 mt-2">
+                                <label>@Local["Tên thư mục"] (@Local["Không có ký tự đặc biệt và khoảng trống"])</label>
+                                <input id="txtName_FolderCustomer" class="form-control" placeholder="eg .@Local["Tên thư mục"]" name="folderimage" type="text" autocomplete="off"/>
+                            </div>
+                            <div class="field col-12 col-xl-12 px-1 mt-2 pe-xl-1">
+                                <label>@Local["Ghi chú"]</label>
+                                <textarea id="txtNote_FolderCustomer" class="form-control" placeholder="eg .@Local["Ghi chú"]" name="foldernote" type="text" autocomplete="off" rows="1" > </textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer fixed-botombutton ms-2">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage_Folder"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" form="formfolder" onclick="CloseModal()">@Local["Đóng"]</button>
+                                <button id="INF_btnSave" form="formfolder" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteData_FolderImage()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var ser_ImageFolderCustomerID;
+        var ser_CurrentFolderID;
+        var ser_CurrentFolderName;
+        var ser_TreatmentPlanID;
+        $(document).ready(function () {
+            ser_CurrentFolderID ='@Model._CurrentFolderID';
+            ser_CurrentFolderName ='@Model._CurrentFolderName';
+            ser_TreatmentPlanID ='@Model._TreatmentPlanID';
+
+            if (ser_CurrentFolderID != "0") {
+                ImgNewForderLoadData();
+            }
+            else {
+            }
+            $("#txtName_FolderCustomer").keyup(function () {
+                if (ImgNewForderCheckCharacters($("#txtName_FolderCustomer").val()) == false) {
+                    document.getElementById("textShowMessage_Folder").innerHTML = '@Local["Không có ký tự"] (\/:*?"<>)';
+                }
+
+            });
+
+        });
+
+        async function ImgNewForderLoadData(){
+            return new Promise((resolve, reject) => {
+                AjaxLoad(url = "/Customer/ImageNewFolder/?handler=Loadata"
+                    , data = {
+                         id: ser_CurrentFolderID
+                    }
+                    , async = true
+                    , error = function () {
+                        notiError_SW();
+                    }
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result);
+                            $('#txtName_FolderCustomer').val((data[0].FolderName));
+                            $('#txtNote_FolderCustomer').val((data[0].Note));
+                        }
+                    },
+                    sender = null,
+                    before = function (e) {
+                    },
+                    complete = function (e) {
+                    }
+                );
+                resolve();
+            })
+        }
+
+        function ImgNewForderCheckCharacters(text) {
+            let characters = '\/:*?"<>';
+            if (text == '') {
+                return false;
+            }
+            else {
+                for (let i = 0; i < text.length; i++) {
+                    if (text[i] == ' ' || characters.includes(text[i]))
+                    {
+                        $("#txtName_FolderCustomer").val(text.replace(text[i],''));
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        function DeleteFolderImage () {
+
+            ser_ImageFolderCustomerID = '@Model._ImageFolderCustomerID';
+            var data = new Object();
+            data.Content = $('#txtName_FolderCustomer').val() ? $('#txtName_FolderCustomer').val() : "";
+            $('#formfolder').form('validate form');
+            if ($('#formfolder').form('is valid')) {
+                AjaxLoad(url = "/Customer/ImageNewFolder/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(data)
+                        , 'CustomerID': ser_ImageFolderCustomerID
+                        , 'CurrentID': ser_CurrentFolderID
+                        , 'oldName': ser_CurrentFolderName
+                        , 'TreatmentPlanId': ser_TreatmentPlanID}
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result== "1") {
+                            notiSuccess();
+                            LoadFolderTree_Customer_File_Image();
+
+                            syslog_cutimgfo('d'
+                                , $('#txtName_FolderCustomer').val()
+                                , ser_MainCustomerID);
+                            $('#DetailModal').modal('hide');
+                            $("#DetailModal_Content").html('');
+                        }
+                        else {
+                            document.getElementById("textShowMessage_Folder").innerHTML = "@Local["Có lỗi xảy ra"]";
+                        }
+                    }
+                );
+            }
+            return false;
+        }
+        function ExcuteData_FolderImage() {
+            ser_ImageFolderCustomerID = '@Model._ImageFolderCustomerID';
+            var data = new Object();
+            data.Content = $('#txtName_FolderCustomer').val() ? $('#txtName_FolderCustomer').val().trim() : "";
+            data.Note = $('#txtNote_FolderCustomer').val() ? $('#txtNote_FolderCustomer').val().trim() : "";
+            $('#formfolder').form('validate form');
+            if ($('#formfolder').form('is valid')) {
+                AjaxLoad(url = "/Customer/ImageNewFolder/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(data)
+                        , 'CustomerID': ser_ImageFolderCustomerID
+                        , 'CurrentID': ser_CurrentFolderID
+                        , 'oldName': ser_CurrentFolderName
+                        , 'TreatmentPlanId': ser_TreatmentPlanID
+                    }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result  == "1") {
+                            notiSuccess();
+                            if (typeof LoadFolderTree_Customer_File_Image !== 'undefined' && $.isFunction(LoadFolderTree_Customer_File_Image)) {
+                                LoadFolderTree_Customer_File_Image();
+                            }
+                            if (typeof Tab_List_Load_Folder !== 'undefined' && $.isFunction(Tab_List_Load_Folder)) {
+                                Tab_List_Load_Folder();
+                            }
+                            syslog_cutimgfo(ser_CurrentFolderID==0 ? 'i' :'u'
+                                , $('#txtName_FolderCustomer').val()
+                                , ser_MainCustomerID);
+                            $('#DetailModal').modal('hide');
+                            $("#DetailModal_Content").html('');
+                        }
+                        else {
+                            document.getElementById("textShowMessage_Folder").innerHTML = "@Local["Có lỗi xảy ra"]";
+                        }
+                    }
+                    , sender = $("#INF_btnSave")
+                );
+            }
+            return false;
+        }
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+</html>
+

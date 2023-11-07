@@ -1,0 +1,148 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Material.MaterialTypeDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid px-0" id="MaterialType_Container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Loại nguyên vật liệu"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết cấu hình loại nguyên vật liệu"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="FromMaterialType">
+                        <div class="field col-12 mt-2 p-1 ">
+                            <label>@Local["Tên"]</label>
+                            <input id="TypeMaterial" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 mt-2 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="NoteTypeMaterial" name="content" type="text" class="form-control" />
+                        </div>
+                        <div id="div_isMedicine" class="field col-12 mt-2 p-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="IsMedicine">
+                                <label class="form-check-label" for="IsMedicine" >@Local["Thuốc"]</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button id="btn_delete_material_type" style="display:none;" class="btn btn-danger ms-2 mb-0 _tab_control_" data-tab="delete_tab_material_type" onclick="event.preventDefault();return DeleteMaterialType()">@Local["Xóa"]</button>
+                        <button class="btn btn-secondary" form="FromMaterialType" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button id="btn_save_material_type" form="FromMaterialType" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_material_type" onclick="event.preventDefault();return ExcuteMaterialType()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+            <!-- #endregion -->
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    var ser_MaterialTypeCurrentID = ("@Model._MaterialTypeCurrentID");
+
+
+    function ExcuteMaterialType() {
+        var data = new Object();
+        data.Name = $('#TypeMaterial').val() ? $('#TypeMaterial').val() : "";
+        data.Note = $('#NoteTypeMaterial').val() ? $('#NoteTypeMaterial').val() : "";
+        data.IsMedicine = $("#IsMedicine").is(":checked") ? 1 : 0;
+        $('#FromMaterialType').form('validate form');
+        if ($('#FromMaterialType').form('is valid')) {
+            AjaxLoad(url = "/WareHouse/Material/MaterialTypeDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_MaterialTypeCurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        if (typeof MaterialList_LoadType === 'function') MaterialList_LoadType(result);
+                        syslog_whr((result != '0' ? 'u' : 'i'), '');
+                        notiSuccess();
+                        CloseModal();
+                    }
+                    else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Tên loại nguyên vật liệu đã tồn tại"]';
+                    }
+                });
+        }
+        return false;
+    }
+
+    $(document).ready(function () {
+        if (ser_MaterialTypeCurrentID != "0")
+            LoadDataUpdateMaterialType();
+        Checking_TabControl_Permission();
+
+        CheckPermissionControlInPage(sys_PerControl ,'@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH,'@Model.CurrentPath');
+    });
+
+    function LoadDataUpdateMaterialType() {
+        AjaxLoad(url = "/WareHouse/Material/MaterialTypeDetail/?handler=Loadata"
+            , data = { id: ser_MaterialTypeCurrentID }
+            , async = true
+            , error = null
+            , success = function (result) {
+                let dataMaterialType = JSON.parse(result);
+                $('#TypeMaterial').val((dataMaterialType[0].Name));
+                $('#NoteTypeMaterial').val((dataMaterialType[0].Note));
+                if ((dataMaterialType[0].IsMedicine) == 1)
+                    $('#IsMedicine').prop('checked', true);
+                else
+                    $('#IsMedicine').prop('checked', false);
+
+                if (dataMaterialType[0].IsDelete == 1) $("#btn_delete_material_type").show()
+                else $("#btn_delete_material_type").remove();
+            }
+        );
+    }
+
+    function DeleteMaterialType() {
+        if (ser_MaterialTypeCurrentID && ser_MaterialTypeCurrentID != undefined) {
+            const promise = notiConfirm();
+            promise.then(function () { ExecuteDeleteMaterialType(ser_MaterialTypeCurrentID); }, function () { });
+        }
+    }
+
+    function ExecuteDeleteMaterialType(id) {
+        AjaxLoad(url = "/WareHouse/Material/MaterialTypeDetail/?handler=DeleteTypeItem"
+            , data = {
+                id: id
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CloseModal();
+                    MaterialList_LoadType();
+                    syslog_whr('d', '');
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

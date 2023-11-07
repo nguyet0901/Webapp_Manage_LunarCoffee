@@ -1,0 +1,888 @@
+﻿@page
+@model MLunarCoffee.Pages.Myinfo.UserLogModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Xem lịch sử"]</h6>
+                            <p class="text-sm mb-0">@Local["Lịch sử trong quá trình thao tác sử dụng phần mềm"]</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <div class="d-flex" style="width: 250px;">
+                            <div class="me-1 w-60">
+                                <div class="input-group mb-0">
+                                    <span class="input-group-text fw-bold text-primary  ">@Local["Tổng"]</span>
+                                    <span class="ps-2 form-control fw-bolder text-dark" id="IUL_lbTotal">0</span>
+                                </div>
+                            </div>
+                            <div class="w-40">
+                                <button class="btn bg-gradient-primary m-0 w-100" onclick="event.preventDefault();return IUL_MasterLoadData();">Ok</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body pt-2 ">
+                <div class="row px-2">
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="input-group">
+                            <div class="input-group-text"><span class="fa fa-search form-control-feedback"></span></div>
+                            <input id="IUL_ipSearch" type="text" class="form-control" placeholder="eg .@Local["Mã"], @Local["Tên"], @Local["Số điện thoại"]">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <input id="IUL_ipDateLog" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày"]" />
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="input-group flex-nowrap rounded-end position-relative">
+                            <div class="ui fluid search selection dropdown form-control border-end disabled" id="IUL_UserID">
+                                <input type="hidden" name="type" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chọn nhân viên"]</div>
+                                <div id="IUL_cbbUser" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                            <div class="input-group-text border-start border-end position-relative IUL_IsMine IUL_IsMineActive cursor-pointer" title="" data-ismine="1">
+                                <div class="fw-bold">@Local["Của tôi"]</div>
+                            </div>
+                            <div class="input-group-text border-end position-relative IUL_IsMine cursor-pointer _tab_control_" data-tab="log_btn_all_user" title="" data-ismine="0">
+                                <div class="fw-bold">@Local["Tất cả"]</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="IUL_BranchID">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chọn chi nhánh"]</div>
+                            <div id="IUL_cbbBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="IUL_TypeID">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chọn loại"]</div>
+                            <div id="IUL_cbbType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="IUL_TypeAction">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="IUL_CbbTypeAction" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-2 h-100 mt-4" id="IUL_MasterContainer">
+                    <div class="col-12 col-sm-6 col-md-4 col-xl-4 p-1">
+                        <div class="max-height-vh-70 overflow-auto overflow-x-hidden mb-5 mb-lg-0" style="height:calc(100vh - 260px);">
+                            <div id="IUL_loading" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="IUL_listMaster" class="timeline timeline-one-side" data-timeline-axis-style="dotted">
+                            </div>
+                            <button id="IUL_MasterbtnloadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0  position-relative bottom-0" onclick="event.preventDefault(); return IUL_MasterLoadData(1);">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-8 col-xl-8 p-1" id="IUL_DetailContainer">
+                        <div id="IUL_DetailEmpty" class="mx-auto text-center">
+                            <h5 class="mb-0">@Local["Chi tiết thao tác"]</h5>
+                            <p>@Local["Chọn khách hàng hoặc thao tác để xem chi tiết"]</p>
+                        </div>
+                        <div id="IUL_DetailLog" class="card card-plain max-height-vh-70 d-none">
+                            <div class="card-header p-3 px-0 pt-0 pe-0">
+                                <div class="d-lg-flex">
+                                    <div class=" col-auto my-auto">
+                                        <div class="text-dark text-sm">
+                                            <div class="ms-1" id="IUL_DetailHeader">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-auto my-auto d-flex">
+                                        <div class="d-flex mt-1">
+                                            <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel" data-checkper="1">
+                                                <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Xuất excel"]">
+                                                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                                                </div>
+                                                <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                                    <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return IUL_ExportDetail(0)">@Local["Tất cả"]</i>
+                                                </div>
+                                                <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                                    <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return IUL_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="position-relative d-inline ms-1">
+                                            <button class="btn btn-dark ms-2 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists" aria-expanded="true">
+                                                @Local["Xem thêm"]
+                                            </button>
+                                            <div class="position-absolute z-index-3 end-1 top-100 mt-2 collapse show" id="colLists" style="min-width: 250px;">
+                                                <ul class="card card-body text-dark text-capitalize opacity-10">
+                                                    <li class="d-flex">
+                                                        <div class="form-check form-switch">
+                                                            <input class="shtoogleDetail form-check-input" data-name="jsoncontent" type="checkbox">
+                                                        </div>
+                                                        <p class="text-sm">@Local["Json"]</p>
+                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div id="IUL_DetailArea" class="p-0 card-body overflow-auto overflow-x-hidden" style="height:calc(100vh - 330px);">
+                                <div id="IUL_DetailLoading" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <table id="IUL_DetailDtContent" class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-1" colspan="3">
+                                                <p class="mb-0 text-sm text-dark fw-bold">@Local["Người thao tác"]</p>
+                                            </th>
+                                            <th class="ps-1">
+                                                <div class="mb-0 text-sm text-dark fw-bold">@Local["Nội dung"]</div>
+                                            </th>
+                                            <th data-name="jsoncontent" class="ps-1">
+                                                <div class="mb-0 text-sm text-dark fw-bold">@Local["Json"]</div>
+                                            </th>
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Chi nhánh"]</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="IUL_DetailDtContentBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button id="IUL_DetailbtnLoadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-3 position-absolute bottom-0" onclick="event.preventDefault(); return IUL_DetailRenderMore();">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    //#region //DEFINE & INIT
+    let IUL_LogUserID = Number(@Model._UserID)
+    let IUL_DataEmp, IUL_DataBranch, IUL_DataType;
+
+    let IUL_beginID = 0;
+    var IUL_MasterIUL_MasterDataLog;
+    let IUL_MasterLimitLoad = 100;
+    let IUL_IsMine = 0;
+    let IUL_TimeString = '';
+    let IUL_IndexTable;
+    let IUL_xhrLoadDetail;
+    let IUL_DataDetailMain, IUL_DataDetailSlice;
+    let IUL_KeyActionArr = [];
+    let IUL_KeyAction = {
+        'd': {
+            'default': '@Local["Xóa"]'
+        },
+        'i': {
+            'default': '@Local["Thêm mới"]',
+            'csm': '@Local["Gửi"]', // SMS KHÁCH HÀNG
+            'cap': '@Local["Tạo"]', // LỊCH HẸN KHÁCH HÀNG
+            'ccl': ''               // CALL KHÁCH HÀNG
+        },
+        'u': {
+            'default': '@Local["Cập nhật"]',
+            'cse': '@Local["Cập nhật"]',
+            'cco': '@Local["Cập nhật"]',
+            'cap-cancel': '@Local["Hủy"]'
+        },
+        's': {
+            'default': '@Local["Ký tên"]'
+        },
+        'e': {
+            'default': '@Local["Xuất"]'
+        },
+        'p': {
+            'default': '@Local["In"]'
+        },
+        'ei': {
+            'default': '@Local["Lỗi thêm hddt"]'
+        },
+        'ed': {
+            'default': '@Local["Lỗi xóa hddt"]'
+        },
+    };
+    let IUL_KeyCode = {
+        'acc': '@Local["Có mã"] ', // Thu Chi Khách Hàng
+        'cap': '@Local["Có mã lịch hẹn"] ', // Lịch Hẹn Khách Hàng
+        'csm': '@Local["Đến số điện thoại"] ', // SMS KHÁCH HÀNG
+        'ccl': '@Local["Đến số điện thoại"] ', // SMS KHÁCH HÀNG
+        'ser': '@Local["Có mã"] ', // Dịch Vụ Khách Hàng
+        'cpa': '@Local["Có mã hóa đơn"] ', // Thanh Toán Khách Hàng
+        'stp': '@Local["Có mã hóa đơn"] ', // Thanh Toán Khách Hàng
+        'cse': '@Local["Có mã"] ',  // Dịch vụ Khách Hàng
+        'cfo': '@Local["Có tên"] ',  // Folder Hình Ảnh Khách Hàng , Hình Ảnh Khách Hàng
+        'f12': '@Local["Mở developer tool"] ',  // Folder Hình Ảnh Khách Hàng , Hình Ảnh Khách Hàng
+        'mob': '@Local["Loại"]',
+        'default': '@Local["Có mã"]'
+    }
+    let shtableDetail;
+    $(document).ready(function () {
+        shtableDetail = $("#IUL_DetailDtContent").TableExpandColumn({
+            shtoogle: $('.shtoogleDetail')
+        });
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee, _Session_Branch]
+            , function (data) {
+                IUL_DataEmp = data[0];
+                IUL_DataBranch = data[1];
+                Checking_TabControl_Permission();
+                IUL_Init();
+                ToolPopper();
+            })
+        IUL_Event();
+    });
+
+    function IUL_Init() {
+
+        $("#IUL_ipDateLog").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                } else {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31)
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+
+        var date = new Date();
+        $("#IUL_ipDateLog").val(formatDateClient(date) + ' to ' + formatDateClient(date));
+        IUL_IsMine = 1;
+        IUL_LoadDataCombo();
+
+    }
+
+    function IUL_LoadDataCombo() {
+        AjaxLoad(url = "/Myinfo/UserLog/?handler=LoadCombo"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataType = data.Type;
+                    let dataBranch = data.Branch;
+                    let dataUser = data.User;
+                    IUL_KeyActionArr = IUL_ArrActionConvert(IUL_KeyAction);
+                    Load_Combo(dataBranch, "IUL_cbbBranch", false, "@Local["Tất cả chi nhánh"]");
+                    $("#IUL_BranchID").dropdown("refresh");
+                    $("#IUL_BranchID").dropdown("set selected", "0");
+
+                    Load_Combo(dataUser, "IUL_cbbUser", true, "@Local["Tất cả nhân viên"]");
+                    $("#IUL_UserID").dropdown("refresh");
+                    $("#IUL_UserID").dropdown("set selected", IUL_LogUserID);
+
+                    Load_Combo(dataType, "IUL_cbbType", false, "@Local["Tất cả loại"]");
+                    $("#IUL_TypeID").dropdown("refresh");
+                    $("#IUL_TypeID").dropdown("set selected", '0');
+
+                    Load_Combo(IUL_KeyActionArr, "IUL_CbbTypeAction", false, "@Local["Hoạt động"]");
+                    $("#IUL_TypeAction").dropdown("refresh");
+                    $("#IUL_TypeAction").dropdown("set selected", '0');
+
+                    IUL_DataType = dataType.reduce((pre, arr) => { if (arr.ID) pre[arr.ID] = arr; return pre; }, {});
+
+                    IUL_MasterLoadData();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = $("#loaderLog")
+        );
+    }
+
+
+    //#endregion
+
+    //#region //LOADDATA MASTER
+
+    async function IUL_MasterLoadData(isLoadMore = 0)  {
+        return new Promise(resolve => {
+            if (isLoadMore != 1) {
+                IUL_beginID = 0;
+                IUL_TimeString = '';
+                IUL_MasterDataLog = [];
+                $("#IUL_listMaster").empty();
+                $("#IUL_DetailEmpty").removeClass('d-none');
+                $("#IUL_DetailLog").addClass('d-none');
+            }
+            let data = IUL_GetDataFilter();
+            AjaxLoad(url = "/Myinfo/UserLog/?handler=LoadDataMaster"
+                , data = {
+                    'data': JSON.stringify(data)
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "[]") {
+                        let dataMain = JSON.parse(result);
+                        if (dataMain && dataMain.length > 0) {
+                            IUL_MasterDataLog = IUL_MasterDataLog.concat(dataMain);
+                            IUL_beginID = dataMain[dataMain.length - 1].Time;
+                            $("#IUL_MasterbtnloadMore").show();
+                            fnRenderBlock(dataMain, "IUL_listMaster"
+                                , blocknum = 50
+                                , fnrender = IUL_MasterRender
+                                , fnsuccess = function () {
+                                });
+                        }
+                        else {
+                            $("#IUL_MasterbtnloadMore").hide();
+                        }
+
+                    }
+                    else if (result == "[]") {
+
+                        if (isLoadMore == 1)
+                            $("#IUL_MasterbtnloadMore").hide();
+                    }
+                    Count_Up("IUL_lbTotal", IUL_MasterDataLog.length);
+                    resolve();
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#IUL_loading").show();
+                    $("#btnLoreMoreLog").hide();
+                }
+                , complete = function (e) {
+                    $("#IUL_loading").hide();
+                }
+            );
+        })
+    }
+
+    function IUL_GetDataFilter() {
+        try {
+
+            let date = $('#IUL_ipDateLog').val() ? $('#IUL_ipDateLog').val() : new Date();
+            let dateFrom = '', dataTo = '';
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "x");
+                dateFrom = date.split('x')[0];
+                dateTo = date.split('x')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+
+            var objData = new Object();
+            objData.TextSearch = $("#IUL_ipSearch").val() ? $("#IUL_ipSearch").val() : "";
+            objData.IsMine = IUL_IsMine;
+            objData.UserID = $('#IUL_UserID').dropdown('get value') ? $('#IUL_UserID').dropdown('get value') : IUL_LogUserID;
+            objData.BranchID = Number($('#IUL_BranchID').dropdown('get value')) ? Number($('#IUL_BranchID').dropdown('get value')) : 0
+            objData.DateFrom = dateFrom;
+            objData.DateTo = dateTo;
+            objData.Type = $('#IUL_TypeID').dropdown('get value') ? $('#IUL_TypeID').dropdown('get value') : "0";
+            objData.TypeAction = $('#IUL_TypeAction').dropdown('get value') ? $('#IUL_TypeAction').dropdown('get value') : "0"
+            objData.Limit = IUL_MasterLimitLoad;
+            objData.BeginTime = IUL_beginID;
+            return objData;
+        }
+        catch (ex) {
+            return {};
+        }
+    }
+
+    //#endregion
+
+    //#region //RENDERDATA MASTER
+
+    async function IUL_MasterRender(data, id) {
+        new Promise(resolve => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = IUL_MasterRenderItem(item);
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                            ToolPopper();
+                            IUL_EventList();
+                        }
+                        Checking_TabControl_Permission();
+                    }
+                }
+                resolve();
+            }, 10);
+        })
+    }
+
+    function IUL_MasterRenderItem(item) {
+        let result = '';
+        if (item) {
+            let obj = Fun_GetObject_ByID(IUL_DataEmp, item.EmpID);
+            let objBranch = Fun_GetObject_ByID(IUL_DataBranch, item.BranchID);
+            let name = (obj != null) ? obj.Name : '@Local["Không xác định"]';
+            let img = (obj != null) ? obj.Avatar : Master_circleAvatar;
+
+            let subTime = (item.Time).substring(0, 8);
+            let blockTime = "";
+            if (IUL_TimeString != subTime) {
+                IUL_TimeString = subTime;
+                blockTime = IUL_MasterRender_TimeBlock(item.Time, item.NO);
+            }
+            let PhoneNumberPer = false;
+            let RegexPhone = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+            PhoneNumberPer = RegexPhone.test(item.Value);
+
+            let value = (item.Value != '') ?
+                `${IUL_RenderCode(item.Value, item.Type)}
+                    <span class="text-primary border-bottom border-primary cursor-pointer IUL_MasterCode ${PhoneNumberPer ? '_tab_control_' : ''}" ${PhoneNumberPer ? 'data-tab="phone_customer"' : ''} data-type="${item.Type}" data-code="${item.Value}">
+                        ${item.Value}
+                    </span>` : '';
+            let customer = (item.CustomerID != 0) ?
+                `<p class="font-weight-bold text-xs mt-1">
+                        <span class="opacity-7">@Local["Khách hàng"]</span>
+                        <span class="text-primary border-bottom border-primary cursor-pointer IUL_MasterCust"
+                                data-custid="${item.CustomerID}" data-custcode="${item.CustCode}" data-custname="${item.CustName}">
+                        ${item.CustName}
+                        </span>
+                    </p>` : '';
+            let tr = `
+                <div class="timeline-block mb-3" data-id="${item.ID}">
+                    <span class="timeline-step">
+                        <img class="avatar avatar-xs " data-bs-toggle="tooltip" data-bs-original-title="${name}"
+                            src="${img}" alt="label-image">
+                    </span>
+                    <div class="d-flex align-items-center text-sm IUL_TimelineBlock">
+                        <div class="timeline-content">
+                            <p class="text-secondary font-weight-bold text-xs mb-0 mt-n3 mb-1 IUL_Timeline">
+                                ${BigIntYMDHMToHHMM(item.Time)} - ${objBranch.Name}
+                            </p>
+                            <h6 class="text-dark text-sm mb-0 font-weight-bold">
+                                ${IUL_RenderAction(item.Action, item.Type, item.Content)}
+                                ${IUL_RenderType(item.Type)}
+                                ${value}
+                            </h6>
+                            ${customer}
+                        </div>
+                            <button data-id="${item.ID}" data-type="${item.Type}" data-action="${item.Action}" data-content="${item.Content}"
+                                    class="detail btn btn-link text-dark text-sm ms-auto mb-3 IUL_BtnListItem">
+
+                                <i class="fas fa-angle-right text-sm me-1 text-dark IUL_IconList"></i>
+                        </button>
+                    </div>
+                </div>`
+            result += blockTime + tr;
+        }
+        return result
+    }
+
+    function IUL_MasterRender_TimeBlock(time, idx) {
+        let result = '';
+        result = `<div class="timeline-block mb-3 bg-white">
+                <div class="my-2 py-4 mt-0">
+                ${((idx != 1) ? '<hr class="horizontal dark mt-1 mb-3">' : '')}
+                ${((idx != 1) ? '<h6 class="mt-5 mb-0 fw-bold ms-2">' : '<h6 class="mt-0 mb-0 fw-bold ms-2">')}
+                    <i class="fa fa-angle-double-right me-2" aria-hidden="true">
+                    </i>${BigIntToDate(time)}
+                </h6>
+                </div>
+            </div>`;
+        return result;
+    }
+
+    function IUL_RenderAction(action, type, content) {
+        if (action == 'u' && type == 'cap' && content != ''
+            && (content.toLocaleLowerCase()).includes('cancel')) {
+            type = 'cap-cancel';
+        }
+        let keyAction = IUL_KeyAction[action];
+        if (keyAction != undefined && keyAction[type] != undefined)
+            return keyAction[type];
+        if (keyAction != undefined && keyAction['default'] != undefined)
+            return keyAction['default'];
+        return '';
+    }
+
+    function IUL_RenderType(type) {
+        let result = "";
+        result = IUL_DataType[type] != undefined ? IUL_DataType[type].Name : '';
+        return result;
+    }
+
+    function IUL_RenderCode(value, type) {
+        if (value == '') return '';
+        if (IUL_KeyCode[type] != undefined)
+            return IUL_KeyCode[type];
+        return IUL_KeyCode['default'];
+    }
+
+    //#endregion
+
+    //#region //LOADDATA DETAIL
+
+    function IUL_DetalLoad(currentID = 0, value = '', custID = 0) {
+        if (IUL_xhrLoadDetail && IUL_xhrLoadDetail.readyState != 4) IUL_xhrLoadDetail.abort();
+        IUL_IndexTable = 0;
+        let data = IUL_GetDataFilter();
+        data.Value = value;
+        data.CustID = custID;
+        IUL_xhrLoadDetail = AjaxLoad(url = "/Myinfo/UserLog/?handler=LoadDataDetail"
+            , data = {
+                'data': JSON.stringify(data),
+                'currentID': currentID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    IUL_DataDetailMain = JSON.parse(result);
+                    IUL_DataDetailSlice = sliceIntoChunks(data, 500);
+                    $("#IUL_DetailDtContentBody").empty();
+                    if (IUL_DataDetailSlice && IUL_DataDetailSlice.length != 0) {
+                        fnRenderBlock(IUL_DataDetailSlice[IUL_IndexTable], "IUL_DetailDtContentBody"
+                            , blocknum = 100
+                            , fnrender = IUL_DetailRender
+                            , fnsuccess = null
+                        );
+                    }
+                }
+                else if (result == "[]") {
+
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#IUL_DetailLoading").show();
+            }
+            , complete = function (e) {
+                $("#IUL_DetailLoading").hide();
+            }
+        );
+    }
+
+    function IUL_DetailRenderMore() {
+        IUL_IndexTable += 1;
+        if (IUL_DataDetailSlice && IUL_DataDetailSlice[IUL_IndexTable]) {
+            fnRenderBlock(IUL_DataDetailSlice[IUL_IndexTable], "IUL_DetailDtContentBody"
+                , blocknum = 100
+                , fnrender = IUL_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function IUL_DetailRender(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let obj = Fun_GetObject_ByID(IUL_DataEmp, item.EmpID);
+                            let objBranch = Fun_GetObject_ByID(IUL_DataBranch, item.BranchID);
+                            let name = (obj != null) ? obj.Name : '@Local["Không xác định"]';
+                            let img = (obj != null) ? obj.Avatar : Master_circleAvatar;
+                            let value = (item.Value != '') ?
+                                `${IUL_RenderCode(item.Value, item.Type)} ${item.Value}` : '';
+                            let customer = (item.CustomerID != 0) ? `<a class="text-primary fw-bold mx-1" target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}">${item.CustName}</a>` : '';
+                            let jsonContent = item.JsonContent != "" ? `<figure class="bg-gray-100 p-3">
+                                                                          <div class="end-0 position-sticky top-1 text-primary me-3 IUL_btnCopy">
+                                                                            <span class="d-none IUL_jsonContent">${IUL_RenderJsonBeauty(item.JsonContent)}</span>
+                                                                            <i class="IUL_copyIcon cursor-pointer end-0 fa-copy far position-absolute" title="" data-bs-toggle="tooltip" data-bs-original-title="@Local["Sao chép"]"></i>
+                                                                          </div>
+                                                                          <pre class="mb-1"><span class="text-break content_line_clamp">${IUL_RenderJsonBeauty(item.JsonContent)}</span></pre>
+                                                                        </figure>` : '';
+                            let tr = `
+                                <tr>
+                                    <td class="ps-0" colspan="3">
+                                        <div class="d-flex">
+                                            <div class="icon icon-shape icon-sm me-2 text-center">
+                                            <img class="avatar avatar-xs mt-2" src="${img}" alt="label-image"></div>
+                                            <div class="d-flex flex-column">
+                                                <h6 class="text-dark text-sm mb-0">${name}</h6>
+                                                <span class="text-xs">${BigIntYMDHMToHHMM(item.Time)} ${ConvertYMDInt_ToDate(item.Time)} </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="ps-1 text-dark text-sm">
+                                        ${IUL_RenderAction(item.Action, item.Type, item.Content)}
+                                        ${IUL_RenderType(item.Type)}
+                                        ${customer}
+                                        ${value}
+                                        ${item.Page != '' ? `<span class="d-block">@Local["Trang"]: ${item.Page}</span>` : ``}
+                                        ${item.Content != '' ? `<span class="d-block text-wrap">@Local["Nội dung"]: ${item.Content}</span>` : ``}
+                                    </td>
+                                    <td data-name="jsoncontent" class="ps-1 text-dark text-sm">
+                                        ${jsonContent}
+                                    </td>
+                                    <td class="ps-1 text-dark text-sm">${objBranch.Name}</td>
+                                </tr>`
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtableDetail.Refresh();
+                        ToolPopper();
+                        IUL_EventDetail();
+                    }
+                }
+                resolve();
+            }, 10)
+        })
+    }
+
+    function IUL_RenderJsonBeauty(str) {
+        try {
+            return JSON.stringify(JSON.parse(str), undefined, 4)
+        }
+        catch {
+            return str;
+        }
+
+    }
+    //#endregion
+
+    //#region //RENDERDATA DETAIL
+
+    function IUL_RenderDetailHeader(item) {
+        let result = `
+            <h6 class="mb-0 d-block text-capitalize">${item.Title}</h6>
+            <div class="d-flex">
+                <span class="text-sm text-dark opacity-8">${item.Key} </span>
+                <span class="text-sm text-primary opacity-8 ms-1 fw-bold"> ${item.Value}</span>
+            </div>`;
+
+        return result;
+    }
+
+    //#endregion
+
+    //#region //EVENT
+
+    function IUL_Event() {
+
+        $(".IUL_IsMine").unbind('click').click(function () {
+            let isMine = $(this).attr("data-ismine") || 0;
+            $('.IUL_IsMine').removeClass('IUL_IsMineActive');
+            IUL_IsMine = isMine;
+            if (IUL_IsMine == 1) {
+                $("#IUL_UserID").addClass('disabled');
+                $("#IUL_UserID").dropdown("refresh");
+                $("#IUL_UserID").dropdown("set selected", IUL_LogUserID);
+            }
+            else {
+                $("#IUL_UserID").removeClass('disabled');
+                $("#IUL_UserID").dropdown("refresh");
+                $("#IUL_UserID").dropdown("set selected", "0");
+            }
+            $(this).addClass('IUL_IsMineActive');
+
+        });
+
+    }
+    function IUL_EventDetail() {
+
+        $(".IUL_btnCopy").unbind('click').click(function () {
+            let value = $(this).children(".IUL_jsonContent")?.html() || "";
+            navigator.clipboard.writeText(value);
+        });
+
+    }
+
+    function IUL_EventList() {
+
+        //UseCase Choose Customer
+        $(".IUL_MasterCust").unbind('click').click(function () {
+            IUL_HandleListActive($(this));
+            let id = $(this).attr("data-custid") ?? 0;
+            let code = $(this).attr("data-custcode") ?? '';
+            let name = $(this).attr("data-custname") ?? '';
+            let value = id != 0 ? `<a class="text-primary fw-bold mx-1 border-bottom border-primary" target="_blank" href="/Customer/MainCustomer?CustomerID=${id}">${code}</a>` : '';
+            let item = {
+                Title: "@Local["Khách hàng"]",
+                Key: name,
+                Value: value,
+            }
+            $("#IUL_DetailHeader").html(IUL_RenderDetailHeader(item));
+            IUL_DetalLoad(currentID = 0, value = '', custID = id);
+        })
+
+        //UseCase Choose Value
+        $(".IUL_MasterCode").unbind('click').click(function () {
+            IUL_HandleListActive($(this));
+            let value = $(this).attr("data-code") ?? '';
+            let type = $(this).attr("data-type") ?? '';
+            let data = IUL_RenderCode(value, type).split(" ");
+            data.splice(0, 1);
+            let title = data.join(" ").toUpperCase();
+            let item = {
+                Title: "@Local["Chi tiết thao tác"]",
+                Key: title + ' ',
+                Value: value,
+            }
+            $("#IUL_DetailHeader").html(IUL_RenderDetailHeader(item));
+            IUL_DetalLoad(currentID = 0, value = value, custID = 0);
+        })
+        //UseCase Choose LogItem
+        $(".IUL_BtnListItem").unbind('click').click(function () {
+            IUL_HandleListActive($(this));
+            let currentID = $(this).attr("data-id") ?? 0;
+            let action = $(this).attr("data-action") ?? '';
+            let type = $(this).attr("data-type") ?? '';
+            let content = $(this).attr("data-content") ?? '';
+            let key = IUL_RenderAction(action, type, content);
+            let item = {
+                Title: "@Local["Chi tiết thao tác"]",
+                Key: key + ' ' + IUL_RenderType(type),
+                Value: '',
+            }
+
+            $("#IUL_DetailHeader").html(IUL_RenderDetailHeader(item));
+            IUL_DetalLoad(currentID, value = '', custID = 0);
+        })
+    }
+
+    function IUL_HandleListActive(ele) {
+        if (!$("#IUL_DetailEmpty").hasClass('d-none')) $("#IUL_DetailEmpty").addClass('d-none');
+        if ($("#IUL_DetailLog").hasClass('d-none')) $("#IUL_DetailLog").removeClass('d-none');
+        $(".IUL_TimelineBlock").removeClass('active');
+        ele.closest('.IUL_TimelineBlock').addClass('active');
+    }
+
+    //#endregion
+
+    //#region // OTHER
+
+    function IUL_ArrActionConvert(DtObj){
+        try {
+            let result = [];
+            for (const [key, value] of Object.entries(DtObj)) {
+                let e = {};
+                e.ID = key;
+                e.Name = value['default']
+                result.push(e);
+            }
+            return result;
+        }catch(ex){
+            return [];
+        }
+    }
+
+    async function IUL_ExportDetail(isOption = 0) {
+        try {
+            if (IUL_DataDetailMain && IUL_DataDetailMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#IUL_DetailLog');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "EmpID": ["@Local["Người thao tác"]", (value) => {
+                        let obj = Fun_GetObject_ByID(IUL_DataEmp, value);
+                        let name = (obj != null) ? obj.Name : decodeHtml('@Local["Không xác định"]');
+                        return name;
+                    }],
+                    "Time": ["@Local["Ngày thao tác"]", (value) => {
+                        return `${BigIntYMDHMToHHMM(value)} ${ConvertYMDInt_ToDate(value)}`;
+                    }],
+                    "Content": ["@Local["Nội dung"]", (value, { Content, Action, Type, Value, CustName, Page }) => {
+                        let content = IUL_RenderAction(Action, Type, Content).trim() + ' '
+                            + IUL_RenderType(Type).trim() + ' '
+                            + CustName + ' '
+                            + IUL_RenderCode(Value, Type).trim() + ' '
+                            + Value + '. '
+                            + (Page != '' ? "@Local["Trang"]: " + Page : '')
+                            + (Content != '' ? "@Local["Nội dung"]: " + Content : '');
+                        return decodeHtml(content);
+                    }],
+                    "JsonContent": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='jsoncontent']`)).is(":checked"),
+                        data: ["Json"]
+                    },
+                    "BranchID": ["@Local["Chi nhánh"]", (value) => {
+                        let objBranch = Fun_GetObject_ByID(IUL_DataBranch, value);
+                        return objBranch.Name ?? '';
+                    }]
+                }
+                let fileName = Outlang["Lich_su_thao_tac"];
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'IUL_DetailDtContentBody', PermissionTable_TabControl);debugger
+                exportJsonToExcel(fileName, IUL_DataDetailMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+        //#endregion
+
+
+</script>
+
+<style>
+    .IUL_TimelineBlock:hover .IUL_Timeline,
+    .IUL_TimelineBlock:hover .IUL_IconList {
+        color: rgb(var(--bs-primary)) !important;
+    }
+
+    .IUL_TimelineBlock.active .IUL_Timeline,
+    .IUL_TimelineBlock.active .IUL_IconList {
+        color: rgb(var(--bs-primary)) !important;
+    }
+
+    .IUL_IsMineActive {
+        background-image: linear-gradient(310deg, rgb(var(--bs-primary-from)) 0%, rgb(var(--bs-primary-to)) 100%);
+        color: white;
+    }
+
+    #IUL_listMaster .timeline-block:first-child > div {
+        padding-top: 0 !important;
+    }
+
+        #IUL_listMaster .timeline-block:first-child > div > hr {
+            background-image: none !important;
+            margin-bottom: 0 !important;
+        }
+
+        #IUL_listMaster .timeline-block:first-child > div > h6 {
+            margin-top: 0 !important;
+        }
+</style>

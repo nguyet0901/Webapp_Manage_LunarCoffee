@@ -1,0 +1,84 @@
+﻿@page
+@model SourceMain.Pages.Report.ReportSheet.ReportSheetDescriptionDetailModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VT-Tech Solution</title>
+    <meta charset="utf-8" />
+     
+</head>
+<body style="background-color: white; max-width: 100%; height: auto">
+    <form id="form1" runat="server">
+        <div data-languagestatic="" class="header header_form_main">
+            Chỉnh Sửa Description/ Description Code
+        </div>
+        <div class="row" style="padding: 15px;">
+            <div class="sixteen wide tablet sixteen wide computer column">
+                <div class="sixteen wide tablet sixteen wide computer column">
+                    <div id="textEdit">
+                       @* <%--<textarea id="textEditDetail"></textarea>--*@
+                        <textarea id="textEditDetail" rows="3"></textarea>
+                    </div>
+                </div>
+                <div id="btnEdit" class="field" style="height: 27px; margin-top: 10px">
+                   @* <%--<button id="btnEditDocument" style="display: none; float: left;" class="ui teal button" data-value="fade up" onclick="event.preventDefault();return editCurrentDocument()">Chỉnh Sửa</button>--*@
+                    <button id="btnSaveDocument" style="float: right;" class="ui yellow button saveButton" data-value="fade up" onclick="event.preventDefault();return ExcuteData()">Lưu</button>
+                    <button id="btnCancelDocument" style="float: right;" class="ui gray button cancelButton" data-value="fade up" onclick="event.preventDefault();return CloseModal()">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+    <script type="text/javascript">
+    var currentDocument = 0;
+    var ser_CurrentID = "@Model._CurrentID";
+    var Type = "@Model._Type";
+    $(document).ready(function () {
+        if (ser_CurrentID != "0")
+        LoadDataDesDetail();
+    });
+
+    function LoadDataDesDetail() {
+        AjaxLoad(url = "/Report/ReportSheet/ReportSheetDescriptionDetail/?handler=Loadata"
+            , data = { id: ser_CurrentID }, async = true, error = null
+            , success = function (result) {
+                let dataDesDetail = JSON.parse(result);
+                if (Type == 0) {
+                    $('#textEditDetail').val(formatHTML(dataDesDetail[0].Description));
+                }
+                else {
+                    $('#textEditDetail').val(formatHTML(dataDesDetail[0].Description_code));
+                }
+            });
+        
+    }
+
+    function ExcuteData() {
+        var data = new Object();
+        data.Name = $("#textEditDetail").val() ? $("#textEditDetail").val() : "";
+        AjaxLoad(url = "/Report/ReportSheet/ReportSheetDescriptionDetail/?handler=ExcuteData"
+            , data = {
+                data: JSON.stringify(data),
+                CurrentID: ser_CurrentID,
+                Type: Type
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadSheetAjax();
+                } else {
+                    notiError_SW();
+                }
+            });
+        $('#DetailModal').modal('hide');
+        $("#DetailModal_Content").html('');
+        return false;
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Treatment.TreatmentWork.TreatWorkDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-3 px-0">
+    <div class="row bodyViewEdit">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Công việc điều trị"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết công việc điều trị"]</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="card-body pt-2 form3" id="form3">
+
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label  >@Local["Nhân viên"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="Employee">
+                                <input type="hidden" name="name" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchEmployee" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg. @Local["Nhân viên"]</div>
+                                <div id="ccbEmployee" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Ngày tạo"]</label>
+                            <input id="dateCreatedExt" class="form-control flatpickr detail" type="text" placeholder="eg .@Local["Ngày tạo"]" disabled="disabled" />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Nội dung công việc"]</label>
+                            <div class="ui fluid search selection dropdown multiple form-control" id="Treat_Task_Content">
+                                <input type="hidden" name="element" />
+                                <i class="dropdown icon"></i>
+                                <div class="default text">eg. @Local["Nội dung công việc"]</div>
+                                <div id="cbbTreat_Task_Content" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label> @Local["Ghi chú"] </label>
+                            <textarea class="form-control" placeholder="eg .@Local["Ghi chú"]" id="Content" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <!-- #endregion -->
+                </div>
+                <!-- #region button save and text show message-->
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="form3" onclick="CancelTreatWorkDetail()">@Local["Đóng"]</button>
+                            <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="SaveTreatmentWork()">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- #endregion -->
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    var ser_CustomerID;
+    var sys_DentistCosmetic;
+    let DataComboEmployee;
+    let _CurrentID ='@Model._CurrentID';
+    let ser_ChooseDateCustomer ='@Model._ChooseDateCustomer';
+    $(document).ready(function () {
+        $(".flatpickr.detail").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+        if (ser_ChooseDateCustomer == "0" || _CurrentID != 0) {
+            $("#dateCreatedExt").attr('disabled', 'disabled');
+        } else {
+            $("#dateCreatedExt").prop('disabled', false);
+        }
+        CheckView();
+        ser_CustomerID ='@Model._CustomerID' ;
+        sys_DentistCosmetic ='@Model.sys_DentistCosmetic';
+
+        document.getElementById("textShowMessage").innerHTML = "";
+        InitializeTreatmentWork();
+    });
+
+    // load data update
+    function LoadUpdateTreatmentWork() {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentWork/TreatWorkDetail/?handler=Loadata"
+            , data = {'id': _CurrentID}
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let DataUpdate = JSON.parse(result);
+                    $('#Content').val(formatHTML(DataUpdate[0].Content));
+                    $("#dateCreatedExt").val(DataUpdate[0].Created);
+                    $("#Employee").dropdown("refresh");
+                    $("#Employee").dropdown("set selected", DataUpdate[0].EmployeeID);
+
+                    if (DataUpdate[0].Task != undefined && DataUpdate[0].Task != null && DataUpdate[0].Task != "") {
+                        $('#Treat_Task_Content').dropdown('clear');
+                        $("#Treat_Task_Content").dropdown("refresh");
+                        $('#Treat_Task_Content').dropdown('set selected', DataUpdate[0].Task.split(","));
+                    }
+                }
+            }
+        );
+    }
+
+    function InitializeTreatmentWork() {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentWork/TreatWorkDetail/?handler=LoadComboMain"
+            , data = {  }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);debugger
+                DataComboEmployee = data.Employee;
+                let DataComboTask = data.Task;
+                Load_Combo(DataComboEmployee, "ccbEmployee", false);
+                Load_Combo(DataComboTask, "cbbTreat_Task_Content", false);
+                if (_CurrentID != "0") LoadUpdateTreatmentWork();
+            }
+        );
+    }
+
+    function SaveTreatmentWork() {
+        var data = new Object();
+        data.Employee = Number($('#Employee').dropdown('get value')) ? Number($('#Employee').dropdown('get value')) : 0;
+        data.Content = $("#Content").val() ? $("#Content").val() : "";
+        data.CustomerID = ser_CustomerID;
+        data.Task = $('#Treat_Task_Content').dropdown('get value');
+        data.dateCreated = $('#dateCreatedExt').val() ? $('#dateCreatedExt').val() : new Date();
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentWork/TreatWorkDetail/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify([data]),
+                    'CurrentID': _CurrentID}
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        syslog_cuttreat(_CurrentID == 0 ? 'i' : 'u', ser_CustomerID
+                            , $("#Content").val() ? $("#Content").val() : "");
+                        CancelTreatWorkDetail();
+                        LoadTreatmentWorkAjax(_CurrentID, 0);
+                        if (typeof LoadCustomerPaymentInfo !== 'undefined' && $.isFunction(LoadCustomerPaymentInfo)) {
+                            LoadCustomerPaymentInfo();
+                        }
+                        notiSuccess();
+                    }
+                }
+            );
+        }
+        return false
+    }
+
+    function CheckView() {
+        let type ='@Model._Type';
+        if (type == "view") {
+            $('.bodyViewEdit textarea').prop("disabled", true);
+            $('.bodyViewEdit textarea').css("opacity", "1");
+            $('.bodyViewEdit .selection.dropdown').addClass("disabled");
+            $('.bodyViewEdit .selection.dropdown').css("opacity", "1");
+            $('.bodyViewEdit .selection.dropdown .dropdown.icon').remove();
+            $('.bodyViewEdit .selection.dropdown .remove.icon').remove();
+            $('.bodyViewEdit .saveButton').remove();
+            if (typeof TreatmentWork == 'function' && $.isFunction(SaveTreatmentWork)) {
+                delete SaveTreatmentWork;
+            }
+        } else {
+            $('.bodyViewEdit .saveButton').show();
+        }
+    }
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

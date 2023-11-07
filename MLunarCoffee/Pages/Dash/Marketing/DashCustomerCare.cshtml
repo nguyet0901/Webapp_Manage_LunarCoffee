@@ -1,0 +1,79 @@
+﻿@page
+@model MLunarCoffee.Pages.Dash.Marketing.DashCustomerCareModel
+@{
+    Layout = null;
+}
+<div class="card overflow-hidden">
+    <div class="card-header p-3 pb-3">
+        <div class="d-flex align-items-center">
+            <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                <i class="ni ni-calendar-grid-58 text-lg opacity-10" aria-hidden="true"></i>
+            </div>
+            <div class="ms-3">
+                <p class="text-sm mb-0 text-capitalize font-weight-bold">@Local["Chăm sóc trong ngày"]</p>
+                <div class="d-flex">
+                    <h6 class="font-weight-bolder mb-0" id="dmcc_total"></h6>
+                    <div class="w-100 ms-2">
+                        <div class="progress-info">
+                            <div class="progress-percentage">
+                                <span class="text-xs font-weight-bold">@Local["Xử lý"]</span>
+                                <span id="dmcc_percent" class="text-xs font-weight-bold"></span>
+                            </div>
+                        </div>
+                        <div class="progress" id="dmcc_progress"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+ 
+    $(document).ready(function () {
+        DM_CustomerCare();
+
+    });
+    function DM_CustomerCare(_dateFrom, _dateTo) {
+        AjaxLoad(url = "/Dash/Marketing/DashCustomerCare/?handler=Loadata"
+            , data = { 'dateFrom': GETDATE_NOW_DMYHM(), 'dateTo': GETDATE_NOW_DMYHM() }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dataMain = [];
+                    dataMain.push(data["Table"][0]);
+                    dataMain.push(data["Table1"][0]);
+                    dataMain.push(data["Table2"][0]);
+                    dataMain.push(data["Table3"][0]);
+                    dataMain.push(data["Table4"][0]);
+                    dataMain.push(data["Table5"][0]);
+
+                    let total = 0;
+                    let istakecare = 0;
+                    for (let i = 0; i < dataMain.length; i++) {
+                        total = total + dataMain[i].TOTAL;
+                        istakecare = istakecare + dataMain[i].IsTakeCare;
+                    }
+    
+                    let percent = (total != 0) ? (Number(istakecare) * 100 / total).toFixed(2) : 0;
+                    $('#dmcc_percent').html(percent + ' %');
+                    $('#dmcc_total').html(total);
+                    $('#dmcc_progress').html('<div class="progress-bar bg-gradient-info w-' + percent + '" role="progressbar" aria-valuenow="' + percent + '" aria-valuemin="0" aria-valuemax="100"></div>');
+
+
+
+                }
+            }
+
+        );
+
+
+    }
+
+</script>
+

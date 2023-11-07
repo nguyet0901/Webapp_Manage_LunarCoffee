@@ -1,0 +1,99 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.EmployeeLevelDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chức vụ"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết chức vụ"]</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formEmployeeLevel">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Chức vụ"]</label>
+                            <input class="form-control" id="EmpNameLevel" name="name" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea rows="3" id="EmpNoteLevel" name="note" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formEmployeeLevel" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button form="formEmployeeLevel" type="button" class="btn bg-gradient-primary mt-2 me-2 setting_projectclosure" onclick="event.preventDefault();return  EmployeelLevelExcute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+        var ser_EmployeeLevelID;
+        $(document).ready(function () {
+            ser_EmployeeLevelID = @Model._EmployeeLevelID;
+            if (ser_EmployeeLevelID != "0") {
+                EmployeelLevelLoadUpdate();
+            }
+        });
+
+    function  EmployeelLevelExcute() {
+            let NameLevel = $('#EmpNameLevel').val() ? $('#EmpNameLevel').val() : "";
+            let Note = $("#EmpNoteLevel").val();
+        $('#formEmployeeLevel').form('validate form');
+        if ($('#formEmployeeLevel').form('is valid')) {
+                AjaxLoad(url = "/Setting/EmployeeLevelDetail/?handler=ExcuteData"
+                    , data = {
+                        NameLevel: NameLevel,
+                        Note: Note,
+                        CurrentID: ser_EmployeeLevelID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            EmployeeLevelLoad();
+
+                            $('#DetailModal').modal('hide');
+                            $("#DetailModal_Content").html('');
+                        } else if (result == "-1") {
+                            $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+
+            }
+            return false;
+        }
+
+        function EmployeelLevelLoadUpdate() {
+            AjaxLoad(url = "/Setting/EmployeeLevelDetail/?handler=Loadata"
+                , data = {
+                    id: ser_EmployeeLevelID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataEmployeeLevel = JSON.parse(result);
+                    $('#EmpNameLevel').val(dataEmployeeLevel[0].Title);
+                    $("#EmpNoteLevel").val(dataEmployeeLevel[0].Note);
+                });
+
+        }
+</script>
+<script src="/js/main.js"></script>
+<script src="/js/customjs/custom-validation.js"></script>

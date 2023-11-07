@@ -1,0 +1,969 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Account.BalanceCustByTreatmentGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div id="BCBG_Container">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0 d-block d-lg-flex">
+            <div class="left w-lg-40">
+                <div class="col-auto my-auto d-lg-flex">
+                    <div class="col-12 col-lg-6 pt-2">
+                        <div class="input-group mb-0 flex-nowrap">
+                            <div class="ui fluid search selection dropdown" id="BT_TypeCus">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="BT_CbbTypeCus" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                            <input id="BT_SearchCus" class="form-control" type="text" placeholder="eg .@Local["Nhập tối thiểu 3 ký tự"]" />
+                            <div class="input-group-text" id="BT_AreaBtnSearch">
+                                <i class="btn_clear fas fa-minus-circle opacity-1"></i>
+                                <div class="spinner-border spinner-border-sm d-none"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 pt-2 px-lg-1" id="BT_SerSourceDiv" style="display: none">
+                        <div class="ui fluid search selection dropdown form-control" id="BT_SourceService">
+                            <input type="hidden" class="_validation_option_" data-validation="cbbass_tabmulti" />
+                            <i class="dropdown icon"></i>
+                            <i class="remove icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Nguồn dịch vụ"]</div>
+                            <div id="BT_cbbSourceService" class="menu" tabindex="-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right mt-2 mt-lg-0 w-lg-60">
+                <div class="wrap">
+                    <div class="wrapblock">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                            <span id="Reve_currentdata">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="Reve_totaldata">0</span>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#BT_GridArea" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Tải lại"]">
+                            <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); return BT_Load()"></i>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["In báo cáo"]">
+                            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); BT_PrintReport()"></i>
+                        </div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return BT_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return BT_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div> 
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="phone" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số điện thoại"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custcodeold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="TreatCustomer" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Công nợ điều trị của khách hàng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custnew" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Khách mới"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="age" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Độ tuổi"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="gender" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Giới tính"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="address" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Địa chỉ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="district" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Quận huyện"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="city" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tỉnh thành phố"]</p>
+                        </li>
+
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="service" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicecode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicesource" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="salescode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã lên đơn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi tiết"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="consult" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tư vấn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thông tin tạo"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="percent" type="checkbox">
+                            </div>
+                            <p class="text-sm mb-0">@Local["Phần trăm hoàn thành"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card-body px-0 pt-2">
+            <div class="row collapsesticky z-index-sticky collapse show" id="BT_FilterDiv">
+                <div class="col-12 col-lg-4 col-md-12">
+                    <div class="MS_CheckHR bg-gray-100 border-5 border-primary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2 py-3">
+                        <div class="ms-2">
+                            <span class="text-sm fw-bold text-secondary">@Local["Tổng tiền phát sinh"]</span>
+                        </div>
+                        <div class="ms-2 d-flex text-dark">
+                            <span id="lbTotalAmount" class="text-lg fw-bold text-primary">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4 col-md-12">
+                    <div class="MS_CheckHR bg-gray-100 border-5 border-primary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2 py-3">
+                        <div class="ms-2">
+                            <span class="text-sm fw-bold text-secondary">@Local["Tổng tiền thanh toán"]</span>
+                        </div>
+                        <div class="ms-2 d-flex text-dark">
+                            <span id="lbTotalAmount" class="text-lg fw-bold text-primary">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4 col-md-12">
+                    <div class="MS_CheckHR bg-gray-100 border-5 border-danger border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2 py-3">
+                        <div class="ms-2">
+                            <span class="text-sm fw-bold text-secondary">@Local["Tổng tiền công nợ"]</span>
+                        </div>
+                        <div class="ms-2 d-flex text-dark">
+                            <span id="lbTotalAmountBalance" class="text-lg  text-danger fw-bold">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="collapsesticky collapse show mt-3" id="BT_GridArea">
+                <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                    <table class="table vt-table mb-0" id="BT_Grid">
+                        <thead>
+                            <tr role="row">
+                                <th rowspan="2">#</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Mã khách hàng"]</th>
+                                <th rowspan="2" style="min-width: 150px;" data-name="custcodeold">@Local["Mã khách hàng cũ"]</th>
+                                <th rowspan="2" style="min-width: 200px;">@Local["Khách hàng"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Mã hồ sơ"]</th>
+                                <th rowspan="2" data-name="phone">@Local["Số điện thoại"]</th>
+                                <th rowspan="2" data-name="service" style="min-width: 200px;">@Local["Dịch vụ"]</th>
+                                <th rowspan="2" data-name="servicecode" style="min-width: 150px;">@Local["Mã dịch vụ"]</th>
+                                <th rowspan="2" data-name="servicesource" style="min-width: 150px;">@Local["Nguồn dịch vụ"]</th>
+                                <th rowspan="2" data-name="salescode" style="min-width: 150px;">@Local["Mã lên đơn"]</th>
+                                <th rowspan="2" data-name="consult" style="min-width: 200px;">@Local["Tư vấn"]</th>
+                                <th rowspan="2" data-name="created" style="min-width: 120px;">@Local["Thông tin tạo"]</th>
+                                <th rowspan="2" data-name="detail" style="min-width: 200px;">@Local["Chi tiết"]</th>
+                                <th rowspan="2" data-name="percent" style="min-width: 200px;">@Local["Phần trăm hoàn thành"]</th>
+                                <th colspan="3" style="min-width: 250px;">@Local["Phát sinh của dịch vụ"]</th>
+                                <th colspan="3" style="min-width: 250px;">@Local["Điều trị của dịch vụ"]</th>
+                                <th colspan="3" style="min-width: 250px;">@Local["Công nợ của khách hàng"]</th>
+                                <th colspan="3" data-name="TreatCustomer" style="min-width: 250px;">@Local["Công nợ điều trị của khách hàng"]</th>
+                                <th rowspan="2" data-name="custnew" style="min-width:120px;">@Local["Khách mới"]</th>
+                                <th rowspan="2" data-name="source" style="min-width:150px;">@Local["Nguồn"]</th>
+                                <th rowspan="2" data-name="age" style="min-width:100px;">@Local["Độ tuổi"]</th>
+                                <th rowspan="2" data-name="gender" style="min-width: 80px;">@Local["Giới tính"]</th>
+                                <th rowspan="2" data-name="address" style="min-width: 120px;">@Local["Địa chỉ"]</th>
+                                <th rowspan="2" data-name="district" style="min-width: 120px;">@Local["Quận huyện"]</th>
+                                <th rowspan="2" data-name="city" style="min-width: 150px;">@Local["Tỉnh thành phố"]</th>
+                                <th rowspan="2" data-name="branch" style="min-width: 120px;">@Local["Chi nhánh"]</th>
+                            </tr>
+                            <tr>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Phát sinh"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Thanh toán"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Công nợ"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Phát sinh điều trị"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Thanh toán"]</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Chênh lệch"] </br>(@Local["Điều trị"] - @Local["Thanh toán"])</th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Phát sinh"]<span class="d-block text-danger">[1]</span></th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Thanh toán"]<span class="d-block text-danger">[2]</span></th>
+                                <th rowspan="2" style="min-width: 150px;">@Local["Công nợ"]<span class="d-block text-danger">[1] - [2]</span></th>
+                                <th rowspan="2" data-name="TreatCustomer" style="min-width: 150px;">@Local["Phát sinh điều trị"]<span class="d-block text-danger">[1]</span></th>
+                                <th rowspan="2" data-name="TreatCustomer" style="min-width: 150px;">@Local["Thanh toán"]<span class="d-block text-danger">[2]</span></th>
+                                <th rowspan="2" data-name="TreatCustomer" style="min-width: 150px;">@Local["Chênh lệch"] </br>(@Local["Điều trị"] - @Local["Thanh toán"])<span class="d-block text-danger">[1] - [2]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="BT_GridBody">
+                        </tbody>
+                        <tfoot id="BT_GridFoot">
+                        </tfoot>
+                    </table>
+                </div>
+                <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return BT_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT LOAD LIST
+
+    let xhrLoadList;
+    let DataReportMain, DataReportMainSlice;
+    let IndexReport = 0;
+    let shtable;
+    let timeoutCount;
+    let Debt_By_Treatment = '@Model._Debt_By_Treatment';
+    let sys_TreatManualAmount = Number('@Model.sys_TreatManualAmount');
+    let BT_SourceServiceID;
+    let BT_DataTypeCus = [
+        {"ID": 1, "Name": "@Local["Khách mới"]"}
+        , {"ID": 2, "Name" : "@Local["Khách cũ"]"}
+    ];
+    $(document).ready(function () {
+        BT_Init();
+        Checking_TabControl_Permission();
+    });
+    function BT_Init() {
+        shtable = $("#BT_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        Load_Combo(BT_DataTypeCus, "BT_CbbTypeCus", false, '@Local["Tất cả"]');
+        $("#BT_TypeCus").dropdown("refresh");
+        $("#BT_TypeCus").dropdown("set selected", "0");
+        if (Object.keys(RP_DataServiceSource).length > 0) {
+            $('#BT_SerSourceDiv').show();
+            Load_Combo(Object.values(RP_DataServiceSource), "BT_cbbSourceService", false, '@Local["Nguồn dịch vụ"]');
+            $("#BT_SourceService").dropdown("refresh");
+            $("#BT_SourceService").dropdown("set selected", "0");
+
+        }
+        else {
+            $('#BT_SerSourceDiv').hide();
+        }
+        BT_Load();
+        BT_Event();
+    }
+    function BT_Load() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._branch";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        IndexReport = 0;
+        $("#BT_GridBody, #BT_GridFoot").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/Account/BalanceCustByTreatmentGrid/?handler=Loadata"
+            , data = { 'branchID': _branchID, 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'sersourceID': BT_SourceServiceID, 'TreatManualAmount': sys_TreatManualAmount}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    BT_CalculatorTotal(data);
+                    DataReportMain = JSON.parse(JSON.stringify(data));
+                    DataReportMainSlice = sliceIntoChunks(data, 500);
+                    if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "BT_GridBody"
+                            , blocknum = 100
+                            , fnrender = BT_Render
+                            , fnsuccess = null
+                        );
+                    }
+
+                    Count_Up("Reve_totaldata", DataReportMain.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    function BT_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "BT_GridBody"
+                , blocknum = 100
+                , fnrender = BT_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function BT_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                        <td class="vt-number-order" ></td>
+                                        <td >
+                                            <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                                ${item.CustCode}
+                                            </a>
+                                        </td>
+                                            <td data-name="custcodeold">${item.CustOldCode}</td>
+                                        <td >${item.CustName}</td>
+                                        <td >${item.DocCode}</td>
+                                        <td data-name="phone"><span class="_tab_control_" data-tab="phone_customer">${item.Phone}</span></td>
+                                        <td data-name="service">${BT_Render_GetName(RP_DataService, item.ServiceID)}</td>
+                                        <td data-name="servicecode">${BT_Render_GetCode(RP_DataService, item.ServiceID)}</td>
+                                        <td data-name="servicesource">${BT_Render_GetName(RP_DataServiceSource, item.ServiceSourceID)}</td>
+                                        <td data-name="salescode">${item.SalesCode}</td>
+                                        <td data-name="consult">${BT_Render_GetName(RP_DataEmployee, item.ConsultID)}</td>
+                                        <td data-name="created" >${BT_Render_Created(item.Created, item.CreatedBy)}</td>
+                                        <td data-name="detail">${BT_Render_Detail(item.TeethType, item.TeethChoosing, item.TreatTime, item.TreatIndex)}</td>
+                                        <td data-name="percent">${BT_Render_TreatmentOrPercentService(item.TreatIndex, item.TreatTime, item.TreatDetail, item.PercentOfService, item.TeethChoosing, item.TreatPercentDetail, item.Quantity)}</td>
+                                        <td >${formatNumber(item.ServicePrice)}</td>
+                                        <td >${formatNumber(item.TreatPaid)}</td>
+                                        <td >${formatNumber(item.ServicePrice - item.TreatPaid)}</td>
+
+                                        <td >${formatNumber(item.TreatService)}</td>
+                                        <td >${formatNumber(item.TreatPaid)}</td>
+                                        <td >${formatNumber((item.TreatService - item.TreatPaid))}</td>
+                                        <td >${formatNumber(item.TotalPriceDiscount)}</td>
+                                        <td >${formatNumber(item.Paid)}</td>
+                                        <td >${formatNumber(item.TotalDebt)}</td>
+
+                                        <td data-name="TreatCustomer">${formatNumber(item.TotalPriceTreat)}</td>
+                                        <td data-name="TreatCustomer">${formatNumber(item.Paid)}</td>
+                                        <td data-name="TreatCustomer">${formatNumber(item.TotalDebtTreat)}</td>
+
+                                        <td data-name="custnew" class="text-center">${(item.IsCustNew == 1) ? `<i class="fas fa-check text-success"></i>` : ``}</td>
+                                        <td data-name="source" class="source">${BT_Render_GetName(RP_DataCustomerSource, item.SourceID)}</td>
+                                        <td data-name="age" >${BT_Render_TypeAge(item.Birthday)}</td>
+                                        <td data-name="gender" >${BT_Render_Gender(item.Gender)}</td>
+                                        <td data-name="address" class="_tab_control_" data-tab="address_customer">${item.Address}</td>
+                                        <td data-name="district" class="_tab_control_" data-tab="address_customer">${item.District}</td>
+                                        <td data-name="city" class="_tab_control_" data-tab="address_customer">${item.City}</td>
+                                        <td data-name="branch" >${BT_Render_GetName(RP_DataBranch, item.BranchID)}</td>
+                                                    `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtable.Refresh();
+                        Checking_TabControl_Permission();
+                        clearTimeout(timeoutCount);
+                        timeoutCount = setTimeout(() => {
+                            Count_Up("Reve_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+            }, 100);
+        })
+    }
+
+
+    function BT_CalculatorTotal(data) {
+        let totalAmount = 0;
+        let totalAmountPaid = 0;
+        let custid = 0;
+        if (data && data.length != 0) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                item.TreatService = sys_TreatManualAmount == 1 ? item.ManualTreat : item.TreatService;
+                item.TreatServiceAll = sys_TreatManualAmount == 1 ? item.ManualTreatAll : item.TreatServiceAll;
+                item.TotalPriceDiscount = item.PriceDiscounted;
+                item.TotalDebt = item.PriceDiscounted - item.Paid;
+                item.TotalPriceTreat = item.TreatServiceAll;
+                item.TotalDebtTreat = item.TreatServiceAll - item.Paid > 0 ? item.TreatServiceAll - item.Paid : 0;
+
+                totalAmount += item.TreatService;
+                totalAmountPaid += item.TreatPaid;
+            }
+        }
+        Count_Up("lbTotalAmount", totalAmount, 1);
+        Count_Up("lbTotalAmountPaid", totalAmountPaid, 1);
+        Count_Up("lbTotalAmountBalance", totalAmount - totalAmountPaid, 1);
+    }
+
+    function BT_Render_TreatmentOrPercentService(TreatIndex, TimeToTreatment, TreatDetail, PercentOfService, TeethChoosing, Treat_Percent_Detail, Quantity) {
+        try {
+            let result = 100;
+            if (sys_dencos_Main == 0) result = TimeToTreatment != 0 ? (100 * TreatIndex / TimeToTreatment) : 0;
+            else {
+                if (TreatDetail == 0) result = PercentOfService;
+                else {
+                    if (TeethChoosing != '') result = (Quantity != 0) ? (Treat_Percent_Detail / Quantity) : 0;
+                    else result = Treat_Percent_Detail;
+                }
+            }
+            return result;
+        }
+        catch (ex) {
+            return 0;
+        }
+    }
+
+    function BT_Render_Detail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment) {
+        try {
+            let result = '';
+            if (sys_dencos_Main == 0) {
+                result = `${decodeHtml("@Local["Đã điều trị"]")}: ${TreatIndex} | ${TimeToTreatment}`
+            }
+            else {
+                result = `${(TeethChoosing != '') ? Fun_GetTeeth_ByToken(DataTeeth, TeethChoosing, TeethType) : ''}`
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function BT_Render_GetName(data, id) {
+        try {
+            let result = '';
+            if (data && data[id] != undefined) {
+                result = data[id].Name;
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function BT_Render_GetCode(data, id) {
+        try {
+            let result = '';
+            if (data && data[id] != undefined) {
+                result = data[id].Code;
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function BT_Render_Gender(id) {
+        try {
+            let result = decodeHtml('@Local["Nam"]');
+            if (id == 61) result = decodeHtml('@Local["Nữ"]');
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function BT_Render_TypeAge(date) {
+        try {
+            let age = 0;
+            let result = '';
+            if (!date.includes('1900'))
+                age = BT_Render_GetAge(date);
+            if (age > 0) {
+                if (age < 16) result = '< 16'
+                else if (age > 16 && age < 31) result = '17 - 30'
+                else if (age > 16 && age <= 30) result = '17 - 30'
+                else if (age > 30 && age <= 40) result = '31 - 40'
+                else if (age > 40 && age <= 50) result = '41 - 50'
+                else if (age > 50) result = '> 51'
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function BT_Render_GetAge(dateString) {
+        try {
+            var today = new Date();
+            var birthDate = new Date(dateString);
+            var age = today.getFullYear() - birthDate.getFullYear();
+            var m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        catch (ex) {
+            return 0;
+        }
+    }
+
+    function BT_Render_Created(created, createdBy) {
+        try {
+            let result = '';
+            result = `
+                      <p class="mb-0 text-sm" >${BT_Render_GetName(RP_DataEmployee, createdBy)}</p>
+                      <span class="text-xs"> ${ConvertDateTimeUTC_DMYHM(created)} </span>
+                                    `
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function BT_Event() {
+        $("#BT_TypeCus").on("change", function () {
+            BT_FilterData();
+        })
+
+        $("#BT_SourceService").unbind('change').change(function () {
+            BT_SourceServiceID = $(this).dropdown("get value") ? Number($(this).dropdown("get value")) : 0;
+            BT_Load();
+        })
+
+        $("#BT_SearchCus").on("keyup", function () {
+            clearTimeout(BT_Timer);
+            $("#BT_AreaBtnSearch .btn_clear").addClass('d-none');
+            $("#BT_AreaBtnSearch .spinner-border").removeClass('d-none');
+            BT_Timer = setTimeout(() => {
+                BT_FilterData();
+            }, 500);
+        })
+
+        $("#BT_AreaBtnSearch .btn_clear").on("click", function () {
+            $("#BT_SearchCus").val("");
+            BT_FilterData();
+        })
+    }
+
+    function BT_FilterData() {
+        if (DataReportMain && DataReportMain.length > 0) {
+            let _Dt = DataReportMain;
+            let TypeCus = $("#BT_TypeCus").dropdown("get value") ? Number($("#BT_TypeCus").dropdown("get value")) : 0;
+            let SearchText = $("#BT_SearchCus").val() ? xoa_dau($("#BT_SearchCus").val()).toLowerCase().trim() : '';
+
+            if (TypeCus != 0) {
+                _Dt = _Dt.filter((item) => { return ((TypeCus == 1 && item["IsCustNew"] == 1) || (TypeCus == 2 && item["IsCustNew"] == 0)) });
+            }
+            if (SearchText != '' && SearchText.length > 3) {
+                _Dt = _Dt.filter((item) => { return ((xoa_dau(item["CustCode"])).toLowerCase().trim().includes(SearchText) || (xoa_dau(item["CustName"])).toLowerCase().trim().includes(SearchText)) })
+            }
+            $("#BT_AreaBtnSearch .btn_clear").removeClass('d-none');
+            $("#BT_AreaBtnSearch .spinner-border").addClass('d-none');
+            if (SearchText == '' || SearchText.length > 3) {
+                IndexReport = 0;
+                $("#BT_GridBody").empty();
+                BT_CalculatorTotal(_Dt);
+                Count_Up("Reve_totaldata", _Dt.length);
+                DataReportMainSlice = sliceIntoChunks(JSON.parse(JSON.stringify(_Dt)), 500);
+                if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                    fnRenderBlock(DataReportMainSlice[IndexReport], "BT_GridBody"
+                        , blocknum = 100
+                        , fnrender = BT_Render
+                        , fnsuccess = null
+                    );
+                }
+
+            }
+        }
+    }
+    //#endregion
+
+    //#region // EXPORT - PRINT
+
+    function BT_Export(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#BCBG_Container');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustOldCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcodeold']`)).is(":checked"),
+                        data: ["@Local["Mã khách hàng cũ"]"]
+                    },
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": ["@Local["Mã hồ sơ"]"],
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='phone']`)).is(":checked"),
+                        data: ["@Local["Số điện thoại"]"]
+                    },
+                    "ServiceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='service']`)).is(":checked"),
+                        data: ["@Local["Dịch vụ"]", (v) => {
+                            return BT_Render_GetName(RP_DataService, v);
+                        }]
+                    },
+                    "ServiceID1": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicecode']`)).is(":checked"),
+                        data: ["@Local["Mã dịch vụ"]", (v, {ServiceID}) => {
+                            return BT_Render_GetCode(RP_DataService, ServiceID);
+                        }]
+                    },
+                    "ServiceSourceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicesource']`)).is(":checked"),
+                        data: ["@Local["Nguồn dịch vụ"]", (v, { ServiceSourceID }) => {
+                            return BT_Render_GetName(RP_DataServiceSource, ServiceSourceID);
+                        }]
+                    },
+                    "SalesCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='salescode']`)).is(":checked"),
+                        data: ["@Local["Mã lên đơn"]"]
+                    },
+                    "ConsultID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='consult']`)).is(":checked"),
+                        data: ["@Local["Tư vấn"]", (v) => {
+                            return BT_Render_GetName(RP_DataEmployee, v);
+                        }]
+                    },
+                    "Created": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Thông tin tạo"]", (v, { CreatedBy }) => {
+                            return `${BT_Render_GetName(RP_DataEmployee, CreatedBy)} ${ConvertDateTimeUTC_DMYHM(v)}`;
+                        }]
+                    },
+                    "Detail": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detail']`)).is(":checked"),
+                        data: ["@Local["Chi tiết"]", (v, { TeethType, TeethChoosing, TreatTime, TreatIndex }) => {
+                            return BT_Render_Detail(TeethType, TeethChoosing, TreatTime, TreatIndex);
+                        }]
+                    },
+                    "PerComplete": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='percent']`)).is(":checked"),
+                        data: ["@Local["Phần trăm hoàn thành"]", (v, { TreatIndex, TreatTime, TreatDetail, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity }) => {
+                            return BT_Render_TreatmentOrPercentService(TreatIndex, TreatTime, TreatDetail, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity);
+                        }]
+                    },
+                    "ServicePrice": ["@Local["Dịch vụ - phát sinh"]"],
+                    "TreatPaid1": ["@Local["Dịch vụ - thanh toán"]", (v, { TreatPaid }) => { return (TreatPaid != undefined ? TreatPaid : 0) }],
+                    "ServiceLeft": ["@Local["Dịch vụ - còn lại"]", (v, { ServicePrice, TreatPaid }) => { return ServicePrice - TreatPaid }],
+                    "TreatService": ["@Local["Dich vụ điều trị - phát sinh điều trị"]"],
+                    "TreatPaid": ["@Local["Dich vụ điều trị - thanh toán"]"],
+                    "TreatPaidLeft": ["@Local["Dich vụ điều trị"] - @Local["Chênh lệch"]", (v, { TreatService, TreatPaid }) => {
+                        return TreatService - TreatPaid;
+                    }],
+
+                    "TotalPriceDiscount": ["@Local["Khách hàng - phát sinh điều trị"]"],
+                    "Paid": ["@Local["Khách hàng - thanh toán"]"],
+                    "TotalDebt": ["@Local["Khách hàng - còn lại"]"],
+                    "TotalPriceTreat": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='TreatCustomer']`)).is(":checked"),
+                        data: ["@Local["Điều trị"] - @Local["Phát sinh"]", (value) => { return value}]
+                    },
+                    "Paid1": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='TreatCustomer']`)).is(":checked"),
+                        data: ["@Local["Điều trị"] - @Local["Thanh toán"]", (value, {Paid}) => {return Paid}]
+                    },
+                    "TotalDebtTreat": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='TreatCustomer']`)).is(":checked"),
+                        data: ["@Local["Điều trị"] - @Local["Chênh lệch"]", (value) => {return value}]
+                    },
+                    "SourceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                        data: ["@Local["Nguồn"]", (value) => { return BT_Render_GetName(RP_DataCustomerSource, value) }]
+                    },
+                    "Birthday": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='age']`)).is(":checked"),
+                        data: ["@Local["Độ tuổi"]", (value) => { return BT_Render_TypeAge(value) }]
+                    },
+                    "IsCustNew": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custnew']`)).is(":checked"),
+                        data: ["@Local["Khách mới"]", (value) => { return (value == "1" ? 'x' : '') }]
+                    },
+                    "Gender": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gender']`)).is(":checked"),
+                        data: ["@Local["Giới tính"]", (value) => { return BT_Render_Gender(value) }]
+                    },
+                    "Address": {
+                        dataNamePer: 'address',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='address']`)).is(":checked"),
+                        data: ["@Local["Địa chỉ"]"]
+                    },
+                    "District": {
+                        dataNamePer: 'district',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='district']`)).is(":checked"),
+                        data: ["@Local["Quận huyện"]"]
+                    },
+                    "City": {
+                        dataNamePer: 'city',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='city']`)).is(":checked"),
+                        data: ["@Local["Tỉnh thành phố"]"]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return BT_Render_GetName(RP_DataBranch, value) }]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'BT_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Sys_cong_no_theo_dieu_tri"]);
+                exportJsonToExcel(Outlang["Sys_cong_no_theo_dieu_tri"], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!' + ex.message);
+        }
+    }
+
+    async function BT_PrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = "@Model._branch";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustOldCode": ["@Local["Mã khách hàng cũ"]", {
+                        isShow: $(`.shtoogle[data-name='custcodeold']`).is(":checked")
+                    }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": ["@Local["Mã hồ sơ"]"],
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]", { isShow: $(`.shtoogle[data-name='phone']`).is(":checked") }]
+                    },
+                    "ServiceID": ["@Local["Dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='service']`).is(":checked")
+                        , callbackRenderValue: (v) => {
+                            return BT_Render_GetName(RP_DataService, v);
+                        }
+                    }],
+                    "ServiceCode": ["@Local["Mã dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicecode']`).is(":checked")
+                        , callbackRenderValue: (v, { ServiceID }) => {
+                            return BT_Render_GetCode(RP_DataService, ServiceID);
+                        }
+                    }],
+                    "ServiceSourceID": ["@Local["Nguồn dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicesource']`).is(":checked")
+                        , callbackRenderValue: (v, { ServiceSourceID }) => {
+                            return BT_Render_GetName(RP_DataServiceSource, ServiceSourceID);
+                        }
+                    }],
+                    "SalesCode": ["@Local["Mã lên đơn"]", {
+                        isShow: $(`.shtoogle[data-name='salescode']`).is(":checked")
+                    }],
+                    "ConsultID": ["@Local["Tư vấn"]", {
+                        isShow: $(`.shtoogle[data-name='consult']`).is(":checked")
+                        , callbackRenderValue: (v) => {
+                            return BT_Render_GetName(RP_DataEmployee, v);
+                        }
+                    }],
+                    "Created": ["@Local["Thông tin tạo"]", {
+                        isShow: $(`.shtoogle[data-name='created']`).is(":checked")
+                        , callbackRenderValue: (v, { CreatedBy }) => {
+                            return `${BT_Render_Created(v, CreatedBy)}`;
+                        }
+                    }],
+                    "Detail": ["@Local["Chi tiết"]", {
+                        isShow: $(`.shtoogle[data-name='detail']`).is(":checked")
+                        , callbackRenderValue: (v, { TeethType, TeethChoosing, TreatTime, TreatIndex }) => {
+                            return BT_Render_Detail(TeethType, TeethChoosing, TreatTime, TreatIndex);
+                        }
+                    }],
+                    "PerComplete": ["@Local["Phần trăm hoàn thành"]", {
+                        isShow: $(`.shtoogle[data-name='percent']`).is(":checked")
+                        , callbackRenderValue: (v, { TreatIndex, TreatTime, TreatDetail, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity }) => {
+                            return BT_Render_TreatmentOrPercentService(TreatIndex, TreatTime, TreatDetail, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity);
+                        }
+                    }],
+                    "ServicePrice": ["@Local["Dịch vụ - phát sinh"]"],
+                    "TreatPaid1": ["@Local["Dịch vụ - thanh toán"]", { callbackRenderValue: (v, { TreatPaid }) => { return TreatPaid } }],
+                    "ServiceLeft": ["@Local["Dịch vụ - còn lại"]", {
+                        callbackRenderValue: (v, { ServicePrice, TreatPaid }) => { return ServicePrice - TreatPaid }
+                    }],
+                    "TreatService": ["@Local["Dich vụ điều trị - phát sinh điều trị"]"],
+                    "TreatPaid": ["@Local["Dich vụ điều trị - thanh toán"]"],
+                    "TreatPaidLeft": ["@Local["Dich vụ điều trị"] - @Local["Chênh lệch"]", {
+                        callbackRenderValue: (v, { TreatService, TreatPaid }) => {
+                            return TreatService - TreatPaid;
+                        }
+                    }],
+
+                    "TotalPriceDiscount": ["@Local["Khách hàng - phát sinh điều trị"]"],
+                    "Paid": ["@Local["Khách hàng - thanh toán"]"],
+                    "TotalDebt": ["@Local["Khách hàng - còn lại"]"],
+
+                    "TotalPriceTreat": ["@Local["Điều trị"] - @Local["Phát sinh"]", {
+                        isShow: $(`.shtoogle[data-name='TreatCustomer']`).is(":checked")
+                        , callbackRenderValue: (value) => { return value }
+                    }],
+
+                    "Paid1": ["@Local["Điều trị"] - @Local["Thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='TreatCustomer']`).is(":checked")
+                        , callbackRenderValue: (value, {Paid }) => {return Paid }
+                    }],
+
+                    "TotalDebtTreat": ["@Local["Điều trị"] - @Local["Chênh lệch"]", {
+                        isShow: $(`.shtoogle[data-name='TreatCustomer']`).is(":checked")
+                        , callbackRenderValue: (value) => { return value }
+                    }],
+
+                    "SourceID": ["@Local["Nguồn"]", {
+                        isShow: $(`.shtoogle[data-name='source']`).is(":checked")
+                        , callbackRenderValue: (value) => { return BT_Render_GetName(RP_DataCustomerSource, value) }
+                    }],
+                    "Birthday": ["@Local["Độ tuổi"]", {
+                        isShow: $(`.shtoogle[data-name='age']`).is(":checked")
+                        , callbackRenderValue: (value) => { return BT_Render_TypeAge(value) }
+                    }],
+                    "IsCustNew": ["@Local["Khách mới"]", {
+                        isShow: $(`.shtoogle[data-name='custnew']`).is(":checked")
+                        , callbackRenderValue: (value) => { return (value == "1" ? 'x' : '') }
+                    }],
+                    "Gender": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='gender']`).is(":checked")
+                        , callbackRenderValue: (value) => { return BT_Render_Gender(value) }
+                    }],
+                    "Address": {
+                        dataNamePer: 'address',
+                        data: ["@Local["Địa chỉ"]", {
+                            isShow: $(`.shtoogle[data-name='address']`).is(":checked")
+                        }]
+                    },
+                    "District": {
+                        dataNamePer: 'district',
+                        data: ["@Local["Quận huyện"]", {
+                            isShow: $(`.shtoogle[data-name='district']`).is(":checked")
+                        }]
+                    },
+                    "City": {
+                        dataNamePer: 'city',
+                        data: ["@Local["Tỉnh thành phố"]", {
+                            isShow: $(`.shtoogle[data-name='city']`).is(":checked")
+                        }]
+                    },
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked")
+                        , callbackRenderValue: (value) => { return BT_Render_GetName(RP_DataBranch, value) }
+                    }]
+                };
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'BT_GridBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Sys_cong_no_theo_dieu_tri"], DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                            //#endregion
+
+</script>
+
+

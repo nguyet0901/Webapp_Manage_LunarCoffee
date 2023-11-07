@@ -1,0 +1,281 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Checkin.CheckinDetail
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row card shawdow-none m-0">   
+    <div class="col-md-12">
+        <form class="form form3" id="HRCheckin">
+            <div class="p-3 border-radius-xl mb-3">
+                <div class="row p-2 d-flex justify-content-center align-items-center">
+                    <div class="col-12 col-md-10 col-lg-8 p-1 mt-2 position-relative">
+                        <div class="text-center">
+                            <h6 id="HRCheckin_Day" class="text-primary font-weight-bolder mb-1"></h6>
+                            <p class="mb-0 text-sm text-dark">@Local["Tiến hành chấm công trong ngày"]</p>                            
+                        </div>
+                        <div class="ms-2 mt-3 d-flex align-items-center">
+                            <div class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" type="checkbox" data-bs-toggle="collapse" data-bs-target=".HRCheckin_collapse" aria-expanded="false">
+                                </div>
+                            </div>
+                            <div class="text-sm text-dark ps-2">@Local["Tất cả ca làm việc"]</div>
+                        </div>
+                        <div class="row px-2 mt-3 mt-lg-3 mb-3">                            
+                            <div class="col-12 col-lg-12 col-sm-12">
+                                <ul id="HRCheckin_ContentBody" class="nav nav-pills flex-column bg-white border-radius-lg p-0 mt-2">
+
+                                </ul>
+                                <div class="bg-gradient-warning text-white p-2 rounded-2 text-center d-none" id="HRCheckin_Warning">@Local["Không có ca làm việc vào hôm nay"]</div>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="action_Save mb-3">
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" form="HRCheckin" onclick="event.preventDefault();return CloseModal();">@Local["Đóng"]</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+<script type="text/javascript">
+    //#region // Load
+    var numdate = 0;
+    var numTime = 0;
+    var Flag_AllEmp = 1;
+    $(document).ready(function () {
+        HRCheckin_LoadData();
+        HRCheckin_EventClick();
+        let date = new Date();
+        let DateCheckin = HRCheckin_GetDayName(date.getDay()) + ", " + ConvertDateTimeUTC_DMY(date);
+        numdate = date.getDay().toString();
+        numTime = Number(date.getHours().toString() + (date.getMinutes().toString().length == 1 ? "0" + date.getMinutes().toString() : date.getMinutes().toString()));
+        $("#HRCheckin_Day").html(DateCheckin);
+        ToolPopper();
+    });
+    function HRCheckin_LoadData() {
+        AjaxLoad(url = "/HR/Checkin/CheckinDetail/?handler=LoadData"
+            ,data = {}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = HRCheckin_GetShifNow(datas);
+                    data = HRCheckin_Sort(data);
+                    if(data.length != 0) HRCheckin_RenderShift(data,'HRCheckin_ContentBody');
+                    else {
+                        $("#HRCheckin_Warning").removeClass('d-none');
+                    }
+                }
+                else notiError_SW();
+            }
+        );
+    }
+    function HRCheckin_GetShifNow(datas){
+        let result = [];
+        if (datas.Table2.length == 0 || datas.Table1.length == 0) return result;
+        let dataDetail = datas.Table;
+        let dataShift = datas.Table2;
+        let dataEmpShift = JSON.parse(datas.Table1[0].Data);
+        let dataEmpShiftNow = dataEmpShift.filter(word => { return word['dayofweek'] == numdate });
+        if (dataEmpShiftNow.length == 0) dataEmpShiftNow = dataEmpShift;
+        if(dataEmpShiftNow[0]?.off) return result;
+        else {
+            let branch = dataEmpShiftNow[0].shift[0].branch;
+            let shift = '';
+            dataEmpShiftNow[0]?.shift.forEach((word) => { word.branch == Master_branchID ? shift += word.shift.toString() + ',' : '' });
+            if (Master_branchID != branch) return result;
+            else {
+                let _v = shift.split(',');
+                for (let i = 0; i < _v.length; i++) {
+                    let item = _v[i];
+                    if(item != ''){
+                        let _dShift = dataShift.filter(word => { return word['ID'] == item });
+                        let _dEmpTime = dataDetail.filter(word => { return word['ShiftID'] == item });
+                        let _e = {};
+                        _e.ShiftName = _dShift[0]?.Code;
+                        _e.HourFrom = _dShift[0]?.HourFrom;
+                        _e.HourFromNum = Number(ConvertTime_ToString(_e.HourFrom));
+                        _e.HourTo = _dShift[0]?.HourTo;
+                        _e.HourToNum = Number(ConvertTime_ToString(_e.HourTo));
+                        _e.ColorCode = _dShift[0]?.ColorCode;
+                        _e.TimeCheckin = _dEmpTime[0]?.TimeCheckin;
+                        _e.TimeCheckout = _dEmpTime[0]?.TimeCheckout;
+                        _e.ShiftID = item;                        
+                        _e.IsCheckin = (_e.HourToNum >= numTime)
+                            ? 1 : 0;
+                        _e.IsCheckout = (_e.HourFromNum <= numTime)
+                            ? 1 : 0;
+                        result.push(_e);
+                    }
+                }
+            }
+            
+        }        
+        return result;
+    }
+
+    function HRCheckin_Sort(data){
+        let result = [];
+        result = data.sort((a,b) =>{
+            return Number(ConvertTime_ToString(a.HourFrom)) - Number(ConvertTime_ToString(b.HourFrom))
+        })
+        return result;
+    }
+    async function HRCheckin_RenderShift(data,id) {
+        new Promise((resolve, reject) => {
+            let myNode = document.getElementById(id);
+            let str = '';
+            if( myNode != null ){
+                if (data && data.length != 0) {
+                    for(let i = 0 ; i < data.length ; i++){
+                        let item = data[i];
+                        let itemAfter = data[i + 1] != undefined ? data[i + 1] : [];
+                        let itemBefore = data[i - 1] != undefined ? data[i - 1] : [];                        
+                        let IsCheckIn = ((item.IsCheckin == 1) //trong ca
+                            && (itemBefore.HourToNum < numTime || itemBefore.length == 0)//trong ca
+                            && item.TimeCheckin == undefined //đã check in                            
+                            && (((itemBefore.TimeCheckout == undefined) && (itemBefore.TimeCheckin == undefined)) || ((itemBefore.TimeCheckout != undefined) && (itemBefore.TimeCheckout != "0")))) //Dkien ca trước
+                            ? 1 : 0;                            
+                        let IsCheckOut = ((item.IsCheckout == 1) //trong ca                            
+                            && item.TimeCheckin != undefined //Đã checkin
+                            && ((itemAfter.TimeCheckin == undefined) || (itemAfter.TimeCheckin == undefined  && itemAfter.TimeCheckout == undefined))) //Dkien ca sau
+                            || (item.TimeCheckin != undefined && item.IsCheckout == 1 && item.IsCheckin == 1)
+                            ? 1 : 0;
+                        let IsShow = ((IsCheckIn == 1)
+                            || (IsCheckOut == 1))
+                            ? 1 : 0;                        
+                        str +=
+                        `<li class="nav-item ${IsShow == 1 ? "" : "collapse collapsesticky HRCheckin_collapse"}">
+                            <div class="d-flex align-items-center row">
+                                <div class="col-12 col-lg-4">
+                                    <div class="ps-3 ms-n1 border border-5 border-bottom-0 border-top-0 border-end-0 border-3" style="border-color:${item.ColorCode}!important;">
+                                        <div class="mb-n2">
+                                            <span class=" text-dark text-lg fw-bolder">${item.ShiftName}</span>
+                                        </div>
+                                        <span class="text-dark text-sm fw-bold">${item.HourFrom} - ${item.HourTo}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-12 mt-lg-2 mt-4">
+                                    <div class="row">
+                                        <button class="col-12 col-sm-12 col-xl-6 p-0 px-2 mb-0 btn shadow-none ${(IsCheckIn == 1) ? "" : "disabled"}" >
+                                            <div class="card cursor-pointer btn btn-white btn-animate px-0 HRCheckin_BtnCheck" data-shift="${item.ShiftID}">
+                                                <div class="card-body p-1 text-center">
+                                                    <h3 class="text-gradient text-primary">
+                                                        <span>${HRCheckin_GetTime(item.TimeCheckin)}</span>
+                                                    </h3>
+                                                    <h6 class="mb-0 font-weight-bolder">Clock In</h6>
+                                                    <p class="opacity-8 mb-0 text-sm">@Local["Thời gian vào làm"]</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        <button class="col-12 col-sm-12 col-xl-6 p-0 px-2  mb-0 btn shadow-none ${IsCheckOut == 1 ? "" : "disabled"}" >
+                                            <div class="card cursor-pointer btn btn-white btn-animate px-0 HRCheckin_BtnCheck" data-shift="${item.ShiftID}">
+                                                <div class="card-body p-1 text-center">
+                                                    <h3 class="text-gradient text-primary">
+                                                        <span>${HRCheckin_GetTime(item.TimeCheckout)}</span>
+                                                    </h3>
+                                                    <h6 class="mb-0 font-weight-bolder">Clock Out</h6>
+                                                    <p class="opacity-8 mb-0 text-sm">@Local["Thời gian ra về"]</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="horizontal dark">
+                        </li>
+                        `
+                    }
+                }                
+                myNode.innerHTML = str;
+                HRCheckin_EventClick();
+            }            
+            resolve();
+        });
+    }
+    //#endregion
+
+    //#region Event
+    function HRCheckin_EventClick(){
+        $("#HRCheckin_ContentBody .HRCheckin_BtnCheck").unbind('click').click(function (){
+            $(this).addClass('disabled');
+            let shift = $(this).attr('data-shift');
+            HRCheckin_ExcuteData(shift);
+            $(this).removeClass('disabled');
+        });
+    }
+
+    function HRCheckin_ExcuteData(shift) {        
+        let data = {};
+        data.Shift = shift;
+        data.BranchID = Master_branchID;
+        AjaxLoad(url = "/HR/Checkin/CheckinDetail?handler=ExcuteData"
+            ,data = {
+                data: JSON.stringify(data)                
+            }
+            , async = true, error = null
+            , success = function (_r) {
+                if(_r != "0"){
+                    notiSuccess();
+                    CloseModal()
+                }
+                else notiError_SW();
+            }
+            ,sender = $(".HRCheckin_BtnCheck")            
+        );
+    }
+    function HRCheckin_GetDayName(num) {
+        var dayofweek = [decodeHtml("@Local["Chủ nhật"]")
+        ,decodeHtml("@Local["Thứ hai"]")
+        ,decodeHtml("@Local["Thứ ba"]")
+        ,decodeHtml("@Local["Thứ tư"]")
+        ,decodeHtml("@Local["Thứ năm"]")
+        ,decodeHtml("@Local["Thứ sáu"]")
+        ,decodeHtml("@Local["Thứ bảy"]")];
+        return dayofweek[Number(num)];
+    }
+    function HRCheckin_GetTime(val){
+        let result = '-';
+        if (val && val != '0'){
+            result = ConvertTimeInt_ToTime(val);
+        }
+        return result;
+    }
+    //#endregion
+</script>
+
+<style>
+    #HRCheckin_ContentBody .disabled .HRCheckin_BtnCheck{
+        background: #dee2e6 !important;
+    }
+    #HRCheckin .btn:visited {
+        text-transform: uppercase;
+        text-decoration: none;
+        padding: 15px 40px;
+        display: inline-block;
+        border-radius: 100px;
+        transition: all .2s;
+        position: absolute;
+    }
+
+    #HRCheckin .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    #HRCheckin .btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    }
+  
+
+</style>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

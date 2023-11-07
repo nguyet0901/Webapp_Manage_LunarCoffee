@@ -1,0 +1,137 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.ManuClass.ManuClassDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-1 ">
+    <div class="row ">
+        <div class="col-12 px-0">
+            <div class="card card-plain mb-3">
+                <div class="card-header pt-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-lg-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chi tiết phòng học"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row form3 px-2" id="form3">
+                        <div class="field col-12 col-xl-6 p-1">
+                            <label><span>@Local["Mã phòng"]</span></label>
+                            <input id="SSMClassDetail_Code" class="form-control" name="code" type="text" />
+                        </div>
+                        <div class="field col-12 col-xl-6 p-1">
+                            <label><span>@Local["Tên phòng"]</span></label>
+                            <input id="SSMClassDetail_Name" class="form-control" name="name" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Chi nhánh"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="SSMClassDetail_BranchID">
+                                <input type="hidden" name="ware" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="SSMClassDetail_cbbBranch" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label><span>@Local["Ghi chú"]</span></label>
+                            <textarea id="SSMClassDetail_Note" class="form-control" name="note"></textarea>
+                        </div>
+                    </div>
+                    <div class="fixed-botombutton pt-3">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); SSMClassList_Close()">@Local["Hủy"]</button>
+                                <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return SSMClassDetail_ExcuteDataDetail()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let ser_CurentID;
+    $(document).ready(function () {
+        ser_CurentID = "@Model._CurrentID";
+        SSMClassDetail_Init();
+
+    });
+
+    function SSMClassDetail_Init() {
+        AjaxLoad(url = "/Student/Settings/ManuClass/ManuClassDetail/?handler=LoadInitializeData"
+            , data = {}
+            , async = false, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data, "SSMClassDetail_cbbBranch", true);
+                    $("#SSMClassDetail_BranchID").dropdown("set selected", 1);
+                    SSMClassDetail_LoadDataUpdate();
+                }
+            });
+    }
+
+    function SSMClassDetail_LoadDataUpdate() {
+        if (ser_CurentID != 0) {
+            AjaxLoad(url = "/Student/Settings/ManuClass/ManuClassDetail/?handler=LoadData"
+                , data = {
+                    currentid: ser_CurentID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data && data.length === 1) SSMClassDetail_FillData(data[0]);
+                    }
+                    else notiError_SW();
+                }
+            );
+        }
+    }
+
+    function SSMClassDetail_FillData(item) {
+        $("#SSMClassDetail_BranchID").dropdown("refresh");
+        $("#SSMClassDetail_BranchID").dropdown("set selected", item.BranchID);
+        $('#SSMClassDetail_Code').val((item.Code));
+        $('#SSMClassDetail_Name').val((item.Name));
+        $('#SSMClassDetail_Note').val((item.Note));
+    }
+
+    function SSMClassDetail_ExcuteDataDetail() {
+        let data = new Object();
+        data.BranchID = $('#SSMClassDetail_BranchID').dropdown('get value');
+        data.Code = $('#SSMClassDetail_Code').val() ? $('#SSMClassDetail_Code').val() : "";
+        data.Name = $('#SSMClassDetail_Name').val() ? $('#SSMClassDetail_Name').val() : "";
+        data.Note = $('#SSMClassDetail_Note').val() ? $('#SSMClassDetail_Note').val() : "";
+
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/ManuClass/ManuClassDetail/?handler=ExcuteDataDetail"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_CurentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        SSMClassList_LoadData();
+                        SSMClassList_Close();
+                    } else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Trùng dữ liệu"]';
+                    }
+                });
+        }
+        return false;
+    }
+</script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>

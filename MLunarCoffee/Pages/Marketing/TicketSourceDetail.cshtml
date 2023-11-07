@@ -1,0 +1,142 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketSourceDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Nguồn khách hàng"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="form3" id="form3">
+                        <div class="row px-1">
+                            <div class="field col-12 p-1">
+                                <label>@Local["Tên nguồn khách hàng"]</label>
+                                <input id="SourceCount" class="form-control" name="name" type="text" />
+                            </div>
+                        </div>
+                        <div class="row px-1">
+                            <div class="field col-12 col-md-6 p-1">
+                                <label>@Local["Nhóm"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="GroupSouce">
+                                    <input name="statusType" type="hidden" />
+                                    <input id="searchGroupSouce" class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg. @Local["Nhóm"]</div>
+                                    <div id="cbbGroupSouce" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 p-1">
+                                <label>@Local["Nguồn riêng"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="SpecificSouce">
+                                    <input type="hidden" />
+                                    <input id="searchSpecificSouce" class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg. @Local["Nguồn riêng"]</div>
+                                    <div id="cbbSpecificSouce" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row px-1">
+                            <div class="field col-12 p-1">
+                                <label>@Local["Ghi chú"]</label>
+                                <textarea id="NoteSourceCount" class="form-control" rows="2" name="content"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="button_customer_detail_save" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();ExcuteData(1)">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    var ser_SourceDetailID = "@Model._SourceDetailID";
+
+    $(document).ready(function () {
+        TicketSourceDetail_LoadInitialize();
+        Checking_TabControl_Permission();
+    });
+
+    function TicketSourceDetail_LoadInitialize() {
+        AjaxLoad(url = "/Marketing/TicketSourceDetail/?handler=LoadDataInitialize"
+            , data = { 'TypeID': ser_SourceDetailID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data.dataTypeCat, "cbbGroupSouce", true);
+                    Load_Combo(data.SpecificSouce, "cbbSpecificSouce", true);
+                    let dataDetail = data.dataDetail;
+                    LoadDataUpdate(dataDetail);
+                }
+            }
+        );
+    }
+    function ExcuteData() {
+        var data = new Object();
+        data.Name = $('#SourceCount').val() ? $('#SourceCount').val() : "";
+        data.Note = $('#NoteSourceCount').val() ? $('#NoteSourceCount').val() : "";
+        data.SpecificSouce = Number($('#SpecificSouce').dropdown('get value')) ? Number($('#SpecificSouce').dropdown('get value')) : 0;
+        data.GroupSouce = Number($('#GroupSouce').dropdown('get value')) ? Number($('#GroupSouce').dropdown('get value')) : 0;
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Marketing/TicketSourceDetail/?handler=ExcuteData"
+                , data = { 'data': JSON.stringify(data), 'CurrentID': ser_SourceDetailID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        LoadTicketSourceAjax();
+                        $('#DetailModal').modal('hide');
+                        $("#DetailModal_Content").html('');
+                    }
+                    else {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    }
+                }
+            );
+        }
+        return false;
+    }
+
+    function LoadDataUpdate(data) {
+        if (data && data.length > 0) {
+            $('#SourceCount').val((data[0].Name));
+            $('#NoteSourceCount').val((data[0].Note));
+            $("#SpecificSouce").dropdown("refresh");
+            $("#SpecificSouce").dropdown("set selected", data[0].SPID);
+
+            $("#GroupSouce").dropdown("refresh");
+            $("#GroupSouce").dropdown("set selected", data[0].TypeCat_ID);
+        }
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

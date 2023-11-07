@@ -1,0 +1,256 @@
+﻿@page
+@model MLunarCoffee.Pages.Service.ServiceTypeDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0" id="ServiceType_Container">
+    <div class="row">
+        <div class="col-12">
+            <!--Master-->
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <!-- #region header -->
+                                <h6 class="mb-0">@Local["Loại dịch vụ"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết loại dịch vụ"]</p>
+                                <!-- #endregion -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-3 pt-2">
+                    <!-- #region control execute-->
+                    <div class="row px-2 form3" id="frservicetypeDetail">
+                        <div class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Mã loại dịch vụ"]</label>
+                            <input id="ServiceTypeCode" name="code" type="text" class="form-control" placeholder="eg .@Local["Mã loại dịch vụ"]"/>
+                        </div>
+                        <div class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Tên"]</label>
+                            <input id="ServiceType" name="name" type="text" class="form-control" placeholder="eg .@Local["Loại dịch vụ"]" />
+                        </div>
+                        <div id="PatientRecordTemplate" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2" style="display:none">
+                            <label>@Local["Mẫu hồ sơ bệnh án"]</label>
+                            <div class="ui fluid search selection dropdown " id="PatientRecordID">
+                                <input type="hidden" name="" />
+                                <i class="dropdown icon"></i>
+                                <i class="remove icon"></i>
+                                <input id="searchTemplate" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chọn mẫu hồ sơ bệnh án"]</div>
+                                <div id="ccbTemplate" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Màu"]</label>
+                            <input id="ColorCode" name="fillCode" type="text" class="form-control" />
+                        </div>
+                        <div class="col-sm-12 col-12 field px-1 mt-2">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea rows="2" id="NoteServiceType" name="content" class="form-control" placeholder="eg .@Local["Ghi chú"]"></textarea>
+                        </div>
+                        <div class="col-sm-6 col-12 field px-1 mt-2">
+                            <div class="form-check" id="IsProductDiv">
+                                <input type="checkbox" class="form-check-input" id="IsProductType">
+                                <label class="custom-control-label" for="IsProductType">@Local["Sản phẩm"]</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12 field px-1 mt-2">
+                            <div class="form-check" id="PerExamination">
+                                <input type="checkbox" class="form-check-input" id="IsExamination">
+                                <label class="custom-control-label" for="IsExamination">@Local["Khám (tư vấn nhưng không làm thêm dịch vụ)"]</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button id="btn_delete_service_type" style="display:none;" class="btn btn-danger ms-2 mb-0 _tab_control_" data-tab="delete_tab_material_type" onclick="event.preventDefault();return DeleteServiceType()">@Local["Xóa"]</button>
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="btn_save_service_type" class="btn bg-gradient-primary mx-2 mb-0 _tab_control_" data-tab="edit_service_type" form="frservicetypeDetail" onclick="event.preventDefault(); return ExcuteDataServiceType()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_ServiceTypeCurrentID = @Model._ServiceTypeCurrentID ;
+    var ser_sys_Patient_Record = @Model._sys_Patient_Record;
+
+    $(document).ready(function () {
+
+        $("#ColorCode").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            showInput: true,
+            color: '#ffffff',
+            palette: [
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+        if (ser_sys_Patient_Record == 0) {
+            $("#PatientRecordTemplate").hide();
+        } else {
+            $("#PatientRecordTemplate").show();
+        }
+        LoadInitialize();
+
+        Checking_TabControl_Permission();
+
+        CheckPermissionControlInPage(sys_PerControl ,'@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH,'@Model.CurrentPath');
+    });
+
+ 
+    function ExcuteDataServiceType() {
+        var data = new Object();
+        data.Code = $('#ServiceTypeCode').val() ? $('#ServiceTypeCode').val() : "";
+        data.Name = $('#ServiceType').val() ? $('#ServiceType').val() : "";
+        data.Note = $('#NoteServiceType').val() ? $('#NoteServiceType').val() : "";
+        data.Color = $("#ColorCode").spectrum('get').toHexString();
+        data.IsPro = $("#IsProductType").is(":checked") ? 1 : 0;
+        data.IsExamination = $("#IsExamination").is(":checked") ? 1 : 0;
+        data.PatientRecordID = Number($('#PatientRecordID').dropdown('get value')) ? Number($('#PatientRecordID').dropdown('get value')) : 0;
+
+        $('#frservicetypeDetail').form('validate form');
+        if ($('#frservicetypeDetail').form('is valid')) {
+            AjaxLoad(url = "/Service/ServiceTypeDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_ServiceTypeCurrentID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let code = data[0].RESULT;
+                        let currentid = data[0].ID;
+                        if (code != '0') {
+                            CloseModal();
+                            notiSuccess();
+                            if (typeof SerList_Type_Load === 'function') SerList_Type_Load(currentid);
+                            syslog_ser((ser_ServiceTypeCurrentID != '0' ? 'u' : 'i'), code);
+                            if (ser_ServiceTypeCurrentID != "0") {
+                                SerList_Load(0);
+                            }
+                        }
+                        else notiError_SW();
+                    }
+                    else notiError_SW();
+            });
+        }
+        //$('#servicetypeDetail').Require_Validation();
+        return false;
+    }
+
+    function LoadInitialize() {
+        AjaxLoad(url = "/Service/ServiceTypeDetail/?handler=LoadInitialize"
+            , data = { CurrentID: ser_ServiceTypeCurrentID }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let data_PatientRecord = data.PatientRecord;
+                    let data_Detail = data.Detail;
+
+                    Load_Combo(data_PatientRecord, "ccbTemplate", false);
+                    if (data_Detail != undefined) {
+                        LoadDataUpdateProductType(data_Detail)
+                    }
+                } else {
+                    notiError_SW();
+                }
+        })
+    }
+
+    function LoadDataUpdateProductType(dataServiceType) {
+        if (dataServiceType && dataServiceType.length != 0 ) {
+            $("#ColorCode").spectrum("set",dataServiceType[0].Color);
+            $('#ServiceType').val((dataServiceType[0].Name));
+            $('#ServiceTypeCode').val(dataServiceType[0].Code);
+            $('#NoteServiceType').val((dataServiceType[0].Note));
+
+            if ((dataServiceType[0].IsProduct) == 1)
+                $('#IsProductType').prop('checked', true);
+            else
+                $('#IsProductType').prop('checked', false);
+
+            if ((dataServiceType[0].IsExamination) == 1)
+                $('#IsExamination').prop('checked', true);
+            else
+                $('#IsExamination').prop('checked', false);
+
+            if (Number(dataServiceType[0].BtnEdit) == 1) {
+                $("#btn_delete_service_type").show();
+                $("#IsProductType").prop("disabled", false);
+                $("#IsProductDiv label[for='IsProductType']").removeClass('text-secondary');
+            }
+            else {
+                $("#btn_delete_service_type").hide();
+                $("#IsProductType").prop("disabled", true);
+                $("#IsProductDiv label[for='IsProductType']").addClass('text-secondary');
+            }
+
+            $("#PatientRecordID").dropdown("refresh");
+            $("#PatientRecordID").dropdown("set selected", dataServiceType[0].PatientRecordID);
+        }
+    }
+
+    function DeleteServiceType() {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteServiceType(ser_ServiceTypeCurrentID); }, function () { });
+    }
+
+    function ExecuteDeleteServiceType(id) {
+        AjaxLoad(url = "/Service/ServiceTypeDetail/?handler=DeleteTypeItem"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    CloseModal();
+                    notiSuccess();
+                    if (typeof SerList_Type_Load === 'function') SerList_Type_Load(0);
+                    syslog_ser('d', result);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        )
+    }
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    .sp-replacer {
+        display: block !IMPORTANT;
+        width: 100% !IMPORTANT;
+        padding: 0.5rem 0.75rem !IMPORTANT;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.4rem;
+        color: #495057 !important;
+        background-color: #fff !IMPORTANT;
+        background-clip: padding-box !important;
+        border: 1px solid #d2d6da !IMPORTANT;
+        height: auto !important;
+        border-radius: 0.5rem;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+</style>
+

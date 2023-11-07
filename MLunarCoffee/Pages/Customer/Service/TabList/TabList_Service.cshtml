@@ -1,0 +1,1730 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Service.TabList.TabList_ServiceModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/Service_List/PatientRecord.js')</script>
+<script>js_require('/js/Service_List/Treatment_Plant.js')</script>
+@*<script>js_require('/js/Service_List/ShowHide_Functioning.js')</script>*@
+
+<script>js_require_notasync('/js/Service_List/folderimage.js', true)</script>
+<script>js_require_notasync('/js/comon/customerimage2.js', true);</script>
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/assests/dist/plugins/sweetalert2/sweetalert2.min.js');</script>
+
+
+<div class="row">
+    <div class="col-12">
+        <div id="Div_Tab_List_Service_Master" class="position-relative">
+            <div id="patient_record_list" style="display:none;">
+                <div class="card-header p-0">
+                    <div class="d-lg-flex">
+                        <div class="card-body p-2 d-flex align-items-center overflow-auto">
+                            <div class="col-lg-1 col-md-2 col-sm-3 col-4 text-center">
+                                <a id="buttonadd_patient_record" data-tab="add_tab_cust_patient" class="cursor-pointer avatar avatar-sm border-1  bg-gradient-primary _tab_control_">
+                                    <i class="fas fa-plus text-white "></i>
+                                </a>
+                                <p class="text-nowrap mb-0 text-sm text-dark" style="margin-top:6px;">@Local["Bệnh án"]</p>
+                            </div>
+                            <div id="tab_list_patient_record" class="d-flex w-100 "></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mx-0 mt-1">
+                <div class="col-12 p-1 position-relative">
+                    <div id="tab_list_service_waiting" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="px-3">
+                        <div id="cus_using_treatment_plan" style="display:none;">
+                            <div class="card-body py-1 p-0 position-relative">
+                                <div id="popupExecute_Treatment_Plan" class="ui dropdown item text-sm" tabindex="0">
+                                    <div class="menu" style="display: block" tabindex="-1">
+                                        <a class="item button_treatment_plan" id="Treat_Plan_Detail" onclick="Treatment_Plan_Detail()">
+                                            <span>@Local["Chi tiết"]</span>
+                                        </a>
+                                        <a class="item button_treatment_plan" id="Treat_Plan_Choose" onclick="Treatment_Plan_Choose(1)">
+                                            <span>@Local["Chọn"]</span>
+                                        </a>
+                                        <a class="item button_treatment_plan" id="Treat_Plan_UnChoose" onclick="Treatment_Plan_Choose(0)">
+                                            <span>@Local["Hủy chọn"]</span>
+                                        </a>
+                                        <a class="item button_treatment_plan" id="Treat_Plan_Print" onclick="Treatment_Plan_Print()">
+                                            <span>@Local["In công nợ"]</span>
+                                        </a>
+                                        <a class="item button_treatment_plan" id="Treat_Plan_Clone" onclick="Treatment_Plan_Clone()">
+                                            <span>@Local["Sao chép"]</span>
+                                        </a>
+                                        <div class="item button_treatment_plan" id="Treat_Plan_Status">
+                                            <span class="text">@Local["Trạng thái"]</span>
+                                            <i class="right dropdown icon"></i>
+                                            <div class="right menu hidden" id="Treat_Plan_Status_Body">
+                                            </div>
+                                        </div>
+                                        <a class="item button_treatment_plan" id="Treat_Plan_Delete" onclick="Treatment_Plan_Delete()">
+                                            <span>@Local["Xóa"]</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="d-flex">
+                                    <button id="buttonadd_treatment_plain" data-tab="add_tab_cust_treatment_plan" class="px-3 btn bg-gradient-primary py-2 my-1 _tab_control_">
+                                        @Local["Thêm kế hoạch"]
+                                    </button>
+                                    <ul id="tab_list_treatment_plant" class="nav nav-pills p-1 bg-gray-100  treatplant" role="tablist">
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-lg-flex mb-2 align-items-center">
+                            <div class="d-flex align-items-center mb-sm-0 mb-4  position-relative">
+                                <ul class="nav nav-pills p-1 bg-transparent" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#tlcustdescrip">
+                                            <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <a data-bs-toggle="collapse"  data-bs-target="#tl_filterarea"
+                                           class="nav-link cursor-pointer">
+                                            <i class=" text-gradient text-lg text-primary fas fa-filter"></i>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                                <div id="tl_filterarea" class="collapse card p-3 position-absolute z-index-3 end-1 top-100 mt-1 shadow-lg" style="min-width:250px;">
+                                    <div class="form-check">
+                                        <input id="choose_all_type_service" onchange="event.preventDefault();return TabList_FilterType();" class="form-check-input pr-2"
+                                               type="checkbox" checked="checked">
+                                        <label class="custom-control-label" for="choose_all_type_service">@Local["Dịch vụ"]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input id="choose_all_type_product" onchange="event.preventDefault();return TabList_FilterType();" class="form-check-input pr-2"
+                                               type="checkbox" checked="checked">
+                                        <label class="custom-control-label" for="choose_all_type_product">@Local["Sản phẩm"]</label>
+                                    </div>
+                                    <hr class="horizontal dark my-1">
+                                    <div class="form-check">
+                                        <input id="tlfiler_complete" onchange="event.preventDefault();return TabList_FilterLayout();" class="form-check-input pr-2"
+                                               type="checkbox" checked="checked">
+                                        <label class="custom-control-label">@Local["Hoàn tất"]</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input id="tlfiler_uncomplete" onchange="event.preventDefault();return TabList_FilterLayout();" class="form-check-input pr-2"
+                                               type="checkbox" checked="checked">
+                                        <label class="custom-control-label">@Local["Chưa hoàn tất"]</label>
+                                    </div>
+
+                                    <h6 class="text-xs mt-3 fw-bold">@Local["Sắp xếp"]</h6>
+                                    <div class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="groupdate" type="checkbox">
+                                        </div>
+                                        <p class="text-dark text-sm">@Local["Theo ngày"]</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="service_info_list" class="row  mx-0 d-flex gap-3">
+                                <div class="col-w-150 border border-5 border-bottom-0 border-top-0 border-end-0 border-success py-1 bg-gray-100 rounded-2 border-radius-top-start-0 border-radius-bottom-start-0">
+                                    <p class="text-sm text-dark mb-0 text-capitalize">@Local["Tổng"]</p>
+                                    <h6 id="treat_Total_price" class="font-weight-bolder mb-0">0</h6>
+                                </div>
+                                <div class="col-w-150 border border-5 border-bottom-0 border-top-0 border-end-0 border-success py-1 bg-gray-100 rounded-2 border-radius-top-start-0 border-radius-bottom-start-0">
+                                    <p class="text-sm text-dark mb-0 text-capitalize ">@Local["Đã chốt"]</p>
+                                    <h6 id="treat_Total_price_confirm" class="font-weight-bolder mb-0">0</h6>
+                                </div>
+                                <div class="col-w-150 border border-5 border-bottom-0 border-top-0 border-end-0 border-warning py-1 bg-gray-100 rounded-2 border-radius-top-start-0 border-radius-bottom-start-0">
+                                    <p class="text-sm text-dark mb-0 text-capitalize">@Local["Chưa chốt"]</p>
+                                    <h6 id="treat_Total_price_nonconfirm" class="font-weight-bolder mb-0"></h6>
+                                </div>
+                            </div>
+                            <div class="ms-auto my-auto pt-2 mt-1 text-end">
+                                <button id="tablist_addnew" data-tab="add_tab_customer_detail" class="btn bg-gradient-primary btn-sm mt-1 _tab_control_" onclick="Tab_List_Service_Add()">
+                                    @Local["Thêm mới"]
+                                </button>
+                                <button id="tablist_addcombonew" data-tab="add_tab_customer_detail" class="btn bg-gradient-primary btn-sm mt-1 _tab_control_" onclick="Tab_List_ServiceCombo_Add()">
+                                    @Local["Combo"]
+                                </button>
+                                <button id="print_tab_cust_profile" class="btn btn-dark btn-sm mt-1 _tab_control_" data-tab="print_tab_cust_profile" onclick="PrintCustomerServiceList()">
+                                    @Local["In"]
+                                </button>
+                                <button class="btn btn-dark btn-sm mt-1 _tab_control_ px-3" id="per_CustPrintTabByDate" onclick="TL_PrintListBydDay()">
+                                    @Local["In theo ngày"]
+                                </button>
+                                <button class="btn btn-dark btn-sm mt-1" onclick="TSprintoption()"> @Local["In tùy chọn"]</button>
+                                <button class="btn btn-dark btn-sm mt-1" id="print_all_cust_profile" onclick="PrintAllServiceList()">
+                                    @Local["In tất cả"]
+                                </button>
+                                <button id="btn_view_all_service" class="btn btn-dark btn-sm mt-1" onclick="Tab_List_ViewAll_Service()">@Local["Tất cả"]</button>
+                                <div class="position-relative d-inline" style="z-index: 2!important">
+                                    <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Thông tin tạo"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="choose" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chốt dịch vụ"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="editor" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chỉnh sửa"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chi nhánh"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="telesale" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Telesale"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="custcare" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chăm sóc"]</p>
+                                            </li>
+
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="file" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["File"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="type" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Loại"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="warranty" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Bảo hành"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="serviceunit" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Đơn vị"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="servicesource" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Nguồn dịch vụ"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="serviceold" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Dịch vụ cũ"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="personres" type="checkbox">
+                                                </div>
+                                                <p class="text-sm text-start">@Local["Người chịu trách nhiệm"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="vourcher" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">Vourcher</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="servicecombo" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Combo dịch vụ"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="totalpaid" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Tổng thanh toán"]</p>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <div id="tlcustdescrip" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark mb-4 mt-2 multi-collapse collapse">
+
+                        <h6 class="mb-0">@Local["Quy định chỉnh sửa"]</h6>
+                        <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa. Dịch vụ đã đóng tiền, chi hoa hồng hoặc điều trị không thể sửa và xóa"]</p>
+                        <p class="text-sm mb-0">@Local["Dịch vụ đóng đủ tiền không được đổi, người tạo mới được đổi dịch vụ.Sản phẩm được bán và xuất kho không được xóa và sửa"]</p>
+                        <p class="text-sm mb-0 tl_FirstUpper">@Local["Khóa dịch vụ"] @Local["Công nợ sẽ bị xóa"]</p>
+                    </div>
+                    <p id="tsprint_option" class="bg-white fw-bold sticky-top text-primary text-sm d-none">
+                        @Local["Chọn dịch vụ in bên dưới"] click <span><i onclick="tsprint_Action()" class="fs-6 cursor-pointer mx-2  fas fa-print"></i></span> @Local["Để in"].
+                    </p>
+                    <div id="TabList_Content_Main" class="m-0 my-1 mobile-responsive position-relative vt-header-sticky" style="max-height: 75vh; min-height: 30vh;">
+                        <table data-name="ContentTabCustomer" class="table vt-table mb-0" id="dtContentTab">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th style="width: 30px;">#</th>
+                                    <th class="_tab_control_" data-tab="confirm_using_service" style="text-align: center; width: 45px">@Local["Chọn"]</th>
+                                    <th class="bg-gray-100 d-none print" style="width: 110px;">
+                                        <div class="form-check ms-2">
+                                            <input class="fs-6 selectall form-check-input pr-2" type="checkbox">
+                                            <label class="custom-control-label pt-1 ms-n2 mb-0">@Local["Chọn in"]</label>
+                                        </div>
+                                    </th>
+                                    <th>@Local["Dịch vụ"]</th>
+                                    <th style="min-width: 200px;">@Local["Thành tiền"]</th>
+                                    <th>@Local["Tư vấn"]</th>
+                                    <th data-name="telesale">@Local["Telesale"]</th>
+                                    <th data-name="custcare">@Local["Chăm sóc"]</th>
+                                    <th style="min-width: 100px;" data-name="content">@Local["Nội dung"] @Local["Ghi chú"]</th>
+                                    <th data-name="warranty">@Local["Bảo hành"]</th>
+                                    <th data-name="created">@Local["Thông tin tạo"]</th>
+                                    <th data-name="choose">@Local["Chốt dịch vụ"]</th>
+                                    <th data-name="editor">@Local["Chỉnh sửa"]</th>
+                                    <th data-name="branch">@Local["Chi nhánh"]</th>
+                                    <th data-name="file">@Local["File"]</th>
+                                    <th data-name="type">@Local["Loại"]</th>
+                                    <th data-name="servicesource">@Local["Nguồn dịch vụ"]</th>
+                                    <th data-name="serviceunit">@Local["Đơn vị"]</th>
+                                    <th data-name="serviceold">@Local["Dịch vụ cũ"]</th>
+                                    <th data-name="personres">@Local["Người chịu trách nhiệm"]</th>
+                                    <th data-name="vourcher">Voucher</th>
+                                    <th data-name="servicecombo">@Local["Combo dịch vụ"]</th>
+                                    <th data-name="totalpaid">@Local["Tổng thanh toán"]</th>
+                                    <th style="min-width: 60px;">@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentTabBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="TLS_btnmore" class="btn btnsysmore btn-secondary w-100 p-1 "
+                            onclick="event.preventDefault(); return TLS_Viewmore();">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                </div>
+            </div>
+            <div class="row my-1" id="Treatment_Plan_Folder" style="display:none;">
+                <div class="mb-3 z-index-2  h-100 ">
+                    <div class="card-header pb-0">
+                        <div class="d-lg-flex">
+                            <div class="col-auto my-auto">
+                                <div class="h-100">
+                                    <h6 class="mb-0">@Local["Hình ảnh"]</h6>
+                                    <p class="text-sm mb-0">@Local["Chi tiết hình ảnh"]</p>
+                                </div>
+                            </div>
+                            <div class="ms-auto my-auto mt-1">
+                                <button id="button_create_folder" onclick="event.preventDefault();return Treatment_Plant_Create_Folder();" class="btn bg-gradient-primary btn-sm mt-1">
+                                    @Local["Tạo thư mục"]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        @*<div id="FolderTreatmentPlan" class="nav d-flex flex-wrap p-2">
+                            </div>*@
+                        <ul id="FolderTreatmentPlan" class="nav py-1 border-radius-lg me-2"></ul>
+
+                        <div id="ImgTreatmentPlan" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="display: none" id="Div_Tab_Service_Detail">
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var dataServiceTab;
+    var data_service_root;
+    var data_servicetype_root;
+    var ser_sys_Treatment_Plan = '@Model._sys_Treatment_Plan';
+    var ser_sys_Patient_Record = '@Model._sys_Patient_Record';
+
+    var current_view_all_service = 0;
+    var ser_BranchID = ser_MainBranchID;
+    var ser_UsingConfirmService = '@Model._UsingConfirmService';
+    var ser_Treatment_Plan_Comparing = 0;
+    var ser_current_patient_record = 0;
+    var ser_current_data_patient_record = {};
+    var ser_current_treatment_plant_id = 0;
+    var ser_current_treatment_plant_data = {};
+    var ser_TabCustomerID = '@Model._TabCustomerID';
+    var ser_TabViewAll = Number(@Model._ViewAll);
+
+    var data_Tab_Service = [];
+    //img treatment plan
+    var CurrentFolderName_Customer = '';
+    var CurrentFolderID_Customer = '';
+    var DefaultAvatar = Master_Default_Pic;
+    var ser_sys_Patient_Record_Root;
+    var ser_sys_Treatment_Plan_Root;
+    var DataService, DataTeeth;
+    let DataUser, DataEmployee;
+    let shtable;
+    let flag_option = 1;
+    let tsprint_selected = '';
+    var tsprintData = [];
+    var tsprint_IsAll = 0;
+    let TLS_Blockindex = 0;
+    let TLS_Splitdata = [];
+
+    $(window).click(function() {
+        $("#popupExecute_Treatment_Plan").hide();
+    });
+    $(document).ready(function () {
+
+        if (sys_MCBreakRule == 0) {
+            if (Number(ser_sys_Treatment_Plan) == 0) {
+                $('#print_tab_cust_profile').addClass('d-none');
+                $('#print_all_cust_profile').removeClass('d-none');
+            }
+            else {
+                if (Number(current_view_all_service) == 0) {
+                    $('#print_tab_cust_profile').removeClass('d-none');
+                    $('#print_all_cust_profile').addClass('d-none');
+
+                }
+                else {
+                    $('#print_all_cust_profile').removeClass('d-none');
+                    $('#print_tab_cust_profile').addClass('d-none');
+                }
+            }
+            shtable = $("#dtContentTab").TableExpandColumn({
+                shtoogle: $('.shtoogle')
+            });
+            ser_sys_Patient_Record_Root = ser_sys_Patient_Record;
+            ser_sys_Treatment_Plan_Root = ser_sys_Treatment_Plan;
+            Master_IndexDB_Reads(_Session_Data, [_Session_Service, _Session_Teeth, _Session_User, _Session_Employee]
+                , function (data) {
+                    DataService = data[0];
+                    DataTeeth = data[1];
+                    DataUser = data[2];
+                    DataEmployee = data[3];
+                    Tab_List_Load_InitializeData();
+                });
+            $('#cus_service_list_button').show();
+            Tab_List_Customer_Service_Event();
+            if (ser_sys_Treatment_Plan == 0 && ser_sys_Patient_Record == 0)
+                $("#btn_view_all_service").hide();
+            else
+                $("#btn_view_all_service").show();
+            TL_ServiceLoad();
+            Checking_TabControl_Permission();
+            CheckPermissionControlInPage(sys_PerControl, '@Model._dtPermissionCurrentPage');
+            CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+            $('#tab_list_content_div').show();
+        }
+        else {
+            $('#tab_list_content_div').hide();
+        }
+    });
+
+
+
+
+    function Tab_List_Load_InitializeData () {
+
+        $("#buttonadd_treatment_plain").unbind().click(function() {
+            Treatment_Plan_Add();
+        });
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=LoadInitialize"
+            , data = { 'CustomerID': ser_MainCustomerID }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                ser_current_data_patient_record = {};
+                ser_current_patient_record = 0;
+                ser_current_treatment_plant_id = 0;
+                ser_current_treatment_plant_data = {};
+                let data = JSON.parse(result);
+                let datastatus = data.Status;
+                let datarecord = data.PatientRecord;
+                if (ser_sys_Treatment_Plan == 0 && ser_sys_Patient_Record == 0) {
+                    $('#patient_record_list').hide();
+                    $('#cus_using_treatment_plan').hide();
+                    $('#Treatment_Plan_Folder').hide();
+                    $('#service_info_list').hide();
+                    Tab_List_Customer_Service();
+                }
+                else {
+                    if (Number(ser_sys_Patient_Record) == 0) {
+                        $('#patient_record_list').hide();
+                    }
+                    else {
+                        $('#patient_record_list').show();
+                        $("#buttonadd_patient_record").unbind().click(function() {
+                            Patient_Record_Add();
+                        });
+                    }
+
+                    if (Number(ser_sys_Treatment_Plan) == 0) {
+                        $('#cus_using_treatment_plan').hide();
+                        $('#Treatment_Plan_Folder').hide();
+                        $('#service_info_list').hide();
+
+                    }
+                    else {
+                        $('#cus_using_treatment_plan').show();
+                        //$('#service_info_list').show();
+                        if (datastatus != undefined && datastatus.length > 0) Render_Tab_List_Treatment_Plant_Status(datastatus, 'Treat_Plan_Status_Body');
+                        else $('#Treat_Plan_Status').remove();
+                        if (datarecord != undefined) {
+                            for (i = 0; i < datarecord.length; i++) {
+                                let e = {};
+                                e.IsClose = datarecord[i].IsClose;
+                                e.TeamplateName = datarecord[i].TeamplateName;
+                                e.Created = datarecord[i].Created;
+                                e.Created_By = datarecord[i].Created_By;
+                                e.Image = datarecord[i].Image;
+                                ser_current_data_patient_record[datarecord[i].ID] = e;
+                            }
+                            Render_Tab_List_Patient_Record(ser_current_data_patient_record, 'tab_list_patient_record');
+                            if (datarecord.length == 0) {
+                                ser_current_patient_record = 0;
+                                Tab_List_Customer_Service();
+                            }
+                            else ser_current_patient_record = datarecord[0].ID;
+                            Tab_List_Customer_Patient_Record_Trigger(ser_current_patient_record);
+                        }
+                    }
+                }
+            },
+        );
+    }
+    function Tab_List_Customer_Service_Event() {
+
+        $('#dtContentTab tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Tab_List_Service_Edit(ID);
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonViewClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Tab_List_Service_View(ID);
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Tab_List_Delete_Service(ID)
+        });
+
+        // ẩn dịch vụ
+        $('#dtContentTab tbody').on('click', '.buttonDisableClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Tab_List_Disable_Service(ID)
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonPrintClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            syslog_cutcon('p', ser_MainCustomerID, '');
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=service_warranty&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonPrintTreatClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            syslog_cutcon('p', ser_MainCustomerID, '');
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=treatment_list&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonUnDisableClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Un_Tab_List_Disable_Service(ID)
+        });
+
+        // khóa dịch vụ
+        $('#dtContentTab tbody').on('click', '.buttonBlockClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Tab_List_Lock_Service(ID)
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonUnBlockClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            Un_Tab_List_Lock_Service(ID)
+        });
+
+        $('#dtContentTab tbody').on('click', '.buttonChangeClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            let rule = 1;
+            let treatplant = ser_current_treatment_plant_id;
+            if (ser_sys_Treatment_Plan == 1) {   //using treatment plan
+                if (treatplant == 0) {
+                    rule = 0;
+                    notiError(`${Outlang["Chon_ke_hoach"]}`);
+                }
+            }
+            if (rule == 1) Tab_List_Change_Service(ID, treatplant)
+        });
+
+        $('#dtContentTab tbody').on('click', '.EditContent', function () {
+            let ID = Number($(this).attr('data-id'));
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Customer/Service/TabEditContent?CurrentID=" + ID + "&CustomerID" + ser_MainCustomerID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+        });
+
+        $("#dtContentTab").on('click', '.ConfirmUsing', function (event) {
+            let Value = (this.checked ? 1 : 0);
+            let TabID = Number($(this).attr('data-id'));
+            let Package = $(this).attr('data-package');
+            let data = [{
+                "TabID": TabID
+                , "Value": Value
+                , "Package": Package
+            }];
+            TabService_Change_Choose(data);
+        });
+        $("#dtContentTab").on('change', '.printservice', function (event) {
+            tsprint_IsAll = 0;
+            TSPrint_SetIndex($(this)[0]);
+        });
+        $("#dtContentTab").on('click', '.selectall', function (event) {
+            TSprint_SelectAll($(this).is(":checked"));
+        });
+        $("#dtContentTab").on('click', 'a.groupdate', function (event) {
+            let numcreated = $(this).attr('data-value');
+            if ($(this).hasClass('openned')) {
+                $(this).removeClass('openned');
+                $('#dtContentTab tr[data-numcreated="' + numcreated + '"]').removeClass('d-none');
+            }
+            else {
+                $(this).addClass('openned');
+                $('#dtContentTab tr[data-numcreated="' + numcreated + '"]').addClass('d-none');
+            }
+        });
+    }
+
+    function Tab_List_Service_Close_Detail() {
+        $('#Div_Tab_List_Service_Master').show();
+        $('#Div_Tab_Service_Detail').hide();
+        $('#Div_Tab_Service_Detail').empty();
+    }
+
+    // #region // Change
+    function Tab_List_Change_Service(id,treatplan) {
+        $('#DetailModal_Content').empty();
+        $("#DetailModal_Content").load("/Customer/Service/ServiceChange?CurrentID=" + id + "&Treatplan=" + treatplan);
+        $('#DetailModal').modal('show');
+    }
+    // #endregion
+
+    // #region // View
+    function Tab_List_Service_View (id) {
+        $('#Div_Tab_List_Service_Master').hide();
+        $('#Div_Tab_Service_Detail').show();
+        $('#Div_Tab_Service_Detail').empty();
+        $("#Div_Tab_Service_Detail").load("/Customer/Service/TabMulti?Type=view&CustomerID="+ ser_MainCustomerID
+            + "&PatientRecordID=" + ser_current_patient_record
+            + "&CurrentID=" + id
+            + "&ver=" + versionofWebApplication);
+    }
+    // #endregion
+
+    // #region // Edit
+    function Tab_List_Service_Edit(id) {
+        $('#Div_Tab_Service_Detail').empty();
+        $("#Div_Tab_Service_Detail").load("/Customer/Service/TabMulti?Type=edit&CustomerID=" + ser_MainCustomerID
+            + "&PatientRecordID=" + ser_current_patient_record
+            + "&CurrentID=" + id
+            + "&ver=" + versionofWebApplication, function() {
+                $('#Div_Tab_List_Service_Master').hide();
+                $('#Div_Tab_Service_Detail').show();
+            });
+
+    }
+    // #endregion
+
+    // #region // Add
+    function Tab_List_Service_Add() {
+        $('#Div_Tab_Service_Detail').empty();
+        $("#Div_Tab_Service_Detail").load("/Customer/Service/TabMulti?CustomerID=" + ser_MainCustomerID
+            + "&PatientRecordID=" + ser_current_patient_record
+            + "&Plan=" + ser_current_treatment_plant_id
+            + "&ver=" + versionofWebApplication, function (e) {
+                $('#Div_Tab_List_Service_Master').hide();
+                $('#Div_Tab_Service_Detail').show();
+            });
+    }
+
+    function Tab_List_ServiceCombo_Add() {
+        $('#Div_Tab_Service_Detail').empty();
+        $("#Div_Tab_Service_Detail").load("/Customer/Service/TabComboMulti?CustomerID=" + ser_MainCustomerID
+            + "&PatientRecordID=" + ser_current_patient_record
+            + "&Plan=" + ser_current_treatment_plant_id
+            + "&ver=" + versionofWebApplication, function (e) {
+                $('#Div_Tab_List_Service_Master').hide();
+                $('#Div_Tab_Service_Detail').show();
+            });
+    }
+    // #endregion
+
+    //#region // Render and Load
+    function Tab_List_Customer_Service() {
+        Tab_List_Customer_Service_Execute(ser_current_patient_record, ser_current_treatment_plant_id);
+    }
+    function Tab_List_Customer_Service_Execute (_record, _plan) {
+
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=LoadataTab"
+            , data = {
+                'CustomerID': ser_MainCustomerID,
+                'Record': _record,
+                'Plan': _plan,
+                'ViewAll': ser_TabViewAll
+            }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                let data = JSON.parse(result).Table;
+                let dataPlan = JSON.parse(result).Table1;
+                if (Number(ser_sys_Treatment_Plan) == 0) {
+                    $('#cus_using_treatment_plan').hide();
+                    $('#Treatment_Plan_Folder').hide();
+                    $('#service_info_list').hide();
+                }
+                else {
+
+                    if (dataPlan != undefined) {
+                        ser_current_treatment_plant_data = {};
+                        for (i = 0; i < dataPlan.length; i++) {
+                            let e = {};
+                            e.Name = dataPlan[i].Name;
+                            e.IsLock = dataPlan[i].IsLock;
+                            e.ExchangeStatus = dataPlan[i].ExchangeStatus;
+                            e.ExchangeStatusName = dataPlan[i].ExchangeStatusName;
+                            e.Created = dataPlan[i].Created;
+                            e.CreatedName = dataPlan[i].CreatedName;
+                            e.Token_Tab = dataPlan[i].Token_Tab;
+                            ser_current_treatment_plant_data[dataPlan[i].ID] = e;
+                        }
+                        Render_Tab_List_Treatment_Plant(ser_current_treatment_plant_data, 'tab_list_treatment_plant');
+                        initNavs();
+                        $('.treatplant a:first').addClass('active');
+                        $('#FolderTreatmentPlan').empty();
+                        $('#ImgTreatmentPlan').empty();
+                        if (dataPlan.length > 0) {
+                            ser_current_treatment_plant_id = dataPlan[0].ID;
+                            let token = ',' + dataPlan[0].Token_Tab + ',';
+                            data = data.filter(word => token.includes(',' + word["ID"] + ','));
+                            $('#imgExecute_Treatment_Plan_' + ser_current_treatment_plant_id).show();
+                            $('#treatment_plan_' + ser_current_treatment_plant_id).addClass('active');
+                            //$('#Treatment_Plan_Folder').show();
+                            if (ser_current_treatment_plant_id != 0) Treatment_Plan_LoadInfo(ser_MainCustomerID, ser_current_treatment_plant_id);
+                            //Tab_List_Load_Folder();
+                            $('#service_info_list').show();
+                        }
+                        else {
+                            $('#Treatment_Plan_Folder').hide();
+                            $('#service_info_list').hide();
+                        }
+                        Tab_List_Customer_Treatment_Plan_Event();
+                    }
+                    else if (_plan != 0) {
+                        //$('#Treatment_Plan_Folder').show();
+                        $('#service_info_list').show();
+                    }
+
+                }
+                data_Tab_Service = data;
+                $('#dtContentTabBody').html('');
+                $('#dtContentTab thead .print').addClass('d-none');
+                $('#dtContentTab thead .selectall').prop('checked', false);
+
+                TLS_Blockindex = 0;
+                $('#dtContentTabBody').html('');
+                TLS_Splitdata = sliceIntoChunks(JSON.parse(JSON.stringify(data)), 50);
+                TLS_Viewmore();
+            }
+            , sender = null
+            , before = function(e) {
+                $("#tab_list_service_waiting").show();
+
+            }
+            , complete = function(e) {
+                $("#tab_list_service_waiting").hide();
+
+            }
+        );
+    }
+    function TLS_Viewmore () {
+        var p = TLS_ViewmoreBlock(data = TLS_Splitdata
+            , id = "dtContentTabBody"
+            , index = TLS_Blockindex
+            , fnrender = Render_Tab_List_Service
+            , fnsuccess = function () {
+               $("#tab_list_service_waiting").hide();
+            }
+            , fnbegin = function () {
+                $("#tab_list_service_waiting").show();
+            });
+        p.then(function (v) {
+            TLS_Blockindex = v;
+            if (TLS_Blockindex <= TLS_Splitdata.length) {
+                $('#TLS_btnmore').show();
+            }
+            else $('#TLS_btnmore').hide();
+        });
+    }
+    async function TLS_ViewmoreBlock (data, id, index, fnrender, fnsuccess, fnbegin) {
+        if (typeof fnbegin === 'function') fnbegin();
+        return new Promise((resolve, reject) => {
+            fnrender(data[index] , id);
+            index = index + 1;
+            if (typeof fnsuccess === 'function') fnsuccess();
+            resolve(index);
+        });
+    }
+
+    function Render_Tab_List_Service_Status(Is_Block, Is_Disable, Is_Finish) {
+        let isblock = '', isdisabled = '', isfinish = '';
+        if (Is_Block == 1) isblock = '<i class="text-danger text-gradient vtt-icon vttech-icon-lock-01 text-sm" data-bs-toggle="tooltip"  title="@Local["Đã khóa"]"></i>';
+        if (Is_Disable == 1) isdisabled = '<i class="text-danger text-gradient vtt-icon vttech-icon-disable text-sm" data-bs-toggle="tooltip"  title="@Local["Vô hiệu hóa"]"></i>';
+        if (Is_Finish == 1) isblock = '<i class="text-success text-gradient vtt-icon vttech-icon-check text-sm" data-bs-toggle="tooltip"  title="@Local["Đã hoàn thành điều trị"]"></i>';
+
+        return '<div class="position-absolute top-0 end-0">' + isblock + isdisabled + isfinish + '</div>';
+
+    }
+    function Render_Tab_List_Service_ServiceProduct(id,dencos, code, ServiceName, isProduct
+        , TimeToTreatment, Treat_Index, number
+        , Percent, Percent_Teeth
+        , TeethChoosing, TeethType
+        , Is_Block, Is_Disable, Is_Finish, HavingStage
+
+    ) {
+
+        let status = Render_Tab_List_Service_Status(Is_Block, Is_Disable, Is_Finish);
+        let teeth = '';
+        let percent = '';
+        let percentinfo = '';
+        if (isProduct == 1) {
+        }
+        else {
+            let percentwidth;
+            if (dencos == 0 && HavingStage==0) {
+                percentinfo = Treat_Index + " | " + TimeToTreatment;
+                percentwidth = ((TimeToTreatment != 0) ? (Treat_Index / TimeToTreatment * 100) : 0);
+            }
+            else {
+
+                let PercentOfService = 0;
+                if (Percent_Teeth != 0) {
+                    if (TeethChoosing != '') PercentOfService = (number == 0) ? 0 : (Percent_Teeth / number);
+                    else PercentOfService = Percent_Teeth;
+                }
+                else {
+                    PercentOfService = Percent
+                }
+                PercentOfService = Math.ceil(PercentOfService);
+                percentinfo = PercentOfService + ' %';
+                percentwidth = PercentOfService;
+                let teethdetail = Fun_GetTeeth_ByToken(DataTeeth, TeethChoosing, TeethType);
+                if (teethdetail != '') {
+                    teeth = '<div class="text-dark text-sm d-flex">'
+                        + '<i class="vtt-icon vttech-icon-labo text-xs text-gradient text-info ms-n1"></i>'
+                        + '<span class="ms-1">' + teethdetail + '</span>'
+                        + '</div>';
+                }
+
+            }
+            percent = '<div class="progress-wrapper ms-2 mt-2">'
+                + '<div class="progress-info">'
+
+                + '</div>'
+                + '<div class="progress">'
+                + '<div class="progress-bar bg-gradient-success serprogress" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" data-value=' + percentwidth + ' style="width: ' + percentwidth + '%;"></div>'
+                + '</div>'
+                + '</div>';
+        }
+        let serpro = '<div class="d-flex position-relative">'
+            + status
+            + '<div class="ms-2 d-flex flex-column">'
+            + '<h6 class="mb-1 text-dark text-sm">'
+            + '<a data-id="'+id+'" class="buttonViewClass" href="#">'
+            + ((code != '') ? ('<span class="fw-bold pe-2">' + code + '</span>') : '')
+            + ServiceName
+            + '</a>'
+            + '</h6>'
+            + '<div class="text-dark text-sm d-flex">'
+            + '<span style="min-width:max-content">' + percentinfo + '</span>'
+            + percent
+            + '</div>'
+            + teeth
+
+            + '</div>'
+            + '</div>';
+
+        return serpro;
+    }
+    function Render_Check_Customer_Tab(id, usingconfirm, IsChoose, Per_Is_Treated, Per_Is_Paid, Per_Is_PaidCom, Per_Changed, Per_Is_Labo
+        , Per_Is_Block, Per_Treat_Lock, Per_Record_Lock, Per_Export_Sale, IsInstallment, package, IndexTreatment) {
+
+        let result = '';
+        let _check = '';
+        let _disable = '';
+        if (IsChoose == 1) _check = ' checked';
+        if (Per_Is_Treated == 1
+            || Per_Is_Paid == 1
+            || Per_Is_PaidCom == 1
+            || Per_Export_Sale == 1
+            /*|| Per_Changed == 1*/
+            || Per_Is_Labo == 1
+            || IndexTreatment != 0
+            || IsInstallment != 0
+            || Per_Treat_Lock != 0
+            || Per_Record_Lock != 0
+            || Per_Is_Block != 0)
+            _disable = ' disabled';
+
+        if (usingconfirm == 1) {
+
+            result = '<td class="text-center _tab_control_" data-tab="confirm_using_service"  >'
+                + '<div class="form-check d-flex justify-content-center"><input type="checkbox" data-id="'
+                + id + '" data-package="' + package + '" class="form-check-input pr-2 ConfirmUsing" '
+                + _check
+                + _disable
+                + '><label class="coloring red"></label></div></td>';
+        }
+        else result = (IsChoose == 1 ? '<td style="text-align: center;"><i class="fa fa-check text-success"></i></td>' : '<td></td>');
+        return result;
+    }
+    function Render_Button_Customer_Tab_Execute2 (id, Per_Export_Sale, Per_Same_User, Per_Same_Date
+        , Per_Is_Treated, Per_Is_Paid, Per_Is_PaidCom, Per_Changed, Per_Is_Labo
+        , Per_Is_Block
+        , Per_Treat_Lock, Per_Record_Lock
+        , IsInstallment
+        , Per_Passing_Date
+        , Per_Is_Disable
+        , Per_User_Disable
+        , IsFinish
+        , UserFinish
+        , Per_User_Current
+        , Per_DisableService_Permission
+        , Per_Is_Refund
+        , IndexTreatment
+    ) {
+        let buttons = [];
+
+        // Hủy dịch vụ
+        if (Per_Is_Block === 0 && Per_Treat_Lock == 0 && Per_Record_Lock == 0 && Per_Is_Disable == 0) {
+            buttons.push('<button class="buttonGrid _tab_control_"  data-tab="cust_tab_btn_block" title="@Local["Khóa dịch vụ"]" value="' + id + '"><i data-id=' + id +' class="buttonBlockClass vtt-icon vttech-icon-lock-01"></i></button>')
+
+        }
+
+        // bỏ hủy dịch vụ
+        if (Per_Is_Block === 1 && Per_Treat_Lock == 0 && Per_Record_Lock == 0 && Per_Is_Disable == 0) {
+            buttons.push('<button class="buttonGrid _tab_control_"  data-tab="cust_tab_btn_block" title="@Local["Hủy khóa dịch vụ"]" value="' + id + '"><i data-id=' + id +' class="buttonUnBlockClass vtt-icon vttech-icon-unlock-01"></i></button>')
+
+        }
+
+        if (Per_Is_Disable === 1 && (Per_User_Current === Per_User_Disable || Per_DisableService_Permission === 1)) {
+            buttons.push('<button class="buttonGrid" title="@Local["Kích hoạt dịch vụ"]" value="' + id + '"><i data-id=' + id +' class="buttonUnDisableClass vtt-icon vttech-icon-undisable"></i></button>')
+
+        }
+        else if (Per_Is_Disable === 0 && Per_Is_Block === 0) {
+            buttons.push('<button class="buttonGrid _tab_control_"  data-tab="cust_tab_btn_disabled" title="@Local["Vô hiệu hóa dịch vụ"]" value="' + id + '"><i data-id=' + id +' class="buttonDisableClass vtt-icon vttech-icon-disable"></i></button>')
+            buttons.push('<button class="buttonGrid"  title="@Local["In thông tin dịch vụ"]"  value="' + id + '"><i data-id=' + id +' class="buttonPrintClass vtt-icon vttech-icon-print"></i></button>');
+            buttons.push('<button class="buttonGrid"  title="@Local["In điều trị"]"  value="' + id + '"><i data-id=' + id +' class="buttonPrintTreatClass vtt-icon vttech-icon-print"></i></button>');
+        }
+
+
+        // Change service.
+        if (((Per_Same_User == 1) || Per_Passing_Date == 1)
+            && Per_Is_Labo == 0
+            && Per_Export_Sale == 0
+            && Per_Is_Block == 0
+            /*&& Per_Changed == 0*/
+            && Per_Is_Disable == 0
+            && (Per_Is_Paid != 0 || IndexTreatment != 0 || Per_Is_Treated != 0)
+
+        ) {
+
+            /*if (ser_sys_DentistCosmetic == 0)*/
+            buttons.push('<button class="buttonGrid btnchange _tab_control_" data-tab="cust_tab_btn_change_service" title="@Local["Đổi dịch vụ"]" value="' + id + '"><i data-id=' + id +' class="buttonChangeClass vtt-icon vttech-icon-merge"></i></button>')
+        }
+        // Edit service
+        if (((Per_Same_User == 1 && Per_Same_Date == 1) || Per_Passing_Date == 1)
+            //&& Per_Is_Labo == 0
+            //&& Per_Is_Treated == 0
+            //&& Per_Is_Paid == 0
+            //&& Per_Is_PaidCom == 0
+            && Per_Export_Sale == 0
+            && Per_Treat_Lock == 0
+            && Per_Is_Disable === 0
+            && Per_Record_Lock == 0
+            && Per_Is_Block == 0
+           /* && Per_Changed == 0*/
+            && Per_Is_Disable == 0) {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="cust_tab_btn_edit" title="@Local["Sửa dịch vụ"]" value="' + id + '">'
+                + '<i data-id='+id+' class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>')
+
+
+        }
+        else {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="cust_tab_btn_edit_content" title="@Local["Sửa nội dung dịch vụ"]" value="' + id + '">'
+                + '<i data-id=' + id +' class="EditContent vtt-icon vttech-icon-edit-content"></i></button>')
+
+
+        }
+
+        // Delete service
+        if (((Per_Same_User == 1 && Per_Same_Date == 1) || Per_Passing_Date == 1)
+            && Per_Is_Labo == 0
+            && Per_Is_Treated == 0
+            && Per_Is_Paid == 0
+            && Per_Is_PaidCom == 0
+            && Per_Export_Sale == 0
+            && Per_Is_Block == 0
+            && Per_Treat_Lock == 0
+            && Per_Record_Lock == 0
+            && IsInstallment == 0
+            && IndexTreatment == 0
+
+           /* && Per_Changed == 0*/
+            && Per_Is_Disable === 0) {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="cust_tab_btn_delete" title="@Local["Xóa dịch vụ"]" value="' + id + '">'
+                + '<i data-id=' + id +' class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+        }
+        return Render_Button_Grid(buttons)
+    }
+    function Render_Button_Customer_Tab_Amount (id, PriceRoot, Discount_Amount, Discount_CusGroup_Amount, Discount_CusMem_Amount
+        , Discount_Voucher, DiscountForCus_Amount
+        , Discount_Amount_Doctor, Card_Amount_Using, Price_Discounted, UseInsurance, InsurAmount, PointAmount,vatper,vatamount) {
+        let _PriceRoot = '', _Discount_Amount = '', _Discount_Voucher = '', _DiscountForCus_Amount = '', _Discount_CusGroup_Amount = '', _Discount_CusMem_Amount = '';
+        let _Discount_Amount_Doctor = '', _Card_Amount_Using = '', _InsurAmount = '', _PointAmount = '', _Vat = '';
+
+        if (vatamount != "0") {
+            _Vat = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["VAT"]</span>'
+                + '<span class="text-dark ">' + formatNumber(vatamount) + ' ( ' + formatNumber(vatper)+'% )' + '</span>'
+                + '</div>';
+        }
+
+
+        if (PriceRoot != Price_Discounted) {
+            _PriceRoot = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Giá tiền"]</span>'
+                + '<span class="text-dark">' + formatNumber(PriceRoot) + '</span>'
+                + '</div>';
+        }
+
+        if (Discount_Amount != "0") {
+            _Discount_Amount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Tiền giảm"]</span>'
+                + '<span class="text-dark ">' + formatNumber(Discount_Amount) + '</span>'
+                + '</div>';
+        }
+        if (Discount_CusGroup_Amount != "0") {
+
+            _Discount_CusGroup_Amount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Giảm theo nhóm"]</span>'
+                + '<span class="text-dark ">' + formatNumber(Discount_CusGroup_Amount) + '</span>'
+                + '</div>';
+        }
+        if (Discount_CusMem_Amount != "0") {
+
+            _Discount_CusMem_Amount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Giảm theo hạng thành viên"]</span>'
+                + '<span class="text-dark ">' + formatNumber(Discount_CusMem_Amount) + '</span>'
+                + '</div>';
+        }
+        if (Discount_Voucher != "0") {
+            _Discount_Voucher = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Voucher"]</span>'
+                + '<span class="text-dark ">' + formatNumber(Discount_Voucher) + '</span>'
+                + '</div>';
+        }
+        if (DiscountForCus_Amount != "0") {
+            _DiscountForCus_Amount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Chiết khấu"]</span>'
+                + '<span class="text-dark">' + formatNumber(DiscountForCus_Amount) + '</span>'
+                + '</div>';
+        }
+        if (Discount_Amount_Doctor != "0") {
+            _Discount_Amount_Doctor = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="text-sm">@Local["Giảm khác"]</span>'
+                + '<span class="text-dark ">' + formatNumber(Discount_Amount_Doctor) + '</span>'
+                + '</div>';
+        }
+        if (Card_Amount_Using != "0") {
+            _Card_Amount_Using = '<div id="card_amount_using_' + id + '" class="d-flex justify-content-between align-items-center">'
+                + '<span class="mt-1 text-sm">@Local["Trừ thẻ"]</span>'
+                + '<span class="text-dark">' + formatNumber(Card_Amount_Using) + '</span>'
+                + '</div>';
+        }
+        if (UseInsurance != "0") {
+            _InsurAmount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="mt-1 text-sm">@Local["Bảo hiểm thanh toán"]</span>'
+                + '<span class="text-dark">' + formatNumber(InsurAmount) + '</span>'
+                + '</div>';
+        }
+        if (PointAmount != "0") {
+            _PointAmount = '<div class="d-flex justify-content-between align-items-center">'
+                + '<span class="mt-1 text-sm">@Local["Điểm tích lũy"]</span>'
+                + '<span class="text-dark">' + formatNumber(PointAmount) + '</span>'
+                + '</div>';
+        }
+
+        result = '<div class="border-0 p-2 bg-gray-100 border-radius-lg">'
+            + _PriceRoot
+            + _Discount_Amount + _Discount_Voucher + _Discount_CusGroup_Amount + _Discount_CusMem_Amount
+            + _DiscountForCus_Amount
+            + _Discount_Amount_Doctor
+            + _Card_Amount_Using
+            + _InsurAmount
+            + _PointAmount
+            + _Vat
+            + ((_PriceRoot != '') ? '<hr class="horizontal dark my-2">' : '')
+            + '<div class="d-flex justify-content-between align-items-center">'
+            + '<span class="mt-0 text-sm">@Local["Thành tiền"]</span>'
+            + '<span id="price_discounted_' + id + '" class="text-dark font-weight-bold">' + formatNumber(Price_Discounted) + '</span>'
+            + '</div>'
+            + '</div>';
+        return result;
+    }
+    function Render_Tab_List_Service_Created(id, date) {
+        if (id == "0") return '';
+        let obj = Fun_GetObject_ByID(DataUser, id);
+        let name = (obj != null && obj.EmployeeName != undefined) ? obj.EmployeeName : 'unknown';
+        let img = (obj != null && obj.Avatar != "") ? obj.Avatar : Master_Default_Pic;
+        let result = '<div class="d-flex ms-2">'
+            + '<div class="icon icon-shape icon-sm me-2   text-center">'
+            + '<img class="avatar avatar-xs mt-2" src="' + img + '" alt="label-image">'
+            + '</div>'
+            + '<div class="d-flex flex-column">'
+            + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+            + '<span class="text-xs">' + GetDateTime_String_DMYHM(date) + '</span>'
+            + '</div>'
+            + '</div>';
+
+        return result;
+
+    }
+    function Render_Tab_List_Service_Employee(id) {
+        if (id == "0") return '';
+        let obj = Fun_GetObject_ByID(DataEmployee, id);
+        let name = (obj != null) ? obj.Name : 'unknown';
+        let img = (obj != null && obj.Avatar != "") ? obj.Avatar : Master_Default_Pic;
+        let result = '<div class="d-inline"><img class="avatar avatar-xs me-2" src="' + img + '" alt="label-image" /><span>' + name + '</span></div>';
+
+        return result;
+    }
+    async function Render_Tab_List_Service (data, id) {
+         new Promise((resolve) => {
+             setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let stringContent = '';
+                    if (data && data.length > 0) {
+                        let IsSelect = $("#dtContentTab thead .print").hasClass('d-none') ? 0 : 1;
+                        let NumCreated = 0;
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let sercom = Render_Tab_List_Service_ServiceProduct(item.ID, ser_sys_DentistCosmetic, item.Code, item.ServiceName, item.isProduct
+                                , item.TimeToTreatment, item.Treat_Index, item.Number
+                                , item.Percent, item.PercentTeeth
+                                , item.TeethChoosing, item.TeethType
+                                , item.Per_Is_Block, item.IsDisable, item.IsFinish, item.HavingStage
+                            );
+                            let guidestr = `<div class="d-flex justify-content-center">
+                                ${item.GuideDocument != "" ? '<a target="_blank" class="d-flex justify-content-center" data-bs-toggle="tooltip" title="@Local["Khác"]" href=' + encodeURI(decodeURI(item.GuideDocument)) + '><i class="vtt-icon vttech-icon-pdf"></i></a>' : ''}
+                                ${item.WarrantyDocument != "" ? '<a target="_blank" class="d-flex justify-content-center" data-bs-toggle="tooltip" title="@Local["Bảo hành"]" href=' + encodeURI(decodeURI(item.WarrantyDocument)) + '><i class="vtt-icon vttech-icon-pdf text-info"></i></a>' : ''}
+                            </div>
+                            `
+                            let tr =
+                                '<td class="d-none">' + item.ID + '</td>'
+                                + '<td class="vt-number-order"></td>'
+                                + Render_Check_Customer_Tab(item.ID, ser_UsingConfirmService, item.IsChoose
+                                    , item.Per_Is_Treated, item.Per_Is_Paid, item.Per_Is_PaidCom
+                                    , item.Per_Changed, item.Per_Is_Labo
+                                    , item.Per_Is_Block, item.Per_Treat_Lock, item.Per_Record_Lock
+                                    , item.Per_Export_Sale, item.Installment_Step, item.PackageNumber, item.IndexTreatment)
+                                + '<td class="text-center bg-gray-100 print ' + `${IsSelect == 0 ? "d-none" : ""}` + ' position-relative">'
+                                + `<span class="position-absolute end-4 top-4 text-primary text-sm numIndex fw-bold" id="numIndex_${item.ID}"> </span>`
+                                + '<div class="form-check d-flex justify-content-center">'
+                                + '<input type="checkbox" data-id="' + item.ID + '" class="form-check-input pr-2 printservice"></div>'
+                                + '</td>'
+                                + '<td>' + sercom + '</td>'
+
+                                + '<td>' + Render_Button_Customer_Tab_Amount(item.ID, item.Price_Root, item.Discount_Amount, item.Discount_CusGroup_Amount, item.Discount_CusMem_Amount
+                                    , item.Discount_Voucher, item.DiscountForCus_Amount
+                                    , item.Discount_Amount_Doctor, item.Card_Amount_Using
+                                    , item.Price_Discounted
+                                    , item.UseInsurance
+                                    , item.InsurAmount
+                                    , item.Discount_Point, item.Vatper, item.Vatamount
+                                ) + '</td>'
+                                + '<td>' + Render_Tab_List_Service_Employee(item.ConsultID) + '</td>'
+                                + '<td data-name="telesale">' + ((item.TeleID != 0) ? Render_Tab_List_Service_Employee(item.TeleID) : '') + '</td>'
+                                + '<td data-name="custcare">' + ((item.CustCareID != 0) ? Render_Tab_List_Service_Employee(item.CustCareID) : '') + '</td>'
+                                + '<td data-name="content"><span class="content_line_clamp white-space-pre-line">' + item.Content + '</span></td>'
+                                + '<td data-name="warranty">' + (item.MonthWarranty != 0 ?
+                                    ('<div>' + item.MonthWarranty + ' @Local["Tháng"]</div>'
+                                        + '<div>@Local["Từ"]: ' + item.StartTimeWarranty + '</div>'
+                                        + '<div>@Local["Đến"]: ' + item.EndTimeWarranty + '</div>') : "")
+                                + '</td>'
+                                + '<td data-name="created">'
+                                + Render_Tab_List_Service_Created(item.CreatedBy, item.Created)
+                                + '</td>'
+                                + '<td data-name="choose"><div class="chooseinfo" data-id="' + item.ID+'">'
+                                + `${item.IsChoose == 1 ? `${Render_Tab_List_Service_Created(item.ChooseBy, item.ChooseDate)}` : ``}`
+                                + '</div></td>'
+
+                                + '<td data-name="editor">'
+                                + Render_Tab_List_Service_Created(item.ModifiedBy, item.Modified)
+                                + '</td>'
+                                + '<td data-name="branch">' + item.BranchName + '</td>'
+
+                                + '<td data-name="file">' + guidestr + '</td>'
+                                + '<td data-name="type">'
+                                + ((item.isProduct == 0) ? '<span class="badge bg-gradient-info">Service</span>' : '<span class="badge bg-gradient-success">Product</span>')
+                                + '</td>'
+                                + '<td data-name="servicesource">' + item.Servicesource + '</td>'
+                                + '<td data-name="serviceunit">' + (item.ServiceUnit || "@Local["Đơn vị khác"]") + '</td>'
+                                + '<td data-name="serviceold">' + item.ServiceOld + '</td>'
+                                + '<td data-name="personres">' + Fun_GetName_ByID(DataEmployee, item.PersonResID) + '</td>'
+                                + '<td data-name="vourcher">'
+                                + (item.VoucherCode != "" ? `<span class="text-dark fw-bold">${item.VoucherCode}</span><span class="text-secondary text-lowercase d-block">Series : ${item.VoucherSeries}</span>`  : "")
+                                + '</td>'
+                                + '<td data-name="servicecombo">'
+                                + `<p class="text-sm text-dark fw-bold mb-0">${item.ComboCode}</p>
+                                    <span class="text-sm text-dark mt-n2">${item.ComboName}</span>
+                                `
+                                + '</td>'
+                                + '<td data-name="totalpaid">'
+                                + formatNumber(item.TotalPaid)
+                                + '</td>'
+ 
+                                + '<td>'
+                                + '<div class="text-nowrap">'
+                                + Render_Button_Customer_Tab_Execute2(item.ID, item.Per_Export_Sale, item.Per_Same_User, item.Per_Same_Date
+                                    , item.Per_Is_Treated, item.Per_Is_Paid, item.Per_Is_PaidCom, item.Per_Changed, item.Per_Is_Labo
+                                    , item.Per_Is_Block
+                                    , Number(item.Per_Treat_Lock), Number(item.Per_Record_Lock)
+                                    , item.Installment_Step
+                                    , item.Per_Passing_Date
+                                    , item.IsDisable
+                                    , item.UserDisable
+                                    , item.IsFinish
+                                    , item.UserFinish
+                                    , item.User_Current
+                                    , item.DisableService_Permission
+                                    , item.Per_Is_Refund
+                                    , item.IndexTreatment
+                                )
+                                + '</div>'
+                                + '</td>'
+                            if (item.NumCreated != NumCreated) {
+                                NumCreated = item.NumCreated;
+                                stringContent = stringContent +
+                                 `<tr class="groupdate"><td data-name="groupdate" colspan="100">
+                                 <a class="groupdate fw-bolder" data-value=${NumCreated}>
+                                     <i class="collapse-close fa fa-plus text-xs pt-1 me-3" aria-hidden="true"></i>
+                                     <i class="collapse-open fa fa-minus text-xs pt-1 me-3" aria-hidden="true"></i>
+                                     ${GetDateTime_String_DMY(item.Created)}
+                                </a></td></tr>`;
+                            }
+                            stringContent = stringContent +
+                                `<tr id="row_tab_${item.ID}" data-numcreated=${NumCreated} class="vt-number row_tab_${item.ID} ${item.Tab_ID_New !== 0 ? " negative" : "" } ${(item.Tab_ID_Old !== 0 ? "positive" : "" )}" role = "row">
+                                     ${tr}
+                                </tr>`;
+                        }
+                    }
+                    myNode.insertAdjacentHTML('beforeend', stringContent);
+                }
+                $(".info_modified,.hoverpopup,.buttonGrid").popup({
+                    transition: "scale up",
+                    position: "right center"
+                });
+                ToolPopper();
+                TabList_FilterLayout();
+                shtable.Refresh();
+                Checking_TabControl_Permission();
+                CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+                 resolve();
+             }, 100)
+         })
+     }
+
+
+    //#endregion
+    //#region Print select
+    function TSprintoption () {
+        $('#dtContentTab thead .print .selectall').prop('checked', false);
+        if($('#dtContentTab thead .print').length){
+            $("#dtContentTab .numIndex").html('');
+            tsprint_selected = '';
+            if ($('#dtContentTab thead .print').hasClass('d-none')) {
+                $('#tsprint_option').removeClass('d-none');
+                $('#dtContentTab thead .print').removeClass('d-none');
+                $('#dtContentTab tbody .print').removeClass('d-none');
+                flag_option = 0;
+                let obj = $("#dtContentTabBody .printservice");
+                for (let i = 0; i < obj.length; i++) obj[i].checked = false;
+                flag_option = 1;
+            }
+            else {
+                $('#tsprint_option').addClass('d-none');
+                $('#dtContentTab thead .print').addClass('d-none');
+                $('#dtContentTab tbody .print').addClass('d-none');
+            }
+        }
+    }
+    function tsprint_Action () {
+        if (tsprint_selected != '') {
+            if (tsprint_selected.length < 1000) {
+                syslog_cutcon('p', ser_MainCustomerID, '');
+                $("#DetailModal_Content").html('');
+                var url = "/Print/print?Type=servicechoose&DetailID=" + encodeURIComponent(tsprint_selected);
+                $("#DetailModal_Content").load(url);
+                $('#DetailModal').modal('show');
+            }
+            else  notiWarning("@Local["Vượt số lượng cho phép"]");
+        }
+    }
+    function TSPrint_SetIndex(val){
+        if(val.checked){
+            let tabID = val.getAttribute('data-id');
+            tsprintData.push(tabID);
+        }
+        else{
+            let tabID = val.getAttribute('data-id');
+            let index = tsprintData.indexOf(tabID);
+            tsprintData.splice(index,1);
+        }
+
+        if(tsprint_IsAll == 1){
+            if(tsprintData.length == $('.printservice').length) {
+                TSprint_Select();
+            };
+        }
+        else TSprint_Select();
+
+    }
+    async function TSprint_Select () {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                if (flag_option == 1) {
+                    $('.numIndex').html('');
+                    let str = '';
+                    if (tsprintData.length != 0) {
+                        for (let i = 0; i < tsprintData.length; i++) {
+                            let item = tsprintData[i];
+                            $('#numIndex_' + item).html(i + 1);
+                            str = str + item + ',';
+                        }
+                        tsprint_selected = str;
+                    }
+                }
+                resolve();
+            }, 100)
+         })
+    }
+
+    function TSprint_SelectAll (val) {
+        tsprint_selected = '';
+        tsprint_IsAll = 1;
+        tsprintData = [];
+        if (!val) $('.numIndex').html('');
+        let obj = $("#dtContentTabBody .printservice");
+        for (let i = 0; i < obj.length; i++) {
+            obj[i].checked = val;
+            TSPrint_SetIndex(obj[i]);
+        }
+        flag_option = 1;
+    }
+
+    //#endregion
+
+    //#region // Delete
+    function Tab_List_Delete_Service(id) {
+        const promise = notiConfirm();
+        promise.then(function() { ExecuteTab_List_Delete_Service(id); }, function() { });
+    }
+    function ExecuteTab_List_Delete_Service(id) {
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                if (result != "0") {
+                    syslog_cutser('d', result, ser_MainCustomerID, '');
+                    notiSuccess();
+                    TabList_Service_Loading_After_Execute(1);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+    //#endregion
+
+    // #region // Lock and Unclock service
+
+    function Tab_List_Lock_Service(id) {
+        const promise = notiConfirm("@Local["Khóa dịch vụ"]");
+        promise.then(function() { Execute_Tab_List_Lock_Service(id, 1); }, function() { });
+    }
+
+    function Un_Tab_List_Lock_Service(id) {
+        const promise = notiConfirm("@Local["Hủy khóa dịch vụ"]");
+        promise.then(function() { Execute_Tab_List_Lock_Service(id, 0); }, function() { });
+    }
+
+    function Execute_Tab_List_Lock_Service(id, type) {
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=LockAndUnlockTab"
+            , data = { 'id': id, 'type': type }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                if (result != "0") {
+                    notiSuccess();
+                    syslog_cutser('u', result, ser_MainCustomerID, type == 0 ? 'unblock' : 'block');
+                    Tab_List_Customer_Service();
+                    if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                }
+                else {
+                      notiWarning("@Local["Dịch vụ đã hoàn"]");
+                }
+            }
+        );
+    }
+    //#endregion
+
+    // #region // disable and Undisable service
+    function Tab_List_Disable_Service(id) {
+        const promise = notiConfirm("@Local["Vô hiệu hóa dịch vụ"]");
+        promise.then(function() { Execute_Tab_List_Disable_Service(id, 1); }, function() { });
+    }
+    function Un_Tab_List_Disable_Service(id) {
+        const promise = notiConfirm("@Local["Kích hoạt dịch vụ"]");
+        promise.then(function() { Execute_Tab_List_Disable_Service(id, 0); }, function() { });
+    }
+    function Execute_Tab_List_Disable_Service(id, type) {
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=DisableAndUndisableTab"
+            , data = { 'id': id, 'type': type }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                if (result != "0") {
+                    notiSuccess();
+                    syslog_cutser('u', result, ser_MainCustomerID, type == 0 ? 'Abled' : 'Disabled');
+                    Tab_List_Customer_Service();
+                    if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    // #region // disable and Undisable service
+    //function Tab_List_Finish_Service(id) {
+    //    const promise = notiConfirm_Type("customer_finish_tab");
+    //    promise.then(function() { Execute_Tab_List_Finish_Service(id, 1); }, function() { });
+    //}
+    //function Un_Tab_List_Finish_Service(id) {
+    //    const promise = notiConfirm_Type("customer_un_finish_tab");
+    //    promise.then(function() { Execute_Tab_List_Finish_Service(id, 0); }, function() { });
+    //}
+    //function Execute_Tab_List_Finish_Service(id, type) {
+    //    AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=FinishTab"
+    //        , data = { 'id': id, 'type': type }
+    //        , async = true
+    //        , error = function() { notiError_SW() }
+    //        , success = function(result) {
+    //            if (result == "1") {
+    //                notiSuccess();
+    //                Tab_List_Customer_Service();
+    //            } else {
+    //                notiError_SW();
+    //            }
+    //        }
+    //    );
+    //}
+    //#endregion
+
+    // #region // Confirm Service
+    function Refresh_Tabs_Choose(table_tab) {
+
+        for (let i = 0; i < table_tab.length; i++) {
+            if (table_tab[i].Result == 1) {
+                let elm = $('#dtContentTab .ConfirmUsing[data-id=' + table_tab[i].TabID + ']');
+                elm[0].checked = (table_tab[i].Value == 1 ? true : false);
+                syslog_cutser('u', table_tab[i].Code, ser_MainCustomerID, Number(table_tab[i].Value) == 1 ? '@Local["Chọn"]' : '@Local["Hủy chọn"]');
+
+                let elminfo = $('#dtContentTab .chooseinfo[data-id=' + table_tab[i].TabID + ']');
+                if (Number(table_tab[i].Value) == 1)
+                    elminfo[0].innerHTML = Render_Tab_List_Service_Created(table_tab[i].ChooseBy, table_tab[i].ChooseDate);
+                else elminfo[0].innerHTML = '';
+            }
+            else {
+                notiError('@Local["Có lỗi xảy ra"]');
+            }
+        }
+
+    }
+    function TabService_Change_Choose(table_tab) {
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=TabService_Change_Choose"
+            , data = { "data": JSON.stringify(table_tab), "customerid": ser_MainCustomerID }
+            , async = true
+            , error = function() {
+                // let data = table_tab.filter(a => a.Value = (a.Value == 1 ? 0 : 1));
+                // Refresh_Tabs_Choose(table_tab);
+            }
+            , success = function(result) {
+                let data = JSON.parse(result);
+                data = data.filter(a => Number(a.Result) == 1);
+                if (data != undefined && data.length != 0) {
+                    Refresh_Tabs_Choose(data);
+                    Treatment_Plan_LoadInfo(ser_MainCustomerID, ser_current_treatment_plant_id);
+                    if (typeof LoadCustomerPaymentInfo !== 'undefined' && $.isFunction(LoadCustomerPaymentInfo)) {
+                        LoadCustomerPaymentInfo();
+                    }
+                }
+                else {
+                    notiWarning("@Local["Dịch vụ đã điều trị"]");
+                }
+            }
+        );
+
+    }
+    // #endregion
+
+    //#region // Other
+    function TabList_Service_Loading_After_Modified_Service(_addingnew_plan) {
+        if (_addingnew_plan == 1) {
+            if (ser_current_patient_record != 0) Tab_List_Customer_Patient_Record_Trigger(ser_current_patient_record);
+            else Tab_List_Customer_Service();
+            if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+            if (ser_current_treatment_plant_id != 0) Treatment_Plan_LoadInfo(ser_MainCustomerID, ser_current_treatment_plant_id);
+        }
+        else {
+            TabList_Service_Loading_After_Execute(1);
+        }
+
+    }
+    function TabList_Service_Loading_After_Execute(is_reload) {
+        if (is_reload == 1) {
+            if (ser_current_treatment_plant_id != 0) Tab_List_Customer_Treatment_Plan_Trigger(ser_current_treatment_plant_id);
+            else if (ser_current_patient_record != 0) Tab_List_Customer_Patient_Record_Trigger(ser_current_patient_record);
+            else Tab_List_Customer_Service();
+        }
+        else Tab_List_Customer_Service();
+        if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+        if (ser_current_treatment_plant_id != 0) Treatment_Plan_LoadInfo(ser_MainCustomerID, ser_current_treatment_plant_id);
+    }
+    function Tab_List_ViewAll_Service() {
+        current_view_all_service = (current_view_all_service == 0) ? 1 : 0;
+        if (current_view_all_service == 1) {
+            ser_sys_Patient_Record = 0;
+            ser_sys_Treatment_Plan = 0;
+            $('#btn_view_all_service').addClass('selected_viewall');
+            $('#print_tab_cust_profile').addClass('d-none');
+            $('#print_all_cust_profile').removeClass('d-none');
+            if ($('#tablist_addnew').length) $('#tablist_addnew').addClass('d-none');
+            $('#TabList_Content_Main').addClass('showall');
+            $('#btn_view_all_service').html(`@Local["Tắt tất cả"]`);
+
+
+        }
+        else {
+            ser_sys_Patient_Record = ser_sys_Patient_Record_Root;
+            ser_sys_Treatment_Plan = ser_sys_Treatment_Plan_Root;
+            $('#btn_view_all_service').removeClass('selected_viewall');
+            $('#print_tab_cust_profile').removeClass('d-none');
+            $('#print_all_cust_profile').addClass('d-none');
+            if ($('#tablist_addnew').length) $('#tablist_addnew').removeClass('d-none');
+            $('#TabList_Content_Main').removeClass('showall');
+            $('#btn_view_all_service').html(`@Local["Tất cả"]`);
+        }
+        Tab_List_Load_InitializeData();
+
+    }
+    function Tab_List_Reload_PatientRecord() {
+        Tab_List_Load_InitializeData();
+    }
+    function ContentIMGByTreatPlan(ID) {
+        $("#ImgTreatmentPlan").empty();
+        $("#ImgTreatmentPlan").load("/Customer/CustomerImageByFolder?CustomerID=" + ser_MainCustomerID + "&FolderID=" + ID + "&TreatPlanID=" + ser_current_treatment_plant_id + "&ver=" + versionofWebApplication);
+    }
+    function TabList_FilterType () {
+        let data = [];
+        data = data_Tab_Service;
+        if ($('#choose_all_type_service')[0].checked == false) {
+            data = data.filter(word => Number(word.isProduct) == 1);
+        }
+        if ($('#choose_all_type_product')[0].checked == false) {
+            data = data.filter(word => Number(word.isProduct) != 1);
+        }
+        TLS_Blockindex = 0;
+        $('#dtContentTabBody').html('');
+        TLS_Splitdata = sliceIntoChunks(JSON.parse(JSON.stringify(data)), 50);
+        TLS_Viewmore();
+    }
+
+    function TabList_FilterLayout () {
+
+        $("#dtContentTabBody tr").removeClass('d-none');
+        let obj = $("#dtContentTabBody tr:not(.groupdate)");
+        let percentComplete = '100';
+        obj.each(function (index, value) {
+            if ($('#tlfiler_complete').length != 0 && !$('#tlfiler_complete')[0].checked) {
+                if ($(this).find('.serprogress')[0] == undefined || $(this).find('.serprogress')[0].dataset.value == percentComplete) {
+                    $(this).addClass('d-none');
+                }
+            }
+            if ($('#tlfiler_uncomplete').length != 0 && !$('#tlfiler_uncomplete')[0].checked) {
+                if ($(this).find('.serprogress')[0] != undefined && $(this).find('.serprogress')[0].dataset.value != percentComplete) {
+                    $(this).addClass('d-none');
+                }
+            }
+        });
+    }
+
+    //#endregion
+
+    //#region // Load list service add
+    async function TL_ServiceLoad () {
+        new Promise((resolove) => {
+            setTimeout(() => {
+                AjaxLoad(url = "/Customer/Service/TabList/TabList_Service/?handler=LoadServiceTab"
+                    , data = {
+                    }
+                    , async = true
+                    , error = function () {notiError_SW()}
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+                        dataServiceTab = data.Service;
+                        data_service_root = data.Service;
+                        data_servicetype_root = data.ServiceType;
+                    }, sender = null
+                );
+            }, 100)
+        })
+    }
+    //#endregion
+
+    //#region Event other
+    function TL_PrintListBydDay() {
+        syslog_cuttreat('p', ser_MainCustomerID, '');
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Print/Condi/SelectTime", function () {
+            prtime_assignlink(`/Print/print?Type=servicebyday&DetailID=${ser_MainCustomerID}`);
+        });
+        $('#DetailModal').modal('show');
+    }
+    //#endregion Event other
+</script>
+
+
+<style type="text/css">
+
+
+
+    .patient_record_item .patient_record_detail {
+        display: none;
+    }
+
+    .patient_record_item {
+        cursor: pointer;
+    }
+
+    .recordselected .patient_record_detail {
+        display: block;
+        border-bottom: 1px solid #3a416f;
+    }
+
+
+    #popupExecute_Treatment_Plan {
+        display: none;
+        position: absolute;
+        width: 10%;
+    }
+
+    .patient_record_item .patientrename {
+        display: block;
+    }
+
+    .recordselected .patientrename {
+        display: none;
+    }
+
+    #Div_Tab_List_Service_Master .form-check:not(.form-switch) .form-check-input {
+        width: 1.3rem !important;
+        height: 1.3rem !important;
+    }
+
+    #TabList_Content_Main.showall .buttonGrid.btnchange {
+        display: none !important;
+    }
+
+    #btn_view_all_service.selected_viewall {
+        background: rgb(var(--bs-primary));
+    }
+    #dtContentTab tr.groupdate {
+        background: rgb(var(--bs-primary),0.1);
+    }
+    #dtContentTab a.groupdate .collapse-close {
+        display: none;
+    }
+    #dtContentTab a.groupdate .collapse-open {
+        display: inline-flex;
+    }
+    #dtContentTab a.groupdate.openned .collapse-open {
+        display: none;
+    }
+    #dtContentTab a.groupdate.openned .collapse-close {
+        display: inline-flex;
+    }
+    .tl_FirstUpper{
+        text-transform: lowercase;
+    }
+    .tl_FirstUpper:first-letter {
+        text-transform: uppercase;
+    }
+</style>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/assests/dist/plugins/trumbowyg/trumbowyg.js');</script>
+<script>js_require('/js/customjs/custom-editor.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti_Combo.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti_Update.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti_Teeth.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti_Program.js');</script>
+<script>js_require('/js/TabDetail/ExecuteTabMulti_Card.js');</script>
+
+

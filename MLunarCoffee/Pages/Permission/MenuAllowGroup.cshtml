@@ -1,0 +1,205 @@
+﻿@page
+@model MLunarCoffee.Pages.Permission.MenuAllowGroupModel
+@{
+    Layout = null;
+}
+<div class="row my-3">
+    <div class="col-lg-3">
+        <div class="position-sticky top-1 z-index-3 pb-2">
+            <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column bg-white border-radius-lg" id="Permis_Group">
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-9 mt-lg-0 mt-0">
+        <div class="card-body pt-0 px-0">
+            <div class="d-flex mb-2">
+                <div class="col-auto my-auto py-1">
+                    <span id="Permis_HeaderName" class="badge badge-md bg-gradient-warning"></span>
+                </div>
+                <div class="ms-auto my-auto  py-1">
+                    <button id="btnPermis_Edit" class="btn bg-gradient-dark btn-sm d-none Permission_btnEdit badge badge-md m-0" onclick="Permis_EditBegin()">
+                        @Local["Chỉnh sửa"]
+                    </button>
+                    <div id="Permis_EditArea" class="d-none">
+                        <button class="btn bg-gradient-dark btn-sm badge badge-md m-0" onclick="Permis_Cancel()">@Local["Hủy"]</button>
+                        <button id="btnPermis_Save" class="btn bg-gradient-primary btn-sm badge badge-md m-0" onclick="Permis_SaveExecute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+            <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div id="Permis_Detail" class="border-dashed border-radius-md  border-1 border-secondary px-2 py-4">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+    let currentGroupID = 0;
+    let currentServerDetailID = 0;
+    let PermisData;
+    $(document).ready(function () {
+        Permis_LoadGroup();
+    });
+    function Permis_LoadGroup() {
+        AjaxLoad(url = "/Permission/MenuAllowGroup/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    PermisData = data;
+                    Permis_GroupRender(PermisData, 'Permis_Group');
+                    Permis_GroupEvent();
+                    $('#Permis_Group a:first').tab('show');
+                }
+            });
+        return false;
+    }
+    function Permis_GroupRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent + '<li class="nav-item">'
+                        + '<a data-id="' + item.ID + '" class="permission_group nav-link item-menu text-dark text-sm p-2" data-bs-toggle="tab">'
+                        + item.Name 
+                        + '</a>'
+                        + '</li>'
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function Permis_GroupEvent() {
+        $(".permission_group").on('shown.bs.tab', function (e) {
+            $('.permission_group').removeClass('active');
+            $(this).addClass('active');
+            let ID = $(this).attr("data-id");
+            let x = PermisData.filter(word => word["ID"] == ID)[0];
+            if (x != undefined) {
+                let GroupFromServerID = x.InheritanceGroup;
+                let Name = x.Name;
+                Permis_DetailEdit(ID, GroupFromServerID, Name);
+            }
+        });
+    }
+    function Permis_DetailEdit(CurrentID, GroupFromServerID, Name) {
+        event.preventDefault();
+        currentGroupID = CurrentID;
+        currentServerDetailID = GroupFromServerID;
+        $('#Permis_HeaderName').html(Name)
+        if (!$('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').addClass('d-none');
+        if ($('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').removeClass('d-none');
+        PermisMAG_DetailLoad(currentGroupID, GroupFromServerID);
+
+    }
+    function PermisMAG_DetailLoad(CurrentID, GroupFromServerID) {
+        AjaxLoad(url = "/Permission/MenuAllowGroup/?handler=LoadDataDetail"
+            , data = {
+                CurrentID: CurrentID,
+                GroupFromServerID: GroupFromServerID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    Permis_DetailRender(data, "Permis_Detail");
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#Permis_Detail").hide();
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#Permis_Detail").show();
+                $("#loaderList").hide();
+            });
+        return false;
+    }
+    function Permis_EditBegin() {
+        event.preventDefault();
+        if (!$('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').addClass('d-none');
+        if ($('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').removeClass('d-none');
+        $("#Permis_Detail :input").attr("disabled", false);
+    }
+    function Permis_SaveExecute() {
+        var x = document.getElementsByName("chkPermissDetail");
+        if (x != null && x != undefined) {
+            var data = [];
+            for (let i = 0; i < x.length; i++) {
+                let element = {};
+                element.ID = x[i].value;
+                element.Status = (x[i].checked) ? 1 : 0;
+                data.push(element);
+            }
+            AjaxLoad(url = "/Permission/MenuAllowGroup/?handler=ExecuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: currentGroupID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        setTimeout(() => {
+                            PermisMAG_DetailLoad(currentGroupID, currentServerDetailID);
+                        }, 100)
+                    }
+                    else notiError();
+                });
+        }
+        if (!$('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').addClass('d-none');
+        if ($('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').removeClass('d-none');
+        $("#Permis_Detail :input").attr("disabled", true);
+        return false;
+    }
+    function Permis_Cancel() {
+        if (!$('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').addClass('d-none');
+        if ($('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').removeClass('d-none');
+        $("#Permis_Detail :input").attr("disabled", true);
+        setTimeout(() => {
+            PermisMAG_DetailLoad(currentGroupID, currentServerDetailID);
+        }, 100)
+        return false;
+    }
+    function Permis_DetailRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                let idGroup = 0;
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let textMenu = Outlang[item.NameLangKey] != undefined ? Outlang[item.NameLangKey] : item.Name;
+                    if (item.GroupID != idGroup) {
+                        textGroup = Outlang[item.GroupNameLangKey] != undefined ? Outlang[item.GroupNameLangKey] : item.GroupName;
+                        idGroup = item.GroupID;
+                        stringContent = stringContent
+                            + '<h6 class="fw-bold text-md m-2 text-gradient text-primary">' + textGroup + '</h6>'
+                            + '<div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 flex-grow-1 mb-4">';
+                    }
+                    stringContent = stringContent
+                        + '<div class="col">'
+                        + '<div class="form-check form-check m-2">'
+                        + '<input class="form-check-input pr-2" type="checkbox" value=' + item.ID + ' name="chkPermissDetail"'
+                        + ((item.isBlock == 1) ? '' : 'checked') + ' disabled >'
+                        + '<label class="ps-1 text-sm font-weight-normal" >' + textMenu + '</label>'
+                        + '</div>'
+                        + '</div>'
+                    if ((i === data.length - 1) || idGroup !== data[i + 1].GroupID) {
+                        stringContent = stringContent + '</div><hr class="horizontal dark mt-2 mb-5">';
+                    }
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>

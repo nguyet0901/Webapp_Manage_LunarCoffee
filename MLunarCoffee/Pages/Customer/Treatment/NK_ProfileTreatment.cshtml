@@ -1,0 +1,181 @@
+﻿@page
+@model SourceMain.Pages.Customer.Treatment.NK_ProfileTreatmentModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card mb-4">
+    <div class="card-body p-3 pt-0" id="pt_content">
+
+
+        <div class="row mt-4">
+
+
+            <div class="col-lg-8 col-md-6 col-12">
+                <div class="mx-3 ">
+                    <h6 id="pt_companyname" class="text-lg mb-0 mt-2"></h6>
+                    <p id="pt_companytel" class="text-sm  mb-0"></p>
+                    <p id="pt_companywebsite" class="text-sm  mb-0"></p>
+                    <p id="pt_companyaddress" class="text-sm mb-1"></p>
+                    <span id="pt_branchcode" class="badge badge-sm bg-gradient-success"></span>
+                </div>
+
+            </div>
+            <div class="col-lg-4 col-md-6 col-12">
+                <img id="pt_companyavatar" src="/assests/img/logo/logo_transparent.png">
+            </div>
+
+
+        </div>
+        <hr class="horizontal dark mt-4 mb-2 mx-10">
+        <h4 class="text-center p-3">@Local["Phiếu điều trị"]</h4>
+        <div class="row">
+            <div class="col-lg-5 col-md-6 col-12">
+                <ul class="list-group">
+                    <li class="list-group-item border-0 d-flex p-3 mb-2 bg-gray-100 border-radius-lg">
+                        <div class="d-flex flex-column">
+
+                            <span class="mb-2">@Local["Tên"]: <span id="pt_custname" class="text-dark font-weight-bold ms-2"></span></span>
+                            <span class="mb-2">@Local["MSKH"]: <span id="pt_custcust_code" class="text-dark font-weight-bold ms-2"></span></span>
+                            <span class="mb-2">@Local["Giới tính"]: <span id="pt_custgender" class="text-dark ms-2 font-weight-bold"></span></span>
+                            <span class="mb-2">@Local["Năm sinh"]: <span id="pt_custbirth" class="text-dark ms-2 font-weight-bold"></span></span>
+                            <span class="mb-2">@Local["Số điện thoại"]: <span id="pt_custphone" data-tab="phone_customer" class="_tab_control_ text-dark ms-2 font-weight-bold"></span></span>
+                            <span class="">@Local["Địa chỉ"]: <span id="pt_custaddress" class=" text-dark ms-2 font-weight-bold"></span></span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-7 col-md-6 col-12">
+
+                <div class="card card-body  card-plain border-radius-lg  align-items-center  ">
+                    <div class="row">
+                        <img src="/assests/img/choose-teeth.png" />
+                    </div>
+                    <div class="row">
+                        <img src="/assests/img/choose-teeth-kid.png" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <h6 class="mb-3 mt-4">@Local["Chi tiết điều trị"]</h6>
+                <div class="m-0 my-3 mobile-responsive">
+                    <table class="table vt-table mb-0" id="Content">
+                        <thead>
+                            <tr>
+                                <td>#</td>
+                                <td style="min-width:75px">@Local["Ngày"] </td>
+                                <td style="min-width:100px">@Local["Bác sĩ"] </td>
+                                <td style="min-width:100px">@Local["Phụ tá"]</td>
+                                <td>@Local["Nội dung điều trị"] </td>
+                                <td style="min-width:150px">@Local["Ghi chú"] </td>
+                            </tr>
+                        </thead>
+                        <tbody id="pt_dtcontentBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer fixed-botombutton">
+        <div class="action_Save">
+
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" onclick="Treatment_List_Detail_Cancel()">@Local["Đóng"]</button>
+                <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="PT_PrintContent()">@Local["In"]</button>
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+        var CustomerID ='@Model._CustomerID';
+        var PermissionTable_TabControl = PermissionTable_TabControl;
+        function Checking_TabControl_Permission() {
+            Checking_TabControl_Permission_Exe(PermissionTable_TabControl)
+        }
+        $(document).ready(function () {
+            Load_Profile_Data_Print();
+            $(document).keydown(function (e) {
+                if (e.keyCode == 80 && e.ctrlKey) {
+                    PT_PrintContent();
+                    return false;
+                }
+            });
+        });
+        function PT_PrintContent() {
+        //$('#pt_content').printThis({ canvas: true, importCSS: true, importStyle: true });
+
+        let ID = Number(ser_MainCustomerID);
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=form_treatment&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+        }
+    function PT_rendertable(data) {
+
+            var myNode = document.getElementById("pt_dtcontentBody");
+            if (myNode != null) {
+                let stringContent = '';
+                for (let i = 0; i < data.length; i++) {
+                    let tr = '';
+                    let item = data[i];
+                    tr = '<td class="vt-number-order"></td>'
+                        + '<td>' + item.CreatedString.substring(0, 10) + '</td> '
+                        + '<td>' + item.Doc1Name + '</td>'
+                        + '<td>' + item.Ass1Name +'</td>'
+                        + '<td>' + item.Content +'</td>'
+                        + '<td>' + item.Note +'</td>';
+                    stringContent = stringContent + '<tr class="vt-number">' + tr + '</tr>';
+                }
+                for (let j = 0; j < 20; j++) {
+                    let tr = '';
+                    tr = '<td>&nbsp</td><td></td> <td></td> <td></td> <td></td> <td></td> ';
+                    stringContent = stringContent + '<tr class="vt-number">' + tr + '</tr>';
+                }
+                document.getElementById("pt_dtcontentBody").innerHTML = stringContent;
+            }
+        }
+        function Load_Profile_Data_Print() {
+            AjaxLoad(url = "/Customer/Treatment/NK_ProfileTreatment/?handler=LoadataProfileTreat"
+                , data = { 'CustomerID': CustomerID }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    let dataTreat = data.dtTreatment.sort((a, b) => b.ID - a.ID).slice(0, 2).sort((a, b) => a.ID - b.ID);
+                    PT_rendertable(dataTreat);
+                    pt_renderprofile(data.dtProfile[0]);
+                }
+            );
+        }
+    function pt_renderprofile(data) {
+
+        $('#pt_companyavatar').attr('src', 'data:image/png;base64, ' + data.AvatarCompany1);
+        document.getElementById("pt_companyname").innerHTML = data.CompanyName
+        document.getElementById("pt_companytel").innerHTML = data.Hotline
+        document.getElementById("pt_companywebsite").innerHTML = data.Website
+        document.getElementById("pt_companyaddress").innerHTML = data.addr
+        document.getElementById("pt_branchcode").innerHTML = Master_branchNameCurrent
+
+        document.getElementById("pt_custname").innerHTML = data.Name;
+        document.getElementById("pt_custbirth").innerHTML = data.YearOfBirth;
+        document.getElementById("pt_custaddress").innerHTML = data.Address;
+        document.getElementById("pt_custphone").innerHTML = data.Phone;
+        document.getElementById("pt_custgender").innerHTML = data.Gender_ID == 60 ? 'Nam' : 'Nữ';
+        document.getElementById("pt_custcust_code").innerHTML = data.Cust_Code;
+
+            Checking_TabControl_Permission();
+        }
+
+</script>
+
+
+

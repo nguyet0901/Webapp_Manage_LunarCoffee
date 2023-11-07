@@ -1,0 +1,465 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Insurance.InsuranceList
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<div class="container-fluid py-3 px-0">
+
+    <div class="card p-3">
+        <div class="card-header p-2 pb-2">
+            <div class="d-lg-flex">
+                <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link cursor-pointer  " data-bs-toggle="collapse" href="#ISL_infodes">
+                            <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div id="ISL_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-0 mt-2 multi-collapse collapse">
+                <h6 class="mb-0">@Local["Bảo hiểm"]</h6>
+                <p class="text-sm mb-0">@Local["Chi tiết bảo hiểm"]</p>
+            </div>
+        </div>
+        <div class="row mb-2 position-relative">
+            <div id="ISL_Waiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center z-index-sticky" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="col-md-5 col-lg-3 pe-0">
+                <div class="position-sticky top-0" style=" transition:top 500ms ease-in-out;">
+                    <div class="card-body pe-0 py-2 ps-2 ">
+                        <a class="align-items-center d-flex nav-link p-0 text-body ms-2" style="min-height: 26px">
+                            <div class="form-check pe-1">
+                                <input onchange="event.preventDefault();return ISL_FilterType(0);" name="radioinsur"
+                                       class="form-check-input cursor-pointer" type="radio" checked>
+                                <label class="form-check-label mb-0 me-3">
+                                    @Local["Tất cả"]
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input onchange="event.preventDefault();return ISL_FilterType(1);" name="radioinsur"
+                                       class="form-check-input cursor-pointer" type="radio">
+                                <label class="form-check-label mb-0">
+                                    @Local["Bảo hiểm"]
+                                </label>
+                            </div>
+                        </a>
+                        <div class="input-group mt-2 pt-2" id="ISL_Filter">
+                            <span class="input-group-text px-2">
+                                <i class="fas fa-search" area-hidden="true"></i>
+                                <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                            </span>
+                            <input id="ISL_InputFilter" type="text" class="form-control" placeholder="eg. @Local["Tìm kiếm"]">
+                            <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                        </div>
+
+                        <div class="overflow-y ps-1 mt-2" style="max-height:calc(100vh - 200px)">
+                            <ul id="ISL_Master" class="nav nav-pills flex-column bg-white border-radius-lg p-0 mt-2">
+                            </ul>
+                        </div>
+                        <button id="ISL_btnloadmore" class="btn btnsysmore btn-secondary w-100 p-1" onclick="ISL_Ini(0,1)">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7 col-lg-8 mt-4 flex-grow-1 pe-0">
+                <div class="p-3 pt-2 ps-0 position-relative mt-n0 mt-lg-n5 pe-0">
+                    <div class="text-dark mb-3">
+                        <div class="card-body m-3 mt-0 p-3 px-2 pe-1">
+                            <div id="ISDdetail_wait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="ISDdetail_Main" class="d-none card mb-4 px-3">
+                                <div class="card-header p-3 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-primary fw-bold mb-0" id="isde_servicename"></h6>
+                                            <p id="isde_serviceinfo" class="text-sm mb-0"></p>
+                                        </div>
+                                        <div class="ms-auto d-flex">
+                                            <a id="isde_btnnprint" class=" btn btn-sm bg-gradient-info mb-0 me-2" name="button"
+                                               onclick="event.preventDefault(); return ISD_Print();">
+                                                @Local["In"]
+                                            </a>
+                                            <a id="isde_btnnewedit" onclick="event.preventDefault(); return ISD_NewEdit();"
+                                               class="btn btn-sm bg-gradient-dark  mb-0">@Local["Bảo hiểm"]</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3 pt-3">
+                                    <hr class="horizontal dark mt-0 mb-4 ">
+                                    <div class="row">
+                                        <div class="col-lg-3 col-md-12 col-12">
+                                            <h6 class="mb-3">@Local["Thông tin chung"]</h6>
+                                            <div class="card-body m-3 mt-0 p-3 ms-0 bg-gray-100 border-radius-lg">
+                                                <div class="ps-1 pt-0 text-dark text-sm">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Người tạo"]</p>
+                                                    <p id="isde_creatorper" class="text-sm font-weight-bold my-auto"></p>
+                                                    <hr class="horizontal dark">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Ngày tạo"]</p>
+                                                    <p id="isde_creatordate" class="text-sm font-weight-bold my-auto"></p>
+                                                    <hr class="horizontal dark">
+                                                    <p class="mb-0 text-sm mt-3">@Local["Chi nhánh"]</p>
+                                                    <p id="isde_branch" class="text-sm font-weight-bold my-auto"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4 col-md-12 col-12">
+                                            <h6 class="mb-3">@Local["Bảo hiểm"]</h6>
+                                            <div id="ISDetail_Nondata" class="ms-0 card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg d-none">
+                                                <h6 class="text-danger">@Local["Chưa có dữ liệu"]</h6>
+                                            </div>
+                                            <div id="ISDetail_Havedata" class="d-none">
+                                                <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
+                                                    <img id="isde_supavatar" class=" w-10 mb-0" src="#" alt="logo">
+                                                    <h6 id="isde_supname" class="mb-0 ps-2"></h6>
+                                                    <a id="isde_suplink" href="#" target="_blank" class="btn btn-icon-only btn-rounded btn-outline-secondary mb-0 ms-2 btn-sm d-flex align-items-center justify-content-center ms-auto"
+                                                       data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
+                                                       data-bs-original-title="@Local["File liên kết với đơn vị bảo hiểm"]">
+                                                        <i class="fas fa-info" aria-hidden="true"></i>
+                                                    </a>
+                                                </div>
+                                                <h6 class="mb-3 mt-4">@Local["Thông tin bảo hiểm"]</h6>
+                                                <ul class="list-group pt-1">
+                                                    <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg pb-2">
+                                                        <div class="d-flex flex-column">
+                                                            <span class="mb-2 text-sm">@Local["Chỉnh sửa gần nhất"]: <span id="isde_increator" class="text-dark fw-bold ms-2"></span></span>
+                                                            <span class="mb-2 text-sm">@Local["Cập nhật gần nhất"]: <span id="isde_indate" class="text-dark ms-2 fw-bold"></span></span>
+
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-5 col-md-12  ms-auto">
+                                            <h6 class="mb-3">@Local["Thông tin thanh toán"]</h6>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="mb-2 text-sm">
+                                                    @Local["Giá tiền"]:
+                                                </span>
+                                                <span id="isde_installprice" class="text-dark font-weight-bold ms-2"></span>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-sm">
+                                                    @Local["Bảo hiểm thanh toán"]:
+                                                </span>
+                                                <span id="isde_insurAmount" class="text-dark ms-2 font-weight-bold"></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-sm">
+                                                    @Local["Cần thanh toán"]:
+                                                </span>
+                                                <span id="isde_insurneedpaid" class="text-dark ms-2 font-weight-bold"></span>
+                                            </div>
+                                            <hr class="horizontal dark mt-4 mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="mb-2 text-sm">
+                                                    @Local["Đã thanh toán"]:
+                                                </span>
+                                                <span id="isde_installpaid" class="text-dark ms-2 font-weight-bold"></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="mb-2 text-sm">
+                                                    @Local["Còn lại"]:
+                                                </span>
+                                                <span id="isde_installleft" class="text-dark ms-2 font-weight-bold"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ISDdetail_MainNo" class=" ms-0 card-body m-3 mt-0 p-3 bg-gray-100 border-radius-lg mt-5">
+                                <h6 class="text-danger">@Local["Chưa có dữ liệu"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+<script type="text/javascript">
+    let ISL_DataFill;
+    let ISL_TimerOnchange;
+    let ISL_Limit = 50;
+    let ISL_Begin = 0;
+    var ser_CustSurID = '@Model._CustomerInsurID';
+    var ser_CurrentSurID = 0;
+     $(document).ready(function () {
+         ISL_Ini(0, 0);
+         ISL_FilterSearch();
+     });
+
+    //#region //filter
+    function ISL_FilterSearch () {
+        $('#ISL_Filter #ISL_InputFilter').unbind('keyup').on('keyup', function () {
+            let SearchText = xoa_dau($('#ISL_InputFilter').val().toLowerCase().trim());
+            if (SearchText.length > 0) $('#ISL_Filter .btn_clear').removeClass('opacity-1');
+            else $('#ISL_Filter .btn_clear').addClass('opacity-1');
+            $("#ISL_Filter .fa-search").hide();
+            $("#ISL_Filter .spinner-border").show();
+            clearTimeout(ISL_TimerOnchange);
+
+            ISL_TimerOnchange = setTimeout(function (e) {
+                if (SearchText == '') {
+                    $('#ISL_Master .nav-item').each(function () {
+                        $(this).removeClass('d-none');
+                    })
+                }
+                else {
+                    for (let i = 0; i < ISL_DataFill.length; i++) {
+                        let item = ISL_DataFill[i];
+                        let ServiceName = xoa_dau(item.ServiceName).toLowerCase().trim();
+                        if (ServiceName.includes(SearchText)) {
+                            $('#ISL_Master .nav-item[data-key="' + item.ID + '"]').removeClass('d-none');
+                        }
+                        else {
+                            $('#ISL_Master .nav-item[data-key="' + item.ID + '"]').addClass('d-none');
+                        }
+                    }
+                }
+                $("#ISL_Filter .fa-search").show();
+                $("#ISL_Filter .spinner-border").hide();
+            }, 200)
+        })
+        $('#ISL_Filter .btn_clear').unbind('click').on('click', function () {
+            $('#ISL_Filter #ISL_InputFilter').val('');
+            $('#ISL_Filter .btn_clear').addClass('opacity-1');
+            $('#ISL_Master .nav-item').each(function () {
+                $(this).removeClass('d-none');
+            });
+        })
+    }
+    function ISL_FilterType (_type) {
+        if (_type == 1) {
+            $('#ISL_Master .nav-item').addClass('d-none');
+
+            $('#ISL_Master .insurance').each(function () {
+                $(this).removeClass('d-none');
+            });
+        }
+        else $('#ISL_Master .nav-item').removeClass('d-none');
+    }
+    //#endregion
+
+    //#region // Master
+    function ISL_Ini (tabid, more) {
+        if (more == 0) {ISL_Begin = 0; ISL_DataFill = [];}
+        AjaxLoad(url = "/Customer/Insurance/InsuranceList/?handler=LoadService"
+            , data = {
+                'CustomerID': ser_CustSurID,
+                'TabID': tabid,
+                'Limit': ISL_Limit,
+                'BeginID': ISL_Begin,
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data.length != 0) {
+                    ISL_Begin = data[data.length - 1].ID;
+                    data = data.filter(v => v.UseInsurance === 1 || v.Paid === 0);
+                    if (tabid != 0) {
+                        let item = data[0];
+                        for (let i = 0; i < ISL_DataFill.length; i++) {
+                            if (ISL_DataFill[i].ID == item.ID) {
+                                ISL_DataFill[i] = item;
+                                break;
+                            }
+                        }
+                        let tr = ISL_RenderEach(item);
+                        $('#insuranceser_' + tabid).replaceWith(tr);
+                        ISL_Event();
+                        $('#insuranceser_' + tabid + ' a').trigger('click');
+                    }
+                    else {
+                        ISL_DataFill = ISL_DataFill.concat(data);
+
+                        if (more == 1) ISL_Render("ISL_Master", ISL_DataFill, function () { });
+                        else ISL_Render("ISL_Master", ISL_DataFill, function () {$("#ISL_Master a").first().trigger('click');});
+                    }
+                }
+                else $('#ISL_btnloadmore').remove();
+            }
+            , sender = null
+            , before = function (e) {
+                $('#ISL_Waiting').show();
+            }
+            , complete = function (e) {
+                $('#ISL_Waiting').hide();
+            }
+        );
+    }
+    async function ISL_Render (id, data,callback) {
+        return new Promise(resolve => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = ISL_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+                ISL_Event();
+                if (callback!= undefined) callback();
+            }
+            resolve();
+        });
+    }
+    function ISL_RenderEach (item) {
+
+        let teethname = '', status = '', statusicon;
+        if (item.UseInsurance == 0) {
+                            status = 'nonregis';
+                            statusicon = `<i class="text-secondary mt-2 pt-1 far fa-circle-notch text-sm"
+                            data-bs-toggle="tooltip" ></i>`
+                        }
+         else {
+               status = 'insurance';
+                                statusicon = `<i class="text-danger mt-2 pt-1 fas fa-registered text-sm"
+                                data-bs-toggle="tooltip" title=""
+                                data-bs-original-title="@Local["Bảo hiểm"]" aria-label="@Local["Bảo hiểm"]"></i>`
+        }
+        if (ser_sys_DentistCosmetic == 1 && item.TeethChoosing!='') {
+                            teethname = `<i class="vtt-icon vttech-icon-labo text-xs text-dark ms-n1"></i>`
+                                + Fun_GetTeeth_ByToken(sys_MainTeeth, item.TeethChoosing, item.TeethType);
+                        }
+        let tr = `<li id="insuranceser_${item.ID}" class="nav-item ${status} " role="presentation" data-key="${item.ID}">
+                                    <div class="w-100">
+                                        <div class="d-flex">
+                                            ${statusicon}
+                                            <div class="w-100">
+                                                <a class="nav-link nav-detail text-body pe-0 ms-n3  ps-4" data-id="${item.ID}">
+                                                    <div class="d-inline mb-2">
+                                                        <p class="text-secondary text-sm text mt-1 mb-0 d-inline">${GetDateTime_String_DMY(item.Created)}</p>
+                                                        <span class="ps-2 text-sm mt-1 mb-0 text-secondary">
+                                                            ${teethname}
+                                                        </span>
+                                                    </div>
+                                                    <h6 class="text-dark text-sm font-weight-bold mb-0">${item.ServiceName}</h6>
+
+                                                </a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <hr class="horizontal dark my-0 opacity-5">
+                                </li>`;
+        return tr;
+    }
+    function ISL_Event () {
+        ToolPopper();
+        $('#ISL_Master .nav-detail').unbind('click').click(function () {
+            $('#ISL_Master .nav-detail').removeClass("active");
+            $(this).addClass("active");
+            let id = $(this).attr("data-id");
+            if (id && id != '') {
+                ser_CurrentSurID = id;
+                ISD_LoadDetail(id);
+                $('#ISDdetail_MainNo').addClass("d-none");
+                $('#ISDdetail_Main').removeClass("d-none");
+
+            }
+        })
+    }
+    //#endregion
+
+    //#region // Detail
+    function ISD_LoadDetail (id) {
+        AjaxLoad(url = "/Customer/Insurance/InsuranceList/?handler=LoadDetail"
+            , data = { 'TabID': id }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                let datas = JSON.parse(result);
+                let datainfo = datas.Table;
+
+                if (datainfo != undefined && datainfo.length == 1) ISD_Fillinfo(datainfo[0]);
+
+
+            }
+            , sender = null
+            , before = function (e) {
+                $('#ISDdetail_wait').show();
+            }
+            , complete = function (e) {
+                $('#ISDdetail_wait').hide();
+            }
+        );
+    }
+    async function ISD_Fillinfo (item) {
+        return new Promise(resolve => {
+            $('#isde_servicename').html(item.ServiceName);
+            $('#isde_supavatar').attr('src', (item.InsurAvatar != '' ? item.InsurAvatar : '/default.png'));
+            $('#isde_supname').html(item.InsurName);
+            $('#isde_increator').html(item.Insurmodifyper);
+            $('#isde_indate').html(GetDateTime_String_DMY(item.Insurancemodify));
+            $('#isde_suplink').attr('href', (item.InsurFile != '' ? item.InsurFile : '#'));
+            $('#isde_installpaid').html(formatNumber(item.Paid));
+            $('#isde_installprice').html(formatNumber(item.Price + item.InsurAmount));
+            $('#isde_insurAmount').html(formatNumber(item.InsurAmount));
+            $('#isde_insurneedpaid').html(formatNumber(item.Price));
+            $('#isde_installleft').html(formatNumber(item.Price - item.Paid));
+
+
+            let info = '';
+            if (ser_sys_DentistCosmetic == 1 && item.TeethChoosing != '') {
+                info = Fun_GetTeeth_ByToken(sys_MainTeeth, item.TeethChoosing, item.TeethType);
+            }
+            else {
+                if (ser_sys_DentistCosmetic == 1) info = Outlang["So_luong"] + ' : ' + item.Quantity;
+                else info = Outlang["So_luong"] + ' : ' + item.Quantity + ' , ' + Outlang["Lan_dieu_tri"] + ' : ' + item.TimeToTreatment;
+            }
+            $('#isde_serviceinfo').html(info);
+            $('#isde_creatorper').html(item.Creator);
+            $('#isde_creatordate').html(GetDateTime_String_DMY(item.Created));
+
+            $('#isde_branch').html(item.BranchName);
+            if (item.UseInsurance === 1) {
+                $('#ISDetail_Havedata').removeClass('d-none');
+                $('#ISDetail_Nondata').addClass('d-none');
+            }
+            else {
+                $('#ISDetail_Havedata').addClass('d-none');
+                $('#ISDetail_Nondata').removeClass('d-none');
+            }
+            resolve();
+        });
+    }
+
+    function ISD_NewEdit () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Customer/Insurance/InsuranceDetail?TabID=" + ser_CurrentSurID );
+        $('#DetailModal').modal('show');
+    }
+    function ISD_Print () {
+        syslog_cutinsu('p',val='',ser_MainCustomerID);
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load('/Print/print?Type=insurance_form&DetailID=' + ser_CurrentSurID);
+        $('#DetailModal').modal('show');
+    }
+     //#endregion
+
+</script>
+<style>
+    #isde_supavatar {
+        width: 35px !important;
+        height: 35px !important;
+        border-radius: 8px;
+    }
+</style>

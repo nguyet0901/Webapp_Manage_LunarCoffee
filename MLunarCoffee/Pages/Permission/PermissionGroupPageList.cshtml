@@ -1,0 +1,141 @@
+﻿@page
+@model SourceMain.Pages.Permission.PermissionGroupPageListModel
+@{ Layout=null;
+}
+
+<div class="sixteen wide tablet ten wide computer column">
+    <div class="ui segments" style="background-color: white">
+        <div class="ui segment" style="border: none; box-shadow: none; height: 110px">
+            <h2 class="ui center aligned header" style="padding-top: 10px; font-family: 'Times New Roman'">
+                @Local["Phân quyền nhóm theo page"]
+
+            </h2>
+            <button class="ui teal button" data-value="fade up" onclick="return AddNewPermissionGroupPage()">@Local["Thêm mới"]</button>
+        </div>
+        <div class="ui segment" style="border: none;">
+            <div class="ui grid dataTables_wrapper  no-footer">
+                <div class="sixteen wide column" style="padding-bottom: 1rem;">
+                    <table id="dtContentPerGroupPageList" class="ui compact selectable striped celled table tablet stackable dataTable no-footer" role="grid" aria-describedby="data_table_info" style="width: 100%;">
+                        <thead>
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th style="text-align: center; width: 25px;">@Local["#"]</th>
+                                <th style="text-align: center">@Local["Tên nhóm"]</th>
+                                <th style="text-align: center">@Local["Tên màn hình"]</th>
+                                <th style="text-align: center">@Local["Ghi chú"]</th>
+                                <th style="text-align: center">@Local["Ngày tạo"]</th>
+                                <th style="text-align: center">@Local["Người tạo"]</th>
+                                <th style="text-align: center" width="50px">@Local["Sửa"]</th>
+                                <th style="text-align: center" width="50px">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentPerGroupPageListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function LoadGroupPageListAjax() {
+        AjaxLoad(url = "/Permission/PermissionGroupPageList/?handler=LoadData"
+            , data = {  }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                RenderPerGroupPage(data, "dtContentPerGroupPageListBody");
+                $('#dtContentPerGroupPageList tbody').on('click', '.buttonEditClass', function () {
+                    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                    EditPermissionGroupPage(ID);
+                });
+                $('#dtContentPerGroupPageList tbody').on('click', '.buttonDeleteClass', function () {
+                    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                    DeletePermissionGroupPage(ID)
+                });
+            });
+        //GetDataPermissionGroupPageList("/Permission/PermissionGroupPageList/LoadData", function (data) {
+        //    RenderPerGroupPage(data, "dtContentPerGroupPageListBody");
+        //    $('#dtContentPerGroupPageList tbody').on('click', '.buttonEditClass', function () {
+        //        let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //        EditPermissionGroupPage(ID);
+        //    });
+        //    $('#dtContentPerGroupPageList tbody').on('click', '.buttonDeleteClass', function () {
+        //        let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //        DeletePermissionGroupPage(ID)
+        //    });
+        //})
+    }
+    function RenderPerGroupPage(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td>' + item.GroupName + '</td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td>' + item.Note + '</td>'
+                        + '<td>' + item.Created + '</td>'
+                        + '<td><button class="buttonGrid" value="'
+                        + ((item.EditButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button></td>')
+                            : '<td></td>')
+                        + ((item.DeleteButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function DeletePermissionGroupPage(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeletePermissionGroupPage(id) }, function () { });
+    }
+    function ExecuteDeletePermissionGroupPage(id) {
+        AjaxLoad(url = "/Permission/PermissionGroupPageList/?handler=DeleteItem"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadGroupPageListAjax();
+                } else {
+                    notiError();
+                }
+            });
+    }
+
+    function AddNewPermissionGroupPage() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionGroupPageDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EditPermissionGroupPage(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionGroupPageDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    $(document).ready(function () {
+        LoadGroupPageListAjax();
+    });
+
+</script>
+
+<script>js_require('/assests/dist/semantic.min.js');</script>
+<script>js_require('/js/comon/load_datasource.js');</script>
+
+

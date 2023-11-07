@@ -1,0 +1,297 @@
+﻿@page
+@model MLunarCoffee.Pages.ToDo.ToDoRemind.ToDoDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/assests/dist/datetimepicker/build/jquery.datetimepicker.full.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<link rel="stylesheet" type="text/css" href="/assests/dist/datetimepicker/jquery.datetimepicker.css" />
+
+
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="formTodoDetail">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Trạng thái"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="TodoStatusID">
+                                <input type="hidden" name="">
+                                <i class="dropdown icon"></i>
+                                <div class="default text">@Local["Chọn trạng thái"]</div>
+                                <div id="cbbTodoStatus" class="menu"></div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Người nhận todo"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="TodoDetail_RemindUserID">
+                                <input type="hidden" name="" />
+                                <i class="dropdown icon"></i>
+                                <i class="remove icon"></i>
+                                <input id="searchTodoEmployee" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Người nhận"]</div>
+                                <div id="cbbTodoDetail_RemindUserID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <div id="TodoQuickNote" class="mb-2"></div>
+                            <textarea id="TodoContent" rows="3" class="form-control"></textarea>
+                        </div>
+    
+                    </div>
+                    <div class="fixed-botombutton mt-2">
+                        <div class="action_Save">
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" onclick="event.preventDefault();return Todo_Detail_ClosePopup()">@Local["Hủy"]</button>
+                                <button class="btn bg-gradient-primary mt-2 me-2 " id="todo_button_save" type="submit" onclick="event.preventDefault();return Todo_Detail_ExcuteData()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var ser_DataTodo_Status = [];
+
+    var ser_DataTodo_QuickTemplate = {};
+    var ser_DataTodo_Current_CustomerID = Number(@Model._CustomerID);
+    var ser_DataTodo_Current_TicketID = Number(@Model._TicketID);
+    var ser_DataTodo_Current_TodoID = Number(@Model._TodoID)
+    let DataUser;
+
+    $(document).ready(function () {
+        $('.ui.dropdown .remove.icon').on('click', function (e) {
+            $(this).parent('.dropdown').dropdown('clear');
+            e.stopPropagation();
+        });
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                Todo_Detail_LoadInitialize();
+            });
+    })
+
+
+    //#region // LoadInitialize Data
+
+    function Todo_Detail_LoadInitialize() {
+        AjaxLoad(url = "/ToDo/ToDoRemind/ToDoDetail/?handler=LoadInitializeData"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    ser_DataTodo_Status = data.Status;
+
+                    let ser_DataTodo_Employee = (data.User).filter((user) => {
+                        return user.ID != sys_userID_Main;
+                    });
+                    let dataQuickTemplate = data.QuickTemplate;
+                    for (let i = 0; i < dataQuickTemplate.length; i++) {
+                        let item = dataQuickTemplate[i];
+                        ser_DataTodo_QuickTemplate[item.ID] = item;
+                    }
+                    Todo_Detail_RenderStatus(ser_DataTodo_Status, "cbbTodoStatus");
+                   
+                    Load_Combo(ser_DataTodo_Employee, "cbbTodoDetail_RemindUserID", false);
+
+                    Todo_Detail_Render_Quick_Teamplate(ser_DataTodo_QuickTemplate, 'TodoQuickNote')
+                    Todo_Detail_Event_Add_Teamplate_QuickNote();
+                    Todo_Detail_LoadDetail();
+                }
+            }
+            , sender = null
+        );
+    }
+
+
+    //#endregion
+
+
+    //#region // Load Data Detail
+
+    function Todo_Detail_LoadDetail() {
+        if (ser_DataTodo_Current_TodoID != 0) {
+            AjaxLoad(url = "/ToDo/ToDoRemind/ToDoDetail/?handler=LoadDetail"
+                , data = { "CurrentID": ser_DataTodo_Current_TodoID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (data.length != 0) {
+                            let item = data[0];
+                            $("#TodoStatusID").dropdown("refresh");
+                            $("#TodoStatusID").dropdown("set selected", item.StatusID);
+                            $("#TodoDetail_RemindUserID").dropdown("refresh");
+                            $("#TodoDetail_RemindUserID").dropdown("set selected", item.UserTo);
+                            if (item.IsSendMess == 1) {
+                                $("#TodoDetail_RemindUserID").addClass("disabled");
+                            }
+                            $('#TodoContent').val(item.Content);
+                             
+                        }
+                    }
+                }
+                , sender = null
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // Render Data
+
+    function Todo_Detail_RenderStatus(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<div class="item" data-value=' + item.ID + '>'
+                        + '<div class="circle" style="background-color:' + item.ColorCodeString + ';"></div>'
+                        + item.Name
+                        + '</div>'
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function Todo_Detail_Render_Quick_Teamplate(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            for ([key, value] of Object.entries(data)) {
+                let item = value;
+                let tr = '';
+                tr = '<span data-id="' + key + '" class="todo_quicknote_teamplate badge-sm badge text-info border border-info me-1 mb-1 cursor-pointer text-gradient">'
+                    + item.Feature
+                    + '</span>';
+                stringContent = stringContent + tr;
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    //#endregion
+
+
+    //#region // Event
+
+ 
+
+    function Todo_Detail_Event_Add_Teamplate_QuickNote() {
+        $(".todo_quicknote_teamplate").on('click', function (event) {
+            let _id = $(this).attr('data-id');
+            if (ser_DataTodo_QuickTemplate[_id] != undefined) {
+                let _content = ser_DataTodo_QuickTemplate[_id].Content;
+                $("#TodoContent").val(_content);
+                $('#TodoContent').focus();
+            }
+        });
+    }
+
+    
+
+    //#endregion
+
+
+    //#region //Excute Data
+
+    function Todo_Detail_ExcuteData() {
+        let data = new Object();
+        data.StatusID = Number($('#TodoStatusID').dropdown('get value')) ? Number($('#TodoStatusID').dropdown('get value')) : 0;
+        data.TicketID = ser_DataTodo_Current_TicketID;
+        data.CustomerID = ser_DataTodo_Current_CustomerID;
+        data.Content = $('#TodoContent').val() ? $('#TodoContent').val() : "";
+        data.UserTo = Number($('#TodoDetail_RemindUserID').dropdown('get value')) ? Number($('#TodoDetail_RemindUserID').dropdown('get value')) : 0;
+         
+        $('#formTodoDetail').form('validate form');
+        if ($('#formTodoDetail').form('is valid')) {
+            AjaxLoad(url = "/ToDo/ToDoRemind/ToDoDetail/?handler=ExcuteData"
+                , data = {
+                    'CurrentID': ser_DataTodo_Current_TodoID,
+                    'Data': JSON.stringify(data)
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        Todo_Detail_ClosePopup();
+                        let _re = JSON.parse(result)[0];
+                        if (Number(_re.USERTO)!=0)  fcm_senduser(_re.USERTO, Master_circleAvatar, sys_employeeName_Main, $('#TodoContent').val());
+                        if (typeof Todo_Status_ClosePopup !== 'undefined' && $.isFunction(Todo_Status_ClosePopup)) {
+                            Todo_Status_ClosePopup();
+                        }
+                        if (typeof TodoList_LoadData !== 'undefined' && $.isFunction(TodoList_LoadData)) {
+                            let rowtodo = $("#todo_item_list_" + result);
+                            if (rowtodo.length) {
+                                TodoList_LoadData(result, 0, 0);
+                            }
+                            else {
+                                TodoList_LoadData(result, 0, 1);
+                            }
+
+                        }
+                        if (typeof Dashboard_Todo_List_Load !== 'undefined' && $.isFunction(Dashboard_Todo_List_Load)) {
+                            Dashboard_Todo_List_Load(result);
+                        }
+                        if (typeof TicketAction_TodoLoad !== 'undefined'  ) {
+                            TicketAction_TodoLoad();
+                        }
+                        if (typeof Customer_Todo_Load !== 'undefined' && $.isFunction(Customer_Todo_Load)) {
+                            Customer_Todo_Load();
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                , sender = $("#todo_button_save")
+            );
+        }
+
+        return false;
+    }
+
+    //#endregion
+
+
+    function Todo_Detail_ClosePopup() {
+        $("#DetailModalPopup").fadeOut(300);
+    }
+
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+<style>
+    #TodoStatusID .circle {
+        width: 10px;
+        height: 10px;
+        border-radius: 30px;
+        display: inline-block;
+        margin-right: 10px;
+        border: 1px solid #d4d4d5;
+    }
+
+ 
+</style>

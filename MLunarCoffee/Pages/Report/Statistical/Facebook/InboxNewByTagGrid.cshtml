@@ -1,0 +1,107 @@
+﻿@page
+@model SourceMain.Pages.Report.Statistical.Facebook.InboxNewByTagGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="rp_inbox_by_tag_header"
+                   class="text-md text-dark font-weight-bold mb-1">InBox mới theo tag</p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#InboxNewByTagGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_InboxNewByTagGrid()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_InboxNewByTagGrid()"></i>
+ 
+            </div>
+        </div>
+
+    </div>
+    <div class="collapsesticky collapse show" id="InboxNewByTagGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReport_InboxNewByTagGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 20px; display: none!important;"></th>
+                            <th data-languagestatic="no" style="width: 60px">#</th>
+                            <th data-languagestatic="type">Loại</th>
+                            <th>Inbox New</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportBody_InboxNewByTagGrid">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    var dataDetail;
+    var nameType;
+
+    $(document).ready(function () {
+ 
+        LoadDataReport_InboxNewByTagGrid();
+        $('#dtContentReport_InboxNewByTagGrid').tablesort();
+       // $("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function LoadDataReport_InboxNewByTagGrid() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _TokenPage = "@Model._TokenPage";
+        AjaxLoad(url = "/Report/Statistical/Facebook/InboxNewByTagGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'TokenPage': _TokenPage }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    RenderReport_InboxNewByTagGrid(data, "dtContentReportBody_InboxNewByTagGrid");
+                }
+            }
+        );
+        return false;
+    }
+
+    function RenderReport_InboxNewByTagGrid(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td >' + item.TagName + '</td>'
+                        + '<td data-sortvalue="' + (item.Num) +'">' + item.Num + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function exportData_InboxNewByTagGrid() {
+        exportToExcel("dtContentReport_InboxNewByTagGrid", 'Tong-InBox-Moi-Theo-Tag');
+    }
+</script>

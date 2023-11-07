@@ -1,0 +1,292 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Deposit.TabDepositDetail_ReturnModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+</head>
+
+<body>
+
+    <div class="container-fluid py-3 px-0">
+        <div class="row">
+            <div class="col-12">
+                <!--Master-->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <div class="h-100">
+                                    <h6 id="header" class="mb-0">@Local["Trả tiền cọc"]</h6>
+                                    <p class="text-sm mb-0">@Local["Chi tiết trả tiền cọc"]</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card-body pt-2 form3" id="form3">
+                        <div class="row px-1 ">
+                            <div class="field col-12 px-1 mt-2">
+                                <label>@Local["Chi nhánh"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="BranchID">
+                                    <input type="hidden" name="branch" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">@Local["Chi nhánh"]</div>
+                                    <div id="ccbBranch" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="field col-12 col-xl-6 px-1 mt-2">
+                                <label>@Local["Hình thức"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="Method" onchange="OnchangeMethodReturn();">
+                                    <input type="hidden" name="paymentMethod" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .@Local["Hình thức"]</div>
+                                    <div id="ccbMethod" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-xl-6 px-1 mt-2">
+                                <label>@Local["Chi tiết"]</label>
+                                <div class="ui fluid search selection dropdown disabled form-control" id="MethodTypeReturn">
+                                    <input type="hidden" name="paymentMethodType" class="input payment" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .@Local["Chi tiết"]</div>
+                                    <div id="CbbMethodTypeReturn" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-xl-6 px-1 mt-2">
+                                <label>@Local["Số tiền"]</label>
+                                <input id="Amount_Deposit" name="discountOther" type="text" placeholder="@Local["Số tiền"]" class="form-control money" />
+                            </div>
+                            <div class="field col-12 col-xl-6 px-1 mt-2">
+                                <label>@Local["Ngày tạo"]</label>
+                                <input id="dateCreatedExt" class="flatpickr detail form-control" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                            </div>
+                        </div>
+                        <div class="row px-1 ">
+                            <div class="field col-12 px-1 mt-2">
+                                <label>@Local["Lý do"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="ReasonReturn">
+                                    <input type="hidden" name="reasonReturn" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">@Local["Lý do"]</div>
+                                    <div id="ccbReasonReturn" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row px-1 ">
+                            <div class="field col-12 px-1 mt-2">
+                                <label>@Local["Nội dung"]</label>
+                                <textarea id="txtContentDeposit" data-validation="content_customer" class="form-control _validation_option_"
+                                          name="content" rows="4" placeholder="eg .@Local["Nội dung"]"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer fixed-botombutton">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" form="form3" onclick="CloseModal()">@Local["Đóng"]</button>
+                                <button id="button_save_deposit_return_detail" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                        onclick="ExcuteData()">
+                                    @Local["Lưu"]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var ser_ChooseDateCustomer = '@Model._ChooseDateCustomer';
+        var ser_CustomerDeposit = '@Model._CustomerDeposit';
+        var ser_CurrentDepositID = '@Model._CurrentDepositID';
+        var ser_PaymentMethodType = [];
+        var ser_PaymentMethod = {};
+        var ser_dataMaxDeposit = 0;
+        $(document).ready(function () {
+            $("#dateCreatedExt.flatpickr").flatpickr({
+                dateFormat: 'd-m-Y H:i',
+                enableTime: true,
+                defaultDate: new Date()
+            });
+            if (ser_ChooseDateCustomer == "1") {
+                $("#dateCreated").show();
+                $('#div_info_deposit_return').addClass("two fields");
+            }
+            InitializeCustomerDepositReturn();
+            $('#Amount_Deposit').divide();
+        });
+
+        function InitializeCustomerDepositReturn() {
+            AjaxLoad(url = "/Customer/Deposit/TabDepositDetail_Return/?handler=LoadInitialize"
+                , data = { "CustomerID": ser_CustomerDeposit }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+
+                    Load_Combo(data.Branch, "ccbBranch", true);
+                    $("#BranchID").dropdown("refresh");
+                    $("#BranchID").dropdown("set selected", Master_branchID);
+
+                    Load_Combo(data.dtMethod, "ccbMethod", true);
+                    $("#Method").dropdown("refresh");
+                    $("#Method").dropdown("set selected", Number(data.dtMethod[0].ID));
+                    ser_PaymentMethod = (data.dtMethod).reduce((pre, arr) => {if(arr.ID) pre[arr.ID] = arr; return pre}, {});
+                    Load_Combo(data.dtReasonReturn, "ccbReasonReturn", true);
+                    $("#ReasonReturn").dropdown("refresh");
+                    ser_PaymentMethodType = data.dtMethodType;
+
+
+                    if (data.dtReasonReturn.length > 0)
+                        $("#ReasonReturn").dropdown("set selected", Number(data.dtReasonReturn[0].ID));
+                    ser_dataMaxDeposit = data.dtDetectMaxDeposit[0].Deposit;
+                    document.getElementById("textShowMessage").innerHTML = `@Local["Tối đa tiền cọc được trả"] : ${formatNumber(ser_dataMaxDeposit)}`;
+
+                    LoadDataUpdate();
+                }
+            );
+        }
+
+        function LoadDataUpdate() {
+            if (ser_CurrentDepositID != "0") {
+                AjaxLoad(url = "/Customer/Deposit/TabDepositDetail_Return/?handler=Loadata"
+                    , data = { "id": ser_CurrentDepositID }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+
+                        $("#Method").dropdown("refresh");
+                        $("#Method").dropdown("set selected", data[0].Method);
+                        $("#ReasonReturn").dropdown("refresh");
+                        $("#ReasonReturn").dropdown("set selected", data[0].ReasonReturn);
+
+                        $('#Amount_Deposit').val((data[0].Amount));
+                        $('#txtContentDeposit').val((data[0].Content));
+                    }
+                );
+            }
+        }
+
+        function OnchangeMethodReturn () {
+            let idMethod = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+            $("#MethodTypeReturn").dropdown("clear");
+            $("#CbbMethodTypeReturn").html("");
+            let data = ser_PaymentMethodType.filter(a => a.Type == idMethod);
+            Load_Combo(data, "CbbMethodTypeReturn", true);
+
+            if (data.length > 0) {
+                $("#MethodTypeReturn").removeClass('disabled');
+                $("#MethodTypeReturn input.payment").attr('name', "paymentMethodType");
+
+                $("#MethodTypeReturn").dropdown("refresh");
+                $("#MethodTypeReturn").dropdown("set selected", data[0].ID.toString());
+            }
+            else {
+                $("#MethodTypeReturn").addClass('disabled');
+                $("#MethodTypeReturn input.payment").attr('name', "");
+            }
+        }
+
+        function ExcuteData() {
+            Checking_Require_Validation('@Model._dtPermissionCurrentPage');
+            var data = new Object();
+            document.getElementById("textShowMessage").innerHTML = "";
+            let MethodType = $("#MethodTypeReturn").dropdown("get value") ? Number($("#MethodTypeReturn").dropdown("get value")) : 0;
+            data.BranchID = Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0;
+            data.Method = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+            data.PosType = (data.Method == 5 ? MethodType : 0);
+            data.TransferType = (data.Method == 4 ? MethodType : 0);
+            data.MedthodDetail = ((data.Method != 4 && data.Method != 5) ? MethodType : 0);
+            data.ReasonReturn = Number($('#ReasonReturn').dropdown('get value')) ? Number($('#ReasonReturn').dropdown('get value')) : 0;
+            var depositAmount = $('#Amount_Deposit').val() ? $('#Amount_Deposit').val() : 0;
+            if (depositAmount <= 0) document.getElementById("textShowMessage").innerHTML = "@Local["Tiền trả cọc phải lớn hơn 0"]";
+            if (depositAmount > ser_dataMaxDeposit) document.getElementById("textShowMessage").innerHTML = `@Local["Tối đa tiền cọc được trả"] : + ${formatNumber(ser_dataMaxDeposit)}`;
+            data.AmountDeposit = depositAmount;
+            data.Content = $('#txtContentDeposit').val() ? $('#txtContentDeposit').val() : "";
+            data.dateCreated = $('#dateCreatedExt').val() ? $('#dateCreatedExt').val() : new Date();
+            if (document.getElementById("textShowMessage").innerHTML == "") {
+                $('#form3').form('validate form');
+                if ($('#form3').form('is valid')) {
+                    AjaxLoad(url = "/Customer/Deposit/TabDepositDetail_Return/?handler=ExcuteData"
+                        , data = {
+                            'data': JSON.stringify(data),
+                            'CustomerID': ser_CustomerDeposit,
+                            'CurrentID': ser_CurrentDepositID
+                        }
+                        , async = true
+                        , error = function () { notiError_SW() }
+                        , success = function (result) {
+                            if (result != "0") {
+                                let datar = JSON.parse(result);
+                                if (datar != undefined && datar.length == 1) {
+                                    let idInserted = datar[0]['Result'];
+                                    if (idInserted == "-1") document.getElementById("textShowMessage").innerHTML= "@Local["Đã chốt sổ, không thể thêm thanh toán trước thời gian chốt"]";
+                                    else {
+                                        if (idInserted == "0") notiError_SW();
+                                        else {
+                                            notiSuccess();
+                                            if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                                            if (typeof LoadPaymentAjax === 'function') LoadPaymentAjax(idInserted, 'deposit');
+                                            if (typeof SMSSYS_AfterPaid === 'function')
+                                                SMSSYS_AfterPaid(_customerid = ser_CustomerDeposit, _objCurrentID = { DepositID: idInserted });
+                                            if (typeof TabDepositDetail_UpdateThirdAccount === 'function')
+                                                TabDepositDetail_UpdateThirdAccount(idInserted);
+                                            fcm_sendtopic("payment", Master_circleAvatar, sys_employeeName_Main, formatNumber(depositAmount));
+                                            let paymethod = Fun_GetName_ByID(ser_PaymentMethod, datar[0]["PayMethod"]);
+                                            let amount = formatNumber(datar[0]["Amount"]);
+                                            syslog_cutpaid(ser_CurrentDepositID == 0 ? 'i' : 'u', datar[0]['Code'], ser_CustomerDeposit, `${paymethod} ${amount} `);
+                                            CloseModal();
+                                        }
+                                    }
+                                }
+                                else notiError_SW();
+                            }
+                            else notiError_SW();
+                        }
+                        , sender = $("#button_save_deposit_return_detail")
+                    );
+                }
+                return false;
+            }
+        }
+
+        //#region //ThirdAccount
+        function TabDepositDetail_UpdateThirdAccount(id) {
+            if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+                APIAccount_Excute(currentID = id, type = 4, action = "save"
+                    , beforefunc = function () { }
+                    , successfunc = function (e) {
+                        if (typeof LoadPaymentAjax == 'function') LoadPaymentAjax(id, 'deposit');
+                    }
+                    , failfunc = function (message) { }
+                    , completefunc = function () { }
+                );
+            }
+        }
+        //#endregion
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+
+
+</body>
+
+</html>

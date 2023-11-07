@@ -1,0 +1,756 @@
+﻿@page
+@model MLunarCoffee.Pages.CustomerCare.CustomerCare_PeriodTimeModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+
+<div class="row">
+    <div class="col-12 p-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <ul class="nav nav-pills p-0 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item me-3" role="presentation">
+                            <a class="nav-link cursor-pointer active" data-bs-toggle="collapse" href="#CCPT_AreaFill">
+                                <i class="text-gradient text-primary fas fa-filter"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <h6 class="mb-0 mt-1">@Local["Chăm sóc khách hàng định kỳ"]</h6>
+                            <p class="text-sm mb-0">@Local["Chăm sóc khách hàng định kỳ từ lần cuối cùng điều trị"]</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="right">
+                    <div class="wrap">
+                        <div class="wrapblock pb-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="0" onchange="event.preventDefault();return CCPT_Filter(2);" checked="">
+                                <label class="mb-0 form-check-label">@Local["Tất cả"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="1" onchange="event.preventDefault();return CCPT_Filter(0);">
+                                <label class="mb-0 form-check-label">@Local["Chưa xử lý"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="2" onchange="event.preventDefault();return CCPT_Filter(1);">
+                                <label class="mb-0 form-check-label">@Local["Đã xử lý"]</label>
+                            </div>
+                        </div>
+                        <div class="wrapblock pb-2">
+                            <div class="form-group mb-0 ">
+                                <div class="input-group mb-0">
+                                    <span class="input-group-text fw-bold text-primary">@Local["Tổng"]</span>
+                                    <span class="form-control fw-bolder text-dark ps-2" style="width:65px;max-width:100px;" id="CCPT_LbTotal">0</span>
+                                </div>
+                            </div>
+                            <button class="btn w-100 btn-dark m-0" onclick="event.preventDefault();return CustCare_ExportData();">@Local["Xuất"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="vtcondition">
+                    <div class="row px-2 collapsesticky z-index-sticky collapse" id="CCPT_AreaFill">
+                        <div class="field col-12 col-md-12 col-xl-4 p-1">
+                            <div class="input-group">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <div class="spinner-border spinner-border-sm d-none"></div>
+                                </div>
+                                <input id="CCPT_SearchInput" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm khách hàng"]" autocomplete="off">
+                                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CCPT_BranchID">
+                                <input type="hidden" name="branch" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="CCPT_cbbBranch" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CCPT_SerTypeID">
+                                <input type="hidden" name="sertype" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="CCPT_ccbSerType" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CCPT_CCStaffID">
+                                <input type="hidden" name="sertype" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="CCPT_CbbCCStaffID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CCPT_StatusID">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="CCPT_CbbStatusID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-4 p-1 d-flex">
+                            <div class="input-group mb-0 flex-nowrap">
+                                <div class="ui fluid search selection dropdown" id="CCPT_TypeDate" style="width:30%;">
+                                    <input type="hidden" name="employee" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="CCPT_CbbTypeDate" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                                <input id="CCPT_Date" class="form-control hoverpopup flatpickr flatpickr-input" type="text" placeholder="eg .@Local["Ngày"]" readonly="readonly">
+                                <div class="input-group-text p-0 pe-2">
+                                    <div class="position-relative d-inline">
+                                        <a class="cursor-pointer px-2" data-bs-toggle="collapse" role="tab" data-bs-target="#DivSearchDate">
+                                            <i class=" text-gradient text-primary fas fa-filter"></i>
+                                        </a>
+                                        <div class="collapse collapsesticky position-absolute z-index-3 end-1 top-100 mt-1" id="DivSearchDate" style="min-width:285px;">
+                                            <div class="card card-body text-dark text-capitalize opacity-10">
+                                                <div class="field col-12 mt-2">
+                                                    <div class="ui fluid search selection dropdown form-control" id="CCPT_PeriodTimeID">
+                                                        <input type="hidden" name="employee" />
+                                                        <input class="search" autocomplete="off" tabindex="0" />
+                                                        <div class="default text">eg .@Local["Tháng định kỳ"]</div>
+                                                        <div id="CCPT_CbbPeriodTime" class="menu" tabindex="-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CCPT_StatusCallID">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="CCPT_CbbStatusCallID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-2 p-1">
+                            <button class="btn bg-gradient-primary m-0" onclick="event.preventDefault();return CustCare_LoadData();">@Local["OK"]</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="m-0 mt-1 position-relative">
+                        <div id="CCPT_waiting" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x z-index-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]...</span>
+                            </div>
+                        </div>
+                        <div class="row px-2 h-100">
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3 p-1">
+                                <div class="overflow-auto stickytable" style="max-height:calc(100vh - 289px);">
+                                    <ul id="CCPT_dtContentBody" class="list-group">
+                                    </ul>
+                                </div>
+                                <button class="btn btn-secondary btnsysmore w-100 p-1 mt-2 mb-0 d-none" id="CustCare_BtnLoadMore" onclick="CustCare_LoadData(0, 1)">@Local["Xem thêm"]</button>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-8 col-xl-9 p-1">
+                                <div id="CCPT_Empty" class="mx-auto text-center">
+                                    <h5 class="mb-0">@Local["Chăm sóc khách hàng định kỳ"]</h5>
+                                    <p>@Local["Chọn khách hàng để tiến hành chăm sóc"]</p>
+                                </div>
+                                <div id="CCPT_Area" class="card h-100 d-none">
+                                    <div class="card-header shadow-none p-2">
+                                        <div class="d-lg-flex">
+                                            <div class=" col-auto my-auto">
+                                                <div class="text-dark ms-2  text-sm">
+                                                    <div>
+                                                        <a id="CCPT_custcode" target="_blank" href="#" class="border-1 border-primary border-bottom cursor-pointer"></a>
+                                                        <i class="text-sm text-dark vtt-icon vttech-icon-call-action"></i>
+                                                        <a id="CCPT_custphone" onclick="CCPT_Call(this);" class="text-dark cursor-pointer">
+                                                        </a>
+                                                        <i class="fas fa-sms text-md text-md text-dark ms-2"></i>
+                                                        <a class="ms-1 cursor-pointer text-dark text-sm" onclick="CCPT_SendSMS();">
+                                                            SMS
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="d-block fs-6 mt-1">
+                                                        <span id="CCPT_custname" class="mb-0 mt-2"></span> - 
+                                                        <span id="CCPT_custgender" class="mb-0 mt-2"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-auto my-auto mt-1 d-flex justify-content-center">
+                                                <div id="CCPT_groupname" class="p-1" data-bs-toggle="tooltip" title="" data-bs-original-title="">
+                                                    <img class="cursor-pointer icon icon-shape icon-sm me-2 shadow text-center" id="CCPT_groupimg" src="/default.png" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                                                </div>
+                                                <button class="btn bg-gradient-primary btn-sm ms-2 my-1" onclick="CCPT_New()">@Local["Thêm mới"]</button>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div id="CCPT_detailarea" class=" card-body overflow-auto overflow-x-hidden" style="height:calc(100vh - 330px);">
+                                    </div>
+                                    <button id="CCPT_btnloadmore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0  position-absolute bottom-0" onclick="event.preventDefault(); return CCPT_RenderMore();">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>js_require('/js/main.js');</script>
+<script>
+    //#region //INIT - DEFINE
+    let TypeCustomerCare = 5;
+    let sysUserID = @Model.sys_UserID;
+    let CCPT_DataMain;
+    let CCPT_DataExport;
+    let CCPT_DataEmployee = [];
+    let CCPT_DataBranch = {};
+    let CCPT_DataTypeCare = {};
+    let CCPT_Type = TypeCustomerCare;
+    let CCPT_Limit = 200;
+    let CCPT_BeginID = 0;
+    let CCPT_xhrRequest;
+    let CCPT_CurrentID = 0;
+    let CCPT_CustID = 0;
+    let CCPT_Date = 0;
+    let CCPT_DataMainSlice;
+    let CCPT_IndexTable = 0;
+    let CCPT_PeriodTime = 0;
+    let CCPT_TypeCare = 2;
+    let DataMonthPeriod = [{ "ID": "1", "Name": "1 @Local["Tháng"]" }, { "ID": "3", "Name": "3 @Local["Tháng"]" },
+    { "ID": "6", "Name": "6 @Local["Tháng"]" }, { "ID": "12", "Name": "12 @Local["Tháng"]" }];
+    let CCPT_TypeDate = [
+        { "ID": 1, "Name": "@Local["Ngày điều trị cuối cùng"]" }
+        , { "ID": 3, "Name": "@Local["Ngày gọi lại"]" }
+    ];
+
+    $(document).ready(function () {
+        $("#CCPT_Date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        Load_Combo(DataMonthPeriod, "CCPT_CbbPeriodTime", true, '@Local["Định kỳ"]');
+        $("#CCPT_PeriodTimeID").dropdown("refresh");
+        $("#CCPT_PeriodTimeID").dropdown("set selected", "0");
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                CCPT_DataEmployee = data[0];
+                CCPT_Initialization();
+            }
+        );
+
+        ToolPopper();
+        $("#CCPT_Date").val(formatDateClient(new Date()) + ' to ' + formatDateClient(new Date()));
+        CCPT_EventHandle();
+    })
+    $(document).mouseup(function (e) {
+        let DivFillDate = $('#DivSearchDate');
+        if (!DivFillDate.is(e.target) && DivFillDate.has(e.target).length === 0) {
+            $('#DivSearchDate').collapse('hide');
+        }
+    })
+    function CCPT_Initialization() {
+        AjaxLoad(url = "/CustomerCare/CustomerCare_PeriodTime/?handler=Initialization"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '[]') {
+                    console.log('1');
+                    let data = JSON.parse(result);
+                    let DtStatus = data?.StatusCare.filter(item => item["ParentID"] == 0);
+                    let DtStatusCall = data?.StatusCare.filter(item => item["ParentID"] != 0);
+                    CCPT_DataTypeCare = (data?.StatusCare).reduce((pre, acc) => {pre[acc.ID] = acc; return pre;}, {})
+                    CCPT_DataBranch = (data.Branch).reduce((pre, acc) => { pre[acc.ID] = acc; return pre; }, {})
+                    Load_Combo(data.Branch, "CCPT_cbbBranch", true, '@Local["Chi nhánh"]');
+                    Load_Combo(data.SerType, "CCPT_ccbSerType", true, '@Local["Nhóm dịch vụ"]');
+                    Load_Combo(data.TeleCare, "CCPT_CbbCCStaffID", true, '@Local["Nhân viên chăm sóc"]');
+                    Load_Combo(CCPT_TypeDate, "CCPT_CbbTypeDate", true, '@Local["Ngày"]');
+                    Load_Combo(DtStatus, "CCPT_CbbStatusID", true, '@Local["Trạng thái"]');
+                    Load_Combo(DtStatusCall, "CCPT_CbbStatusCallID", true, '@Local["Trạng thái chi tiết"]');
+
+
+                    $("#CCPT_CCStaffID").dropdown("refresh");
+                    $("#CCPT_CCStaffID").dropdown("set selected", "0");
+
+                    $("#CCPT_BranchID").dropdown("refresh");
+                    $("#CCPT_BranchID").dropdown("set selected", "0");
+
+                    $("#CCPT_SerTypeID").dropdown("refresh");
+                    $("#CCPT_SerTypeID").dropdown("set selected", "0");
+
+                    $("#CCPT_TypeDate").dropdown("refresh");
+                    $("#CCPT_TypeDate").dropdown("set selected", "0");
+
+                    $("#CCPT_StatusID").dropdown("refresh");
+                    $("#CCPT_StatusID").dropdown("set selected", "0");
+
+                    $("#CCPT_StatusCallID").dropdown("refresh");
+                    $("#CCPT_StatusCallID").dropdown("set selected", "0");
+
+                    CustCare_LoadData();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //LOADDATA
+    async function CustCare_LoadData(currentID = 0, isLoadMore = 0) {
+        return new Promise((resolve, reject) => {
+            if (CCPT_xhrRequest && CCPT_xhrRequest.readyState != 4) CCPT_xhrRequest.abort();
+            if (currentID == 0 && isLoadMore == 0) {
+                CCPT_DataMain = [];
+                CCPT_BeginID = 0;
+                $('#CCPT_dtContentBody').html('');
+            }
+            if (currentID != 0) CCPT_BeginID = 0;
+
+            let data = new Object();
+            let branchid = $('#CCPT_BranchID').dropdown('get value') ? $('#CCPT_BranchID').dropdown('get value') : "0";
+            let branchToken = branchid == 0 ? Object.values(CCPT_DataBranch).map(e => e.ID).join(',') : '';
+            let SearchText = $("#CCPT_SearchInput").val() ? $("#CCPT_SearchInput").val() : "";
+
+            data.BranchID = branchid;
+            data.BranchToken = branchToken;
+            data.SerTypeID = Number($('#CCPT_SerTypeID').dropdown('get value')) ? Number($('#CCPT_SerTypeID').dropdown('get value')) : "0";
+            data.PeriodicTime = Number($('#CCPT_PeriodTimeID').dropdown('get value')) ? Number($('#CCPT_PeriodTimeID').dropdown('get value')) : "0";;
+            data.CCStaffID = $('#CCPT_CCStaffID').dropdown('get value') ? Number($('#CCPT_CCStaffID').dropdown('get value')) : "0";
+            data.TypeDate = $('#CCPT_TypeDate').dropdown('get value') ? $('#CCPT_TypeDate').dropdown('get value') : "0";
+            data.SearchText = xoa_dau(SearchText).toLowerCase().trim().replace(/[^a-zA-Z0-9 ]/g, '');
+            data.statusCallID = $('#CCPT_StatusCallID').dropdown('get value') ? $('#CCPT_StatusCallID').dropdown('get value') : "0";
+            data.statusID = $('#CCPT_StatusID').dropdown('get value') ? $('#CCPT_StatusID').dropdown('get value') : "0";
+
+            let date = $("#CCPT_Date").val() ? $("#CCPT_Date").val() : new Date();
+            let dateFrom;
+            let dateTo;
+
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "#");
+                dateFrom = date.split('#')[0];
+                dateTo = date.split('#')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+
+            CCPT_xhrRequest = AjaxLoad(url = "/CustomerCare/CustomerCare_PeriodTime/?handler=LoadData"
+                , data = {
+                    'data': JSON.stringify(data)
+                    , 'DateFrom': dateFrom
+                    , 'DateTo': dateTo
+                    , 'TreatID': currentID
+                    , 'BeginID': CCPT_BeginID
+                    , 'Limit': CCPT_Limit
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data != undefined) {
+                        if (data.length != 0) {
+                            let stringContent = '';
+                            $("#CustCare_BtnLoadMore").removeClass("d-none");
+                            if (currentID == 0) {
+                                fnRenderBlock(data, "CCPT_dtContentBody"
+                                    , blocknum = 30
+                                    , fnrender = CCPT_RenderData
+                                    , fnsuccess = null
+                                );
+                                CCPT_DataMain = CCPT_DataMain.concat(data);
+                                CCPT_DataExport = CCPT_DataMain;
+                            }
+                            else {
+                                let _id = $('#CCPT_MasterRow_' + currentID);
+                                if (_id != undefined && _id.length != 0) {
+                                    for (let i = 0; i < CCPT_DataMain.length; i++) {
+                                        if (CCPT_DataMain[i].TreatID == currentID) {
+                                            CCPT_DataMain[i] = data[0];
+                                        }
+                                    }
+                                    stringContent = CCPT_RenderEach(data[0]);
+                                    _id.replaceWith(stringContent);
+                                    CCPT_Filter();
+                                    $('#CCPT_MasterRow_' + currentID).trigger('click');
+                                }
+                            }
+                            CCPT_BeginID = CCPT_DataMain[CCPT_DataMain.length - 1].TreatID;
+                        }
+                        else {
+                            if (currentID != 0) {
+                                CCPT_DataMain = CCPT_DataMain.filter((item) => item["TreatID"] != currentID);
+                                let _id = 'CCPT_MasterRow_' + currentID;
+                                $("#" + _id).remove();
+                                CCPT_Filter();
+                            }
+                            else {
+                                if (isLoadMore == 0) {
+                                    $('#dtContentCustCare').hide();
+                                }
+                                $("#CustCare_BtnLoadMore").addClass("d-none");
+                            }
+
+                        }
+                        if (CCPT_DataMain && CCPT_DataMain.length == 0 && $('#CCPT_Empty').hasClass('d-none')) {
+                            $('#CCPT_Area').addClass('d-none');
+                            $('#CCPT_Empty').removeClass('d-none');
+                        }
+                        CCPT_BeginID = (CCPT_DataMain && CCPT_DataMain.length > 0) ? CCPT_DataMain[CCPT_DataMain.length - 1].TreatID : 0;
+                        $("#CCPT_LbTotal").html(formatNumber($(".CCPT_MasterRow:visible").length));
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CCPT_waiting').show();
+                }
+                , complete = function (e) {
+                    $('#CCPT_waiting').hide();
+                }
+            );
+
+        });
+    }
+    async function CCPT_RenderData(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CCPT_RenderEach(item);
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                    }
+                }
+                $("#CCPT_LbTotal").html(formatNumber($(".CCPT_MasterRow:visible").length));
+                $('#CCPT_dtContentBody').find('.CCPT_MasterRow:visible:first').trigger("click");
+                CCPT_Filter();
+                ToolPopper();
+                resolve();
+            }, 10)
+        });
+    }
+    function CCPT_RenderEach(item) {
+        let isexecuted = 'checklist-item-secondary', iscallback = '';
+        if (item.IsTakeCare == 1) isexecuted = 'checklist-item';
+        if (item.IsCallback == 1) iscallback = `<div class="mx-1 icon-hover" data-bs-toggle="tooltip" title="@Local["Gọi lại"] : ${GetDateTime_String_DMY(item.CallBackTime)}" data-bs-original-title="cc">
+                                                                                <i class="text-primary far fa-clock"></i>
+                                                                                </div>`  ;
+        let tr = `
+                            <li id="CCPT_MasterRow_${item.TreatID}" data-treatid="${item.TreatID}"  data-date="${item.NumTreat}" data-custid="${item.CustID}" class="CCPT_MasterRow checklist-item px-2 cursor-pointer ${isexecuted} list-group-item border-0 d-flex justify-content-between  border-radius-lg">
+                              <div class="d-flex w-100">
+                                  <div class="row px-2 w-100">
+                                      <span class="text-sm mt-2 text-secondary text-sm">
+                                      ${ConvertDateTimeUTC_DMY(INTYMDToDate(item.NumTreat))}
+                                      </span>
+                                      <span class="text-dark text-sm">${item.CustName} </span>
+                                      <span data-name="phone" class="_tab_control_ cursor-pointer d-none" data-tab="phone_customer" data-checkper="1">*******999</span>
+                                  </div>
+                                  <div class="d-flex align-items-center text-sm">
+                                      ${iscallback}
+                                      <button data-id="${item.ID}" class="detail btn btn-link text-dark text-sm mb-0 px-0 ms-4">
+                                          <i class="fas fa-angle-right text-sm me-1"></i>
+                                      </button>
+                                  </div>
+                              </div>
+                          </li>
+                          <hr class="horizontal dark my-0">
+                      `
+        return tr;
+    }
+
+    //#endregion
+
+    //#region //LOADDETAIL
+    async function CCPT_LoadDetail(cus) {
+        return new Promise((resolve, reject) => {
+            if (CCPT_xhrRequest && CCPT_xhrRequest.readyState != 4) CCPT_xhrRequest.abort();
+            CCPT_IndexTable = 0;
+            CCPT_xhrRequest = AjaxLoad(url = "/CustomerCare/CustomerCare_PeriodTime/?handler=LoadDetail"
+                , data = {
+                    'cus': cus
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let datas = JSON.parse(result);
+                    if (datas != undefined) {
+                        CCPT_FillInfo(datas.Table);
+                        let detailData = [...datas.Table1];
+                        CCPT_DataMainSlice = sliceIntoChunks(detailData, 500);
+                        $("#CCPT_detailarea").empty();
+                        $('#CCPT_btnloadmore').removeClass('d-none');
+                        if (CCPT_DataMainSlice && CCPT_DataMainSlice.length != 0) {
+                            //fnRenderBlock(CCPT_DataMainSlice[CCPT_IndexTable], "CCPT_detailarea"
+                            //    , blocknum = 100
+                            //    , fnrender = CCPT_RenderDetail
+                            //    , fnsuccess = null
+                            //);
+                            CCPT_RenderDetail(CCPT_DataMainSlice[CCPT_IndexTable], "CCPT_detailarea");
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CCPT_waiting').show();
+                }
+                , complete = function (e) {
+                    $('#CCPT_waiting').hide();
+                }
+            );
+
+        });
+    }
+
+    function CCPT_RenderMore() {
+        CCPT_IndexTable += 1;
+        if (CCPT_DataMainSlice && CCPT_DataMainSlice[CCPT_IndexTable]) {
+            //fnRenderBlock(CCPT_DataMainSlice[CCPT_IndexTable], "CCPT_detailarea"
+            //    , blocknum = 100
+            //    , fnrender = CCPT_RenderDetail
+            //    , fnsuccess = null
+            //);
+            CCPT_RenderDetail(CCPT_DataMainSlice[CCPT_IndexTable], "CCPT_detailarea");
+        }
+        if (!$('#CCPT_btnloadmore').hasClass('d-none') && CCPT_IndexTable >= CCPT_DataMainSlice.length - 1) {
+            $('#CCPT_btnloadmore').addClass('d-none');
+        }
+    }
+
+    async function CCPT_FillInfo(dataInfo) {
+        new Promise((resolve, reject) => {
+            let item = dataInfo[0];
+            if (item != undefined) {
+                let birth = '';
+                let _age = Distance_Year_2Date(new Date(item.Birthday), new Date());
+                let groupname = (item.GroupName != '') ? item.GroupName : 'no group';
+                if (_age > 0 && _age < 100) {
+                    birth = ' [ ' + _age + ' @Local["Tuổi"] ] ';
+                    $('#actionticket_birthday').html(birth);
+                }
+                $('#CCPT_custgender').html(item.GenderName + (birth != '' ? birth : ''));
+                $('#CCPT_custphone').html('<span class="_tab_control_ cursor-pointer" data-name="phone" data-tab="phone_customer" > ' + item.Phone + '</span>');
+                $('#CCPT_custphone').attr('data-info', (item.Phone.length > 0 ? encrypt_phone(item.Phone.replace(" ", "")) : ""));
+
+                $('#CCPT_custname').html(item.Name);
+                $('#CCPT_custcode').html(item.CustomerCode + ((item.DocCode != '') ? (' [ ' + item.DocCode + ' ] ') : '') + ((item.Cust_Code_Old != '') ? ('[' + item.Cust_Code_Old + ']') : ''));
+                $('#CCPT_custcode').attr('href', '/Customer/MainCustomer?CustomerID=' + item.CustomerID);
+
+                $('#CCPT_groupimg').attr('src', ((item.ImageGroup != '') ? item.ImageGroup : Master_Default_Pic));
+                $('#CCPT_groupname').prop("title", groupname)
+                $('#CCPT_groupname').attr('data-bs-original-title', groupname);
+            }
+            Checking_TabControl_Permission();
+            resolve();
+        });
+    }
+    async function CCPT_RenderDetail(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let classname = '', classchilname = '';
+                            let creator = '';
+                            let servicename = '';
+                            if (item.ServiceID == 0) {
+                                classname = 'justify-content-end text-right';
+                                classchilname = 'card shadow-none bg-gray-100';
+                                creator = `<div class="d-flex align-items-center text-sm">
+                                                                                            <span class="text-secondary">${item.CreatedName} ${GetDateTime_String_DMY(item.Created)}
+                                                                                            </span>
+                                                                                        </div>`;
+                            }
+                            else {
+                                servicename = `<span class="text-dark fw-bold me-2">${item.ServiceName}</span>`;
+                                classname = 'justify-content-start';
+                                classchilname = 'card shadow-none bg-gray-200';
+                                creator = `<div class="align-items-center text-sm">
+                                                    ${(item.DocName != '') ? `<span class="d-block text-secondary">BS:${item.DocName}</span>` : ''}
+                                                    ${(item.AssName != '') ? `<span class="d-block text-secondary">PT:${item.AssName}</span>` : ''}
+                                                    <span class="d-block text-secondary">${GetDateTime_String_DMY(item.Created)}</span>
+                                               </div>`;
+                            }
+                            let tr = `
+                                              <div class="row ${classname} mb-4">
+                                                  <div class="col-auto">
+                                                      <div class="${classchilname}">
+                                                          <div class="card-body py-2 px-3">
+                                                              <p class="text-dark mb-1">
+                                                                  ${servicename}
+                                                                  ${item.Content}
+                                                              </p>
+                                                              ${creator}
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          `
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                    }
+                }
+                resolve();
+            }, 10)
+        });
+    }
+    //#endregion
+
+    //#region //EVENT
+    function CCPT_Filter(type) {
+        if (type != undefined) { CCPT_TypeCare = type }
+        else { type = CCPT_TypeCare }
+
+        switch (type) {
+            case 1:
+                CCPT_DataExport = CCPT_DataMain.filter((item) => { return item["IsTakeCare"] == 1 });
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item").removeClass('d-none');
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item-secondary").addClass('d-none');
+                break;
+            case 2:
+                CCPT_DataExport = CCPT_DataMain;
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item").removeClass('d-none');
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item-secondary").removeClass('d-none');
+                break;
+            case 0:
+                CCPT_DataExport = CCPT_DataMain.filter((item) => { return item["IsTakeCare"] == 0 });
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item").addClass('d-none');
+                $("#CCPT_dtContentBody .CCPT_MasterRow.checklist-item-secondary").removeClass('d-none');
+                break;
+            default: break;
+        }
+        if (CCPT_DataExport && CCPT_DataExport.length == 0 && $('#CCPT_Empty').hasClass('d-none')) {
+            $('#CCPT_Area').addClass('d-none');
+            $('#CCPT_Empty').removeClass('d-none');
+        }
+        $("#CCPT_LbTotal").html(formatNumber($(".CCPT_MasterRow:visible").length));
+    }
+    function CCPT_EventHandle() {
+        $('#CCPT_dtContentBody').on('click', '.CCPT_MasterRow', function () {
+            let numcreated = $(this).attr("data-date");
+            let cus = $(this).attr("data-custid");
+            let treat = $(this).attr("data-treatid");
+            $('#CCPT_Area').removeClass('d-none');
+            $('#CCPT_Empty').addClass('d-none');
+            $('.CCPT_MasterRow').removeClass('active');
+            $('#CCPT_MasterRow_' + treat).addClass('active');
+            CCPT_CustID = cus;
+            CCPT_CurrentID = treat;
+            CCPT_Date = numcreated;
+            CCPT_LoadDetail(cus);
+        });
+        //$(".CCPT_PeriodTime").unbind('click').click(function () {
+        //    let periodTime = $(this).attr("data-period") || 0;
+        //    $('.CCPT_PeriodTime').removeClass('CCPT_TimePeriodClass');
+        //    if (CCPT_PeriodTime !== periodTime) {
+        //        CCPT_PeriodTime = periodTime;
+        //        $(this).addClass('CCPT_TimePeriodClass');
+        //    }
+        //    else {
+        //        CCPT_PeriodTime = 0;
+        //        $(this).removeClass('CCPT_TimePeriodClass');
+
+        //    }
+        //});
+    }
+    function CCPT_New() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/CallDetailInput?MasterID=" + 0
+            + "&CustomerID=" + CCPT_CustID
+            + "&Type=" + 5
+            + "&AppID=" + 0
+            + "&TreatID=" + CCPT_CurrentID
+            + "&TreatmentDate=" + CCPT_Date
+            + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CCPT_SendSMS() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/SMS/SmsDetail?CustomerID=" + CCPT_CustID + "&TicketID=" + 0 + "&Type=" + 'SMSContentGeneral' + "&TypeCare=" + 5 + "&AppID=" + 0 + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CCPT_Call(e) {
+        if (typeof CCF_OutcomCall !== 'undefined' && $.isFunction(CCF_OutcomCall)) {
+            let phone = $(e).attr("data-info");
+            CCF_OutcomCall(phone, CCPT_CustID, 0, 0);
+        }
+
+    }
+    //#endregion
+
+    //#region //Export
+
+    function CustCare_ExportData() {
+        try {
+            if (CCPT_DataExport && CCPT_DataExport.length != 0) {
+                var dataHeader = {
+                    "#": ["@Local["#"]", (value, { }, index) => { return index + 1; }]
+                    , "CustName": "@Local["Tên"]"
+                    , "DocCode": "@Local["Mã hồ sơ"]"
+                    , "BranchName": "@Local["Chi nhánh"]"
+                    , "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]"]
+                    }
+                    , "IsTakeCare": ["@Local["Tình trạng"]", (v) => { return v == 1 ? decodeHtml("@Local["Đã chăm sóc"]") : decodeHtml("@Local["Chưa chăm sóc"]") }]
+                    , "CallBackTime": ["@Local["Ngày gọi lại"]", (v) => { return !GetDateTime_String_DMY(v).includes("1900") ? GetDateTime_String_DMY(v) : "" }]
+                    , "Content": "@Local["Nội dung gần nhất"]"
+                    , "CCStaffID": ["@Local["Nhân viên chăm sóc"]", (v) => { return Fun_GetName_ByID(CCPT_DataEmployee, v) }]
+                    , "EmpCare": ["@Local["Người xử lý"]", (v) => {return Fun_GetObject_ByID(CCPT_DataEmployee, v).Name != "unknown" ? Fun_GetObject_ByID(CCPT_DataEmployee, v).Name : ""}]
+                    , "statusID": ["@Local["Trạng thái"]", (v) => {return Fun_GetName_ByID(CCPT_DataTypeCare, v)}]
+                    , "StatusCallID": ["@Local["Trạng thái chi tiết"]", (v) => {return Fun_GetName_ByID(CCPT_DataTypeCare, v)}]
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'CCPT_dtContentBody', PermissionTable_TabControl);
+                exportJsonToExcel(Outlang["Sys_cham_soc_dinh_ky"], CCPT_DataExport, dataHeader);
+            }
+            else { notiWarning('@Local["Không xuất được file"]'); }
+        }
+
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]');
+        }
+    }
+
+        //#endregion
+</script>

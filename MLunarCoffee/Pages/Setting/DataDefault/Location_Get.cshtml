@@ -1,0 +1,347 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.DataDefault.Location_GetModel
+@{
+    Layout = null;
+}
+<div class="position-relative">
+    <div id="LCG_StatusDownLoad" class="position-fixed end-2 z-index-3 rounded-3 bg-white d-grid px-3" style="top:20%">        
+    </div>
+</div>
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0 text-capitalize">@Local["Tỉnh"] @Local["Thành phố"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+                <div class="right">
+                    <button id="LCG_CityUpdate" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return LCG_ConfirmUpdate('City')">@Local["Cập nhật"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 mt-3 mobile-responsive vt-header-sticky" style="max-height:30vh!important;">
+                    <table class="table vt-table mb-0" id="LCGCity_DtContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th style="width:140px;">@Local["Mã"]</th>
+                                <th>@Local["Tỉnh"] @Local["Thành phố"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="LCGCity_DtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary w-100 p-1 btnsysmore mt-2 mb-0" id="LCG_LoadMoreCity" onclick="LCG_LoadMore('City')">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0 text-capitalize">@Local["Quận huyện"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+                <div class="right">
+                    <button id="LCG_DistrictUpdate" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return LCG_ConfirmUpdate('District')">@Local["Cập nhật"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 mt-3 mobile-responsive vt-header-sticky" style="max-height:30vh!important;">
+                    <table class="table vt-table mb-0" id="LCGDistrict_DtContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th style="width:140px;">@Local["Mã"]</th>
+                                <th>@Local["Quận huyện"]</th>
+                                <th>@Local["Tỉnh"] @Local["Thành phố"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="LCGDistrict_DtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary w-100 p-1 btnsysmore mt-2 mb-0" id="LCG_LoadMoreDistrict" onclick="LCG_LoadMore('District')">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0 text-capitalize">@Local["Phường"] @Local["Xã"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+                <div class="right">
+                    <button id="LCG_CommuneUpdate" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return LCG_ConfirmUpdate('Commune')">@Local["Cập nhật"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 mt-3 mobile-responsive vt-header-sticky" style="max-height:30vh!important;">
+                    <table class="table vt-table mb-0" id="LCGCommune_DtContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th style="width:140px;">@Local["Mã"]</th>
+                                <th>@Local["Phường"] @Local["Xã"]</th>
+                                <th>@Local["Quận huyện"]</th>
+                                <th>@Local["Tỉnh"] @Local["Thành phố"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="LCGCommune_DtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary w-100 p-1 btnsysmore mt-2 mb-0" id="LCG_LoadMoreCommune" onclick="LCG_LoadMore('Commune')">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    js_require_notasync('/js/Data/LocationAction.js')
+</script>
+<script>
+    var LCG_DataCity;
+    var LCG_DataCitySlide;
+    var LCG_DataDistrict;
+    var LCG_DataDistrictSlide;
+    var LCG_DataCommune;
+    var LCG_DataCommuneSlide;
+    let IndexCity = 0;
+    let IndexDistrict = 0;
+    let IndexCommune = 0;
+    let Promis = [];
+    let LCG_ListDataExcute = {};
+    var LCG_ProgressDL;
+    $(document).ready(function () {
+        LCG_LoadList();
+    });
+    function LCG_LoadList(){
+        AjaxLoad(url = "/Setting/DataDefault/Location_Get/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    LCG_DataCity = JSON.parse(result).Table;
+                    LCG_DataDistrict = JSON.parse(result).Table1;
+                    LCG_DataCommune = JSON.parse(result).Table2;
+
+                    LCG_DataCitySlide = sliceIntoChunks(LCG_DataCity, 200);
+                    LCG_DataDistrictSlide = sliceIntoChunks(LCG_DataDistrict, 200);
+                    LCG_DataCommuneSlide = sliceIntoChunks(LCG_DataCommune, 200);
+
+                    $("#LCGCity_DtContentBody").html('');
+                    $("#LCGDistrict_DtContentBody").html('');
+                    $("#LCGCommune_DtContentBody").html('');
+
+                    LCG_RenderBlock(LCG_DataCitySlide[IndexCity], "LCGCity_DtContentBody");
+                    LCG_RenderBlock(LCG_DataDistrictSlide[IndexDistrict], "LCGDistrict_DtContentBody");
+                    LCG_RenderBlock(LCG_DataCommuneSlide[IndexCommune], "LCGCommune_DtContentBody");
+                }
+                else {
+                    notiError_SW();
+                }
+            });
+    }
+    async function LCG_RenderList(data, ID) {
+        let MyNode = document.getElementById(ID);
+        if (MyNode != null) {
+            //MyNode.innerHTML = '';
+            let stringContent = '';
+            let str = '';
+            if (data && data.length != 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i]
+                    str = `<td class="d-none">${item.Code}</td>
+                        <td class="vt-number-order"></td>
+                        <td>${item.Code}</td>
+                        <td>${item.Name}</td> 
+                        ${item.DistrictName != undefined ? `<td>${item.DistrictName}</td>` : ""}
+                        ${item.CityName != undefined ? `<td>${item.CityName}</td>` : ""}
+                        ` 
+                    stringContent += `<tr role="row" class="vt-number">${str}</tr>`
+                }
+                MyNode.insertAdjacentHTML('beforeend', stringContent);
+            }
+
+        }
+    }
+    function LCG_RenderBlock(data,ID) {
+        fnRenderBlock(data, ID
+            , blocknum = 100
+            , fnrender = LCG_RenderList
+            , fnsuccess = null
+        );
+    }
+    function LCG_LoadMore(type) {
+        switch (type) {
+            case 'City':
+                IndexCity += 1;                
+                if (LCG_DataCitySlide[IndexCity] && LCG_DataCitySlide[IndexCity].length != 0)
+                    LCG_RenderBlock(LCG_DataCitySlide[IndexCity], "LCGCity_DtContentBody");
+                else $("#LCG_LoadMoreCity").addClass('d-none');
+                break;
+            case 'District':
+                IndexDistrict += 1;               
+                if (LCG_DataDistrictSlide[IndexDistrict] && LCG_DataDistrictSlide[IndexDistrict].length != 0)
+                    LCG_RenderBlock(LCG_DataDistrictSlide[IndexDistrict], "LCGDistrict_DtContentBody");
+                else $("#LCG_LoadMoreDistrict").addClass('d-none');
+                break;
+            case 'Commune':
+                IndexCommune += 1;
+                if (LCG_DataCommuneSlide[IndexCommune] && LCG_DataCommuneSlide[IndexCommune].length != 0)
+                    LCG_RenderBlock(LCG_DataCommuneSlide[IndexCommune], "LCGCommune_DtContentBody");
+                else $("#LCG_LoadMoreCommnue").addClass('d-none');
+                break;
+        }
+    }
+    //#region Excute
+    function LCG_ConfirmUpdate(type) {
+        const promise = notiConfirm();
+        promise.then(function () { 
+            Promis.push(LCG_GETList(type));
+            setTimeout(function () {
+                Promise.all(Promis).then(() => {
+                    if (LCG_ListDataExcute != {}) LCG_Excute(LCG_ListDataExcute, type);
+                })
+            }, 0);
+        }, function () { });
+    }
+
+    async function LCG_GETList(type) { 
+        return new Promise(function (resolve, reject) {
+            Location_GetList(type, '0'
+                , beforefunc = function () { LCG_beforeConnect(type) }
+                , successfunc = function (_rr) {
+                    if (_rr != "0") {debugger
+                        if (LCG_CheckStatusConnect(_rr)) {
+                            LCG_Dowloading(type);
+                            let data = JSON.parse(_rr);
+                            if (data.Messeage != undefined) LCG_ErrorConnect(type, data.Messeage)
+                            else {
+                                if (data != undefined && data.length != 0) { 
+                                    switch (type) {
+                                        case 'City':
+                                            LCG_ListDataExcute.City = data;
+                                            break;
+                                        case 'District':
+                                            LCG_ListDataExcute.District = data;
+                                            break;
+                                        case 'Commune':
+                                            LCG_ListDataExcute.Commune = data;
+                                            break;
+                                    }
+                                }
+                            }
+                        }else{
+                            LCG_ErrorConnect(type, _rr);
+                        }
+                    }
+                    else notiError_SW();
+                    resolve();
+                }
+                , failurefunc = function (e) { }
+                , completefunc = function (e) { }
+            );
+            
+        });
+    }
+    function LCG_CheckStatusConnect(data,type){
+        if (typeof data !== "string") {
+            return false;
+        }
+        try {
+            JSON.parse(data);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+    function LCG_Excute(data,type){
+        AjaxLoad(url = "/Setting/DataDefault/Location_Get/?handler=Excutedata"
+            , data = {
+                data: JSON.stringify(data[type] != undefined ? data[type] : [])
+                , type : type
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "") {                    
+                    let _r = JSON.parse(result);
+                    if (_r.Result == "1") {
+                        LCG_CompleteExcute(type);
+                        notiSuccess();
+                        LCG_LoadList();
+                    }
+                    else{
+                        LCG_ErrorExcute(type);
+                        notiError_SW();
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            //, complete = LCG_CompleteExcute(type)
+            );
+    }
+
+    function LCG_beforeConnect(type) {
+        let str = `
+        <div class="progress-wrapper" id="DowloadDiv_${type}">
+            <div class="progress-info">
+                <div class="progress-percentage">
+                    <span id="fbr_protext" class="text-sm font-weight-bold">0%</span>
+                </div>
+            </div>
+            <div class="progress">
+                <div id="progressDowload_${type}" class="progress-bar bg-primary" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+            </div>
+            <div class="align-items-center d-flex fw-bold text-primary text-sm text-wrap mt-3">
+                <div class="waitingdiv text-center z-index-3  pe-2">
+                    <div class="spinner-border text-primary" role="status" style="font-size:20px;">                        
+                    </div>
+                </div>
+                <span id="Lable_${type}"> @Local["Đang kết nối"]...</span>
+            </div>
+        </div>
+        `
+        $("#LCG_StatusDownLoad")[0].insertAdjacentHTML('beforeend', str);
+       
+    }
+    function LCG_Dowloading(type) {
+        setTimeout(() => {
+            LCG_ProgressDL = setInterval(function () {
+                var width = parseInt($(`#progressDowload_${type}`)[0].style.width) + 5;
+                $(`#progressDowload_${type}`).width(width + '%');
+            }, 20)
+            $(`#Lable_${type}`).html('@Local["Đang xử lý, Xin vui lòng không tắt trang"]');
+        }, 1000)
+        clearInterval(LCG_ProgressDL);
+    }
+    function LCG_ErrorConnect(type,Messeage){
+        $(`#Lable_${type}`).html(`<span class="text-danger">@Local["Kết nối thất bại"]: ${Messeage}</span>`)
+    }
+    function LCG_CompleteExcute(type) {
+        $(`#progressDowload_${type}`).width('100%');
+        clearInterval(LCG_ProgressDL);
+        $(`#DowloadDiv_${type}`).remove();
+    }
+    function LCG_ErrorExcute(type) {  
+        $(`#DowloadDiv_${type}`).remove();
+        clearInterval(LCG_ProgressDL);
+    }
+    //#endregion Excute
+</script>
+    

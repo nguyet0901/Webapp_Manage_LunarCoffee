@@ -1,0 +1,1144 @@
+﻿@page
+@model SourceMain.Pages.WareHouse.Stock.StockDetailModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/Stock/stockdetail.js', true);</script>
+<script>js_require_notasync('/js/comon/initialize_setting.js', true);</script>
+
+<div class="row">
+    <div class="col-12">
+        <!--Master-->
+
+
+        <div id="DetailImport" class="card mb-4" style="display:none;">
+            @*<div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100 ">
+                                <h6 data-languagestatic="detail" class="mb-0">Chi Tiết Phiếu</h6>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+                            <div class="badge badge-pill ps-1 bg-gradient-info" id="txtDetailCode"> </div>
+                        </div>
+                    </div>
+                </div>*@
+
+            <div class="card-header p-3 pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div id="wa_header_import" class="h-100 wareoption">
+                            <h6 data-languagestatic="input_ware_form_detail_header" class="mb-0">Chi Tiết Phiếu Nhập</h6>
+                            <p data-languagestatic="input_ware_form_detail_header_sub" class="text-sm mb-0">Ngày giờ nhập không được nhỏ hơn ngày giờ chốt kho gần nhất hoặc lớn hơn ngày giờ hiện tại.</p>
+                        </div>
+                        <div id="wa_header_change" class="h-100 wareoption">
+                            <h6 data-languagestatic="detail_exchange_warehouse_header" class="mb-0">Chi Tiết Phiếu Chuyển Kho</h6>
+                            <p data-languagestatic="detail_exchange_warehouse_header_sub1" class="text-sm mb-0">Ngày giờ chuyển không được nhỏ hơn ngày giờ chốt kho gần nhất hoặc lớn hơn ngày giờ hiện tại.</p>
+                            <p data-languagestatic="detail_exchange_warehouse_header_sub2" class="text-sm mb-0">Số lượng tồn thay đổi theo ngày chuyển của kho chuyển đi.</p>
+                        </div>
+                        <div id="wa_header_export" class="h-100 wareoption">
+                            <h6 data-languagestatic="export_detail_form_header" class="mb-0">Chi Tiết Phiếu Xuất</h6>
+                            <p data-languagestatic="export_detail_form_header_sub1" class="text-sm mb-0">Ngày giờ xuất không được nhỏ hơn ngày giờ chốt kho gần nhất hoặc lớn hơn ngày giờ hiện tại.</p>
+                            <p data-languagestatic="export_detail_form_header_sub2" class="text-sm mb-0">Số lượng tồn thay đổi theo kho và ngày xuất của kho.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-2">
+                <div class="row px-2 form-3">
+                    <div class="col-12 col-xl-4 col-md-5 p-1 position-relative">
+                        <div class="d-flex">
+                            <div class="input-group flex-nowrap" id="wareSearch">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true" style="display: block;"></i>
+                                    <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                </div>
+                                <input id="searchingProduct" type="text" class="form-control" placeholder="eg .search" autocomplete="off">
+
+                            </div>
+                            <div class="icon shadow border-radius-md bg-dark text-center d-flex align-items-center justify-content-center text-white cursor-pointer ms-2" style="height: 40px;min-width: 40px;" data-bs-toggle="tooltip" onclick="return WareHouse_NewProduct();">
+                                <i class="fa fa-plus" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div id="TableProduct" class="m-0 my-3 mobile-responsive" style="height:500px;overflow-x:auto;">
+                            <div id="WaitingProduct" class="waitingdiv text-center position-absolute translate-middle-x start-50" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table class="table vt-table mb-0" id="dtContentProduct">
+                                <thead>
+                                    <tr>
+                                        <th class="d-none">ID</th>
+                                        <th data-languagestatic="no" style="max-width:40px;">#</th>
+                                        <th data-languagestatic="product" style="min-width:120px;">Sản Phẩm</th>
+                                        <th data-languagestatic="">Tồn</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-languagedyn="grid" id="dtContentProductBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-8 col-md-7 p-1">
+                        <div id="ProductItem" class="card border-1 border-dashed shadow-none rounded-2">
+                            <div class="card-body pt-2">
+                                <div class="row">
+                                    <div class="field col-12 col-md-12 col-sm-12 col-lg-6 px-1 mt-2 flex-grow-1">
+                                        <label data-languagestatic="product">Tên Hàng</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="productDetail" onchange="event.preventDefault();return ItemDetail_DetectUnit();">
+                                            <input type="hidden" />
+                                            <i class="dropdown icon"></i>
+                                            <input id="searchproduct" class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">Product</div>
+                                            <div id="cbbproductDetail" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-sm-12 col-lg-3 px-1 mt-2 ">
+                                        <label data-languagestatic="packagenumber">Số Lô Hàng</label>
+                                        <input id="PackageNumber" class="form-control" type="text" maxlength="100" autocomplete="off" placeholder="eg.Package Number" />
+                                    </div>
+                                    <div id="stock_expiredday" class="field col-12 col-md-12 col-sm-12 col-lg-3 px-1 mt-2 wareoption">
+                                        <label data-languagestatic="expiredate">Ngày Hết Hạn</label>
+                                        <div class="input-group mb-0">
+                                            <input id="ExpiredDay" class="flatpickr detail form-control" type="text" placeholder="dd-mm-yyyy" />
+                                            <span class="input-group-text "><i class="remove link icon text-danger cursor-pointer"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="stock_itemamount" class="field col-12 col-md-12 col-sm-12 col-lg-6 px-1 mt-2 wareoption flex-grow-1">
+                                        <label data-languagestatic="supplier">Nhà Cung Cấp</label>
+                                        <div class="input-group flex-nowrap">
+                                            <div class="ui fluid search selection dropdown form-control" id="supplierDetail">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <input id="searchsupplier" class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">Supplier</div>
+                                                <div id="cbbsupplierDetail" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                            <span class="input-group-text cursor-pointer text-center" style="width:40px;min-width:40px;" onclick="return WareHouse_NewSupplier();">
+                                                <i class="fa fa-plus"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-lg-3 col-sm-12 px-1 mt-2 flex-grow-1">
+                                        <label data-languagestatic="unit">Đơn Vị</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="productUnit" onchange="event.preventDefault();return ItemDetail_OnChangeUnit();">
+                                            <input type="hidden" />
+                                            <i class="dropdown icon"></i>
+                                            <div class="default text">Unit</div>
+                                            <div id="cbbproductUnit" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-lg-3 col-sm-12 px-1 mt-2 ">
+                                        <label data-languagestatic="quantity">Số Lượng</label>
+                                        <input id="numberProduct" class="form-control" type="number" name="numberProduct" onchange="event.preventDefault();return ItemDetail_UpdateAmount();" placeholder="eg.Quantity" />
+                                    </div>
+                                </div>
+                                <div id="stock_infoamount" class="row wareoption">
+                                    <div class="field col-12 px-1 mt-2 col-md-6 col-lg-3 flex-grow-1">
+                                        <label data-languagestatic="unit_price">Đơn Giá</label>
+                                        <input id="Pro_ItemAmount" class="form-control" type="text" onchange="event.preventDefault();return ItemDetail_UpdateAmount();" placeholder="eg.Amount" />
+                                    </div>
+                                    <div class="field col-12 px-1 mt-2 col-md-6 col-lg-3">
+                                        <label data-languagestatic="totalamount">Tổng Tiền</label>
+                                        <input id="Pro_IniAmount" class="form-control" type="text" readonly="readonly" disabled="disabled" />
+                                    </div>
+                                    <div class="field col-12 px-1 mt-2 col-md-12 col-lg-3">
+                                        <label data-languagestatic="amount_discount">Giảm</label>
+                                        <div class="position-relative">
+                                            <input id="Pro_Discount" class="border-right-0 form-control" placeholder="eg .discount" type="text" onchange="event.preventDefault();ItemDetail_OnChangeDiscount();">
+                                            <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-4" id="DiscountAmount" onchange="return ItemDetail_OnChangeDiscount();">
+                                                <input type="hidden" name="name" value="2">
+                                                <i class="dropdown icon opacity-0"></i>
+                                                <input class="search" autocomplete="off" tabindex="0"><div class="text">VND</div>
+                                                <div id="cbbDiscountAmountPer" class="menu transition hidden" tabindex="-1">
+                                                    <div class="item" data-value="1">%</div>
+                                                    <div class="item" data-value="2">VND</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="stock_totalamount" class="field col-12 px-1 mt-2 col-md-12 col-lg-3 wareoption">
+                                        <label data-languagestatic="totalamount_final">Thành Tiền</label>
+                                        <input id="Pro_DiscountedAmount" type="text" readonly="readonly" disabled="disabled" class="form-control" placeholder="eg.Amount final" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @*<div id="stock_totalamount" class="field col-12 col-md-12 col-lg-9 px-1 mt-2 wareoption">
+                                        <label data-languagestatic="totalamount_final">Thành Tiền</label>
+                                        <input id="Pro_DiscountedAmount" type="text" readonly="readonly" disabled="disabled" class="form-control" placeholder="eg.Amount final" />
+                                    </div>*@
+                                    @*<div id="stock_expiredday" class="field col-12 col-md-12 col-lg-3 px-1 mt-2 wareoption">
+                                        <label data-languagestatic="expiredate">Ngày Hết Hạn</label>
+                                        <div class="input-group mb-3">
+                                            <input id="ExpiredDay" class="flatpickr detail form-control" type="text" placeholder="dd-mm-yyyy" />
+                                            <span class="input-group-text "><i class="remove link icon text-danger cursor-pointer"></i></span>
+                                        </div>
+                                    </div>*@
+                                </div>
+                                <div class="row">
+                                    <div class="field col-12 mt-2 px-1 ">
+                                        <label data-languagestatic="note">Ghi Chú</label>
+                                        <textarea id="noteProduct" name="note" type="text" class="form-control" rows="3" placeholder="eg.Note"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex">
+                                            <div class="d-flex ms-auto align-items-center">
+                                                <div class="mt-1 me-1 text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage" id="textShowMessage"></div>
+                                                <button type="button" class="btn btn-sm bg-gradient-primary mt-2 me-0 mb-0" onclick="event.preventDefault();return ItemDetail_Save();">Add</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="DetailInfo" class="row">
+            <div class="col-12 col-xl-4 col-md-5">
+                <div id="StockInfo" class="card ">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="col-auto my-auto flex-grow-1">
+                                <div class="h-100 ">
+                                    <h6 data-languagestatic="detail" class="mb-0">Chi Tiết Phiếu</h6>
+                                </div>
+                            </div>
+                            <div class="ms-auto my-auto mt-0">
+                                <div class="badge badge-pill px-2 bg-gradient-info opacity-0" id="txtDetailCode" > </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="row">
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label class="title title_collapse" data-tab=""><span data-languagestatic="warehouse">Kho</span></label>
+                                <div class="ui fluid search selection dropdown form-control" id="DetailWareID" onchange="WareDetail_UpdateLastLock()">
+                                    <input type="hidden" name="ware" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="cbbDetailWareID" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label data-languagestatic="lock_date_closest">Ngày Chốt Gần Nhất</label>
+                                <input id="lock_date_detail" readonly="readonly" disabled="disabled" class="form-control">
+                            </div>
+                        </div>
+                        <div id="ware_des" class="wareoption">
+                            <div class="row">
+                                <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                    <label data-languagestatic="warehouse_receive">Kho Nhận</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="DetailWareID_To" onchange="WareDetail_UpdateLastLock()">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbDetailWareID_To" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                    <label data-languagestatic="lock_date_closest">Ngày Chốt Gần Nhất (Kho Nhận)</label>
+                                    <input id="lock_date_detail_To" readonly="readonly" disabled="disabled" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form3">
+                            <div class="field col-12 col-md-12 px-1 mt-2 wareoption" id="stock_property">
+                                <div id="import_amount" class="wareoption field">
+                                    <label data-languagestatic="total">Tổng Tiền</label>
+                                    <input id="txtWare_Amount" readonly="readonly" class="form-control" disabled="disabled">
+                                </div>
+                                <div id="reason_export" class="wareoption field">
+                                    <label data-languagestatic="reason">Lý Do</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="ReasonExport">
+                                        <input type="hidden" name="" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbReasonExport" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                <label data-languagestatic="createddate">Ngày Thao Tác</label>
+                                <input id="Detail_Date" class="flatpickr detail form-control" type="text" placeholder="Select Date.." />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                <label data-languagestatic="note">Ghi Chú</label>
+                                <textarea id="txtWare_Content" name="content" rows="3" type="text" class="form-control"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-8 col-md-7" id="StockProductList">
+                <div class="card">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <div class="h-100 ">
+                                    <h6 data-languagestatic="material" class="mb-0">Danh Sách Hàng</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="TableStockProduct" class="card-body pt-2 px-3">
+                        @*<ul id="StockProductBody" class="list-unstyled mx-auto mb-1" style="overflow-y:auto;">
+                        </ul>*@
+
+                        <div class="m-0 my-0 mobile-responsive h-100">
+                            <div id="" class="waitingdiv text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table class="table vt-table mb-0" id="#####">
+                                <thead>
+                                    <tr>
+                                        <th class="d-none">ID</th>
+                                        <th class="d-none">CusID</th>
+                                        <th data-languagestatic="no" style="width:40px;">#</th>
+                                        <th data-languagestatic="product">Sản Phẩm</th>
+                                        <th data-languagestatic="info">Thông Tin</th>
+                                        <th data-languagestatic="" style="width:50px;" id="thRemoveProduct"></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-languagedyn="grid" id="StockProductBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed-botombutton mt-2">
+            <div class="action_Save">
+                <div class="text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage" id="textShowMessageMaster"></div>
+                <div class="action_Save-Content">
+                    <button data-languagestatic="button_cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();WareHouse_Close()">Cancel</button>
+                    <button data-languagestatic="button_ok" id="btnSaveDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return WareHouse_SaveDetail()">Save</button>
+                    <button data-languagestatic="delete" id="btnDeleteDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-danger mt-2 me-2" onclick="return WareHouse_DeleteDetail()">Xóa</button>
+                    <button data-languagestatic="print" id="btnPrintDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-info mt-2 me-2" onclick="return WareHouse_PrintDetail()">In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let ser_DetailID = "@Model._DetailCurrentID";
+    var product_selected = {};
+    var data_TimerOnchange;
+    let data_supplier;
+    var data_product;
+    let data_unit;
+    let data_productunit;
+    let EditButton = 1;
+    var DataComboWare;
+    let Flag_Ware = 0;
+    let StockType = Number("@Model._Type");
+    let ViewDetail = Number("@Model._ViewDetail");
+
+    $(document).ready(function () {
+        WareDetail_Setting(ser_DetailID, StockType, ViewDetail);
+        WareDetail_Initialize(ser_DetailID, StockType);
+        WareDetail_Event();
+    });
+    //#region // Master
+
+
+    function WareDetail_Initialize(id, type) {
+        AjaxLoad(url = "/WareHouse/Stock/StockDetail/?handler=Initialize"
+                , data = {'currentid': id , 'type': type }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        data_product = data.Product;
+                        data_productunit = data.UnitProduct;
+                        data_unit = data.Unit;
+                        data_supplier = data.Supplier;
+                        Load_Combo(data_product, "cbbproductDetail", true);
+                        ItemDetail_RenderProductList(data_product, "dtContentProductBody");
+                        Load_Combo(data_supplier, "cbbsupplierDetail", false);
+                        DataComboWare = data.Warehouse;
+                        Load_Combo(DataComboWare, "cbbDetailWareID", true);
+                        Load_Combo(DataComboWare, "cbbDetailWareID_To", true);
+                        Load_Combo(data.Reason, "cbbReasonExport", false);
+                        if (DataComboWare && DataComboWare.length > 0) {
+                            $("#DetailWareID").dropdown("refresh");
+                            $("#DetailWareID").dropdown("set selected", DataComboWare[0].ID);
+                            $("#DetailWareID_To").dropdown("refresh");
+                            $("#DetailWareID_To").dropdown("set selected", DataComboWare[0].ID);
+                            WareDetail_UpdateLastLock();
+                        }
+                        if (Number(id) != 0) {
+                            WareDetail_RenderData(data.Info, data.Items);
+                        } else {
+                            $('#btnSaveDetail').show();
+                            $('#detail_Item').show();
+                        };
+                        Flag_Ware = 1;
+                    }
+                }
+            );
+
+    }
+    function WareDetail_RenderData(DataMaster, DataDetail) {
+        if (DataMaster.length != 0) {
+            $('#txtDetailCode').html(DataMaster[0].Code);
+            $('#txtDetailCode').addClass("opacity-10");
+            $('#txtWare_Content').val((DataMaster[0].Content));
+            $('#Detail_Date').val(GetDateTime_String_DMYHM(DataMaster[0].DateExecute));
+            $("#DetailWareID").dropdown("refresh");
+            $("#DetailWareID").dropdown("set selected", DataMaster[0].WareID);
+            $("#DetailWareID_To").dropdown("refresh");
+            $("#DetailWareID_To").dropdown("set selected", DataMaster[0].WareIDTo);
+            $("#ReasonExport").dropdown("refresh");
+            $("#ReasonExport").dropdown("set selected", DataMaster[0].Reason);
+
+            let perlock = Number(DataMaster[0].PerLock);
+            let perPassing = Number(DataMaster[0].PerPassing);
+            let perdate = Number(DataMaster[0].PerDate);
+            let peruser = Number(DataMaster[0].PerUser);
+            if ((perPassing == 1 || (perdate == 1 && peruser == 1)) && perlock == 1) {
+                EditButton = 1;
+            } else EditButton = 0;
+            if (ViewDetail == 1) EditButton = 0;
+            if (EditButton == 0) {
+                $('#detail_Item').hide();
+                $('#DetailInfo').find('input, textarea, button, select').attr('disabled', 'disabled');
+                $('#DetailWareID').addClass("disabled");
+                $('#btnSaveDetail').remove();
+                $('#btnDeleteDetail').remove();
+                $("#Detail_Date").flatpickr({
+                    dateFormat: 'd-m-Y H:i',
+                    enableTime: true,
+                    time_24hr: true,
+                    maxDate: new Date(),
+                    defaultDate: new Date()
+                });
+                $('#Detail_Date').val((DataMaster[0].DateExecute));
+            } else {
+                $('#btnSaveDetail').show();
+                $('#btnDeleteDetail').show();
+                $('#detail_Item').show();
+            }
+        }
+        for (let i = 0; i < DataDetail.length; i++) {
+            let item = DataDetail[i];
+            var element = {};
+            element.id = item.idDetail;
+            element.packageNumber = item.packageNumber;
+            element.idProduct = item.idProduct;
+            element.SupplierID = ((StockType == 1 ? item.SupplierID : 0));
+            element.UnitCountID = item.UnitCountID;
+            element.NameProduct = item.NameProduct;
+            element.NameSupplier = item.NameSupplier;
+            element.NameUnit = item.NameUnit;
+            element.Number = Number(item.Number).toString();
+            element.Amount = (StockType == 1) ? item.Amount : 0;
+            element.Note = item.Note;
+            element.state = item.state.toString();
+            element.idDetail = item.idDetail;
+            element.ExpiredDay = item.ExpiredDay;
+            element.IniAmount = item.IniAmount;
+            element.DiscountAmount = item.DiscountAmount;
+            element.DiscountPer = item.DiscountPer;
+            element.UnitPrice = item.UnitPrice;
+            product_selected[item.idDetail] = element;
+            ItemDetail_Render(item.idDetail, element, "StockProductBody");
+
+        }
+        WareHouse_UpdateInfo();
+    }
+    function WareHouse_UpdateInfo() {
+        let data = [];
+        let TotalAmount = 0;
+        for ([key, value] of Object.entries(product_selected)) {
+            data.push(value);
+            TotalAmount = TotalAmount + Number(value.Amount);
+        }
+        $('#DetailWareID').addClass("disabled");
+        $('#DetailWareID_To').addClass("disabled");
+        if (data && data.length == 0) {
+            document.getElementById("Detail_Date").disabled = false;
+        }
+        else {
+            document.getElementById("Detail_Date").disabled = true;
+        }
+        $('#txtWare_Amount').val(StockType == 1 ? TotalAmount : 0);
+    }
+    function WareHouse_SaveDetail() {
+
+        var DateExecute = $('#Detail_Date').val() ? $('#Detail_Date').val() : "";
+        let ware = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+        let wareto = Number($('#DetailWareID_To').dropdown('get value')) ? Number($('#DetailWareID_To').dropdown('get value')) : 0;
+        let reason = Number($('#ReasonExport').dropdown('get value')) ? Number($('#ReasonExport').dropdown('get value')) : 0;
+        let note = $('#txtWare_Content').val() ? $('#txtWare_Content').val() : '';
+
+        let data = [];
+        for ([key, value] of Object.entries(product_selected)) {
+            data.push(value);
+        }
+        document.getElementById("textShowMessageMaster").innerHTML = "";
+        let error = 0;
+        if (StockType != 3 && ware == 0) {
+            $('#DetailWareID').addClass('errormaster');
+            error = 1;
+        } else {
+            $('#DetailWareID').removeClass('errormaster');
+        }
+        if (StockType == 3 && (ware == wareto || ware == 0 || wareto == 0)) {
+            error = 1;
+            $('#DetailWareID').addClass('errormaster');
+            $('#DetailWareID_To').addClass('errormaster');
+        }
+        else {
+            $('#DetailWareID').removeClass('errormaster');
+            $('#DetailWareID_To').removeClass('errormaster');
+        }
+
+        if (data == undefined || data == null || data.length == 0) {
+            error = 1; $("#textShowMessageMaster").html('Empty');
+        }
+
+        if (error == 0) {
+            AjaxLoad(url = "/WareHouse/Stock/StockDetail/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify(data)
+                    , 'ware': ware
+                    , 'wareto': wareto
+                    , 'reason': reason
+                    , 'type': StockType
+                    , 'note': note
+                    , 'DateExecute': DateExecute
+                    , 'CurrentID': ser_DetailID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        WareHouse_Close();
+                        WareHouse_Load(ser_DetailID, 0);
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+
+        }
+    }
+    function WareHouse_PrintDetail() {
+
+    }
+    function WareHouse_DeleteDetail() {
+        const promise = notiConfirm();
+        promise.then(function () {
+
+            let ware = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+            let wareto = Number($('#DetailWareID_To').dropdown('get value')) ? Number($('#DetailWareID_To').dropdown('get value')) : 0;
+            WareHouse_DeleteExecute(ser_DetailID, ware, wareto);
+            WareHouse_Close();
+        }, function () { });
+    }
+    function WareHouse_NewProduct() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/Material/MaterialDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function WareHouse_NewSupplier() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/Setting/SupplierDetail?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function WareHouse_LoadProduct(id) {
+        AjaxLoad(url = "/WareHouse/Stock/StockDetail/?handler=LoadProduct"
+            , data = { }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    data_product = data.Product;
+                    data_productunit = data.UnitProduct;
+                    Load_Combo(data_product, "cbbproductDetail", true);
+                    ItemDetail_RenderProductList(data_product, "dtContentProductBody");
+                    if (id != 0) {
+                        $("#productDetail").dropdown("refresh");
+                        $("#productDetail").dropdown("set selected", id);
+                    }
+
+                }
+            });
+    }
+    function ItemDetail_AddProduct(id) {
+        if (id && id != 0) {
+            WareHouse_LoadProduct(id);
+        }
+    }
+
+    function WareHouse_LoadSupplier(id) {
+        AjaxLoad(url = "/WareHouse/Stock/StockDetail/?handler=LoadSupplier"
+            , data = { }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    data_supplier = data;
+                    let product = Number($('#productDetail').dropdown('get value')) ? Number($('#productDetail').dropdown('get value')) : 0;
+                    if (product == 0) {
+                        Load_Combo(data_supplier, "cbbsupplierDetail", false);
+                        
+                    } else {
+                        ItemDetail_LoadSup(product);
+                    }
+                    $("#supplierDetail").dropdown("refresh");
+                    $("#supplierDetail").dropdown("set selected", (StockType == 1 ? id : 0));
+                }
+            });
+    }
+    function ItemDetail_AddSupplier(id) {
+        if (id && id != 0) {
+            WareHouse_LoadSupplier(id);
+        }
+    }
+    //#endregion
+
+    //#region // Item
+    function ItemDetail_Refresh() {
+        $('#productDetail').dropdown('clear');
+        $('#productUnit').dropdown('clear');
+        $('#supplierDetail').dropdown('clear');
+        $('#PackageNumber').val('');
+        $('#ExpiredDay').val('');
+        $('#noteProduct').val('');
+
+        $('#Pro_DiscountedAmount').divide();
+        $('#Pro_DiscountedAmount').val(0);
+        $('#Pro_ItemAmount').divide();
+        $('#Pro_ItemAmount').val(0);
+        $('#Pro_IniAmount').divide();
+        $('#Pro_IniAmount').val(0);
+        $('#Pro_Discount').divide();
+        $('#Pro_Discount').val(0);
+
+        $('#DiscountAmount').dropdown('refresh');
+        $('#DiscountAmount').dropdown('set value', 1);
+        $('#numberProduct').val(0);
+    }
+    function ItemDetail_DeleteRow(idProduct) {
+        delete product_selected[idProduct];
+        $('#row_' + idProduct).remove();
+        WareHouse_UpdateInfo();
+    }
+    function ItemDetail_EditRow(id) {
+        Flag_Ware = 0;
+        let item = product_selected[id];
+        $("#PackageNumber").val(item.packageNumber);
+        $("#productDetail").dropdown("refresh");
+        $("#productDetail").dropdown("set selected", item.idProduct);
+        $("#productUnit").dropdown("refresh");
+        $("#productUnit").dropdown("set selected", item.UnitCountID);
+        $('#ExpiredDay').val((item.ExpiredDay.includes('1900')) ? '' : item.ExpiredDay);
+        $("#numberProduct").val(item.Number);
+        $("#Pro_DiscountedAmount").val(StockType == 1 ? item.Amount : 0);
+        $("#noteProduct").val(item.Note);
+        $("#supplierDetail").dropdown("refresh");
+        $("#supplierDetail").dropdown("set selected", (StockType == 1 ? item.SupplierID : 0));
+        $("#Pro_ItemAmount").val(item.UnitPrice);
+        $("#Pro_IniAmount").val(item.IniAmount);
+        $("#DiscountAmount").dropdown("refresh");
+        $("#DiscountAmount").dropdown("set selected", ((item.DiscountPer == 0 && item.DiscountAmount != 0) ? 2 : 1));
+        $("#Pro_Discount").val((item.DiscountPer == 0 && item.DiscountAmount != 0) ? item.DiscountAmount : item.DiscountPer);
+        $('.productRow').removeClass('editting');
+        $('#row_' + id).addClass('editting');
+        Flag_Ware = 1;
+    }
+    function ItemDetail_Save() {
+        document.getElementById("textShowMessage").innerHTML = "";
+        let packageNumber = $('#PackageNumber').val() ? ($('#PackageNumber').val()).replace(/[^a-zA-Z0-9]/g, '').trim() : "";
+        let product = Number($('#productDetail').dropdown('get value')) ? Number($('#productDetail').dropdown('get value')) : 0;
+        let supplier = Number($('#supplierDetail').dropdown('get value')) ? Number($('#supplierDetail').dropdown('get value')) : 0;
+        let productDetailUnit = Number($('#productUnit').dropdown('get value')) ? Number($('#productUnit').dropdown('get value')) : 0;
+        let numberProduct = $('#numberProduct').val() ? $('#numberProduct').val() : 0;
+        let Pro_ItemAmount = $('#Pro_ItemAmount').val() ? $('#Pro_ItemAmount').val() : 0;
+        let Pro_IniAmount = $('#Pro_IniAmount').val() ? $('#Pro_IniAmount').val() : 0;
+        let Pro_Discount = $('#Pro_Discount').val() ? $('#Pro_Discount').val() : 0;
+        let DiscountType = Number($('#DiscountAmount').dropdown('get value')) ? Number($('#DiscountAmount').dropdown('get value')) : 0;
+
+        let Pro_DiscountedAmount = $('#Pro_DiscountedAmount').val() ? $('#Pro_DiscountedAmount').val() : 0;
+        let noteProduct = $('#noteProduct').val() ? $('#noteProduct').val() : '';
+        let expiredDay = $('#ExpiredDay').val() ? $('#ExpiredDay').val() : '01-01-1900';
+        //let standardUnit = 0;
+        //let standardNumber = 0;
+
+        //#region //Validate
+        let isError = 0;
+        if (!$.isNumeric(numberProduct) || Number(numberProduct) < vtth_range_min || Number(numberProduct) > vtth_range_max) {
+            $('#numberProduct').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#numberProduct').closest('.field').removeClass('error')
+
+        //if (!$('#supplierDetail').is(":hidden") && supplier == 0) {
+        //    $('#supplierDetail').addClass('errorWare')
+        //    isError = 1;
+        //}
+        //else $('#supplierDetail').removeClass('errorWare')
+        if (product == 0) {
+            $('#productDetail').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#productDetail').closest('.field').removeClass('error')
+        if (productDetailUnit == 0) {
+            $('#productUnit').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#productUnit').closest('.field').removeClass('error')
+        let isProductExist = 0;
+        let keyProductExist = 0;
+        for ([key, value] of Object.entries(product_selected)) {
+            if (value.idProduct == product && value.packageNumber == packageNumber) {
+                isProductExist = 1;
+                keyProductExist = [key];
+                delete product_selected[key];
+                break;
+            }
+        }
+        //#endregion
+
+        if (isError == 0) {
+            document.getElementById("textShowMessage").innerHTML = "";
+            document.getElementById("textShowMessageMaster").innerHTML = ""
+            var element = {};
+            let _id = (new Date()).getTime();
+            element.id = _id;
+            element.packageNumber = packageNumber;
+            element.idProduct = product;
+            element.SupplierID = (StockType == 1) ? supplier : 0;
+            element.UnitCountID = productDetailUnit;
+            element.NameProduct = $('#productDetail').dropdown('get text');
+            element.NameSupplier = $('#supplierDetail').dropdown('get value') != "" ? $('#supplierDetail').dropdown('get text') : "";
+            element.NameUnit = $('#productUnit').dropdown('get text');
+            element.Number = Number(numberProduct).toString();
+            element.Amount = StockType == 1 ? Pro_DiscountedAmount : 0;
+            element.Note = noteProduct;
+            element.state = "1";
+            element.idDetail = "0";
+            element.ExpiredDay = expiredDay;
+            element.IniAmount = Pro_IniAmount;
+            element.DiscountAmount = (DiscountType == 1) ? (Math.round((Pro_Discount * Pro_IniAmount / 100) * 100) / 100) : Pro_Discount;
+            element.DiscountPer = (DiscountType == 1) ? Pro_Discount : 0;
+            element.UnitPrice = Pro_ItemAmount;
+
+            product_selected[_id] = element;
+
+            if (isProductExist == 1) {
+                $('#row_' + keyProductExist).remove();
+            }
+            //ItemDetail_Render(product, element, "dtContentDetailBody");
+            ItemDetail_Render(_id, element, "StockProductBody");
+            WareHouse_UpdateInfo();
+            ItemDetail_Refresh();
+
+            $('#row_' + _id).addClass("more");
+            setTimeout(function () {
+                $('#row_' + _id).removeClass("more")
+            }, 1000)
+        }
+        else {
+            document.getElementById("textShowMessage").innerHTML = "Kiểm tra dữ liệu";
+        }
+        return false;
+    }
+    function ItemDetail_DetectUnit() {
+        ItemDetail_LoadUnit();
+        return false;
+    }
+    function ItemDetail_LoadUnit() {
+        let product = Number($('#productDetail').dropdown('get value')) ? Number($('#productDetail').dropdown('get value')) : 0;
+        let data = ItemDetail_LoadUnitAction(product, data_product, data_productunit)
+        if (data != undefined && data != null && data.length != 0) {
+            Load_Combo(data, "cbbproductUnit", true);
+
+            $("#productUnit").dropdown("refresh");
+            $("#productUnit").dropdown("set selected", Number(data[0].ID));
+        }
+        ItemDetail_LoadSup(product);
+        return false;
+    }
+    function ItemDetail_LoadUnitAction(idProduct, products, unitproduct) {
+
+        let _data = [];
+        let pro = products.filter(word => word["ID"] == idProduct);
+        if (pro && pro.length > 0) {
+            _data.push({ "ID": pro[0].UnitID, "Name": pro[0].UnitName });
+            let unit = unitproduct.filter(word => word["ProductID"] == idProduct);
+            if (unit != undefined && unit.length > 0) {
+                for (let i = 0; i < unit.length; i++) {
+                    _data.push({ "ID": unit[i].UnitChange, "Name": unit[i].UnitChangeName });
+                }
+            }
+        }
+        return _data;
+    }
+    function ItemDetail_LoadSup(ProductID) {
+        ///supplier
+        let isSupplier = 0;
+        data_supplier.sort(function (a, b) {
+            if (a.TokenMaterial.includes(ProductID.toString())) {
+                a.Name = '<span style="color: #0288d1;">' + a.NameString + '</span>';
+                isSupplier = 1;
+                return -1;
+            } else {
+                a.Name = a.NameString;
+            }
+            if (b.TokenMaterial.includes(ProductID.toString())) {
+                b.Name = '<span style="color: #0288d1;">' + b.NameString + '</span>';
+                isSupplier = 1;
+                return 1;
+            } else {
+                b.Name = b.NameString;
+            }
+            return 0;
+        });
+
+        if (data_supplier.length > 0) {
+            Load_Combo(data_supplier, "cbbsupplierDetail", false);
+            if (isSupplier == 1) {
+                $("#supplierDetail").dropdown("refresh");
+                $("#supplierDetail").dropdown("set selected", Number(data_supplier[0].ID));
+            }
+        }
+    }
+    function ItemDetail_OnChangeDiscount() {
+        if (Flag_Ware == 1) {
+            Flag_Ware = 0;
+            let IniAmount = $('#Pro_IniAmount').val() ? $('#Pro_IniAmount').val() : 0;
+            let type = Number($('#DiscountAmount').dropdown('get value')) ? Number($('#DiscountAmount').dropdown('get value')) : 0;
+            if (!isNaN($('#Pro_Discount').val()) || $('#Pro_Discount').val() == '') {
+                let value = Number($('#Pro_Discount').val() ? $('#Pro_Discount').val() : 0);
+                if (type == 1 && (value > 100 || value < 0)) {
+                    $('#Pro_Discount').val(0);
+                }
+                if (type == 2 && (value > IniAmount || value < 0)) {
+                    $('#Pro_Discount').val(0);
+                }
+            }
+            else {
+                $('#Pro_Discount').val(0);
+            }
+            Flag_Ware = 1;
+            ItemDetail_UpdateAmount();
+        }
+    }
+    function ItemDetail_OnChangeUnit() {
+        if (Flag_Ware == 1) {
+            Flag_Ware = 0;
+            let item_price = 0
+            let unitID = Number($('#productUnit').dropdown('get value')) ? Number($('#productUnit').dropdown('get value')) : 0;
+            let productID = Number($('#productDetail').dropdown('get value')) ? Number($('#productDetail').dropdown('get value')) : 0;
+            let data_p = data_product.filter(word => word["ID"] == productID)
+            if (data_p && data_p.length > 0) {
+                let numberChange = 1;
+                let unitstandard = Number(data_p[0]["UnitID"])
+                if (unitstandard != unitID) {
+                    let unit_p = data_productunit.filter(word => word["UnitChange"] == unitID && word["ProductID"] == productID)
+                    if (unit_p && unit_p.length > 0) {
+                        numberChange = unit_p[0]["Number"];
+                        item_price = data_p[0]["Cost_Price"] * numberChange;
+                    }
+                }
+                else item_price = data_p[0]["Cost_Price"];
+            }
+            $('#Pro_ItemAmount').val(Math.round(item_price * 100) / 100);
+            Flag_Ware = 1;
+            ItemDetail_UpdateAmount();
+        }
+    }
+    function ItemDetail_UpdateAmount() {
+        if (Flag_Ware == 1) {
+            Flag_Ware = 0;
+            let pridisconted = 0;
+            let total_price = 0; number_discount = 0;
+
+            let numberProduct = $('#numberProduct').val() ? $('#numberProduct').val() : 0;
+            let item_price = $('#Pro_ItemAmount').val() ? $('#Pro_ItemAmount').val() : 0;
+            total_price = item_price * numberProduct;
+            let discountValue = $('#Pro_Discount').val() ? $('#Pro_Discount').val() : 0;
+            let discountType = Number($('#DiscountAmount').dropdown('get value')) ? Number($('#DiscountAmount').dropdown('get value')) : 0;
+            let discountAmount = 0;
+
+            if (discountType == 1) {
+                discountAmount = (total_price * discountValue) / 100;
+            }
+            else {
+                discountAmount = discountValue;
+            }
+            pridisconted = total_price - discountAmount;
+            $('#Pro_IniAmount').val(Math.round(total_price * 100) / 100);
+            $('#Pro_DiscountedAmount').val(Math.round(pridisconted * 100) / 100);
+            Flag_Ware = 1;
+        }
+    }
+
+
+
+    function ItemDetail_Render(key, item, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let promotion = '', supnote = '';
+            //if (StockType == 1 && item.Amount != 0 && item.IniAmount != 0 && item.IniAmount != item.Amount) {
+            //    let ti_ = formatNumber(item.IniAmount) + ' - ' + formatNumber(item.DiscountAmount)
+            //        + ((item.DiscountPer != 0) ? (' [ ' + Number(item.DiscountPer) + ' % ] ') : '');
+            //    promotion = '<i title="' + ti_ + '" class="promotion hoverpopup vtt-icon vttech-icon-installment"></i>'
+            //}
+            //if (StockType == 1 && item.NameSupplier != '') supnote = '<span class="hoverpopup" title="' + item.NameSupplier + '">' + item.NameSupplier + '</span>';
+            //else supnote = '<span>' + item.Note + '</span>';
+            
+            //let tr =
+            //    '<div class="d-none">' + key + '</div>'
+            //    + '<div class="icon icon-shape icon-sm me-2 ms-0 bg-gradient-dark shadow text-center col-icon-sm mt-2" >'
+            //    + '<h6 class="mt-2 text-white vt-numbers-order"></h6>'
+            //    + '</div >'
+            //    + '<div class="flex-grow-1 my-auto">'
+            //    + ((item.packageNumber != "") ? '<h6 class="fw-bold mb-0 text-sm  text-uppercase ellipsis_one_line"><i class="fa fa-archive me-2" aria-hidden="true"></i>' + item.packageNumber + '</h6></br>' : "")
+            //    //+ '<h6 class="mb-0 text-sm ellipsis_one_line">' + item.NameProduct + '</h6></br>'
+
+            //    + ((EditButton == 1)
+            //        ? ('<a class="mb-0 text-sm ellipsis_one_line fw-bold cursor-pointer buttonEditClass border-bottom border-primary">' + item.NameProduct + '</a></br>')
+            //        : ('<h6 class="mb-0 text-sm ellipsis_one_line">' + item.NameProduct + '</h6></br>'))
+            //    + '<span class="text-xs mb-0 px-1 bg-gradient-warning text-white rounded me-1">x' + item.Number + ' ' + item.NameUnit + '</span>'
+            //    + ((StockType == 1) ? '<span class="text-xs mb-0 px-1 bg-gradient-success text-white rounded"><span class="amount">' + formatNumber(item.Amount) + promotion + '</span></span>' : '')
+            //    //+ '<span class="text-xs mb-0 px-1 bg-gradient-success text-white rounded">' + ((StockType == 1) ? ('<span class="amount">' + formatNumber(item.Amount) + promotion + '</span>') : '') + '</span>'
+            //    + '</div>'
+            //    + '<div>'
+            //    + ((EditButton == 1)
+            //        ? '<button title="Remove" class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-cancel-01 text-danger"></i></button>'
+            //        : '')
+            //    //+ ItemDetail_Render_Buttons(EditButton)
+            //    + '</div>'
+            //tr = '<li id="row_' + key + '" class="d-flex mt-1 productRow vt-numbers">' + tr + '</li>'
+
+
+            let tr = '<td class="d-none">' + key + '</td>'
+                + '<td class="vt-number-order text-center"></td>'
+                + '<td>'
+                + ((item.packageNumber != "") ? '<h6 class="fw-bold mb-0 text-sm  text-uppercase ellipsis_one_line"><i class="fa fa-archive me-2" aria-hidden="true"></i>' + item.packageNumber + '</h6></br>' : "")
+                + ((EditButton == 1)
+                    ? ('<a class="mb-0 text-sm ellipsis_one_line fw-bold cursor-pointer buttonEditClass border-bottom border-primary">' + item.NameProduct + '</a>')
+                    : ('<h6 class="mb-0 text-sm ellipsis_one_line">' + item.NameProduct + '</h6>'))
+                + ((StockType == 1 && item.NameSupplier != '') ? '<p class="text-dark text-xs mb-0 mt-1">' + item.NameSupplier + '</p>' : '')
+                + '</td>'
+               
+                + '<td>'
+                + '<span class="text-xs mb-0 px-1 bg-gradient-warning text-white rounded me-1 text-nowrap">x' + item.Number + ' ' + item.NameUnit + '</span>'
+                + ((StockType == 1) ? '<span class="text-xs mb-0 px-1 bg-gradient-success text-white rounded text-nowrap"><span class="amount">' + formatNumber(item.Amount) + promotion + '</span></span>' : '')
+                + '<span class="text-dark text-xs d-block">' + item.Note + '</span>'
+                + '</td>'
+                + (((EditButton == 1) && (ViewDetail == 0))
+                    ? '<td><button title="Remove" class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-cancel-01 text-danger"></i></button></td>'
+                    : '')
+            tr = '<tr id="row_' + key + '" class="productRow vt-number">' + tr + '</tr>'
+            document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+        }
+
+    }
+    function ItemDetail_Render_Buttons(isEditButton) {
+        let buttons = [];
+        if (isEditButton == 1) {
+            buttons.push('<button title="Edit" class="buttonGrid"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>')
+            buttons.push('<button title="Delete" class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+        }
+        return Render_Button_Grid(buttons);
+    }
+    function ItemDetail_RenderProductList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+
+                    let tr = '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td ><div class="ellipsis_one_line">' + item.Name + '</div></td>'
+                        + '<td class="text-center">0</td>'
+                    stringContent = stringContent + '<tr class="itemProduct vt-number cursor-pointer" role="row" data-id="' + item.ID + '">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    //#endregion
+</script>
+
+<script src="/js/main.js" async></script>
+<script src="/js/customjs/custom-validation.js"></script>
+<style type="text/css">
+    .wareoption {
+        display: none;
+    }
+
+    #dtContentDetailBody .number {
+        color: #000d17;
+        text-transform: lowercase;
+        background: #fff1e8;
+        display: inline-block;
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+
+    #dtContentDetailBody .unit {
+        padding: 2px;
+        color: #000d17;
+        text-transform: lowercase;
+        background: #fff1e8;
+        display: inline;
+        padding-right: 8px;
+    }
+
+    #dtContentDetailBody .amount {
+        padding: 5px;
+        color: #000d17;
+        text-transform: lowercase;
+        background: #e9ffee;
+        margin-right: 5px;
+    }
+    /*#dtContentDetailBody .number {
+                    color: #000d17;
+                    text-transform: lowercase;
+                    background: #fff1e8;
+                    display: inline-block;
+                    padding-left: 7px;
+                    padding-right: 7px;
+                }
+
+                #dtContentDetailBody .unit {
+                    padding: 2px;
+                    color: #000d17;
+                    text-transform: lowercase;
+                    background: #fff1e8;
+                    display: inline;
+                    padding-right: 8px;
+                }
+
+                #dtContentDetailBody .amount {
+                    padding: 5px;
+                    color: #000d17;
+                    text-transform: lowercase;
+                    background: #e9ffee;
+                    margin-right: 5px;
+                }
+
+                #dtContentDetailBody .sup {
+                    max-width: 120px;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                }
+
+                #dtContentDetailBody .promotion {
+                    font-size: 10px;
+                    color: red;
+                }
+
+                #dtContentDetailBody .infoproduct {
+                    overflow: hidden;
+                    height: 20px;
+                    line-height: 20px;
+                }
+
+                #txtDetailCode {
+                    float: right;
+                    color: #000000;
+                    font-size: 15px;
+                    padding-right: 5px;
+                    font-weight: 600;
+                }
+
+                .errorWare {
+                    background: rgb(255 216 216) !important;
+                }
+
+                .errormaster {
+                    border: 1px solid #fd9d9d !important;
+                }
+
+                .editting {
+                    background: #29b87e3b;
+                }
+
+                .productRow {
+                    counter-increment: number-sections;
+                }
+
+                    .productRow .sections:before {
+                        content: counter(number-sections)
+                    }
+
+                #detail_Item.hidden {
+                    display: none;
+                }
+
+                #detail_Item {
+                    z-index: 11;
+                }*/
+</style>
+
+
+<style>
+
+    .promotion {
+        font-size: 10px;
+        color: red;
+    }
+
+    #ProductItem.border-active {
+        animation: spin 1s linear infinite alternate;
+    }
+
+    .itemProduct {
+        transition: 0.2s all;
+    }
+
+        .itemProduct:hover {
+            background-color: var(--bs-blue);
+        }
+
+    @@media only screen and (max-width:767px) {
+        #StockProductList {
+            order: 2;
+        }
+    }
+
+    @@keyframes spin {
+        from {
+            background-color: white;
+        }
+
+        to {
+            background-color: #ffe9e9;
+        }
+    }
+</style>

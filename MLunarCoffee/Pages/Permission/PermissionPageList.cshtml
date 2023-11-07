@@ -1,0 +1,173 @@
+﻿@page
+@model SourceMain.Pages.Permission.PermissionPageListModel
+@{ Layout=null;
+}
+
+<div class="sixteen wide tablet ten wide computer column">
+    <div class="ui segments" style="background-color: white">
+        <div class="ui segment" style="border: none; box-shadow: none;height: 110px">
+            <h2 class="ui center aligned header" style="padding-top: 10px; font-family: 'Times New Roman'">
+                @Local["Danh sách màn hình"]
+                <div class="sub header" style="font-family: 'Times New Roman'">@Local["Chỉ được xóa khi màn hình chưa phân quyền"]</div>
+            </h2>
+            <button class="ui teal button" data-value="fade up" onclick="return AddNewPermissionPage()">@Local["Thêm mới"]</button>
+            <div style="float: right; width: 200px">
+                <div class="ui fluid search selection dropdown" id="PermissionPageGroup" onchange="LoadPermissionPageListAjax()">
+                    <input type="hidden" name="branch" />
+                    <input class="search" autocomplete="off" tabindex="0" />
+                    <div class="default text">@Local["Nhóm trang"]</div>
+                    <div id="cbbPermissionPageGroup" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui segment" style="border: none;">
+            <div class="ui grid dataTables_wrapper  no-footer">
+                <div class="sixteen wide column" style="padding-bottom: 1rem;">
+                    <table id="dtContentPerPageList" class="ui compact selectable striped celled table tablet stackable dataTable no-footer" role="grid" aria-describedby="data_table_info" style="width: 100%;">
+                        <thead>
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th style="text-align: center; width: 25px;">@Local["#"]</th>
+                                <th style="text-align: center">@Local["Tên màn hình"]</th>
+                                <th style="text-align: center">@Local["Giá trị"] (*)</th>
+                                <th style="text-align: center">@Local["Nhóm màn hình"]</th>
+                                <th style="text-align: center">@Local["Ghi chú"]</th>
+                                <th style="text-align: center">@Local["Ngày tạo"]</th>
+                                <th style="text-align: center">@Local["Người tạo"]</th>
+                                <th style="text-align: center" width="50px">@Local["Sửa"]</th>
+                                <th style="text-align: center" width="50px">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentPerPageListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function LoadPermissionPageListAjax() {
+        AjaxLoad(url = "/Permission/PermissionPageList/?handler=LoadData"
+            , data = { }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                var groupid = Number($('#PermissionPageGroup').dropdown('get value'))
+                    ? Number($('#PermissionPageGroup').dropdown('get value'))
+                    : 0;
+                data = data.filter(word => word["GroupID"] === groupid);
+
+                RenderPerPageList(data, "dtContentPerPageListBody");
+                $('#dtContentPerPageList tbody').on('click', '.buttonEditClass', function () {
+                    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                    EditPermissionPage(ID);
+                });
+                $('#dtContentPerPageList tbody').on('click', '.buttonDeleteClass', function () {
+                    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                    DeletePermissionPage(ID)
+                });
+            });
+        //GetDataPermissionPageList("/Permission/PermissionPageList/LoadData", function (data) {
+        //    var groupid = Number($('#PermissionPageGroup').dropdown('get value'))
+        //        ? Number($('#PermissionPageGroup').dropdown('get value'))
+        //        : 0;
+        //    data = data.filter(word => word["GroupID"] === groupid);
+
+        //    RenderPerPageList(data, "dtContentPerPageListBody");
+        //    $('#dtContentPerPageList tbody').on('click', '.buttonEditClass', function () {
+        //        let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //        EditPermissionPage(ID);
+        //    });
+        //    $('#dtContentPerPageList tbody').on('click', '.buttonDeleteClass', function () {
+        //        let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //        DeletePermissionPage(ID)
+        //    });
+        //});
+    }
+    function RenderPerPageList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td>' + item.PageName + '</td>'
+                        + '<td>' + item.PageValue + '</td>'
+                        + '<td>' + item.GroupName + '</td>'
+                        + '<td>' + item.Note + '</td>'
+                        + '<td>' + item.CreatedString + '</td>'
+                        + '<td>' + item.CreateName + '</td>'
+                        + ((item.EditButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button></td>')
+                            : '<td></td>')
+                        + ((item.DeleteButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function DeletePermissionPage(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeletePermissionPage(id) }, function () { });
+
+    }
+    function ExecuteDeletePermissionPage(id) {
+        AjaxLoad(url = "/Permission/PermissionPageList/?handler=DeleteItem"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadPermissionPageListAjax();
+                } else {
+                    notiError("@Local["Không thể xóa vui lòng kiểm tra lại"]");
+                }
+            });
+    }
+
+    function AddNewPermissionPage() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionPageDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EditPermissionPage(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionPageDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    $(document).ready(function () {
+        AjaxLoad(url = "/Permission/PermissionPageList/?handler=LoadComboMain"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let dataGroupPage = JSON.parse(result);
+                Load_Combo(dataGroupPage, "cbbPermissionPageGroup", true);
+                $("#PermissionPageGroup ").dropdown("refresh");
+                $("#PermissionPageGroup").dropdown("set selected", Number(dataGroupPage[0].ID));
+            });
+
+    });
+</script>
+
+<script>js_require('/assests/dist/semantic.min.js');</script>
+<script>js_require('/js/comon/load_datasource.js');</script>
+
+

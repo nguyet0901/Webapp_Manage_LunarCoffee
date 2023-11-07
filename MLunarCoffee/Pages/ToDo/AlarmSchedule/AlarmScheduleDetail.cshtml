@@ -1,0 +1,367 @@
+﻿@page
+@model MLunarCoffee.Pages.ToDo.AlarmSchedule.AlarmScheduleDetailModel
+@{
+    Layout = null;
+}
+
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<!-- #region POPUP -->
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <!--Master-->
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <!-- #re0gion header -->
+                                <h6 class="mb-0">Notify Detail</h6>
+                                <p class="text-sm mb-0">Some text of detail sub</p>
+                                <!-- #endregion -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-3 pt-2 form3" id="form3">
+                    <!-- #region control execute-->
+                    <div class="row px-2">
+                        <div class="field col-12 p-1">
+                            <label>Title *</label>
+                            <input id="AS_Detail_Title" class="form-control" name="name" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>Content *</label>
+                            <textarea id="AS_Detail_Content" class="form-control" name="appointment" rows="4"></textarea>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>Receiver</label>
+                            <div class="ui fluid search selection dropdown form-control" id="AS_Detail_Employee">
+                                <input type="hidden" name="doctor1" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">Receiver</div>
+                                <div id="AS_Detail_Employee_Cbb" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- #endregion -->
+                    <!-- #region control execute-->
+                    <div class="row px-2">
+                        <div class="field col-4 p-1" id="AS_Detail_DivTime">
+                            <label>Hours</label>
+                            <input id="AS_Detail_Time" class="form-control text-md flatpickr" name="date" type="text" placeholder="" />
+                        </div>
+                        <div class="field col-4 p-1" id="AS_Detail_DivTime_Frame">
+                            <label>Time Frame</label>
+                            <div class="ui fluid search selection dropdown form-control" id="AS_Detail_Time_Frame" onchange="AS_Detail_Time_Change();">
+                                <input type="hidden" name="type" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="AS_Detail_Time_Frame_Cbb" class="menu transition hidden" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-4 p-1" id="AS_Detail_DivDay">
+                            <label>Date</label>
+                            <input id="dateDay" class="form-control flatpickr" type="text" placeholder="Ngày" />
+                        </div>
+                        <div class="field col-4 p-1" id="AS_Detail_DivDay_Week">
+                            <label>Days Of Week</label>
+                            <div class="ui fluid search selection dropdown form-control" id="AS_Detail_DayWeek" onchange="AS_Detail_Time_Change();">
+                                <input type="hidden" name="type" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="AS_Detail_DayWeek_Cbb" class="menu transition hidden" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- #endregion -->
+                </div>
+            </div>
+            <!-- #region button save and text show message-->
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+                        <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return AS_Detail_Execute()">Save</button>
+                    </div>
+                </div>
+            </div>
+            <!-- #endregion -->
+        </div>
+    </div>
+</div>
+<!-- #endregion POPUP -->
+
+
+<script type="text/javascript">
+    var CurrentID = "@Model.CurrentID"
+    var CurrentType = "@Model.CurrentType"
+    $(document).ready(function () {
+        AS_Detail_LoadCombo();
+
+        let current_EmployeeID = (@Model.Current_EmployeeID);
+        $("#AS_Detail_Employee").dropdown("set selected", current_EmployeeID);
+        $("#AS_Detail_Time").flatpickr({
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            defaultDate: new Date().getTime()
+        });
+        if (CurrentType != 0) {
+            $('#AS_Detail_Time_Frame').dropdown("set selected", CurrentType);
+            $('#AS_Detail_Time_Frame').children().prop('disabled', true);
+            $('#AS_Detail_Time_Frame').children().css('color', '#777777');
+        } else {
+            $('#AS_Detail_Time_Frame').dropdown("set selected", 1);
+            $('#AS_Detail_DivTime').hide();
+            $('#AS_Detail_DivTime_Frame').hide();
+            //$('#divEmployee').hide();
+            $('#AS_Detail_DivDay').hide();
+            $('#AS_Detail_DivDay_Week').hide();
+        }
+        //debugger
+        if (CurrentID != "0") {
+            AS_Detail_Load(CurrentID);
+        }
+        $('.ui.dropdown .remove.icon').on('click', function (e) {
+            $(this).parent('.dropdown').dropdown('clear');
+            e.stopPropagation();
+        });
+    });
+    function AS_Detail_LoadCombo() {
+        AjaxLoad(url = "/Todo/AlarmSchedule/AlarmScheduleDetail/?handler=LoadInitialize"
+            , data = {}, async = false, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+
+                let dataTypeTime = data.dataTypeTime;
+                Load_Combo(dataTypeTime, "AS_Detail_Time_Frame_Cbb", true);
+
+                let dataDayWeek = data.dataDayWeek;
+                Load_Combo(dataDayWeek, "AS_Detail_DayWeek_Cbb", true);
+
+                let data_Employee = data.dataEmployee;
+                Load_Combo(data_Employee, "AS_Detail_Employee_Cbb", true);
+
+            });
+    }
+
+    function AS_Detail_Time_Change() {
+        $('#AS_Detail_DivDay').hide();
+        $('#AS_Detail_DivDay_Week').hide();
+        let min;
+        let max;
+        let date = new Date();
+        let id = Number($('#AS_Detail_Time_Frame').dropdown('get value')) ? Number($('#AS_Detail_Time_Frame').dropdown('get value')) : 0;
+        switch (id) {
+            case 1:
+                $('#AS_Detail_DivDay').show();
+                $("#dateDay").flatpickr({
+                    enableTime: false,
+                    mode: "single",
+                    minDate: "today",
+                    defaultDate: "today",
+                    dateFormat: "d-m-Y"
+                });
+                break;
+            case 3:
+                $("#AS_Detail_DayWeek").dropdown("set selected", (new Date().getDay() - 1));
+                $('#AS_Detail_DivDay_Week').show();
+                break;
+            case 4:
+                $('#AS_Detail_DivDay').show();
+                min = new Date(date.getFullYear(), date.getMonth(), 1);
+                max = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                $("#dateDay").flatpickr({
+                    enableTime: false,
+                    mode: "single",
+                    minDate: "today",
+                    minDate: min,
+                    maxDate: max,
+                    defaultDate: "today",
+                    dateFormat: "d"
+
+                });
+                break;
+            default:
+                break;
+        }
+    }
+    function AS_Detail_Load(CurrentID) {
+        AjaxLoad(url = "/Todo/AlarmSchedule/AlarmScheduleDetail/?handler=Loadata"
+            , data = { CurrentID: CurrentID}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    //debugger
+                    AS_Detail_Render(JSON.parse(result)[0]);
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function AS_Detail_Render(data) {
+
+        $('#AS_Detail_Title').val(data.title);
+        $('#AS_Detail_Content').val(data.content);
+        $("#AS_Detail_Time").flatpickr({
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            defaultDate: data.hour
+        });
+        $('#AS_Detail_Time_Frame').dropdown("set selected", data.type);
+        $("#AS_Detail_Employee").dropdown("set selected", data.empWork);
+        $('#AS_Detail_DivDay').hide();
+        let date = new Date();
+        let val;
+        switch (data.type) {
+            case 1:
+                val = new Date(data.date);
+                $('#AS_Detail_DivDay').show();
+                $("#dateDay").flatpickr({
+                    enableTime: false,
+                    mode: "single",
+                    dateFormat: "d-m-Y",
+                    defaultDate: val
+                });
+                break;
+            case 3:
+                $('#AS_Detail_DivDay_Week').show();
+                $('#AS_Detail_DayWeek').dropdown("set selected", data.dayofweek);
+                break;
+            case 4:
+                $('#AS_Detail_DivDay').show();
+                min = new Date(date.getFullYear(), date.getMonth(), 1);
+                max = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                val = new Date(date.getFullYear(), date.getMonth(), data.day);
+                $("#dateDay").flatpickr({
+                    enableTime: false,
+                    mode: "single",
+                    minDate: "today",
+                    minDate: min,
+                    maxDate: max,
+                    dateFormat: "d",
+                    defaultDate: val
+                });
+                break;
+            default:
+                break;
+        }
+    }
+    function AS_Detail_Execute() {
+        let title = $('#AS_Detail_Title').val();
+        let content = $('#AS_Detail_Content').val();
+        let hours = $('#AS_Detail_Time').val();
+        let typeTime = Number($('#AS_Detail_Time_Frame').dropdown('get value')) ? Number($('#AS_Detail_Time_Frame').dropdown('get value')) : 0;
+        let Employee = Number($('#AS_Detail_Employee').dropdown('get value')) ? Number($('#AS_Detail_Employee').dropdown('get value')) : 0;
+        let day = 0;
+        let dayWeek = 0;
+        let time = $('#dateDay').val();
+        let datenow = new Date();
+        switch (typeTime) {
+            case 2:
+                time = datenow.getFullYear() + '-' + (datenow.getMonth() + 1) + '-' + datenow.getDate();
+                break
+            case 3:
+                dayWeek = Number($('#AS_Detail_DayWeek').dropdown('get value')) != null ? Number($('#AS_Detail_DayWeek').dropdown('get value')) : -1;
+                time = datenow.getFullYear() + '-' + (datenow.getMonth() + 1) + '-' + datenow.getDate();
+                break
+            case 4:
+                day = time.split('-')[0];
+                time = datenow.getFullYear() + '-' + (datenow.getMonth() + 1) + '-' + datenow.getDate();
+                break;
+            default:
+                time = datenow.getFullYear() + '-' + (datenow.getMonth() + 1) + '-' + datenow.getDate();
+                break;
+        }
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            if (typeTime != 0) {
+                let isEx = 1;
+                switch (typeTime) {
+                    case 4:
+                        if (day == 0) {
+                            $("#dateDay").css('background', '#FFF6F6');
+                            $("#dateDay").css('border-color', '#E0B4B4');
+                            $("#dateDay").click(function () {
+                                $(this).css('background', '#FFF');
+                                $(this).css('border-color', 'rgba(34,36,38,.15)');
+                            })
+                            isEx = 0;
+                        }
+                        break;
+                    case 1:
+                        if (time == '') {
+                            $("#dateDay").css('background', '#FFF6F6');
+                            $("#dateDay").css('border-color', '#E0B4B4');
+                            $("#dateDay").click(function () {
+                                $(this).css('background', '#FFF');
+                                $(this).css('border-color', 'rgba(34,36,38,.15)');
+                            })
+                            isEx = 0;
+                        }
+                        break;
+                    case 3:
+                        if (dayWeek == -1) {
+                            $("#AS_Detail_DayWeek").css('background', '#FFF6F6');
+                            $("#AS_Detail_DayWeek").css('border-color', '#E0B4B4');
+                            $("#AS_Detail_DayWeek").click(function () {
+                                $(this).css('background', '#FFF');
+                                $(this).css('border-color', 'rgba(34,36,38,.15)');
+                            })
+                            isEx = 0;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if (isEx == 1) {
+                    AjaxLoad(url = "/Todo/AlarmSchedule/AlarmScheduleDetail/?handler=Execute"
+                        , data = {
+                            CurrentID: CurrentID,
+                            Title: title,
+                            content: content,
+                            Employee: Employee,
+                            data: JSON.stringify([{ "dayofweek": dayWeek, "type": typeTime, "hour": hours, "date": time.substring(0, 10), "day": day }])
+                        }, async = true, error = null
+                        , success = function (result) {
+                            debugger
+                            if (result != "0") {
+                                notiSuccess();
+                                if (CurrentType != 0) {
+                                    UpdateAlarmCookie(JSON.parse(result)[0], 1);
+                                }
+                                if (typeof LoadAlrmList_Scheduler == 'function' && $.isFunction(LoadAlrmList_Scheduler)) {
+                                    LoadAlrmList_Scheduler();
+                                }
+                                if (typeof RenderSchedulerAlrmByType == 'function' && $.isFunction(RenderSchedulerAlrmByType)) {
+                                    RenderSchedulerAlrmByType();
+                                }
+                                CloseModal();
+                            } else {
+                                notiError_SW();
+                            }
+                        });
+                }
+
+            } else {
+                $("#AS_Detail_Time_Frame").css('background', '#FFF6F6');
+                $("#AS_Detail_Time_Frame").css('border-color', '#E0B4B4');
+                $("#AS_Detail_Time_Frame").click(function () {
+                    $(this).css('background', '#FFF');
+                    $(this).css('border-color', 'rgba(34,36,38,.15)');
+                })
+            }
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

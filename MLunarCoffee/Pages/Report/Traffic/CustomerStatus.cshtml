@@ -1,0 +1,1308 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Traffic.CustomerStatusModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">         
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#TCS_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return TCS_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return TCS_Export()"></i>
+            </div>
+        </div> 
+    </div>
+
+    <div class="collapsesticky collapse show" id="TCS_GridArea">
+        <div class="card-body p-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="TCS_Grid">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="2">@Local["#"]</th>
+                            <th rowspan="2">@Local["Ngày"]</th>
+                            <th rowspan="2">@Local["Tổng lịch hẹn"]</th>
+                            <th rowspan="2">@Local["Thời gian"]</th>
+                            <th colspan="2">@Local["Checkin"]</th>
+                            <th colspan="2">@Local["Điều trị"]</th>
+                            <th colspan="2">@Local["Thu ngân"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th>@Local["Số lượng"]</th>
+                            <th class="TCS_clsMasterRow">@Local["Thời gian"] (@Local["Phút"])</th>
+                            <th>@Local["Số lượng"]</th>
+                            <th class="TCS_clsMasterRow">@Local["Thời gian"] (@Local["Phút"])</th>
+                            <th>@Local["Số lượng"]</th>
+                            <th>@Local["Thời gian"] (@Local["Phút"])</th>
+                        </tr>
+                    </thead>
+                    <tbody id="TCS_GridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="TCS_ScheDetail_Container" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p id="TCS_ScheDetail_Title" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right">
+                <div class="wrap">
+                    <div class="wrapblock">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                            <span id="TCS_ScheDetail_CurrentData">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="TCS_ScheDetail_TotalData">0</span>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#TCS_ScheDetail_ContainerTable" aria-expanded="true"></i>
+                        </div> 
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["In báo cáo"]">
+                            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); TCS_ScheDetail_PrintReport()"></i>
+                        </div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return TCS_ScheDetail_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return TCS_ScheDetail_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div> 
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custbirth" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày sinh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custgender" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Giới tính"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custaddress" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Địa chỉ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doctor2" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Bác sĩ"] 2</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doctor3" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Bác sĩ"] 3</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doctor4" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Bác sĩ"] 4</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="assistant2" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Kỹ thuật viên/phụ tá"] 2</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicecode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã dịch vụ"]</p>
+                        </li>
+
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="quantity" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số lượng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi tiết"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="paidperiod" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thanh toán trong kỳ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="treatdate" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày điều trị"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="content" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nội dung"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="TCS_ScheDetail_ContainerTable">
+        <div class="card-body p-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table class="table vt-table mb-0" id="TCS_ScheGridDetail">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 60px">#</th>
+                            <th rowspan="2" style="min-width: 100px">@Local["Ngày"]</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Mã khách hàng"]</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Khách hàng"]</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="custbirth">@Local["Ngày sinh"]</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="custgender">@Local["Giới tính"]</th>
+                            <th rowspan="2" style="min-width: 250px" data-name="custaddress">@Local["Địa chỉ"]</th>
+                            <th rowspan="2" style="min-width: 100px">@Local["Số lịch hẹn"]</th>
+                            <th rowspan="2" style="min-width: 100px">@Local["Trạng thái"]</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Bác sĩ"] 1</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="doctor2">@Local["Bác sĩ"] 2</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="doctor3">@Local["Bác sĩ"] 3</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="doctor4">@Local["Bác sĩ"] 4</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Kỹ thuật viên/phụ tá"] 1</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="assistant2">@Local["Kỹ thuật viên/phụ tá"] 2</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="servicecode">@Local["Mã dịch vụ"]</th>
+                            <th rowspan="2">@Local["Dịch vụ"]</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Giá dịch vụ"]</th>
+                            <th rowspan="2" data-name="quantity" style="min-width: 80px;">@Local["Số lượng"]</th>
+                            <th rowspan="2" data-name="detail" style="min-width:150px;">@Local["Chi tiết"]</th>
+                            <th rowspan="2" style="min-width: 150px">@Local["Đã thanh toán"]</th>
+                            <th rowspan="2" data-name="paidperiod" style="min-width: 150px">@Local["Thanh toán trong kỳ"]</th>
+                            <th rowspan="1" colspan="2" style="min-width: 150px" class="PerComplete">@Local["Tổng hoàn thành"]</th>
+                            <th rowspan="1" colspan="2" style="min-width: 150px" class="CompleteMoney">@Local["Hoàn thành"]</th>
+                            <th rowspan="2" style="min-width: 150px" class="TimeToTreat">@Local["Lần điều trị"]</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="treatdate">@Local["Ngày điều trị"]</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="content">@Local["Nội dung"]</th>
+                            <th rowspan="2" style="min-width: 150px" data-name="branch">@Local["Chi nhánh"]</th>
+                        </tr>
+                        <tr>
+                            <th style="min-width: 150px">@Local["Phần trăm"] %</th>
+                            <th style="min-width: 150px">@Local["Thành tiền"]</th>
+                            <th style="min-width: 150px">@Local["Phần trăm"] %</th>
+                            <th style="min-width: 150px">@Local["Thành tiền"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="TCS_ScheGridDetailBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return TCS_ScheDetail_RenderMore();">@Local["Xem thêm"]</button>
+        </div>
+    </div>
+</div>
+
+<div id="TCS_StatusDetail_Container" style="display:none;">
+    
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p id="TCS_StatusDetail_Title" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right">
+                <div class="wrap">
+                    <div class="wrapblock">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                            <span id="TCS_StatusDetail_CurrentData">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="TCS_StatusDetail_TotalData">0</span>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#TCS_StatusDetail_ContainerTable" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["In báo cáo"]">
+                            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); TCS_StatusDetail_PrintReport()"></i>
+                        </div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return TCS_StatusDetail_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return TCS_StatusDetail_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrapblock">
+                        <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colListsStatus">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colListsStatus" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="custbirth" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày sinh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="custgender" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Giới tính"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="custaddress" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Địa chỉ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="doctor" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Bác sĩ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="room" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Phòng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtooglestatus form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="collapsesticky collapse show" id="TCS_StatusDetail_ContainerTable">
+            <div class="card-body p-0 pt-0">
+                <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                    <table class="table vt-table mb-0" id="TCS_StatusGridDetail">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px">#</th>
+                                <th style="min-width: 100px">@Local["Ngày"]</th>
+                                <th style="min-width: 150px">@Local["Mã khách hàng"]</th>
+                                <th style="min-width: 150px">@Local["Khách hàng"]</th>
+                                <th style="min-width: 150px" data-name="custbirth">@Local["Ngày sinh"]</th>
+                                <th style="min-width: 150px" data-name="custgender">@Local["Giới tính"]</th>
+                                <th style="min-width: 250px" data-name="custaddress">@Local["Địa chỉ"]</th>
+                                <th style="min-width: 250px">@Local["Mã lịch hẹn"]</th>
+                                <th style="min-width: 250px">@Local["Thời gian lịch hẹn"]</th>
+                                <th style="min-width: 100px">@Local["Trạng thái"]</th>
+                                <th style="min-width: 100px">@Local["Thời gian"]</th>
+                                <th style="min-width: 150px">@Local["Chênh lệch"] (@Local["Phút"])</th>
+                                <th style="min-width: 150px" data-name="doctor">@Local["Bác sĩ"]</th>
+                                <th style="min-width: 150px" data-name="room">@Local["Phòng"]</th>
+                                <th style="min-width: 150px" data-name="branch">@Local["Chi nhánh"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="TCS_StatusGridDetailBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button id="TCS_btnStatusShowMore" class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return TCS_StatusDetail_RenderMore();">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+        </div>
+</div>
+
+<script type="text/javascript">
+    //#region //DECLARE - INIT
+    let xhrLoadList, xhrLoadDetail, xhrLoadStatusDetail;
+    let TCS_ScheDetail_DataSlice = [], TCS_ScheDetail_DataReport = [];
+    let TCS_ScheDetail_IndexData = 0;
+    let timeoutCountDetail;
+    let TCS_ScheDetail_shtable;
+
+    let TCS_StatusDetail_DataSlice = [], TCS_StatusDetail_DataReport = [];
+    let TCS_StatusDetail_IndexData = 0;
+    let timeoutCountStatusDetail;
+    let TCS_StatusDetail_shtable;
+
+    let TCS_numdatefrom = -1, TCS_custid = -1, TCS_appid=-1;
+    $(document).ready(function () {
+        ToolPopper();
+        TCS_LoadData();
+        TCS_ScheDetail_shtable = $("#TCS_ScheGridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+
+        TCS_StatusDetail_shtable = $("#TCS_StatusGridDetail").TableExpandColumn({
+            shtoogle: $('.shtooglestatus')
+        });
+        Checking_TabControl_Permission();
+    });
+    //#endregion
+
+    //#region //LOADDATA
+    function TCS_LoadData() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadList = AjaxLoad(url = "/Report/Traffic/CustomerStatus/?handler=Loadata"
+            , data = {
+                'branchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]" && result != "0") {
+                    let data = JSON.parse(result);
+                    TCS_Render(data, "TCS_GridBody");
+                } else if (result == "0") {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    //#endregion
+
+    //#region //RENDER
+    async function TCS_Render(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let trtotal = '';
+                    let totalApp = 0, totalTimeApp = 0, totalCheckin = 0, timeCheckin = 0, totalTreat = 0, timeTreat = 0, totalCash = 0, timeCash = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let dateRow = item.NumDateFrom != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(item.NumDateFrom)) : '';
+                        totalApp += item.TotalSchedule;
+                        totalTimeApp += item.TimeSchedule;
+                        totalCheckin += item.TotalCheckin;
+                        timeCheckin += item.CheckinTime;
+                        totalTreat += item.TotalTreat;
+                        timeTreat += item.TreatTime;
+                        totalCash += item.TotalCash;
+                        timeCash += item.CashTime;
+                        let tr =
+                            `<td class="vt-number-order"></td>
+                                    <td class="text-center buttonViewClass" data-type="0" style="max-width:110px;min-width:110px;">
+                                        <a href="#" class="border-1 border-primary border-bottom">
+                                            ${dateRow}
+                                        </a>
+                                    </td>
+                                    <td class="text-center">${formatNumber(item.TotalSchedule)}</td>
+                                    <td class="text-center TCS_clsMasterRow buttonViewClass" data-type="1" 
+                                          data-name="@Local["Lịch sử trạng thái"]"
+                                          data-status="0" data-istreat="0" data-iscash="0">
+                                      <a href="#" class="border-1  border-primary border-bottom"">
+                                          ${formatNumber(item.TimeSchedule)}
+                                      </a>
+                                    </td>
+                                    <td class="text-center ">${formatNumber(item.TotalCheckin)}</td>
+                                    <td class="text-center TCS_clsMasterRow buttonViewClass" data-type="1"
+                                          data-name="@Local["Lịch sử trạng thái"] - @Local["Checkin"]"
+                                          data-status="2" data-istreat="0" data-iscash="0">
+                                       <a href="#" class="border-1  border-primary border-bottom">
+                                          ${formatNumber(item.CheckinTime)}
+                                      </a>
+
+                                    </td>
+                                    <td class="text-center">${formatNumber(item.TotalTreat)}</td>
+                                    <td class="text-center TCS_clsMasterRow buttonViewClass" data-type="1"
+                                          data-name="@Local["Lịch sử trạng thái"] - @Local["Điều trị"]"
+                                          data-status="0" data-istreat="1" data-iscash="0">
+                                          <a href="#" class="border-1  border-primary border-bottom">
+                                              ${formatNumber(item.TreatTime)}
+                                      </a>
+                                    </td>
+                                    <td class="text-center">${formatNumber(item.TotalCash)}</td>
+                                    <td class="text-center TCS_clsMasterRow buttonViewClass" data-type="1"
+                                          data-name="@Local["Lịch sử trạng thái"] - @Local["Thu ngân"]"
+                                          data-status="0" data-istreat="0" data-iscash="1">
+                                      <a href="#" class="border-1  border-primary border-bottom">
+                                          ${formatNumber(item.CashTime)}
+                                      </a>
+                                    </td>`
+                        stringContent = stringContent + `<tr class="vt-number" role="row" data-date="${item.NumDateFrom}">` + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                `<td></td>
+                                     <td class="text-center buttonViewClass cursor-pointer" data-date="0"  data-type="0">
+                                        <a href="#" class="border-1 border-white border-bottom text-white">@Local["Tổng"]</a>
+                                     </td>
+                                     <td class="text-center">${formatNumber(totalApp)}</td>
+                                     <td class="text-center buttonViewClass cursor-pointer" data-type="1"
+                                              data-name="@Local["Lịch sử trạng thái"]"
+                                              data-status="0" data-istreat="0" data-iscash="0">
+                                          <a href="#" class="border-1 border-white border-bottom text-white">
+                                              ${formatNumber(totalTimeApp)}
+                                          </a>
+                                     </td>
+                                     <td class="text-center">${formatNumber(totalCheckin)}</td>
+                                     <td class="text-center buttonViewClass cursor-pointer" data-type="1"
+                                                  data-name="@Local["Lịch sử trạng thái"] - @Local["Checkin"]"
+                                              data-status="2" data-istreat="0" data-iscash="0">
+                                              <a href="#" class="border-1 border-white border-bottom text-white">
+                                              ${formatNumber(timeCheckin)}
+                                          </a>
+                                     </td>
+                                     <td class="text-center">${formatNumber(totalTreat)}</td>
+                                     <td class="text-center buttonViewClass cursor-pointer" data-type="1"
+                                              data-name="@Local["Lịch sử trạng thái"] - @Local["Điều trị"]"
+                                              data-status="0" data-istreat="1" data-iscash="0">
+                                          <a href="#" class="border-1 border-white border-bottom text-white">
+                                              ${formatNumber(timeTreat)}
+                                          </a>
+                                     </td>
+                                     <td class="text-center">${formatNumber(totalCash)}</td>
+                                     <td class="text-center buttonViewClass cursor-pointer" data-type="1"
+                                              data-name="@Local["Lịch sử trạng thái"] - @Local["Thu ngân"]"
+                                              data-status="0" data-istreat="0" data-iscash="1">
+                                          <a href="#" class="border-1 border-white border-bottom text-white">
+                                              ${formatNumber(timeCash)}
+                                          </a>
+                                     </td>`
+                                ;
+                            stringContent = stringContent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            TCS_Event();
+        })
+    }
+    //#endregion
+
+    //#region //EVENT
+    function TCS_Event() {
+        $("#TCS_GridBody .buttonViewClass").unbind('click').on("click", function () {
+            let $td =$(this).closest('td');
+            let numDateFrom = $(this).closest('tr').attr('data-date');
+            let type = $td.attr('data-type');
+            if (type == 0) {
+                $("#TCS_ScheDetail_Container").fadeIn('slow');
+                $("#TCS_StatusDetail_Container").hide();
+                $('html, body').animate({
+                    scrollTop: $("#TCS_ScheDetail_Container").offset().top
+                }, 300);
+                if (numDateFrom == "0") {
+                    let _dateFrom = "@Model._dateFrom";
+                    let _dateTo = "@Model._dateTo";
+                    $("#TCS_ScheDetail_Title").html(_dateFrom + ' to ' + _dateTo);
+                }
+                else {
+                    $("#TCS_ScheDetail_Title").html(ConvertYMDInt_ToDate(numDateFrom));
+                }
+                TCS_DetailLoad(numDateFrom);
+            }
+            else {
+                let name = $td.attr('data-name');
+                let status = $td.attr('data-status');
+                let istreat = $td.attr('data-istreat');
+                let iscash = $td.attr('data-iscash');
+
+                $("#TCS_StatusDetail_Container").fadeIn('slow');
+                 $("#TCS_ScheDetail_Container").hide();
+                $('html, body').animate({
+                    scrollTop: $("#TCS_StatusDetail_Container").offset().top
+                }, 300);
+                if (numDateFrom == "0") {
+                    let _dateFrom = "@Model._dateFrom";
+                    let _dateTo = "@Model._dateTo";
+                    $("#TCS_StatusDetail_Title").html(_dateFrom + ' to ' + _dateTo + ' ' + name);
+                }
+                else {
+                    $("#TCS_StatusDetail_Title").html(ConvertYMDInt_ToDate(numDateFrom) + ' ' + name);
+                }
+                TCS_StatusDetailLoad(numDateFrom, status, istreat, iscash);
+            }
+
+        })
+    }
+    //#endregion
+
+    //#region //LOADDETAIL
+    function TCS_DetailLoad(numDateFrom) {
+        TCS_ScheDetail_DataSlice = [], TCS_ScheDetail_DataReport = [];
+        TCS_ScheDetail_IndexData = 0;
+        $('#TCS_ScheDetail_TotalData').html(0);
+        $('#TCS_ScheDetail_CurrentData').html(0);
+        $(`#TCS_ScheGridDetailBody`).empty();
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadDetail = AjaxLoad(url = "/Report/Traffic/CustomerStatus/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'numDateFrom': numDateFrom,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    TCS_ScheDetail_DataReport = JSON.parse(JSON.stringify(data));
+                    TCS_ScheDetail_DataSlice = sliceIntoChunks(data, 500);
+                    $(`#TCS_ScheGridDetailBody`).empty();
+                    if (TCS_ScheDetail_DataSlice && TCS_ScheDetail_DataSlice.length != 0) {
+                        fnRenderBlock(TCS_ScheDetail_DataSlice[TCS_ScheDetail_IndexData], 'TCS_ScheGridDetailBody'
+                            , blocknum = 100
+                            , fnrender = TCS_ScheDetail_Render
+                            , fnsuccess = null
+                        );
+                    }
+                    Count_Up('TCS_ScheDetail_TotalData', TCS_ScheDetail_DataReport.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TCS_ScheDetail_RenderMore() {
+        TCS_ScheDetail_IndexData += 1;
+        if (TCS_ScheDetail_DataSlice && TCS_ScheDetail_DataSlice[TCS_ScheDetail_IndexData]) {
+            fnRenderBlock(TCS_ScheDetail_DataSlice[TCS_ScheDetail_IndexData], "TCS_ScheGridDetailBody"
+                , blocknum = 100
+                , fnrender = TCS_ScheDetail_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function TCS_ScheDetail_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let objCalPercent = TCS_ScheDetail_TreatRenderPercent(item);
+                            let doc1Name = RP_DataEmployee[item.DocID1] != undefined ? RP_DataEmployee[item.DocID1].Name : '';
+                            let doc2Name = RP_DataEmployee[item.DocID2] != undefined ? RP_DataEmployee[item.DocID2].Name : '';
+                            let doc3Name = RP_DataEmployee[item.DocID3] != undefined ? RP_DataEmployee[item.DocID3].Name : '';
+                            let doc4Name = RP_DataEmployee[item.DocID4] != undefined ? RP_DataEmployee[item.DocID4].Name : '';
+                            let assist1Name = RP_DataEmployee[item.Assistant1] != undefined && item.Assistant1 ? RP_DataEmployee[item.Assistant1].Name : '';
+                            let assist2Name = RP_DataEmployee[item.Assistant2] != undefined && item.Assistant2 ? RP_DataEmployee[item.Assistant2].Name : '';
+                            let branchName = RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '';
+                            let detail = TCS_ScheDetail_RenderSerDetail(item.TeethType, item.TeethChoosing, item.TreatIndex, item.TimeToTreatment);
+                            let tr = `
+                                                     <tr class="vt-number">
+                                                         <td class="vt-number-order"></td>
+                                                         <td>${item.NumDateFrom != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(item.NumDateFrom)) : ''}</td>
+                                                         <td>
+                                                             <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustCode != undefined ? item.CustCode : ''}</a>
+                                                         </td>
+                                                         <td>${item.CustName}</td>
+                                                         <td data-name="custbirth">${ConvertDateTimeUTC_DMY(item.CustBirth)}</td>
+                                                         <td data-name="custgender">${item.CustGender}</td>
+                                                         <td data-name="custaddress">${item.CustAddress}</td>
+                                                         <td>${formatNumber(item.TotalSchedule)}</td>
+                                                         <td>${item.IsCheckin == 1 ? '<span class="text-success">@Local["Đã đến"]</span>' : '<span class="text-secondary">@Local["Chưa đến"]</span>'}</td>
+                                                         <td>${doc1Name}</td>
+                                                         <td data-name="doctor2">${doc2Name}</td>
+                                                         <td data-name="doctor3">${doc3Name}</td>
+                                                         <td data-name="doctor4">${doc4Name}</td>
+                                                         <td>${assist1Name}</td>
+                                                         <td data-name="assistant2">${assist2Name}</td>
+                                                         <td data-name="servicecode">${item.ServiceCode}</td>
+                                                         <td>${item.ServiceName}</td>
+                                                         <td>${formatNumber(item.PriceService)}</td>
+                                                         <td data-name="quantity"> ${item.Quantity} </td>
+                                                         <td data-name="detail"> ${detail} </td>
+                                                         <td>${formatNumber(item.AmountPaid)}</td>
+                                                         <td data-name="paidperiod">${formatNumber(item.PaidPeriod)}</td>
+                                                         <td>${objCalPercent?.perCurrent}</td>
+                                                         <td>${formatNumber(objCalPercent?.completeAmount)}</td>
+                                                         <td>${sys_dencos_Main == 1 ? objCalPercent?.perNew : ''}</td>
+                                                         <td>${(sys_dencos_Main == 1 ? formatNumber(objCalPercent?.newAmount) : 0)}</td>
+                                                         <td class="TimeToTreat">${item.TreatedTime}/${item.TimeToTreatment}</td>
+                                                         <td data-name="treatdate">${ConvertDateTimeUTC_DMY(item.TreatDate)}</td>
+                                                         <td data-name="content">${item.ContentFollow}</td>
+                                                         <td data-name="branch">${branchName}</td>
+                                                     </tr>
+                                                     `;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+
+                }
+                TCS_ScheDetail_shtable.Refresh();
+                clearTimeout(timeoutCountDetail);
+                timeoutCountDetail = setTimeout(() => {
+                    Count_Up("TCS_ScheDetail_CurrentData", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+
+        })
+    }
+
+    function TCS_ScheDetail_TreatRenderPercent(item) {
+        let completeAmount, perCurrent = 0, newAmount = 0, perNew = 0;
+        if (sys_dencos_Main == 1) {
+            let TeethChoosing = item.TeethChoosing, Quantity = item.Quantity
+                , PercentNewDetail = item.PercentNewDetail, PercentCurentDetail = item.PercentCurentDetail
+                , Percent = item.Percent, PercentNew = item.PercentNew;
+            if (Percent == 0 && PercentNew == 0) {
+                if (TeethChoosing == '') {
+                    perNew = (Quantity == 0) ? 0 : PercentNewDetail;
+                    perCurrent = (Quantity == 0) ? 0 : PercentCurentDetail;
+                }
+                else {
+                    perNew = (Quantity == 0) ? 0 : PercentNewDetail / Quantity;
+                    perCurrent = (Quantity == 0) ? 0 : PercentCurentDetail / Quantity;
+                }
+            }
+            else { perNew = PercentNew; perCurrent = Percent };
+            perNew = (Math.round(perNew * 100) / 100);
+            perCurrent = (Math.round(perCurrent * 100) / 100);
+        }
+        else {
+            perCurrent = (Number(item.TimeToTreatment) != 0 ? ((Number(item.TreatedTime) / Number(item.TimeToTreatment)) * 100).toFixed(2) : 0);
+        }
+        completeAmount = (perCurrent / 100) * item.PriceService;
+        newAmount = (perNew / 100) * item.PriceService;
+        return { perNew, perCurrent, newAmount, completeAmount }
+    }
+    function TCS_ScheDetail_RenderSerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment) {
+        try {
+            let result = '';
+            if (sys_dencos_Main == 0) {
+                result = `${decodeHtml("@Local["Đã điều trị"]")} : ${TreatIndex} | ${TimeToTreatment}`
+            }
+            else {
+                result = `${(TeethChoosing != '') ? Fun_GetTeeth_ByToken(DataTeeth, TeethChoosing, TeethType) : ''}`
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //LOADStatusDetail
+    function TCS_StatusDetailLoad(numDateFrom, status, istreat, iscash) {
+        TCS_StatusDetail_DataSlice = [], TCS_StatusDetail_DataReport = [];
+        TCS_StatusDetail_IndexData = 0;
+        $('#TCS_StatusDetail_TotalData').html(0);
+        $('#TCS_StatusDetail_CurrentData').html(0);
+        $(`#TCS_StatusGridDetailBody`).empty();
+        if (xhrLoadStatusDetail && xhrLoadStatusDetail.readyState != 4) xhrLoadStatusDetail.abort();
+        TCS_numdatefrom = -1, TCS_custid = -1, TCS_appid=-1;
+        $('#TCS_btnStatusShowMore').show();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadStatusDetail = AjaxLoad(url = "/Report/Traffic/CustomerStatus/?handler=LoadataStatusDetail"
+            , data = {
+                'branchID': _branchID,
+                'numDateFrom': numDateFrom,
+                'status': status,
+                'istreat': istreat,
+                'iscash': iscash,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    TCS_StatusDetail_DataReport = JSON.parse(JSON.stringify(data));
+                    TCS_StatusDetail_DataSlice = sliceIntoChunks(data, 500);
+                    $(`#TCS_StatusGridDetailBody`).empty();
+                    if (TCS_StatusDetail_DataSlice && TCS_StatusDetail_DataSlice.length != 0) {
+                        fnRenderBlock(TCS_StatusDetail_DataSlice[TCS_StatusDetail_IndexData], 'TCS_StatusGridDetailBody'
+                            , blocknum = 100
+                            , fnrender = TCS_StatusDetail_Render
+                            , fnsuccess = null
+                        );
+                    }
+                    Count_Up('TCS_StatusDetail_TotalData', TCS_StatusDetail_DataReport.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TCS_StatusDetail_RenderMore() {
+        TCS_StatusDetail_IndexData += 1;
+        if (TCS_StatusDetail_DataSlice && TCS_StatusDetail_DataSlice[TCS_StatusDetail_IndexData]) {
+            fnRenderBlock(TCS_StatusDetail_DataSlice[TCS_StatusDetail_IndexData], "TCS_StatusGridDetailBody"
+                , blocknum = 100
+                , fnrender = TCS_StatusDetail_Render
+                , fnsuccess = null
+            );
+        }
+        else {
+            $('#TCS_btnStatusShowMore').hide();
+        }
+    }
+
+    async function TCS_StatusDetail_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let trnumdatefrom = '', trcust = '', trapp='';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let docName = RP_DataEmployee[item.DocID1] != undefined ? RP_DataEmployee[item.DocID1].Name : '';
+                            let branchName = RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '';
+                            let vtNum = ''
+                            if (item.NumDateFrom != TCS_numdatefrom) {
+                                vtNum = 'vt-number'
+                                TCS_numdatefrom = item.NumDateFrom;
+                                TCS_custid = -1;
+                                trnumdatefrom = `<td rowspan="${item.RowDate}" class="vt-number-order"></td>
+                                                 <td rowspan="${item.RowDate}">${item.NumDateFrom != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(item.NumDateFrom)) : ''}</td>`;
+                            } else trnumdatefrom = '';
+
+                            if (item.CustID != TCS_custid) {
+                                TCS_custid = item.CustID;
+                                trcust = ` <td rowspan="${item.RowCust}">
+                                               <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustCode != undefined ? item.CustCode : ''}</a>
+                                           </td>
+                                           <td rowspan="${item.RowCust}">${item.CustName}</td>
+                                           <td rowspan="${item.RowCust}" data-name="custbirth">${ConvertDateTimeUTC_DMY(item.CustBirth)}</td>
+                                           <td rowspan="${item.RowCust}" data-name="custgender">${item.CustGender}</td>
+                                           <td rowspan="${item.RowCust}" data-name="custaddress">${item.CustAddress}</td>`;
+                            } else trcust = '';
+
+                            if (item.AppID != TCS_appid) {
+                                TCS_appid = item.AppID;
+                                trapp = ` <td rowspan="${item.RowApp}">${item.ScheduleCode}</td>
+                                          <td rowspan="${item.RowApp}">${GetDateTime_String_HHMM(item.AppCreated)}</td>`;
+                            } else trapp = '';
+
+                            let tr = `
+                                                     <tr id="TCS_RowStatus_${item.NumDateFrom}" class="${vtNum}">
+                                                         ${trnumdatefrom}
+                                                         ${trcust}
+                                                         ${trapp}
+                                                         <td><i class="fas fa-circle me-1 text-xxs" style="color: ${item.StatusColor  != "" ? item.StatusColor : "#dcdcdc"}"></i>
+                                                         ${item.StatusName != "" ? item.StatusName : '@Local["Chưa đến"]'}</td>
+                                                         <td>${GetDateTime_String_HHMM(item.StatusTime)}</td>
+                                                         <td>${formatNumber(item.TimeRange)}</td>
+                                                         
+                                                         <td data-name="doctor">${docName}</td>
+                                                         <td data-name="room">${item.Room}</td>
+                                                         <td data-name="branch">${branchName}</td>
+                                                     </tr>
+                                                     `;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+
+                }
+                TCS_StatusDetail_shtable.Refresh();
+                clearTimeout(timeoutCountStatusDetail);
+                timeoutCountStatusDetail = setTimeout(() => {
+                    Count_Up("TCS_StatusDetail_CurrentData", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+
+        })
+    }
+
+    //#endregion
+
+    //#region //REPORT - EXCEL
+
+    function TCS_Export() {
+        syslog_ExpExcel('e', Outlang['Tinh_trang_khach_hang']);
+        exportToExcel("TCS_Grid", Outlang['Tinh_trang_khach_hang']);
+    }
+
+
+    async function TCS_ScheDetail_Export(isOption = 0) {
+        try {
+            if (TCS_ScheDetail_DataReport && TCS_ScheDetail_DataReport.length != 0) {
+                var dataHeader = {}, fileName = '';
+                let isAll = (isOption == 0);
+                let eleContainer = $('#TCS_ScheDetail_Container');
+                dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "NumDateFrom": ["@Local["Ngày"]", (value) => { return value != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(value)) : '' }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustBirth": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custbirth']`)).is(":checked"),
+                        data: ["@Local["Ngày sinh"]", (value) => { return ConvertDateTimeUTC_DMY(value) }]
+                    },
+                    "CustGender": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custgender']`)).is(":checked"),
+                        data: ["@Local["Giới tính"]"]
+                    },
+                    "CustAddress": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custaddress']`)).is(":checked"),
+                        data: ["@Local["Địa chỉ"]"]
+                    },
+                    "TotalSchedule": ["@Local["Số lịch hẹn"]"],
+                    "IsCheckin": ["@Local["Trạng thái"]", (value, { BranchID }) => {
+                        return value == 1 ? '@Local["Đã đến"]' : '@Local["Chưa đến"]';
+                    }],
+                    "DocID1": ["@Local["Bác sĩ"] 1", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }],
+                    "DocID2": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doctor2']`)).is(":checked"),
+                        data: ["@Local["Bác sĩ"] 2", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }]
+                    },
+                    "DocID3": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doctor3']`)).is(":checked"),
+                        data: ["@Local["Bác sĩ"] 3", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }]
+                    },
+                    "DocID4": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doctor4']`)).is(":checked"),
+                        data: ["@Local["Bác sĩ"] 4", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }]
+                    },
+                    "Assistant1": ["@Local["Kỹ thuật viên/phụ tá"] 1", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }],
+                    "Assistant2": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='assistant2']`)).is(":checked"),
+                        data: ["@Local["Kỹ thuật viên/phụ tá"] 2", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }]
+                    },
+                    "ServiceCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicecode']`)).is(":checked"),
+                        data: ["@Local["Mã dịch vụ"]"]
+                    },
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "PriceService": ["@Local["Giá dịch vụ"]"],
+                    "Quantity": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='quantity']`)).is(":checked"),
+                        data: ["@Local["Số lượng"]"]
+                    },
+                    "Detail": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detail']`)).is(":checked"),
+                        data: ["@Local["Chi tiết"]", (v, { TeethType, TeethChoosing, TreatIndex, TimeToTreatment }) => {
+                            return TCS_ScheDetail_RenderSerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }]
+                    },
+                    "AmountPaid": ["@Local["Tiền đã thanh toán"]"],
+                    "PaidPeriod": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='paidperiod']`)).is(":checked"),
+                        data: ["@Local["Thanh toán trong kỳ"]"]
+                    },
+                    "PercentComplete": ["@Local["Tổng hoàn thành"] (%)", (value, item) => {
+                        return TCS_ScheDetail_TreatRenderPercent(item)?.perCurrent;
+                    }],
+                    "AmountComplete": ["@Local["Tổng tiền hoàn thành"]", (value, item) => {
+                        return TCS_ScheDetail_TreatRenderPercent(item)?.completeAmount;
+                    }],
+                    "PercentMew": ["@Local["Hoàn thành"] (%)", (value, item) => {
+                        return TCS_ScheDetail_TreatRenderPercent(item)?.perNew;
+                    }],
+                    "AmountNew": ["@Local["Tiền hoàn thành"]", (value, item) => {
+                        return TCS_ScheDetail_TreatRenderPercent(item)?.newAmount;
+                    }],
+                    "TreatedTime": ["@Local["Lần điều trị"]", (value, { TimeToTreatment }) => {
+                        return value.toString() + "/" + TimeToTreatment.toString();
+                    }],
+                    "TreatDate": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='treatdate']`)).is(":checked"),
+                        data: ["@Local["Ngày điều trị"]", (value => { return ConvertDateTimeUTC_DMY(value) })]
+                    },
+                    "ContentFollow": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='content']`)).is(":checked"),
+                        data: ["@Local["Nội dung"]"]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return RP_DataBranch[value] != undefined ? RP_DataBranch[value].Name : '' }]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'TCS_ScheGridDetailBody', PermissionTable_TabControl);
+                if (sys_dencos_Main == 1) {
+                    var { TreatedTime, ...densheader } = dataHeader;
+                    dataHeader = { ...densheader };
+                }
+                else {
+                    var { Percent, Quantity, ...tmdata } = dataHeader;
+                    dataHeader = { ...tmdata };
+                }
+                fileName = Outlang["Tinh_trang_khach_hang"] + '-' + xoa_dau($("#TCS_ScheDetail_Title").text()).replaceAll(' ', '-');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(fileName, TCS_ScheDetail_DataReport, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function TCS_ScheDetail_PrintReport() {
+        try {
+            if (TCS_ScheDetail_DataReport && TCS_ScheDetail_DataReport.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                let dataHeader = {}, fileName = '';
+                dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "NumDateFrom": ["@Local["Ngày"]", {
+                        callbackRenderValue: (value) => { return value != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(value)) : '' }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustBirth": ["@Local["Ngày sinh"]", {
+                        isShow: $(`.shtoogle[data-name='custbirth']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(value) }
+                    }],
+                    "CustGender": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='custgender']`).is(":checked")
+                    }],
+                    "CustAddress": ["@Local["Địa chỉ"]", {
+                        isShow: $(`.shtoogle[data-name='custaddress']`).is(":checked")
+                    }],
+                    "TotalSchedule": ["@Local["Số lịch hẹn"]"],
+                    "IsCheckin": ["@Local["Trạng thái"]", {
+                        callbackRenderValue: (value, { BranchID }) => {
+                            return value == 1 ? '@Local["Đã đến"]' : '@Local["Chưa đến"]';
+                        }
+                    }],
+                    "DocID1": ["@Local["Bác sĩ"] 1", {
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "DocID2": ["@Local["Bác sĩ"] 2", {
+                        isShow: $(`.shtoogle[data-name='doctor2']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "DocID3": ["@Local["Bác sĩ"] 3", {
+                        isShow: $(`.shtoogle[data-name='doctor3']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "DocID4": ["@Local["Bác sĩ"] 4", {
+                        isShow: $(`.shtoogle[data-name='doctor4']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "Assistant1": ["@Local["Kỹ thuật viên/phụ tá"] 1", {
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "Assistant2": ["@Local["Kỹ thuật viên/phụ tá"] 2", {
+                        isShow: $(`.shtoogle[data-name='assistant2']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "ServiceCode": ["@Local["Mã dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicecode']`).is(":checked")
+                    }],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "PriceService": ["@Local["Giá dịch vụ"]"],
+                    "Quantity": ["@Local["Số lượng"]", {
+                        isShow: $(`.shtoogle[data-name='quantity']`).is(":checked")
+                    }],
+                    "Detail": ["@Local["Chi tiết"]", {
+                        isShow: $(`.shtoogle[data-name='detail']`).is(":checked"),
+                        callbackRenderValue: (v, { TeethType, TeethChoosing, TreatIndex, TimeToTreatment }) => {
+                            return TCS_ScheDetail_RenderSerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }
+                    }],
+                    "AmountPaid": ["@Local["Tiền đã thanh toán"]"],
+                    "PaidPeriod": ["@Local["Thanh toán trong kỳ"]", {
+                        isShow: $(`.shtoogle[data-name='paidperiod']`).is(":checked")
+                    }],
+                    "PercentComplete": ["@Local["Tổng hoàn thành"] (%)", {
+                        callbackRenderValue: (value, item) => {
+                            return TCS_ScheDetail_TreatRenderPercent(item)?.perCurrent;
+                        }
+                    }],
+                    "AmountComplete": ["@Local["Tổng tiền hoàn thành"]", {
+                        callbackRenderValue: (value, item) => {
+                            return TCS_ScheDetail_TreatRenderPercent(item)?.completeAmount;
+                        }
+                    }],
+                    "PercentMew": ["@Local["Hoàn thành"] (%)", {
+                        callbackRenderValue: (value, item) => {
+                            return TCS_ScheDetail_TreatRenderPercent(item)?.perNew;
+                        }
+                    }],
+                    "AmountNew": ["@Local["Tiền hoàn thành"]", {
+                        callbackRenderValue: (value, item) => {
+                            return TCS_ScheDetail_TreatRenderPercent(item)?.newAmount;
+                        }
+                    }],
+                    "TreatedTime": ["@Local["Lần điều trị"]", {
+                        callbackRenderValue: (value, { TimeToTreatment }) => {
+                            return value.toString() + "/" + TimeToTreatment.toString();
+                        }
+                    }],
+                    "TreatDate": ["@Local["Ngày điều trị"]", {
+                        isShow: $(`.shtoogle[data-name='treatdate']`).is(":checked"),
+                        callbackRenderValue: (value => { return ConvertDateTimeUTC_DMY(value) })
+                    }],
+                    "ContentFollow": ["@Local["Nội dung"]", {
+                        isShow: $(`.shtoogle[data-name='content']`).is(":checked"),
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataBranch[value] != undefined ? RP_DataBranch[value].Name : '' }
+                    }],
+                }
+                if (sys_dencos_Main == 1) {
+                    var { TreatedTime, ...densheader } = dataHeader;
+                    dataHeader = { ...densheader };
+                }
+                else {
+                    var { Percent, Quantity, ...tmdata } = dataHeader;
+                    dataHeader = { ...tmdata };
+                }
+                fileName = Outlang["Tinh_trang_khach_hang"] + ' ' + $("#TCS_ScheDetail_Title").text();
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = fileName, TCS_ScheDetail_DataReport, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+    async function TCS_StatusDetail_Export(isOption = 0) {
+        try {
+            if (TCS_StatusDetail_DataReport && TCS_StatusDetail_DataReport.length != 0) {
+                var dataHeader = {}, fileName = '';
+                let isAll = (isOption == 0);
+                let eleContainer = $('#TCS_StatusDetail_Container');
+                dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "NumDateFrom": ["@Local["Ngày"]", (value) => { return value != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(value)) : '' }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustBirth": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custbirth']`)).is(":checked"),
+                        data: ["@Local["Ngày sinh"]", (value) => { return ConvertDateTimeUTC_DMY(value) }]
+                    },
+                    "CustGender": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custgender']`)).is(":checked"),
+                        data: ["@Local["Giới tính"]"]
+                    },
+                    "CustAddress": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custaddress']`)).is(":checked"),
+                        data: ["@Local["Địa chỉ"]"]
+                    },
+                    "ScheduleCode": ["@Local["Mã lịch hẹn"]"],
+                    "AppCreated": ["@Local["Thời gian lịch hẹn"]", (value) => {
+                        return GetDateTime_String_HHMM(value)
+                    }],
+                    "StatusName": ["@Local["Trạng thái"]", (value) => {
+                        return value != "" ? value : decodeHtml('@Local["Chưa đến"]')
+                    }],
+                    "StatusTime": ["@Local["Thời gian"]", (value) => {
+                        return GetDateTime_String_HHMM(value)
+                    }],
+                    "TimeRange": ["@Local["Chênh lệch"] (@Local["Phút"])"],
+                    "DocID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doctor']`)).is(":checked"),
+                        data: ["@Local["Bác sĩ"]", (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }]
+                    },
+                    "Room": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='room']`)).is(":checked"),
+                        data: ["@Local["Phòng"]"]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return RP_DataBranch[value] != undefined ? RP_DataBranch[value].Name : '' }]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'TCS_ScheGridStatusDetailBody', PermissionTable_TabControl);
+                fileName = Outlang["Tinh_trang_khach_hang"] + '_' + xoa_dau($("#TCS_StatusDetail_Title").text().trim()).replaceAll(' ', '-');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(fileName, TCS_StatusDetail_DataReport, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function TCS_StatusDetail_PrintReport() {
+        try {
+            if (TCS_StatusDetail_DataReport && TCS_StatusDetail_DataReport.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                let dataHeader = {}, fileName = '';
+                dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "NumDateFrom": ["@Local["Ngày"]", {
+                        callbackRenderValue: (value) => { return value != 0 ? ConvertDateTimeUTC_DMY(INTYMDToDate(value)) : '' }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustBirth": ["@Local["Ngày sinh"]", {
+                        isShow: $(`.shtoogle[data-name='custbirth']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(value) }
+                    }],
+                    "CustGender": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='custgender']`).is(":checked")
+                    }],
+                    "CustAddress": ["@Local["Địa chỉ"]", {
+                        isShow: $(`.shtoogle[data-name='custaddress']`).is(":checked")
+                    }],
+                    "ScheduleCode": ["@Local["Mã lịch hẹn"]"],
+                    "AppCreated": ["@Local["Thời gian lịch hẹn"]", {
+                        callbackRenderValue: (value) => {
+                            return GetDateTime_String_HHMM(value);
+                        }
+                    }],
+                    "StatusName": ["@Local["Trạng thái"]", {
+                        callbackRenderValue: (value) => {
+                            return value != "" ? value : decodeHtml('@Local["Chưa đến"]')
+                        }
+                    }],
+                    "StatusTime": ["@Local["Thời gian"]", {
+                        callbackRenderValue: (value) => {
+                            return GetDateTime_String_HHMM(value)
+                        }
+                    }],
+                    "TimeRange": ["@Local["Chênh lệch"] (@Local["Phút"])"],
+                    "DocID": ["@Local["Bác sĩ"]", {
+                        isShow: $(`.shtoogle[data-name='doctor']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataEmployee[value] != undefined ? RP_DataEmployee[value].Name : '' }
+                    }],
+                    "Room": ["@Local["Phòng"]", {
+                        isShow: $(`.shtoogle[data-name='room']`).is(":checked"),
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataBranch[value] != undefined ? RP_DataBranch[value].Name : '' }
+                    }],
+                }
+                fileName = Outlang["Tinh_trang_khach_hang"] + ' ' + $("#TCS_StatusDetail_Title").text();
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = fileName, TCS_StatusDetail_DataReport, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                                             //#endregion
+
+</script>
+<style>
+    .TCS_clsMasterRow:hover {
+        background-image: var(--bs-gradient) !important;
+        background-color: rgba(var(--bs-primary), 0.1) !important;
+        filter: brightness(120%) saturate(120%) contrast(100%);
+        cursor: pointer;
+    }
+</style>

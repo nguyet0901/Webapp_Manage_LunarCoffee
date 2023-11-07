@@ -1,0 +1,97 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.DiseaseStatus.DiseaseStatusSignModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Ký hiệu"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách ký hiệu chuẩn đoán"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="dtContentDSList" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["#"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Nội dung"]</th>
+                                    <th>@Local["Ngày tạo"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentDSList_Body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        DSList_Load();
+
+    });
+    function DSList_Load() {
+        AjaxLoad(url = "/Setting/DiseaseStatus/DiseaseSignList/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    DSList_Render(data, 'dtContentDSList_Body');
+                }
+            });
+    }
+
+    function DSList_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let contentStr = item.Content != '' ? `<span>${item.Content}</span>` : `<span class="text-secondary">@Local["Không có nội dung"]</span>`;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><span class="buttonEditClass cursor-pointer fw-bold text-primary text-decoration-underline">' + item.Name + '</span></td>'
+                        + '<td>' + contentStr + '</td>'
+                        + '<td>'
+                        + '<div class="d-flex">'
+
+                        + '<div class="d-flex flex-column">'
+                        + '<span class="text-sm">' + ConvertDateTimeUTC_DMY(item.DateCreated) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        DSList_Event();
+    }
+
+    function DSList_Event() {
+        $('#dtContentDSList tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DSList_Edit(ID);
+        });
+    }
+
+    function DSList_Edit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/DiseaseStatus/DiseaseSignDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script src="/js/main.js" async></script>

@@ -1,0 +1,708 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.Call.HistoryCallModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<script>js_require('/js/LogCallCenter/LogCallGeneral.js');</script>
+<script>js_require('/assests/js/MD5.js');</script>
+
+
+<div class="card card-plain container-fluid px-0">
+    <div class="row m-0">
+        <div class="col-12 ">
+            <div class="row">
+                <div class="card card-plain px-2">
+                    <div class="vtcardheader card-header pb-0 px-1 pt-3">
+                        <div class="left">
+                            <h6 class="mb-0">@Local["Lịch sử cuộc gọi"]</h6>
+                            <p class="text-sm mb-0">@Local["Thống kê tất cả lịch sử gọi ra, gọi vào của từng extension theo thời gian search. Tele được load theo cấp bậc trong cấu hình marketing"]</p>
+                        </div>
+                    </div>
+                    <div class="card-body px-1 py-1 mt-2">
+                        <div class="row">
+                            <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+                                <div class="m-0">
+                                    <div class="d-flex">
+                                        <input id="dateFillter" class="flatpickr form-control" type="text" onchange="event.preventDefault();" />
+                                        <button id="BEHC_OK" class="btn text-nowrap btn-sm  bg-gradient-primary m-0 ms-1 d-none" onclick="event.preventDefault();return HistoryCall_LoadInit();">@Local["Tìm kiếm"]</button>
+
+                                    </div>
+                                </div>
+
+                                <div class="m-0  position-relative">
+                                    <div id="ContentWaiting" class="waitingdiv text-center position-absolute top-50 z-index-2 start-50 translate-middle" style="display: none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div class="nav-wrapper mt-3" style="--max-height:calc( 100vh - 220px ); --overflow-y: auto">
+                                        <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column  bg-white border-radius-lg"
+                                            id="ContentMaster">
+                                        </ul>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+                                <div class="px-0 m-0 px-lg-2" id="btnAction" style="display: none;">
+                                    <div class="mx-0 row">
+                                        <div class="col-12 col-sm-12 col-md-3 col-lg-4 px-1 py-1 pt-lg-0">
+                                            <div class="ui fluid search selection dropdown form-control" id="HC_Type">
+                                                <input type="hidden" name="branch" />
+                                                <i class="dropdown icon"></i>
+                                                <div class="default text">eg .@Local["Loại"]</div>
+                                                <div id="HC_CbbType" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm-12 col-md-3 col-lg-4 px-1 py-1 pt-lg-0">
+                                            <div class="ui fluid search selection dropdown form-control" id="HC_Status">
+                                                <input type="hidden" name="branch" />
+                                                <i class="dropdown icon"></i>
+                                                <div class="default text">eg .@Local["Tình trạng"]</div>
+                                                <div id="HC_CbbStatus" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm-12 col-md-3 col-lg-3 px-1 d-flex mt-2 mt-lg-0">
+                                            <button class="btn btn-sm text-nowrap bg-gradient-primary " onclick="event.preventDefault();return HistoryCall_Filter();">Ok</button>
+                                            <button class="btn btn-sm text-nowrap btn-dark 1 ms-2" onclick="event.preventDefault();return exportData();">@Local["Xuất"]</button>
+                                        </div>
+
+                                    </div>
+                                    <div class="d-lg-flex align-items-center gap-3 me-2 mb-3">
+                                    
+                                        <div class="row mx-0 mt-2 ms-1 mb-n2 mt-lg-0">
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalCall" class="text-primary mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark mb-0  fst-italic text-nowrap">@Local["Tổng cuộc gọi"]</p>
+                                                </div>
+                                            </div>
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalCallSuccess" class="text-success mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Thành công"]</p>
+                                                </div>
+                                            </div>
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalTime" class="text-info mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Tổng phút"]</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-lg-flex align-items-center gap-3 me-2">
+                                        <div class="col-auto ms-auto mb-2 mt-lg-n4 mt-3" id="HisCall_Pagination">
+                                            <div class="">
+                                                <ul class="pagination mb-0">
+                                                    <li class="page-item ">
+                                                        <a id="backPage" class="page-link" onclick="event.preventDefault();return LoadPageBack();" href="javascript:;">
+                                                            <i class="fa fa-angle-left"></i>
+                                                            <span class="sr-only"></span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="page-item active">
+                                                        <a id="currentPage" class="page-link">1</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a id="nextPage" class="page-link" onclick="event.preventDefault();return LoadPageNext();" href="javascript:;">
+                                                            <i class="fa fa-angle-right"></i>
+                                                            <span class="sr-only"></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div class="card-body m-0 table-responsive pt-0 position-relative px-2" style="height: calc(100vh - 275px);">
+                                        <div id="waiting_list_call" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                        <table class="table vt-table mb-0" id="dtContentLog">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;">#</th>
+                                                    <th>@Local["Từ"]</th>
+                                                    <th>@Local["Gọi đến"]</th>
+                                                    <th>@Local["Loại"]</th>
+                                                    <th>@Local["Thời lượng"]</th>
+                                                    <th>@Local["Tình trạng"]</th>
+                                                    <th>@Local["Ngày gọi"]</th>
+                                                    <th>@Local["Giờ gọi"]</th>
+                                                    <th class="no-sort">@Local["Tệp ghi âm"]</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dtContentLogBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+    var employeeName = '';
+    var dataExt;
+
+    var totalCallSuccess = 0;
+    var currentPage = 1;
+    var extCurrent = 0;
+    var ser_dtConnectCall = "";
+    var dateFrom;
+    var dateTo;
+    var TotalTime = 0;
+    let DataEmployee;
+    let UserID = 0;
+    var BEHCdataExt, BEHCdataDetail;
+    var LogCall_DataCall = [];
+    var LogCall_LogClient = "@Model._LogClient";
+    let LogCall_DtCbbType = {};
+    let LogCall_DtCbbStatus = {};
+
+    $(document).ready(function () {
+
+        let typeScript = '@Model._Type_LinkJS';
+        if (typeScript != '' && typeScript != '#') {
+            js_require_notasync(typeScript, true);
+        }
+        ser_dtConnectCall = JSON.parse(_dtConnectCall)[0];
+        HistoryCall_SetDefaultDate(1);
+        if(LogCall_LogClient == 1) {
+            $("#HisCall_Pagination").hide();
+        }
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                UserID = sys_userID_Main;
+                HistoryCall_LoadInit();
+            });
+
+
+        $('#dtContentLog').tablesort();
+
+    });
+
+    function HistoryCall_SetDefaultDate(numdate) {
+        $("#dateFillter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > numdate) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        var lastDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        $("#dateFillter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        dateFrom = formatDateClient(firstDay);
+        dateTo = formatDateClient(lastDay);
+    }
+
+    function HistoryCall_LoadInit() {
+        var date = $('#dateFillter').val() ? $('#dateFillter').val() : new Date();
+        AjaxLoad(url = "/Marketing/Call/HistoryCall/?handler=Loadata"
+            , data = { 'date': date }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "0") {
+                    HistoryCall_SetDefaultDate(7);
+                    AjaxLoad(url = "/Marketing/Call/HistoryCall/?handler=LoadEmpExtension"
+                        , data = { UserID: UserID }
+                        , async = true
+                        , error = function () { notiError_SW(); }
+                        , success = function (result) {
+                            dataExt = JSON.parse(result);
+                            RenderMaster(dataExt, "ContentMaster");
+                            TriggerClick_Parent();
+                        }
+                    );
+                }
+                else {
+                    document.getElementById('ContentMaster').innerHTML = '';
+                    document.getElementById('dtContentLogBody').innerHTML = '';
+                    HistoryCall_SetDefaultDate(2);
+
+                    $('#BEHC_OK').removeClass('d-none');
+                    BEHCdataDetail = JSON.parse(result);
+                    AjaxLoad(url = "/Marketing/Call/HistoryCall/?handler=LoadEmpExtension"
+                        , data = { UserID: UserID }
+                        , async = true
+                        , error = function () { notiError_SW(); }
+                        , success = function (result) {
+                            BEHCdataExt = JSON.parse(result);
+                            BEHC_Exe();
+                        }
+                    );
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#waiting_list_call").show();
+            }
+            , complete = function (e) {
+                $("#waiting_list_call").hide();
+            }
+        );
+        HisCall_AuthorApi();
+
+    }
+    function TriggerClick_Parent () {
+ 
+        $('#ContentMaster a.rowExtension :first').click();
+
+       
+    }
+
+    function HisCall_AuthorApi() {
+        if (ser_dtConnectCall != undefined && ser_dtConnectCall.length != 0) {
+            if (typeof LogCallGeneral_Author === "function")
+                LogCallGeneral_Author(ser_dtConnectCall);
+
+        } else {
+
+            notiWarning("@Local["Callcenter không kết nối"]!");
+        }
+    }
+
+    function EventrowExtension () {
+        $('#ContentMaster .rowExtension').on('shown.bs.tab', function (e) {
+            let ext = Number($(this).attr("data-ext"));
+            $("#ContentMaster .rowExtension").removeClass('active');
+            $("#ContentMaster .rowExtension").removeClass('tabactive');
+            $(this).addClass('tabactive');
+            $("#currentPage").html(currentPage);
+            employeeName = $(this).attr("data-name");
+            let date = $('#dateFillter').val() ? $('#dateFillter').val() : new Date();
+            if (date.search(" to ") > 0) {
+                date = date.split(' to ')
+                dateFrom = date[0];
+                dateTo = date[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+
+            extCurrent = ext;
+            currentPage = 1;
+            $("#currentPage").html(currentPage);
+            ViewDetail();
+        });
+
+
+    }
+    async function ViewDetail() {
+        if (ser_dtConnectCall != undefined && ser_dtConnectCall.length != 0) {
+            $("#dtContentLog").hide();
+            $("#waiting_list_call").show();
+            $(".rowExtension").addClass('disabled');
+            await ViewDetailAsync();
+            $("#dtContentLog").show();
+
+        } else {
+
+            notiWarning("@Local["Callcenter không kết nối"]!");
+        }
+    }
+    function Render_Call_Log_Execute(data)  {
+        let DtType = [], DtStatus = [];
+        if (data != undefined && data != null && data.length != 0) {
+            Render_Call_Log(data, "dtContentLogBody");
+
+            DtType = Object.keys(LogCall_DtCbbType).map(function (key, index) {return {ID : key, Name: key}});
+            DtStatus = Object.keys(LogCall_DtCbbStatus).map(function (key, index) {return {ID: key, Name: key}});
+
+            Load_Combo(DtType, "HC_CbbType", true, "@Local["Tất cả loại"]");
+            Load_Combo(DtStatus, "HC_CbbStatus", true, "@Local["Tất cả tình trạng"]");
+
+            $("#HC_Type").dropdown("refresh");
+            $("#HC_Type").dropdown("set selected", '0');
+            $("#HC_Status").dropdown("refresh");
+            $("#HC_Status").dropdown("set selected", '0');
+
+            $('#totalCallSuccess').show();
+            $('#totalCall').show();
+            $('#totalTime').show();
+            $('#btnAction').show();
+
+
+            Checking_TabControl_Permission();
+        } else {
+            $('#totalCallSuccess').hide();
+            $('#totalCall').hide();
+            $('#totalTime').hide();
+        }
+        $("#waiting_list_call").hide();
+        $(".rowExtension").removeClass('disabled');
+        if (data.length == 0) {
+            $("#nextPage").parent().addClass('disabled');
+        } else {
+            $("#nextPage").parent().removeClass('disabled');
+        }
+    }
+
+    async function ViewDetailAsync()  {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                async () => {
+                    var data = (typeof LoadLogCall_ByPhoneEx == 'function') ? await LoadLogCall_ByPhoneEx(ser_dtConnectCall, dateFrom, dateTo, extCurrent, currentPage, 'ext', Render_Call_Log_Execute) : [];
+                    totalCallSuccess = 0;
+                    TotalTime = 0;
+ 
+                    LogCall_DataCall = data;
+                    if (data != undefined && data != null && data.length != 0) {
+                        Render_Call_Log_Execute(data)
+                    }
+                    else {
+                        
+                        $("#dtContentLogBody").html('');
+                        $('#totalCallSuccess').hide();
+                        $('#totalCall').hide();
+                        $('#totalTime').hide();
+                        $("#waiting_list_call").hide();
+                        $(".rowExtension").removeClass('disabled');
+                        $("#nextPage").parent().addClass('disabled');
+                    }
+                    if (currentPage == 1) {
+                        $("#backPage").parent().addClass('disabled');
+                    }
+
+                    resolve()
+                },
+                100
+            )
+        })
+    }
+
+    function Render_Call_Log (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    LogCall_DtCbbType[item.direction] = item.direction;
+                    LogCall_DtCbbStatus[item.state] = item.state;
+
+                    if (item.status != undefined && item.status == 'SUCCESS') {
+                        totalCallSuccess = totalCallSuccess + 1;
+                        TotalTime = TotalTime + Number(item.duration)
+                    }
+                    let waitingAudio = ((item.duration > 0)
+                        ? ('<div class="HisCall_Audio_Waitingdiv text-center">'
+                            + '<div class="spinner-border spinner-border-sm text-primary" role="status">'
+                            + '<span class="sr-only">Loading...</span>'
+                            + '</div>'
+                            + '<span>@Local["Đang tải"]</span>'
+                            + '</div>')
+                        : '');
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td class="_tab_control_" data-tab="phone_customer">' + item.from + '</td>'
+                        + '<td class="_tab_control_" data-tab="phone_customer" >' + item.to + '</td>'
+                        + '<td>' + item.direction + '</td>'
+                        + ((item.recordUrl != 'null' && item.recordUrl != '')
+                            ? ('<td><a target="_blank" href="' + item.recordUrl + '">' + secondsToHms(item.duration) + '</a></td>')
+                            : ('<td id="HisCall_AudioDownload_' + ConvertDateTimeToTimeSpan(item.start) + '">' + secondsToHms(item.duration) + '</td>'))
+                        + '<td>' + item.state + '</td>'
+                        + '<td data-sortvalue="' + (new Date(item.start)).getTime() + '">' + yyyyMMddHHMMM_ddMMyyyy(item.start) + '</td>'
+                        + '<td>' + yyyyMMddHHMMM_HHMM(item.start) + '</td>'
+                        + ((item.recordUrl != 'null' && item.recordUrl != '')
+                            ? ('<td><audio style="min-width: 250px; height: 35px;" controls> <source src="' + item.recordUrl + '" type="audio/wav"></audio></td>')
+                            : '<td id="HisCall_Audio_' + ConvertDateTimeToTimeSpan(item.start) + '">'
+                            + waitingAudio
+                            + '</td>')
+                    stringContent = stringContent + '<tr class="vt-number">' + tr + '</tr>';
+                }
+                HisCall_ReloadAudio(data);
+                $('#totalCall').html((data.length));
+                $('#totalCallSuccess').html(totalCallSuccess);
+                $('#totalTime').html(secondsToHms(TotalTime));
+            }
+            else {
+                HistoryCall_Reset();
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    async function HisCall_ReloadAudio(allbound) {
+        new Promise(resolve => {
+            setTimeout(() => {
+                if (ser_dtConnectCall?.Type != 10) {
+                    $('.HisCall_Audio_Waitingdiv').addClass("d-none");
+                    resolve();
+                    return;
+                }
+                let count = 0;
+                var dtAudio = [];
+                let urlRecord = ser_dtConnectCall?.LinkDownloadAudio ?? "";
+                while (dtAudio.length <= 0 && count < 3) {
+                    dtAudio = LogCallGeneral_LoadAudio(ser_dtConnectCall, dateFrom, dateTo, extCurrent);
+                    count++;
+                }
+                if (dtAudio.length > 0 && allbound) {
+                    for (var i = 0; i < allbound.length; i++) {
+                        let element = {};
+                        let item = allbound[i];
+                        if (item.duration <= 0) continue;
+                        let result = dtAudio.filter(word => word && word["start_time"] == item.start);
+                        if (result.length > 0) {
+                            let record = result[0]?.filepath != "" ? urlRecord + result[0]?.filepath : "";
+                            let audio = '<audio style="min-width: 250px; height: 35px;" controls> <source src="' + record + '" type="audio/wav"></audio>'
+                            let audioDownload = '<a target="_blank" href="' + record + '">' + secondsToHms(item.duration) + '</a>'
+                            $("#HisCall_Audio_" + ConvertDateTimeToTimeSpan(item.start))?.html(audio);
+                            $("#HisCall_AudioDownload_" + ConvertDateTimeToTimeSpan(item.start))?.html(audioDownload);
+                        }
+                    }
+                }
+                else {
+                    notiWarning('@Local["Không tải được tệp ghi âm"]')
+                    $('.HisCall_Audio_Waitingdiv').addClass("d-none");
+                }
+                $('.HisCall_Audio_Waitingdiv').html("@Local["Tệp không tồn tại"]");
+                resolve();
+            }, 100)
+        })
+    }
+
+    function RenderMaster(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataEmployee, item.EmpID);
+                    let name = (obj != null) ? obj.Name : '-';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    if (i == 0) CurrentStatusParentID = item.ID;
+                    let li =
+                        `<li class="nav-item" role="presentation">
+                                <a data-ext="${item.Ext}" data-name="${name}"  class="text-sm item-menu rowExtension nav-link cursor-pointer" data-hover data-bs-toggle="tab">
+                                    <div class="d-flex align-items-center">
+                                        <img class="avatar avatar-sm m-0" src="${img}" alt="label-image">
+                                        <div class="ps-2">
+                                            <div class="d-inline">
+                                                <span class="ps-0 text-sm text-primary fw-bold">
+                                                    ${item.Ext}
+                                                </span>
+                                            </div>
+                                            <div class="d-flex align-items-center mt-0">
+                                                <div class="ps-0">
+                                                    <span class="text-dark">${name}</span>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            <hr class="horizontal dark my-0">
+                            </li>
+                                `
+                    stringContent = stringContent + li
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+        EventrowExtension();
+    }
+
+    function LoadPageNext() {
+        currentPage += 1;
+        $("#currentPage").html(currentPage);
+        ViewDetail();
+        $("#backPage").parent().removeClass('disabled');
+    }
+
+    function LoadPageBack() {
+        if (currentPage != 1) {
+            currentPage -= 1;
+            $("#currentPage").html(currentPage);
+            ViewDetail();
+        } else {
+            $("#backPage").parent().addClass('disabled');
+        }
+    }
+
+    function exportData() {
+        let fileName = Outlang['Goi_ra']
+        exportToExcel("dtContentLog", fileName + '-(' + employeeName + ')');
+        return false;
+    }
+
+    function HistoryCall_Filter() {
+        let data = LogCall_DataCall;
+        let TypeID = $("#HC_Type").dropdown('get value') ? $("#HC_Type").dropdown('get value') : "0";
+        let StatusID = $("#HC_Status").dropdown('get value') ? $("#HC_Status").dropdown('get value') : "0";
+        if (data && data.length > 0){
+            HistoryCall_Reset();
+            data = TypeID != "0" ? data.filter((item) => {return item["direction"] == TypeID}) : data;
+            data = StatusID != "0" ? data.filter((item) => {return item["state"] == StatusID}) : data;
+            Render_Call_Log(data, "dtContentLogBody");
+        }
+    }
+
+    function HistoryCall_Reset(){
+        totalCallSuccess = 0;
+        TotalTime = 0;
+        $('#totalCall').html(0);
+        $('#totalCallSuccess').html(0);
+        $('#totalTime').html(0);
+    }
+
+    //#region //  BEHC
+    function BEHC_Exe() {
+        if (BEHCdataDetail != undefined) {
+            if (BEHCdataExt != undefined) {
+                for (i = 0; i < BEHCdataExt.length; i++) {
+                    let ext = BEHCdataExt[i].Ext;
+                    let TotalTime = 0;
+                    let data = BEHCdataDetail.filter(word => word["from"] == ext);
+                    if (data != undefined && data != null) {
+                        for (let j = 0; j < data.length; j++) {
+                            TotalTime = TotalTime + Number(data[j].duration)
+                        }
+                    }
+                    BEHCdataExt[i].TotalTime = secondsToHms(TotalTime);
+                }
+            }
+            EHCERenderReportMaster(BEHCdataExt, "ContentMaster");
+            document.getElementById('dtContentLogBody').innerHTML = '';
+        }
+    }
+    function EHCERenderReportMaster(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<li data-ext="' + item.Ext + '" class="list-group-item rowBEHCExtension border-0 d-flex justify-content-between px-1 mb-1 border-radius-lg cursor-pointer">'
+                        + '<div class=" ">'
+
+                        + '<span class="text-sm fw-bold text-dark me-2">' + item.Ext + '</span >'
+                        + '<span class="text-sm text-dark">' + item.Emp + '</span >'
+                        + '<div class="text-sm fw-bold text-primary d-block">' + item.TotalTime + '</div >'
+                        + '</div>'
+
+                        + '</li><hr class="horizontal dark my-0">';
+
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        BEHCERenderReport_Event();
+    }
+    function BEHCERenderReport_Event() {
+        $('#ExtensionList').on('click', '.rowBEHCExtension', function () {
+            let ext = Number($(this).attr("data-ext"));
+            $(this).addClass("active").siblings().removeClass("active");
+            BEHCEViewDetailAsync(ext);
+        });
+    }
+    function BEHCEViewDetailAsync(extension) {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    if (BEHCdataDetail != undefined) {
+                        var data = BEHCdataDetail.filter(word => word["from"] == extension);
+                        if (data != undefined && data != null && data.length != 0) {
+                            for (let i = 0; i < data.length; i++) {
+                                data[i].STT = (i + 1).toString();
+                            }
+                            BEHCERenderReportDetail(data, "dtContentLogBody");
+                        }
+                    }
+                    resolve()
+                }
+            )
+        })
+    }
+
+    function BEHCERenderReportDetail(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            $('#HisCall_Pagination').hide();
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    if (item.state != undefined && item.state == 'ANSWERED') {
+                        totalCallSuccess = totalCallSuccess + 1;
+                        TotalTime = TotalTime + Number(item.duration)
+                    }
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td>' + item.from + '</td>'
+                        + '<td> <a class=" _tab_control_ cursor-pointer" data-tab="phone_customer" >' + item.to + '</a></td>'
+                        + '<td>' + item.direction + '</td>'
+                        + ((item.recordUrl != 'null') ? ('<td><a target="_blank" href="' + item.recordUrl + '">' + secondsToHms(item.duration) + '</a></td>') : ('<td>' + secondsToHms(item.duration) + '</td>'))
+                        + '<td>' + item.state + '</td>'
+                        + '<td data-sortvalue="' + (new Date(item.start)).getTime() + '">' + yyyyMMddHHMMM_ddMMyyyy(item.start) + '</td>'
+                        + '<td>' + yyyyMMddHHMMM_HHMM(item.start) + '</td>'
+                        + '<td> ' + item?.audiofile + ' </td>'
+                    stringContent = stringContent + '<tr class="vt-number">' + tr + '</tr>';
+                }
+                $('#totalCall').html(data.length);
+                $('#totalCallSuccess').html(totalCallSuccess);
+                $('#totalTime').html(secondsToHms(TotalTime));
+                $('#totalCallSuccess').show();
+                $('#totalCall').show();
+                $('#totalTime').show();
+                $('#btnAction').show();
+            }
+            else {
+                $('#totalCallSuccess').hide();
+                $('#totalTime').hide();
+                $('#totalCall').hide();
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+            Checking_TabControl_Permission();
+        }
+    }
+
+    //#endregion
+
+</script>
+<style>
+    #ContentMaster .rowExtension.tabactive {
+        background-color: #e9ecef !important;
+    }
+</style>
+

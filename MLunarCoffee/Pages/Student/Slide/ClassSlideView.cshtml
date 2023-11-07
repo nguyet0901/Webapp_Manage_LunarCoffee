@@ -1,0 +1,163 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Slide.ClassSlideView
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="card-body pt-0 px-1 ps-5 position-relative">
+    <div id="cl_Loader" class="waitingdiv position-absolute top-50 start-50 translate-middle" style="display:none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div class="row px-2" >
+        <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1 flex-grow-1">
+            <div class="row mt-3">
+                <div class="d-flex align-items-center flex-nowrap text-nowrap overflow-hidden">
+                    <span id="cl_header" class="text-primary fw-bold  fs-3 "></span>
+                </div>
+
+                <p id="cl_desciption" class="text-dark  mb-0 pb-0 pt-0 text-dark">
+                </p>
+            </div>
+            <div id="cl_contentlist" class="row pt-3 mt-3">
+            </div>
+          
+        </div>
+        <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 flex-grow-1">
+            <div class="ms-0 ms-md-2 ms-lg-2 row mt-3">
+                <div class="mt-0 ps-0">
+                    <ul class="nav nav-pills p-1 bg-transparent" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" aria-selected="true">
+                                <i class="text-gradient text-success fas fa-file-word"></i>
+                                @Local["File đính kèm"]
+                            </a>
+                        </li>
+
+                    </ul>
+                    <div class="border-1 mt-3 px-3 py-4 bg-gray-100 border-radius-lg" id="cl_attachment">
+                    </div>
+                </div>
+                <ul class="mt-3 list-unstyled mx-auto">
+                    <li class="d-lg-flex">
+                        <p class="mb-0 text-sm">@Local["Người cập nhật"]</p>
+                        <span id="cl_updatename" class="text-sm text-lowercase text-primary ms-auto"></span>
+                    </li>
+                    <li>
+                        <hr class="horizontal dark">
+                    </li>
+                    <li class="d-lg-flex">
+                        <p class="mb-0 text-sm">@Local["Ngày cập nhật"]</p>
+                        <span id="cl_updatetime" class="text-sm text-lowercase text-primary ms-auto"></span>
+                    </li>
+                    <li>
+                        <hr class="horizontal dark">
+                    </li>
+                    <li class="d-lg-flex">
+ 
+                        <span id="cl_tagname" class="badge badge-pill ms-auto"></span>
+                    </li>
+
+                </ul>
+            </div>
+ 
+           
+        </div>
+    </div>
+   
+</div>
+
+<script type="text/javascript">
+
+    var CL_SlideID = '@Model._SlideID'
+    $(document).ready(function () {
+        CLide_Load();
+    })
+    function CLide_Load () {
+        AjaxLoad(url = "/Student/Slide/ClassSlideView/?handler=LoadSlide"
+            , data = {"TrainslideID": CL_SlideID}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    
+                    let data = datas.Table;
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        $('#cl_header').html(item.Name);
+                        $('#cl_desciption').html(item.Content);
+                        $('#cl_updatetime').html(GetDateTime_String_DMY(item.UpdateTime));
+                        $('#cl_updatename').html(item.UpdateName);
+                        $('#cl_tagname').html(item.TagName);
+                        $('#cl_tagname').css('background-color', item.TagColor);
+                        CDStep_Action(3, item.Name,'');
+                    }
+                    let datacontent = datas.Table1;
+                    let dataattach = datas.Table2;
+                    CLide_Render(datacontent, 'cl_contentlist');
+                    CLideAttach_Render(dataattach, 'cl_attachment');
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#cl_Loader').show();
+            }
+            , complete = function (e) {
+                $('#cl_Loader').hide();
+            }
+        );
+    }
+    async function CLide_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        tr = `<div class="col-12 col-sm-12 pb-4 col-md-${item.NumCol} col-xl-${item.NumCol} p-1 px-2">
+                                <h5 class="text-dark fw-bold">${item.Title}</h6>
+                                <span class="text-dark">${item.Content}</span>
+                              </div>`
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                }
+            }
+            resolve();
+ 
+        })
+    }
+    async function CLideAttach_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        tr = `  <div class="d-flex align-items-center">
+                                    <a href=${item.FileUrl} target="_blank" class="slidetail text-lowercase d-flex align-items-center text-primary text-sm icon-move-right my-auto">
+                                        <p class=" text-dark  mb-0">
+                                               ${item.FileName}
+                                         </p>
+                                        <i class="fas fa-arrow-right text-xs ms-1" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                                ${(i == data.length - 1) ? `` : `<hr class="horizontal dark">`}
+                        `
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                }
+            }
+            resolve();
+            
+        })
+    }
+    
+</script>
+

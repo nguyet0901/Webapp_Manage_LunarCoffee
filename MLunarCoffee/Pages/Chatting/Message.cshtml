@@ -1,0 +1,925 @@
+﻿@page
+@model MLunarCoffee.Pages.Chatting.Message
+@{
+    Layout=null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script src="/assests/js/emoji.js" type="text/javascript"></script>
+<div class="row position-relative h-100">
+    <div class="h-100">
+        <div class="card blur h-100">
+            <div class="border-bottom card-header p-2 position-sticky top-0">
+                <div class="d-flex">
+                    <div class="d-flex">
+                        <div class="d-flex align-items-center">
+                            <div id="receipt_avatargrow" class="spinner-grow spinner-grow-sm text-primary" role="status">
+                            </div>
+                            <img id="receipt_avatar" alt="Image" src="" class="d-none avatar" style="object-fit: cover;" onerror="Master_OnLoad_Error_Image(this)">
+                            <div class="ms-3">
+                                <h6 id="receipt_name" class="mb-0 d-block text-capitalize"></h6>
+                                <h6 id="receipt_code" class="mb-0 d-block text-capitalize"></h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center ms-auto pe-3">
+                        <div id="mess_part" class="avatar-group mt-1 me-2">
+                        </div>
+                        <i id="mess_media" class="d-none cursor-pointer text-gradient text-warning text-md fas fa-photo-video"></i>
+                    </div>
+
+                </div>
+            </div>
+            <div class="pt-4" style="height: calc(100% - 165px);">
+                <div id="message_more" class="d-none cursor-pointer text-center text-primary fw-bold btnsysmore  text-xs w-100 p-1" onclick="Message_Load(1)">@Local["Xem thêm"]</div>
+                <div id="MessageBodygrow" class="position-absolute top-50 start-50 translate-middle spinner-grow spinner-grow-sm text-primary" role="status">
+
+                </div>
+                <div id="MessageBody" class="position-ralative d-none card-body overflow-auto overflow-x-hidden " style="height:100%">
+
+                </div>
+            </div>
+            <div id="MessageFooter" class="bg-white card-footer w-100 position-absolute bottom-0 d-none mb-3 p-2">
+                <div class="align-items-center border-bottom  border-top d-flex  ps-3 pt-2 pb-0">
+                    <div class="d-flex">
+                        <i class="text-lg text-dark fas fa-paperclip"></i>
+                        <input class="opacity-0 cursor-pointer"
+                               style="margin-left: -22px; width: 26px; z-index: 2; cursor: pointer;"
+                               id="messu_file" accept=".csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf" type="file" name="files[]" multiple />
+                    </div>
+                    <div class="mx-3 d-flex">
+                        <i class="text-lg text-dark fas fa-camera-retro"></i>
+                        <input class="opacity-0 cursor-pointer"
+                               style="margin-left: -22px; width: 26px; z-index: 2; cursor: pointer;"
+                               id="messu_image" accept="image/png, image/jpeg" type="file" name="files[]" multiple />
+                    </div>
+                    <div class="mx-3 mb-2 d-flex">
+                        <div class="messagenoti text-danger text-sm" id="messageerror">
+                        </div>
+
+                    </div>
+                </div>
+                <div class=" ">
+                    <div class="position-relative">
+                        <div class="d-flex">
+                            <input id="message_text" type="text" class="ps-3 py-2 text-md border-0 form-control">
+
+                            <div class="d-flex align-items-center ">
+                                <i id="mess_fly" class="text-lg text-dark  fas fa-share me-2 mx-3 cursor-pointer"></i>
+                                <i id="mess_emoji" class="text-lg text-dark fas fa-grin-beam cursor-pointer mx-2"></i>
+                                <i id="mess_like" class="text-gradient text-lg text-warning fas fa-thumbs-up mb-1 ms-2 cursor-pointer me-3"></i>
+
+                            </div>
+                        </div>
+                        <div id="message_upwait" class="ms-2 position-absolute spinner-border-sm top-50 start-0 translate-middle-y d-none">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div id="MessageToBottom" class="position-absolute d-none">
+            <a class="btn bg-gradient-warning mb-0 px-2 py-2 text-end text-xxs shadow-lg " href="javascript:;">
+                <i class="fa fa-arrow-down me-1 mb-0" aria-hidden="true"></i>
+                @Local["Tin nhắn mới"]
+            </a>
+        </div>
+    </div>
+    <div id="MessageMedia_Area" class="position-absolute top-0 h-100">
+        <div class="card shadow-lg blur mw-100 h-100  rounded-0" style="overflow-x:hidden;overflow-y:auto;">
+            <div class="card-header pb-0 pt-3 bg-transparent " style="height:60px;">
+                <div class="d-flex">
+                    <ul class="mediatags nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="mediatag nav-link text-sm cursor-pointer" data-fun="img" role="tab">@Local["Hình ảnh"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="mediatag nav-link text-sm cursor-pointer" data-fun="fle" role="tab">@Local["Tài liệu"]</a>
+                        </li>
+                    </ul>
+                    <div class="ms-auto my-auto mt-1">
+                        <i class="cursor-pointer text-md text-gradient mt-2 text-danger fa fa-close"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body pt-sm-2 pt-0 position-ralative" style="height: calc(100% - 60px)">
+                <hr class="horizontal dark my-1">
+                <div id="MessageMedia_Grow" class="d-none position-absolute top-50 start-50 translate-middle spinner-grow spinner-grow-sm text-primary" role="status">
+                </div>
+                <div id="MessageMedia_Content">
+                    <div id="MessageMedia_Img"></div>
+                    <div id="MessageMedia_File"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var converid = '';
+    var messagedata = {};
+    var urlimage = "/Api/UploadChatting/Upload?Type=Image";
+    var urlfile = "/Api/UploadChatting/Upload?Type=File";
+    var limit = 50;
+    var begin = 0;
+    var picker = new EmojiButton();
+    let sticker = {};
+    let datagreeting = {};
+    var Master_CustomerID = ("@Model._CustID");
+    var customerToken = '';
+
+    $(document).ready(function () {
+        datagreeting = {
+            "val1": "Xin chào Anh/ Chị."
+            , "val2": "Hello Sir / Madam."
+        }
+        sticker = {
+            "like": "/like.webp"
+        }
+        Message_GetInfo();
+        MessageMedia_Event();
+    });
+    function Message_LoadOutside (custid) {
+        $('#MessageMedia_Area').removeClass('active');
+        $('#MessageBody').html('');
+        Master_CustomerID = custid;
+        begin = 0; messagedata = {}; converid = '';
+        Message_GetInfo();
+    }
+    //#region // Load
+    function Message_GetInfo () {
+        AjaxLoad(url = "/Chatting/Message/?handler=GetInfo"
+            , data = {
+                'custid': Master_CustomerID,
+                'converid': converid
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let isExist = false;
+                    let dataMain = JSON.parse(result);
+                    let data = dataMain.Table;
+                    let dataCust = dataMain.Table1;
+                    if (dataCust != undefined && dataCust.length == 1) {
+                        let item = dataCust[0];
+                        $("#receipt_avatar").attr('src',((item.CustomerAvartar != '') ? item.CustomerAvartar : Master_Default_Image));
+                        $("#receipt_avatar").removeClass('d-none');
+                        $("#receipt_avatargrow").addClass('d-none');
+                        $("#receipt_name").html(item.CustomerName);
+                        $("#receipt_code").html(item.CustomerCode);
+                        customerToken = item.CustomerToken;
+                    }
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        if (item.ConverID != '') {
+                            isExist = true;
+                            converid = item.ConverID;
+                            Message_Event();
+                        }
+                    }
+                    if (isExist) {
+                        Message_Load(more = 0);
+                        let datapart = dataMain.Table2;
+                        MessageRender_Part(datapart, "mess_part");
+                        $("#MessageFooter").removeClass('d-none');
+                        $("#mess_media").removeClass('d-none');
+
+                    }
+                    else {
+                        converid = '';
+                        $("#MessageFooter").addClass('d-none');
+                        $("#mess_media").addClass('d-none');
+                        MessageRender_Greeting(datagreeting, "MessageBody");
+                    }
+                }
+            },
+            sender = null,
+            before = function (e) {
+                $('#MessageBodygrow').removeClass('d-none');
+                $('#MessageBody').addClass('d-none');
+            },
+            complete = function (e) {
+                $('#MessageBodygrow').addClass('d-none');
+                $('#MessageBody').removeClass('d-none');
+            }
+        );
+    }
+    function Message_Load (more) {
+        AjaxLoad(url = "/Chatting/Message/?handler=LoadMessage"
+            , data = {
+                'converid': converid
+                , 'limit': limit
+                , 'time': begin
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    message_more
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        $('#message_more').removeClass('d-none');
+                        begin = data[data.length - 1].TimeCreated;
+                        if (more == 0) {
+                            messagedata = {};
+                            $('#MessageBody').html('');
+                        }
+                        for (let i = 0; i < data.length; i++) {
+                            messagedata[data[i].ID] = data[i];
+                        }
+                        data = data.sort((a, b) => (a.TimeCreated > b.TimeCreated) ? 1 : ((b.TimeCreated > a.TimeCreated) ? -1 : 0))
+                        MessageRender_List(ismore = more, data, "MessageBody");
+                    }
+                    else {
+                        $('#message_more').addClass('d-none');
+                        $('#MessageBody').scrollTop(0);
+                    }
+                }
+            },
+            sender = null,
+            before = function (e) {
+
+            },
+            complete = function (e) {
+
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // Event
+    function Message_Event () {
+        let linkimg = urlimage + '&Conver=' + converid;
+        let linkfile = urlfile + '&Conver=' + converid;
+
+        $('#message_text').unbind('keypress').keypress(function (e) {
+            if (e.which == 13) {
+                if ($(this).val() && $(this).val().length != 0) {
+                    var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+                    Message_SendMessage(_d, 'txt', $(this).val(), '', '', '', callbegin = Message_BeginSend
+                        , callend = Message_FinishSend
+                        , callerror = Message_ErrorSend
+                    )
+                    $(this).val("");
+                }
+            }
+        });
+        AjaxUpload_Multi(url = linkimg , inputid = 'messu_image'
+            , success = function (data, e) {
+                if (data != "0") {
+                    var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+                    Message_SendMessage(_d, 'img', '', data.split('##')[0], data.split('##')[1], e, callbegin = function () { }
+                        , callend = function () { }
+                        , callerror = function () { }
+                    )
+                    Message_BeginSend(_d, 'img', '', data.split('##')[0], data.split('##')[1], e);
+                    Message_FinishSend(_d);
+                    $('#message_upwait').addClass('d-none');
+                }
+                else Message_UploadFail('img');
+            }
+            , error = function () {
+                Message_UploadFail('img');
+            },
+            before = function (e) {
+                $('#message_upwait').removeClass('d-none');
+            }
+            , complete = null
+            , funmaxrange = function (e) {
+                notiWarning('@Local["Giới hạn"] : 5')
+            }
+        );
+        AjaxUpload_Multi(url = linkfile, inputid = 'messu_file'
+            , success = function (data, e) {
+                if (data != "0") {
+                    var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+                    Message_SendMessage(id = _d, type = 'fle', message = '', link = data, linkfeature = '', filename = e, callbegin = function () { }
+                        , callend = function () { }
+                        , callerror = function () { }
+                    )
+                    Message_BeginSend(_d, 'fle', '', data, data, e);
+                    Message_FinishSend(_d);
+                    $('#message_upwait').addClass('d-none');
+                }
+                else Message_UploadFail('fle');
+            }
+            , error = function () {
+                Message_UploadFail('fle');
+            },
+            before = function (e) {
+                $('#message_upwait').removeClass('d-none');
+            }
+            , complete = null
+            , funmaxrange = function (e) {
+                notiWarning('@Local["Giới hạn"] : 5')
+            }
+        );
+        const button = document.querySelector('#mess_emoji');
+        button.addEventListener('click', () => {
+            picker.togglePicker(button);
+        });
+        picker.on('emoji', emoji => {
+            document.querySelector('#message_text').value += emoji;
+        });
+        $('#mess_fly').unbind('click').click(function (e) {
+
+            let message = $('#message_text').val();
+            if (message.length != '') {
+                var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+                Message_SendMessage(_d, 'txt', $('#message_text').val(), '', '', '', callbegin = Message_BeginSend, callend = Message_FinishSend
+                    , callerror = Message_ErrorSend
+                )
+            }
+        });
+        $('#mess_like').unbind('click').click(function (e) {
+
+            var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+            Message_SendMessage(_d, 'img', '', sticker['like'], sticker['like'], '', callbegin = function () { }
+                , callend = function () { }
+                , callerror = function () { }
+            )
+
+            Message_BeginSend(_d, 'img', '', sticker['like'], sticker['like'], '');
+            Message_FinishSend(_d);
+        });
+        $("#MessageBody").scroll(function () {
+            if ($("#MessageBody").outerHeight() + $("#MessageBody").scrollTop() + 100 > $('#MessageBody')[0].scrollHeight) {
+                $("#MessageToBottom").addClass('d-none');
+            }
+        })
+        $("#MessageToBottom").unbind('click').click(function () {
+            $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+        })
+
+
+        $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+    }
+    function Message_GreetingEvent () {
+        $('#MessageBody .greeting').unbind('click').click(function (e) {
+            let val = $(this).attr('data-value');
+            let text = datagreeting[val];
+            if (text && text != "") Message_CreatedConver(text)
+        });
+    }
+    function Message_CreatedConver (mess) {
+        AjaxLoad(url = "/Chatting/Message/?handler=CreateConver"
+            , data = {
+                'custid': Master_CustomerID,
+                'message': mess
+            }, async = true, error = function (e) { }
+            , success = function (result) {
+                if (result != "0") {
+                    let _dd = JSON.parse(result)[0];
+                    fcm_chatcustgate(customerToken
+                        , converid = _dd.RESULT
+                        , custid = Master_CustomerID
+                        , time = _dd.TIME
+                        , type = 'txt'
+                        , message = mess
+                        , link = ''
+                        , linkfeature = ''
+                        , filename = '');
+                    Message_GetInfo();
+                    if (typeof Conversation_Load !== 'undefined' && typeof Conversation_Load === 'function') {
+                        Conversation_Load(more = 0, detail = _dd.RESULT);
+                    }
+                }
+            },
+            sender = $(".greeting"),
+            before = function (e) {
+
+            },
+            complete = function (e) {
+
+            }
+        );
+    }
+    function Message_UploadFail (type) {
+        if (type == "fle") $('#messageerror').html('File format: .DOCX,.DOC,.PDF,.XLS,.XLSX,.CSV .Maximum size is 5 M');
+        else $('#messageerror').html('File format: .PNG,.JPG,.JPEG .Maximum size is 5 M');
+        $('#messageerror').removeClass('show');
+        $('#messageerror').addClass('show');
+        $('#message_upwait').addClass('d-none');
+    }
+    function Message_BeginSend (id, type, message, link, linkfeature, filename) {
+
+        let obj = Message_NewRow(id, type, message, link, linkfeature, filename, Master_circleAvatar, sys_userName_Main, 0, sys_userID_Main, BigIntYmdhms());
+        let _item = MessageRender_Item(obj, iswaiting = 1);
+        $("#MessageBody").append(_item);
+        $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+    }
+    function Message_FinishSend (id) {
+        if ($("#messt_" + id).length) {
+            $("#messt_" + id).empty();
+            $("#messt_" + id).html('<i class="text-success fas fa-check" aria-hidden="true"></i>');
+        }
+    }
+    function Message_ErrorSend (id) {
+        if ($("#messt_" + id).length) {
+            $("#messt_" + id).empty();
+            $("#messt_" + id).html('<i class="text-danger fas fa-exclamation-circle" aria-hidden="true"></i>');
+        }
+    }
+    function Message_SendMessage (id, type, message, link, linkfeature, filename, callbegin, callend, callerror) {
+        AjaxLoad(url = "/Chatting/Message/?handler=SendMessage"
+            , data = {
+                'converid': converid,
+                'type': type,
+                'message': message,
+                'link': link,
+                'linkfeature': linkfeature,
+                'filename': filename,
+            }, async = true, error = function (e) {
+                callerror(id);
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    let obj = Message_NewRow(id, type, message, link, linkfeature, filename, '', '', 0, sys_userID_Main, BigIntYmdhms());
+                    messagedata[obj.ID] = obj;
+                    fcm_chatcustgate(customerToken
+                        , converid = converid
+                        , custid = Master_CustomerID
+                        , time = result
+                        , type = type
+                        , message = message
+                        , link = link
+                        , linkfeature = linkfeature
+                        , filename = filename);
+                    Message_Reset();
+                    callend(id);
+                    if (typeof Conver_UpdateItem !== 'undefined' && typeof Conver_UpdateItem === 'function') {
+                        Conver_UpdateItem(converid, type, message, link, filename, result, sys_userID_Main, outconver = false, isusersend=true);
+                    }
+                }
+                else {
+                    callerror(id);
+                }
+            },
+            sender = $("#message_text"),
+            before = function (e) {
+                callbegin(id, type, message, link, filename);
+            },
+            complete = function (e) {
+
+            }
+        );
+    }
+    function Message_NewRow (id, type, message, link, linkfeature, filename, avatarsend, namesend, custid, userid, time) {
+        let e = {};
+        e.Action = "n";
+        e.Content = message;
+        e.CustomerSend = custid;
+        e.ID = id;
+        e.Link = link;
+        e.LinkFeature = linkfeature;
+        e.FileName = filename;
+        e.AvatarSend = avatarsend;
+        e.NameSend = namesend;
+        e.TimeCreated = time;
+        e.Type = type;
+        e.UserSend = userid;
+        return e;
+    }
+    //#endregion
+
+    //#region // Reset
+    function Message_Reset () {
+        $("#message_text").val('');
+    }
+    //#endregion
+
+    //#region // Render
+
+    function MessageRender_Greeting (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let tr = '';
+            for ([key, value] of Object.entries(data)) {
+                tr =
+                    '<div class="card bg-gray-200 my-2 ">'
+                    + '<div class="card-body py-2 px-3">'
+                    + '<p data-value="' + key + '" class="greeting cursor-pointer mb-1 text-sm text-capitalize">'
+                    + value
+                    + '</p>'
+                    + '</div>'
+                    + '</div>'
+                stringContent = stringContent + tr;
+            }
+
+            document.getElementById(id).innerHTML = '<div class="mb-5 me-3 position-absolute bottom-0 end-0">' + stringContent + '</div>';
+        }
+        $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+        Message_GreetingEvent();
+    }
+    function MessageRender_List (more, data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let stringContent = '';
+            let date = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let _date = BigIntToDate(item.TimeCreated);
+                if (date != _date) {
+                    date = _date;
+                    stringContent = stringContent
+                        + '<div class="row mt-4">'
+                        + '<div class="col-md-12 text-center">'
+                        + '<span class="badge text-dark">' + date + '</span>'
+                        + '</div>'
+                        + '</div>'
+                }
+                stringContent = stringContent + MessageRender_Item(item);
+            }
+            document.getElementById(id).insertAdjacentHTML("afterbegin", stringContent);
+        }
+        if (more == 0) {
+            $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+        }
+        else $('#MessageBody').scrollTop(0);
+
+    }
+    function MessageRender_Item (item, iswaiting) {
+
+        let _con = '', _sta = '', _avatarsend, classname, classchild;
+        if (item.CustomerSend == 0) {
+            classname = 'row justify-content-end text-right mb-4';
+            classchild = 'card bg-gray-200';
+            _avatarsend = (item.AvatarSend != '') ? item.AvatarSend : Master_Default_Pic;
+            _avatarsend = '<img class="avatar avatar-xs me-2" src="' + _avatarsend + '" alt="label-image">' + '<span class="me-2">' + item.NameSend + '</span>';
+
+        }
+        else {
+            classname = 'row justify-content-start mb-4';
+            classchild = 'card';
+            _avatarsend = '';
+        }
+        if (iswaiting != undefined && iswaiting == 1) {
+            _sta = '<div class="spinner-border spinner-border-sm text-info" role="status">'
+                + '<span class="sr-only">Loading...</span>'
+                + '</div>';
+        }
+        else {
+            _sta = '<i class="text-success fas fa-check"></i>';
+        }
+
+        switch (item.Type) {
+            case 'txt':
+                {
+                    _con = '<p class="text-dark mb-1">'
+                        + item.Content
+                        + '</p>'
+                }
+                break;
+            case 'img':
+                {
+                    _con = '<div class="col-12 p-0">'
+
+                        + '<a class="mb-1 cursor-pointer" target="_blank" href="' + item.Link + '">'
+                        + '<img src="' + item.LinkFeature + '"  class="img-fluid mb-2 border-radius-lg" style="max-height: 70px;min-height: 70px;">'
+                        + '</a>'
+                        + '</div>'
+                }
+                break;
+            case 'fle':
+                {
+                    _con = '<a class="mb-1 cursor-pointer" target="_blank" href="' + item.Link + '">'
+                        + item.FileName
+                        + '</a>'
+                }
+                break;
+            default: break;
+        }
+        let tr = '<div class="col-auto" style="max-width: 70%">'
+
+            + '<div class="' + classchild + '">'
+            + '<div class="card-body py-2 px-3">'
+            + _con
+            + '<div class="d-flex align-items-center text-sm mt-2">'
+            + _avatarsend
+            + '<div id="messt_' + item.ID + '">'
+            + _sta
+            + '</div>'
+            + '<small class="ms-1 opacity-5 fw-bold text-dark text-xs">' + BigIntToTime(item.TimeCreated) + '</small>'
+            + '</div>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
+        tr = '<div id="mes_' + item.ID + '" class="' + classname + '">' + tr + '</div>'
+        return tr;
+    }
+    function MessageRender_Part (data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let tr = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                tr = '<a href="javascript:;" class="mx-0 avatar avatar-lg avatar-xs rounded-circle" '
+                    + 'data-bs-toggle="tooltip" data-bs-placement="bottom"  title="' + item.NickName + '">'
+                    + '<img src="' + ((item.Avatar != '') ? item.Avatar : Master_Default_Pic) + '">'
+                    + '</a>'
+                stringContent = stringContent + tr;
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+
+    }
+    //#endregion
+
+
+
+
+    //#region // Media area
+    function MessageMedia_Event () {
+        $('#MessageMedia_Area .fa-close').unbind('click').click(function (e) {
+            $('#MessageMedia_Area').removeClass('active');
+            $('.mediatags .mediatag').removeClass('active');
+            $('#MessageMedia_File').html('');
+            $('#MessageMedia_Img').html('');
+        });
+        $('#mess_media').unbind('click').click(function (e) {
+            $('#MessageMedia_Area').addClass('active');
+            $('.mediatags .mediatag[data-fun="img"]').addClass('active');
+            MessageMedia_Load('img');
+            $('#MessageMedia_Img').show();
+            $('#MessageMedia_File').hide();
+        });
+        $(".mediatags .mediatag").unbind('click').click(function (event) {
+            let fun = $(this).attr("data-fun");
+            $('.mediatags .mediatag').removeClass('active');
+            $(this).addClass('active');
+            if (fun == 'img') {
+                if ($('#MessageMedia_Img').html() == '') MessageMedia_Load(fun);
+                $('#MessageMedia_Img').show();
+                $('#MessageMedia_File').hide();
+            }
+            else {
+                if ($('#MessageMedia_File').html() == '') MessageMedia_Load(fun);
+                $('#MessageMedia_Img').hide();
+                $('#MessageMedia_File').show();
+            }
+
+        });
+
+    }
+    function MessageMedia_Load (type) {
+
+        AjaxLoad(url = "/Chatting/Message/?handler=LoadMedia"
+            , data = {
+                'converid': converid,
+                'type': type
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        if (type == 'img') MessageMedia_Render(data, "MessageMedia_Img", type);
+                        else MessageMedia_Render(data, "MessageMedia_File", type);
+                    }
+                }
+            },
+            sender = null,
+            before = function (e) {
+                $('#MessageMedia_Grow').removeClass('d-none');
+                $('#MessageMedia_Content').addClass('d-none');
+            },
+            complete = function (e) {
+                $('#MessageMedia_Grow').addClass('d-none');
+                $('#MessageMedia_Content').removeClass('d-none');
+            }
+        );
+    }
+    function MessageMedia_Render (data, id, type) {
+
+        var myNode = document.getElementById(id);
+        let imageFirstID = ''
+        if (myNode != null) {
+            myNode.innerHTML = '';
+
+            let date = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let tr = '';
+                let stringdate = '';
+                let _date = BigIntToDate(item.TimeCreated);
+                if (date != _date) {
+                    date = _date;
+                    stringdate =  '<span class="d-block text-sm fw-bold my-3 text-dark ">' + date + '</span>';
+                }
+                if (type == 'img') {
+                    let _img = '';
+                    if (data.length >= 1 && i == 0) {
+                        imageFirstID = 'imageLink_' + item.TimeCreated;
+                        _img = '<img data-src="' + item.Link + '" src="/default.png" class="img-fluid img-thumbnail imageFirst" loading="lazy" />';
+                    } else {
+                        _img = '<img src="' + item.LinkFeature + '" class="img-fluid img-thumbnail" loading="lazy" />';
+                    }
+                    tr = '<div id="imageLink_' + item.TimeCreated + '" class="d-inline-block m-0 p-0 ' + ((i == 0) ? 'lazyImage d-block w-100' : '') + '">'
+                        + '<a class="cursor-pointer " target="_blank" href="' + item.Link + '" >'
+                        + _img
+                        + '</a>'
+                        + '</div>';
+                }
+                else {
+                    let ext = item.Link.split('.').pop();
+                    if (ext != undefined && ext != '') {
+                        ext = ext.toLowerCase();
+                        let _clext = '';
+                        switch (ext) {
+                            case 'docx':
+                            case 'doc':
+                                {
+                                    _clext = '<i class="text-info fas fa-file-word" style="font-size: 33px;"></i>';
+                                }
+                                break;
+                            case 'xls':
+                            case 'xlsx':
+                                {
+                                    _clext = '<i class="text-success fas fa-file-excel" style="font-size: 33px;"></i>';
+                                }
+                                break;
+                            case 'pdf':
+                                {
+                                    _clext = '<i class="text-warning fas fa-file-pdf" style="font-size: 33px;"></i>';
+                                }
+                                break;
+                            case 'csv':
+                                {
+                                    _clext = '<i class="text-dark fas fa-file-csv" style="font-size: 33px;"></i>';
+                                }
+                                break;
+                            default: {
+                                _clext = '<i class="text-dark fas fa-file-alt" style="font-size: 33px;"></i>';
+                            }
+                                break;
+                        }
+
+                        tr = '<div class="d-flex my-2 align-items-center">'
+                            + _clext
+                            + '<div class="ms-3">'
+                            + '<a class="text-sm text-dark cursor-pointer" target="_blank" href="' + item.Link + '">' + item.FileName + '</a>'
+                            + '</div>'
+                            + '</div>'
+                    }
+                }
+                document.getElementById(id).insertAdjacentHTML("beforeend", stringdate+tr);
+            }
+        }
+        MessageMedia_RenderImage(imageFirstID);
+
+
+    }
+
+    async function MessageMedia_RenderImage (id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                let block = $("#" + id);
+                if (id != '' && block.length != 0) {
+                    let image = block.find('img[data-src]');
+                    if (image.length != 0) {
+                        image.attr('src', image.attr('data-src'));
+                        var imageLoad = new Image();
+                        imageLoad.onload = function () {
+                            block.removeClass("lazyImage");
+                        }
+                        imageLoad.src = image.attr('data-src');
+                    }
+                }
+                resolve();
+            }, 300)
+
+        }, 0)
+    }
+
+    //#endregion
+
+    //#region // Receipt Message
+    function Message_Receipt (data) {
+        try {
+
+            if (data != undefined) {
+                let outconver = true;
+                if (data.converid == converid) {
+                    var _d = (new Date()).getTime().toString() + Math.floor(Math.random() * 100000).toString();
+                    let obj = Message_NewRow(_d, data.type, data.body, data.link, data.linkfeature, data.filename, data.senderavatar, data.sendername, data.custid, data.userid, data.time);
+                    messagedata[obj.ID] = obj;
+                    let _item = MessageRender_Item(obj, iswaiting = 0);
+                    $("#MessageBody").append(_item);
+                    if ($("#MessageBody").scrollTop() + $("#MessageBody").innerHeight() >= $("#MessageBody")[0].scrollHeight - 200) {
+                        $('#MessageBody').scrollTop($('#MessageBody')[0].scrollHeight);
+                    }
+                    else {
+                        $("#MessageToBottom").removeClass("d-none");
+                    }
+                    outconver = false;
+                }
+                if (typeof Conver_UpdateItem !== 'undefined' && typeof Conver_UpdateItem === 'function') {
+                    Conver_UpdateItem(data.converid, data.type, data.body,data.link, data.filename, data.time, data.userid, outconver = outconver, isusersend = false);
+                }
+            }
+        } catch (e) { }
+    }
+    //#endregion
+</script>
+
+<style>
+    #messageerror {
+        opacity: 0;
+    }
+
+    .messagenoti.show {
+        animation: anime 12s 1;
+    }
+
+    @@keyframes anime {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+        }
+    }
+
+    .emoji-picker__preview {
+        height: 60px !important;
+    }
+
+    .emoji-picker__search {
+        height: 38px !important;
+    }
+
+    #MessageMedia_Area {
+        width: 312px;
+        margin-right: -13px;
+        right: -312px;
+    }
+
+        #MessageMedia_Area.active {
+            right: 0;
+            transition: 0.3s all;
+        }
+
+
+
+    .lazyImage {
+        height: 200px;
+        width: 100%;
+        background-color: #f0f2f5;
+        position: relative;
+        overflow: hidden;
+        display: block;
+    }
+
+        .lazyImage:before {
+            content: '';
+            background: linear-gradient(to right,#ebeff4 0%,#ffffff 50%,#ebeff4 100%);
+            position: absolute;
+            height: 100%;
+            width: 50%;
+            left: 25%;
+            filter: blur(10px);
+            left: 0;
+            animation: blurImage 0.8s backwards infinite;
+            animation-direction: alternate;
+        }
+
+        .lazyImage > * {
+            display: none !important
+        }
+
+    #MessageToBottom {
+        bottom: 150px;
+        right: 50px;
+    }
+
+    .imageFirst {
+        max-height: 300px;
+        min-height: 200px;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+    }
+
+    @@keyframes blurImage {
+        from {
+            left: -25%;
+        }
+
+        to {
+            left: 75%;
+        }
+    }
+
+
+</style>

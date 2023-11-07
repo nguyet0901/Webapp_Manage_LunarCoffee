@@ -1,0 +1,161 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Employee.AllowanceTypeList.AllowanceTypeModel
+@{
+    Layout = null;
+}
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div id="ATMain">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Cấu hình loại phụ cấp"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách loại phụ cấp"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="btn_ATAddNew" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" data-tab="add_tab_about" data-value="fade up" onclick="return ATAddNew()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 pb-0 px-2">
+                    <table class="table vt-table mb-0 mt-2" id="ATDtContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th>@Local["Tên"]</th>
+                                <th>@Local["Người sửa"]</th>
+                                <th style="width:40px;" class="setting_projectclosure">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ATDtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let DataUser;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                ATLoad();
+            }
+        )
+    })
+
+    //#region //LOAD
+    function ATLoad() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Setting/Employee/AllowanceTypeList?handler=LoadData"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result);
+                            ATRenderTable(data, 'ATDtContentBody');
+                            ATEvent();
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    });
+            });
+    }
+
+    //#endregion
+
+    //#region //RENDER
+    function ATRenderTable(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.ModifiedBy);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    let tr = `<td class="d-none ATID"> ${item.ID} </td>
+                        <td class="vt-number-order"></td>
+                        <td class="mx-auto">
+                            <div class="mx-2">
+                                 <a class="text-decoration-underline fw-bold buttonEditClass" href="#"> ${item.Name} </a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex f-md-right">
+                                <div class="icon icon-shape icon-sm me-2 text-center" >
+                                    <img class="avatar avatar-xs mt-2 " src="${img}" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                    <h6 class="text-dark text-sm mb-0"> ${name} </h6>
+                                    <span class="text-xs"> ${formatDateToDMYHM(item.Modified)} </span>
+                                </div>
+                            </div>
+                        </td>
+                            <td class="setting_projectclosure"> ${Render_Button_Grid(['<button class="buttonGrid" value="item.ID"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])}
+                        </td>`;
+                    stringContent = stringContent + `<tr class="vt-number" role="row"> ${tr} </tr>`;
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function ATDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ATExecuteDelete(id); }, function () { });
+    }
+
+    function ATExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/Employee/AllowanceTypeList?handler=Delete"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result)[0];
+                if (data.result != "0") {
+                    notiSuccess();
+                    ATLoad();
+                } else {
+                    NotiError_SW();
+                }
+            });
+    }
+
+    function ATAddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Employee/AllowanceTypeDetail?" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function ATEvent() {
+        $('#ATDtContent tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr').find('.ATID')[0].innerHTML);
+            ATEdit(ID);
+        });
+        $('#ATDtContent tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr').find('.ATID')[0].innerHTML);
+            ATDelete(ID);
+        });
+    }
+
+    function ATEdit(ID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Employee/AllowanceTypeDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    //#endregion
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

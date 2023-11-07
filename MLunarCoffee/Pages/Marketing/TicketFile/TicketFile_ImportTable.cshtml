@@ -1,0 +1,294 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketFile.TicketFile_ImportTableModel
+@{
+    Layout = null;
+}
+<div>
+    <div class="row px-2">
+        <div class="field col-12 col-sm-6 col-xl-3 p-1 ">
+            <label>@Local["Tên tệp"]</label>
+            <input id="TIT_NameFile" class="form-control disabled" disabled readonly />
+        </div>
+        <div id="per_ImportTicketDuplicate" class="field col-12 col-sm-6 col-xl-3 p-1">
+            <label>@Local["Lưu trùng số"]</label>
+            <div class="ui fluid search selection dropdown form-control" id="TIT_AllowDuplicate">
+                <input type="hidden" name="devideType" />
+                <i class="dropdown icon"></i>
+                <input class="search" autocomplete="off" tabindex="0" />
+                <div class="default text"></div>
+                <div id="cbb_TIT_AllowDuplicate" class="menu" tabindex="-1">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="m-0 my-3 table-responsive" id="TableExecelImport" style="max-height:600px">
+    <div id="waitingTicketImport" class="waitingdiv text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div id="TILoadProgress" class="w-50 progress-wrapper position-absolute top-0 start-50 translate-middle-x d-none mt-7 px-5">
+        <div class="progress-info">
+            <div class="progress-percentage mb-2">
+                <span id="TILoadProgress_Text" class="text-lg text-primary font-weight-bold"></span>
+            </div>
+        </div>
+        <div class="progress" style="height: 10px;">
+            <div id="TILoadProgress_Bar" class="progress-bar bg-primary" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style=" height: 10px;"></div>
+        </div>
+    </div>
+    <table id="dtTableExecelImport" class="table vt-table mb-0">
+        <thead>
+            <tr>
+                <th style="text-align: center">@Local["#"]</th>
+                <th style="text-align: center; min-width: 160px;" id="created">@Local["Ngày"]</th>
+                <th style="text-align: center; min-width: 180px;">@Local["Tên"]</th>
+                <th id="tempcustcodeold" style="text-align: center; min-width: 100px;">@Local["Mã khách hàng cũ"]</th>
+                <th style="text-align: center;min-width: 150px;" id="phone">@Local["Số điện thoại"]</th>
+                <th style="text-align: center;min-width: 150px;" id="phone2">@Local["Số điện thoại"] 2</th>
+                <th style="text-align: center;min-width: 120px;" id="birth">@Local["Ngày sinh"]</th>
+                <th style="text-align: center;min-width: 115px;">@Local["Giới tính"]</th>
+                <th style="text-align: center;min-width: 150px;" id="fb">Facebook</th>
+                <th style="text-align: center;min-width: 150px;" id="email">Email</th>
+                <th style="text-align: center;min-width: 150px;" id="addr">@Local["Địa chỉ"]</th>
+                <th style="text-align: center;min-width: 120px;" id="serv">@Local["Dịch vụ quan tâm"]</th>
+                <th id="area" style="text-align: center; min-width: 100px;">@Local["Khu vực"]</th>
+                <th id="timeslot" style=" text-align: center; min-width: 100px;">@Local["Khung giờ"]</th>
+                <th id="symb" style="text-align: center; min-width: 100px;">@Local["Ký hiệu"]</th>
+                <th id="camp" style="text-align: center; min-width: 100px;">@Local["Chiến dịch"]</th>
+                <th id="gclid" style="text-align: center; min-width: 100px;">@Local["Gclid"]</th>
+                <th id="tempidissuenum" style="text-align: center; min-width: 100px;">@Local["CMND/CC"]</th>
+                <th id="tempidissueplace" style="text-align: center; min-width: 100px;">@Local["Nơi cấp"]</th>
+                <th id="tempidissuedate" style="text-align: center; min-width: 100px;">@Local["Ngày cấp"]</th>
+                <th style="text-align: center; min-width: 100px;" id="ads">ADS</th>
+                <th style="text-align: center; min-width: 180px;" id="note">@Local["Ghi chú"]</th>
+                <th style="text-align: center; min-width: 260px" id="status">@Local["Tình trạng"]</th>
+            </tr>
+        </thead>
+        <tbody id="dtTableExecelImportBody">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let TITGender = {
+        60: { "ID": 60, "Name": "@Local["Nam"]" },
+        61: { "ID": 61, "Name": "@Local["Nữ"]" }
+    };
+    $(document).ready(function () {
+        TIT_EventInit();
+        TIT_Reload();
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+        if (TIPDataExcelImport && TIPDataExcelImport.length != 0) {
+            let _data = JSON.parse(JSON.stringify(TIPDataExcelImport));
+            var _totalrow = _data.length;
+            var _step100 = Math.floor(_totalrow / 100);
+            _step100 = _step100 == 0 ? 1 : _step100;
+            if (_data.length < 100) {
+                $("#TILoadProgress").addClass('d-none');
+                $("#dtTableExecelImport").removeClass('blockupload');
+            }
+            else {
+                $("#TILoadProgress").removeClass('d-none');
+                $("#dtTableExecelImport").addClass('blockupload');
+                $("#TILoadProgress_Bar").css({'width': '0%'});
+                $("#TILoadProgress_Text").html('0 %');
+            }
+            TIT_RenderExcel(_data, "dtTableExecelImportBody", _step100);
+        }
+    })
+
+    function TIT_Reload(name = ''){
+        $("#TIT_NameFile").val(name ?? '');
+    }
+
+    function TIT_EventInit(){
+        let dataAllow = [{ ID: 0, Name: "@Local["Không được trùng"]" }, { ID: 1, Name: "@Local["Lưu trùng số"]" },]
+        Load_Combo(dataAllow, "cbb_TIT_AllowDuplicate", true)
+        $("#TIT_AllowDuplicate").dropdown("refresh");
+        $("#TIT_AllowDuplicate").dropdown("set selected", "0");
+    }
+
+    async function TIT_RenderExcel (data, id, blocknum) {
+        return new Promise((resolve, reject) => {
+            let cols = {
+                phone2: 0,
+                fb: 0,
+                birth: 0,
+                email: 0,
+                addr: 0,
+                serv: 0,
+                status: 0,
+                note: 0,
+                area: 0,
+                timeslot: 0,
+                symb: 0,
+                camp: 0,
+                gclid: 0,
+                ads: 0,
+                tempcustcodeold: 0, tempidissuenum: 0, tempidissueplace: 0, tempidissuedate: 0
+            }
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+
+                        if ((item.Phone2 ?? "") != "") cols.phone2 = 1;
+                        if ((item.Birthday ?? "") != "1900-01-01") cols.birth = 1;
+                        if ((item.Facebook ?? "") != "") cols.fb = 1;
+                        if ((item.Email ?? "") != "") cols.email = 1;
+                        if ((item.Address ?? "") != "") cols.addr = 1;
+                        if ((item.ServiceCare ?? "") != "") cols.serv = 1;
+                        if ((item.Note ?? "") != "") cols.note = 1;
+                        if ((item.Area ?? "") != "") cols.area = 1;
+                        if ((item.TimeSlot ?? "") != "") cols.timeslot = 1;
+                        if ((item.Symbol ?? "") != "") cols.symb = 1;
+                        if ((item.Campaign ?? "") != "") cols.camp = 1;
+                        if ((item.Gclid ?? "") != "") cols.gclid = 1;
+                        if ((item.ADS ?? "") != "") cols.ads = 1;
+                        if (item.Status && item.Status.length > 0) cols.status = 1;
+                        if ((item.CustCodeOld ?? "") != "") cols.tempcustcodeold = 1;
+                        if ((item.IDIssuenum ?? "") != "") cols.tempidissuenum = 1;
+                        if ((item.IDIssueplace ?? "") != "") cols.tempidissueplace = 1;
+                        if ((item.IDIssuedate ?? "") != "") cols.tempidissuedate = 1;
+                    }
+                    TIT_RenderExcel_HideThead(cols);
+                    var _p = 0;
+                    let arraySlice = sliceIntoChunks(data, blocknum);
+                    if (arraySlice && arraySlice.length != 0) {
+                        for (let j = 0; j < arraySlice.length; j++) {
+                            TIT_RenderExcel_Each(arraySlice[j], id, cols
+                                , function () {
+                                    _p = _p + 1;
+                                    if (_p < 100) {
+                                        $("#TILoadProgress_Bar").css("width", _p + '%');
+                                        $("#TILoadProgress_Text").html(_p + ' %');
+                                    }
+                                    else {
+                                        $("#TILoadProgress").addClass('d-none');
+                                        $("#dtTableExecelImport").removeClass('blockupload');
+                                    }
+                                }
+                            );
+                        }
+                    }
+
+                }
+            }
+        })
+    }
+
+    function TIT_RenderExcel_Each (data, id, cols, callback) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if (data && data.length != 0) {
+                    var tr = "";
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        tr = `
+                            <tr class="vt-number" role="row">
+                            <td style="width:50px" class="vt-number-order"></td>
+                            <td>${ConvertDateTimeUTC_YMD(item.Created)}</td>
+                            <td>${item.Name}</td>
+                            <td ${cols.tempcustcodeold === 0 ? 'class="d-none"' : ''}>${item?.CustCodeOld ?? ''}</td>
+                            <td>${item.Phone}</td>
+                            <td ${cols.phone2 === 0 ? 'class="d-none"' : ''}>${item.Phone2}</td>
+                            <td ${cols.birth === 0 ? 'class="d-none"' : ''} >${ConvertDateTimeUTC_YMD(item.Birthday)}</td>
+                            <td>${TIT_RenderGender(item.GenderID)}</td>
+                            <td ${cols.fb === 0 ? 'class="d-none"' : ''}>${item.Facebook}</td>
+                            <td ${cols.email === 0 ? 'class="d-none"' : ''}>${item.Email}</td>
+                            <td ${cols.addr === 0 ? 'class="d-none"' : ''}>${item.Address}</td>
+                            <td ${cols.serv === 0 ? 'class="d-none"' : ''}>${item.ServiceCare}</td>
+                            <td ${cols.area === 0 ? 'class="d-none"' : ''}>${item.Area}</td>
+                            <td ${cols.timeslot === 0 ? 'class="d-none"' : ''}>${item.TimeSlot}</td>
+                            <td ${cols.symb === 0 ? 'class="d-none"' : ''}>${item.Symbol}</td>
+                            <td ${cols.camp === 0 ? 'class="d-none"' : ''}>${item.Campaign}</td>
+                            <td ${cols.gclid === 0 ? 'class="d-none"' : ''}>${item?.Gclid ?? ''}</td>
+                            <td ${cols.tempidissuenum === 0 ? 'class="d-none"' : ''}>${item?.IDIssuenum ?? ''}</td>
+                            <td ${cols.tempidissueplace === 0 ? 'class="d-none"' : ''}>${item?.IDIssueplace ?? ''}</td>
+                            <td ${cols.tempidissuedate === 0 ? 'class="d-none"' : ''}>${ConvertDateTimeUTC_YMD(item?.IDIssuedate) ?? ''}</td>
+                            <td ${cols.ads === 0 ? 'class="d-none"' : ''}>${item.ADS}</td>
+                            <td ${cols.note === 0 ? 'class="d-none"' : ''}>${item.Note}</td>
+                            <td ${cols.status === 0 ? 'class="d-none"' : ''}>
+                                ${TIT_RenderStatus(item.Status)}
+                            </td>
+                        </tr>
+                        `
+                        document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+                    }
+                    callback();
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+
+    function TIT_RenderExcel_HideThead (cols) {
+        if (cols.phone2 == 0) $('#phone2').hide();
+        if (cols.tempcustcodeold == 0) $('#tempcustcodeold').hide();
+        if (cols.birth == 0) $('#birth').hide();
+        if (cols.fb == 0) $('#fb').hide();
+        if (cols.email == 0) $('#email').hide();
+        if (cols.addr == 0) $('#addr').hide();
+        if (cols.serv == 0) $('#serv').hide();
+        if (cols.note == 0) $('#note').hide();
+        if (cols.area == 0) $('#area').hide();
+        if (cols.timeslot == 0) $('#timeslot').hide();
+        if (cols.symb == 0) $('#symb').hide();
+        if (cols.camp == 0) $('#camp').hide();
+        if (cols.gclid == 0) $('#gclid').hide();
+        if (cols.tempidissuenum == 0) $('#tempidissuenum').hide();
+        if (cols.tempidissueplace == 0) $('#tempidissueplace').hide();
+        if (cols.tempidissuedate == 0) $('#tempidissuedate').hide();
+        if (cols.ads == 0) $('#ads').hide();
+        if (cols.status == 0) $('#status').hide();
+    }
+
+    function TIT_RenderGender(id){
+        return TITGender[id]?.Name ?? "@Local["Nữ"]";
+    }
+
+    function TIT_RenderStatus (DtSta) {
+        try {
+            let result = ``;
+            let noti = {
+                empty: '@Local["Không có nội dung"]',
+                minLength: '@Local["Ký tự quá ít"]',
+                number: '@Local["Nội dung không phải là số"]',
+                regExp: '@Local["Kiểm tra dữ liệu"]'
+            }
+
+            if (DtSta && DtSta.length > 0) {
+                for (let i = 0; i < DtSta.length; i++) {
+                    let item = DtSta[i];
+                    let type = noti[item.type] ? noti[item.type] + item.value : "";
+                    result += `
+                        <div class="${item.iserr == 1 ? `border-danger` : `border-warning`} border-start border-2 mb-1">
+                            <div class="ms-2">
+                                <p class="fw-bold text-sm mb-0">${item.name} - ${type}</p>
+                                <p class="text-sm mb-0">${item.exam}</p>
+                                <p class="text-sm mb-0">${item.format}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+
+
+</script>
+
+<style>
+    .blockupload {
+        opacity: 0.1;
+        pointer-events: none;
+    }
+</style>

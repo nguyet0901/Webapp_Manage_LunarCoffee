@@ -1,0 +1,423 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.History.HistoryList_CareModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<div class="container-fluid py-0 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header py-0">
+                    <div class="d-lg-flex">
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist" >
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer  " data-bs-toggle="collapse" href="#typeCare_infodes">
+                                    <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="ms-auto my-auto mt-1">
+                            <div class="position-relative d-inline d-none" id="HL_EvaluateTreatDiv">
+                                <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                    @Local["Xem thêm"]
+                                </button>
+                                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="StatusDetail" type="checkbox" checked>
+                                            </div>
+                                            <p class="text-sm">@Local["Trạng thái chi tiết"]</p>
+                                        </li>
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input id="HL_ckbEvaluateTreat" class="shtoogle form-check-input" data-name="EvaluateTreat" type="checkbox">
+                                            </div>
+                                            <p class="text-sm">@Local["Đánh giá sau điều trị"]</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="position-relative d-inline">
+                                <div class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle ui pointing dropdown" id="typeCare_TicketAction"
+                                     onchange="event.preventDefault;return HL_LoadData();">
+                                    <input type="hidden" name="customerCareType" />
+                                    <div class="default text">@Local["Loại"]</div>
+                                    <div id="cbbcustomerCareType" class="text-xs menu" tabindex="-1" style="max-height:240px;overflow-y:auto;">
+                                        <div class="item" data-value="0">
+                                            <span>@Local["Tất cả"]</span>
+                                        </div>
+                                        <div class="item" data-value="1">
+                                            <span>@Local["Nhắc lịch hẹn"]</span>
+                                        </div>
+                                        <div class="item" data-value="2">
+                                            <span>@Local["Đến không phát sinh dịch vụ"]</span>
+                                        </div>
+                                        <div class="item" data-value="3">
+                                            <span>@Local["Chăm sóc sinh nhật"]</span>
+                                        </div>
+                                        <div class="item" data-value="4">
+                                            <span>@Local["Đặt lịch nhưng không đến"]</span>
+                                        </div>
+                                        <div class="item" data-value="5">
+                                            <span>@Local["Chăm sóc khách hàng sau điều trị"]</span>
+                                        </div>
+                                        <div class="item" data-value="6">
+                                            <span>@Local["Khách hàng phàn nàn"]</span>
+                                        </div>
+                                        <div class="item" data-value="7">
+                                            <span>@Local["Telesale follow"]</span>
+                                        </div>
+                                        <div class="item" data-value="8">
+                                            <span>@Local["Lịch sử khách hàng"]</span>
+                                        </div>
+                                        <div class="item" data-value="9">
+                                            <span>@Local["Chăm sóc"]</span>
+                                        </div>
+                                        <div class="item" data-value="10">
+                                            <span>@Local["Hủy lịch hẹn"]</span>
+                                        </div>
+                                        <div class="item" data-value="12">
+                                            <span>@Local["Khách hàng"]</span>
+                                        </div>
+                                        <div class="item" data-value="13">
+                                            <span>@Local["Fanpage"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn bg-gradient-primary btn-sm mt-1" onclick="addNewHistory(ser_CustomerHistoryID)">@Local["Lịch sử"]</button>
+                            <button class="btn btn-dark btn-sm mt-1" id="HisLCare_btnComplaint" onclick="addNewAdvice(ser_CustomerHistoryID)">@Local["Góp ý"]</button>
+                        </div>
+                    </div>
+                    <div id="typeCare_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-4 mt-2 multi-collapse collapse">
+                       <h6 class="mb-0">@Local["Quy định chỉnh sửa"]</h6>
+                        <p class="text-sm mb-0">@Local["Nội dung ghi chú, lịch sử chăm sóc và lịch sử follow khách hàng"]</p>
+                        <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa các ghi chú trong ngày. Chỉ người tạo mới được quyền sửa và xóa. Không chỉnh sửa và xóa nội dung chăm sóc và follow khách hàng tại đây"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="div_history_waiting" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentHistory">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="d-none">ID</th>
+                                    <th rowspan="2" class="d-none">Advice</th>
+                                    <th rowspan="2" style="width: 40px;">@Local["#"]</th>
+                                    <th rowspan="2" style="min-width: 150px;">@Local["Người tạo"]</th>
+                                    <th rowspan="2" style="min-width: 120px;">@Local["Ngày tạo"]</th>
+                                    <th rowspan="2">@Local["Trạng thái"]</th>
+                                    <th rowspan="2" data-name="StatusDetail">@Local["Trạng thái chi tiết"]</th>
+                                    <th rowspan="2">@Local["Nội dung"]</th>
+                                    <th rowspan="2">@Local["Góp ý"]</th>
+                                    <th colspan="3" data-name="EvaluateTreat">@Local["Đánh giá sau điều trị"]</th>
+                                    <th rowspan="2" style="width: 60px;">@Local["Xử lý"]</th>
+                                </tr>
+                                <tr>
+                                    <th data-name="EvaluateTreat">@Local["Cơ sở vật chất"]</th>
+                                    <th data-name="EvaluateTreat">@Local["Thái độ nhân viên"]</th>
+                                    <th data-name="EvaluateTreat">@Local["Bác sĩ điều trị"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentHistoryBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="btn_LoadMore_HL" class="btn btnsysmore btn-secondary w-100 p-1 d-none" onclick="event.preventDefault(); return HL_LoadData(1);">@Local["Xem thêm"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT
+
+    var ser_CustomerHistoryID ='@Model._CustomerHistoryID';
+    let DataEmployee;
+    let HL_Limit = 50;
+    let HL_Begin = 0;
+    let HL_DataMain = [];
+    let HL_Flag = 0;
+    let shtable;
+
+    $(document).ready(function () {
+        HL_Init();
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                HL_Flag = 1;
+                HL_LoadData();
+                HL_Event();
+            })
+
+    });
+
+
+    function HL_Init() {
+        shtable = $("#dtContentHistory").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $("#typeCare_TicketAction").dropdown("refresh");
+        $("#typeCare_TicketAction").dropdown("set selected", "0");
+    }
+
+
+    //#endregion
+
+
+    //#region // EVENT
+
+    function HL_Event() {
+
+        $('#dtContentHistory tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let Advice = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            if (Number(Advice) == 0)
+                editHistory(ID, ser_CustomerHistoryID);
+            else editAdvice(ID, ser_CustomerHistoryID);
+        });
+
+        $('#dtContentHistory tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteHistoryList(ID);
+
+        });
+
+    }
+
+
+    //#endregion
+
+
+    //#region // LOAD DATA
+
+    async function HL_LoadData(isLoadMore = 0) {
+        return new Promise((resolve) => {
+            if (HL_Flag == 1) {
+
+                let TypeHistory = Number($('#typeCare_TicketAction').dropdown("get value")) ? Number($('#typeCare_TicketAction').dropdown("get value")) : 0;
+                if (TypeHistory == 8 || TypeHistory == 0) {
+                    $("#btn_LoadMore_HL").removeClass('d-none');
+                }
+                else {
+                    $("#btn_LoadMore_HL").addClass('d-none');
+                    HL_Begin == 0;
+                }
+                if(TypeHistory == 5 || TypeHistory == 0) {
+                    $('#HL_EvaluateTreatDiv').removeClass('d-none');
+                }
+                else {
+                    $('#HL_ckbEvaluateTreat').prop('checked', false).change();
+                    $('#HL_EvaluateTreatDiv').addClass('d-none');
+                }
+                if (isLoadMore != 1) {
+                    $("#dtContentHistoryBody").empty();
+                    HL_DataMain = [];
+                    HL_Begin = 0;
+                }
+
+                AjaxLoad(url = "/Customer/History/HistoryList_Care/?handler=LoadataHistory"
+                    , data = {
+                        'CustomerID': ser_CustomerHistoryID,
+                        'Type': TypeHistory,
+                        'Limit': HL_Limit,
+                        'BeginID': HL_Begin
+                    }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result);
+
+                            if (data && data.length != 0) {
+                                HL_DataMain = HL_DataMain.concat(data);
+                                HL_Begin = HL_GetBeginID();
+                                HL_Render(data, 'dtContentHistoryBody');
+                            }
+                            else {
+
+                            }
+
+                        }
+                    }
+                    , sender = null
+                    , before = function () {
+                        $("#dtContentHistory").hide();
+                        $("#div_history_waiting").show();
+                    }
+                    , complete = function (e) {
+                        $("#dtContentHistory").show();
+                        $("#div_history_waiting").hide();
+                    }
+                );
+            };
+        });
+    }
+
+    //#endregion
+
+
+    function HL_GetBeginID() {
+        let result = 0;
+        if (HL_DataMain && HL_DataMain.length != 0) {
+            let dataFilter = HL_DataMain.filter((word) => {
+                return word["Type"] == 8;
+            });
+            let lastItem = dataFilter.pop();
+            if (lastItem != undefined) {
+                result = lastItem.ID;
+            }else {
+                result = -1;
+            }
+        }
+        return result;
+    }
+
+
+    //#region // RENDER DATA
+
+    async function HL_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let obj = Fun_GetObject_ByID(DataEmployee, item.EmpID);
+                            let tr =
+                                '<td class="d-none">' + item.ID + '</td>'
+                                + '<td class="d-none">' + item.IsAdvice + '</td>'
+                                + '<td class="vt-number-order"></td>'
+                                + '<td>'
+                                + '<div class="d-inline">'
+                                + '<img class="avatar avatar-xs me-2" src="' + obj.Avatar + '" alt="label-image" />'
+                                + '<span>' + obj.Name + '</span>'
+
+                                + '</div>'
+                                + '</td>'
+                                + '<td>'
+                                + '<span>' + ConvertDateTimeUTC_DMYHM(item.Created).replaceAll('01/01/1900') + '</span>'
+                                + '</td>'
+                                + '<td>'
+                                + '<span class="badge" style="background-color: ' + item.ColorCode + '2b;color:' + item.ColorCode + '">' + item.StatusParentName + '</span>'
+                                + '</td>'
+                                + '<td data-name="StatusDetail">'
+                                + '<span class="badge" style="background-color: ' + item.ColorDetail + '2b;color:' + item.ColorDetail + '">' + item.StatusDetailName + '</span>'
+                                + '</td>'
+                                + '<td>'
+                                + '<div class="text content_line_clamp">' + ((item.Content != "") ? item.Content : '@Local["Không có tin nhắn"]') + '</div>'
+                                + '</td>'
+
+                                + '</td>'
+                                + '<td style="text-align: center">'
+                                + ((item.IsAdvice == 1) ? ('<span class="badge bg-gradient-info">Advice</span>') : '')
+                                + '</td>'
+                                + `<td data-name="EvaluateTreat" style="color: ${HL_RenderEvaluate(item?.EPhysicalFacilities ?? 0).color}">${HL_RenderEvaluate(item?.EPhysicalFacilities ?? 0).text}</td>
+                                  <td data-name="EvaluateTreat" style="color: ${HL_RenderEvaluate(item?.EEmpAttitudes ?? 0).color}">${HL_RenderEvaluate(item?.EEmpAttitudes ?? 0).text}</td>
+                                  <td data-name="EvaluateTreat" style="color: ${HL_RenderEvaluate(item?.EDoctor ?? 0).color}">${HL_RenderEvaluate(item?.EDoctor ?? 0).text}</td>`
+                                + '<td>'
+                                + '<div class="text-nowrap">'
+                                + HL_Render_Buttons(item.ID, item.EditButton, item.DeleteButton)
+                                + '</div>'
+                                + '</td>'
+
+                            tr = '<tr role="row" class="vt-number">' + tr + '</tr>';
+
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtable.Refresh();
+                    }
+                }
+            }, 100)
+        });
+    }
+
+    function HL_RenderEvaluate(evaluate) {
+        let result = {
+            text: '',
+            color: ''
+        };
+        switch (evaluate) {
+            case 1:
+                result.text = decodeHtml("@Local["Rất không hài lòng"]");
+                result.color = "#f53939";
+                break;
+            case 2:
+                result.text = decodeHtml("@Local["Không hài lòng"]");
+                result.color = "#ff7f0e";
+                break;
+            case 3:
+                result.text = decodeHtml("@Local["Bình thường"]");
+                result.color = "#ffbb78";
+                break;
+            case 4:
+                result.text = decodeHtml("@Local["Hài lòng"]");
+                result.color = "#98df8a";
+                break;
+            case 5:
+                result.text = decodeHtml("@Local["Rất hài lòng"]");
+                result.color = "#2ca02c";
+                break;
+        }
+        return result;
+    }
+
+    function HL_Render_Buttons(id, EditButton, DeleteButton) {
+        let buttons = [];
+        // Edit
+        if (EditButton == 1) {
+            buttons.push('<button class="buttonGrid" title="Edit" value="' + id + '">'
+                + '<i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>')
+
+        }
+
+        // Delete
+        if (DeleteButton == 1) {
+            buttons.push('<button class="buttonGrid" title="Delete" value="' + id + '">'
+                + '<i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+
+        }
+        return Render_Button_Grid(buttons)
+    }
+
+    //#endregion
+
+    //#region // DELETE ITEM
+
+
+    function DeleteHistoryList(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteHistory(id); }, function () { });
+    }
+
+    function ExecuteDeleteHistory(id) {
+        AjaxLoad(url = "/Customer/History/HistoryList_Care/?handler=DeleteItem"
+            , data = { 'id': id}
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cutccc('d', ser_MainCustomerID, '');
+                    HL_LoadData();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+</script>

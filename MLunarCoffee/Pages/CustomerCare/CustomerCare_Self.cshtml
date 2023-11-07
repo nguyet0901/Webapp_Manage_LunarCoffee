@@ -1,0 +1,689 @@
+﻿@page
+@model MLunarCoffee.Pages.CustomerCare.CustomerCare_Self
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+<div class="row">
+    <div class="col-12 p-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <ul class="nav nav-pills p-0 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item me-3" role="presentation">
+                            <a class="nav-link cursor-pointer active" data-bs-toggle="collapse" href="#CSeft_AreaFill">
+                                <i class="text-gradient text-primary fas fa-filter"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <h6 class="mb-0 mt-1">@Local["Chăm sóc khách hàng"]</h6>
+                            <p class="text-sm mb-0">@Local["Danh sách khách hàng"]</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="right">
+                    <div class="wrap">
+                        <div class="wrapblock pb-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="0" onchange="event.preventDefault();return CSeft_Filter();" checked="">
+                                <label class="mb-0 form-check-label">@Local["Tất cả"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="1" onchange="event.preventDefault();return CSeft_Filter();">
+                                <label class="mb-0 form-check-label">@Local["Chưa xử lý"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" value="2" onchange="event.preventDefault();return CSeft_Filter();">
+                                <label class="mb-0 form-check-label">@Local["Đã xử lý"]</label>
+                            </div>
+                        </div>
+                        <div class="wrapblock pb-2">
+                            <div class="form-group mb-0">
+                                <div class="input-group mb-0">
+                                    <span class="input-group-text fw-bold text-primary ">@Local["Tổng"]</span>
+                                    <span class="form-control fw-bolder text-dark ps-2" style="width:100px;max-width:100px;" id="CS_TotalCustCare">0</span>
+                                </div>
+                            </div>
+                            <button class="btn w-100 btn-dark m-0" onclick="event.preventDefault();return CSeft_Export();">@Local["Xuất"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="vtcondition">
+                    <div class="row px-2 mt-2 collapsesticky z-index-sticky collapse" id="CSeft_AreaFill">
+                        <div class="col-12 col-md-12 col-xl-4 p-1">
+                            <div class="input-group">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <div class="spinner-border spinner-border-sm d-none"></div>
+                                </div>
+                                <input id="CS_SearchText" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm khách hàng"]" autocomplete="off">
+                                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CS_CCStaff">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="text"></div>
+                                <div id="CS_CbbCCStaff" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CS_BranchID">
+                                <input type="hidden" name="branch" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="text"></div>
+                                <div id="CS_CbbBranchID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CS_CallID">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="text"></div>
+                                <div id="CS_CbbCallID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CS_StatusID">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="text"></div>
+                                <div id="CS_CbbStatusID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4 p-1">
+                            <div class="input-group mb-0 flex-nowrap">
+                                <div class="ui fluid search selection dropdown w-30" id="CS_TypeDate">
+                                    <input type="hidden" name="employee" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="CS_CbbTypeDate" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                                <input id="CS_Date" class="form-control flatpickr" type="text" placeholder="eg .@Local["Ngày"]" />
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="CS_StatusCallID">
+                                <input type="hidden" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="text"></div>
+                                <div id="CS_CbbStatusCallID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-2 p-1">
+                            <button class="btn bg-gradient-primary m-0" onclick="event.preventDefault();return CSeft_LoadData();">@Local["OK"]</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="m-0 mt-1 position-relative">
+                        <div id="CS_Waiting" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x z-index-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]...</span>
+                            </div>
+                        </div>
+                        <div class="row px-2 h-100">
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3 p-1">
+                                <div class="overflow-auto stickytable" style="max-height:calc(100vh - 289px);">
+                                    <ul id="CS_Body" class="list-group block-horizontal ShowHasHandle ShowNoHandle ShowTreat ShowCons">
+                                    </ul>
+                                </div>
+                                <button class="btn btn-secondary btnsysmore w-100 p-1 mt-2 mb-0 d-none" id="CSeft_BtnLoadMore" onclick="CSeft_LoadData('0', 1)">@Local["Xem thêm"]</button>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-8 col-xl-9 p-1">
+                                <div id="CS_Empty" class="mx-auto text-center">
+                                    <h5 class="mb-0">@Local["Chăm sóc khách hàng"]</h5>
+                                    <p>@Local["Chọn khách hàng để tiến hành chăm sóc"]</p>
+                                </div>
+                                <div id="CS_AreaDetail" class="card h-100 d-none">
+                                    <div class="card-header p-2">
+                                        <div class="d-lg-flex">
+                                            <div class="col-auto my-auto">
+                                                <div class="text-dark ms-2 text-sm">
+                                                    <div>
+                                                        <a id="CS_Custcode" target="_blank" href="#" class="border-1 border-primary border-bottom cursor-pointer"></a>
+                                                        <i class="text-sm text-dark vtt-icon vttech-icon-call-action"></i>
+                                                        <a id="CS_Custphone" onclick="CSeft_Call(this);" class="text-dark cursor-pointer">
+                                                            <span class="_tab_control_" data-tab="phone_customer" id="CS_Phone"></span>
+                                                        </a>
+                                                        <i class="fas fa-sms text-md text-md text-dark ms-2"></i>
+                                                        <a class="ms-1 cursor-pointer text-dark text-sm" onclick="CSeft_SendSMS();">
+                                                            SMS
+                                                        </a>
+                                                    </div>
+                                                    <div class="d-block text-sm fw-bold mt-1">
+                                                        <span id="CS_Custname" class="mb-0 mt-2"></span> - 
+                                                        <span id="CS_Custgender" class="mb-0 mt-2"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-auto my-auto mt-1 d-flex">
+                                                <div id="CS_Groupname" class="p-1" data-bs-toggle="tooltip" title="" data-bs-original-title="">
+                                                    <img class="cursor-pointer icon icon-shape icon-sm me-2 shadow text-center" id="CS_Groupimg" src="/default.png" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                                                </div>
+                                                <button class="btn bg-gradient-primary btn-sm ms-2 my-1" onclick="CSeft_New()">@Local["Thêm mới"]</button>
+                                            </div>
+                                        </div>
+                                        <hr class="horizontal dark mt-3 mb-2">
+                                    </div>
+                                    <div id="CS_Detailarea" class=" card-body overflow-auto overflow-x-hidden" style="height:calc(100vh - 330px);">
+                                    </div>
+                                    <button id="CS_BtnLoadmore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-absolute bottom-0" onclick="event.preventDefault(); return CSeft_RenderMore();">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let TypeCustomerCare = 5;
+    //#region // Declare && Initialization
+
+    let CS_DTCus = [];
+    let CustCareExport = [];
+    let CustCareDataBranch = {};
+    let CustCareTypeCare = {};
+    let CustCareType = TypeCustomerCare;
+    let CustCareLimit = 200;
+    let CustCareBeginID = 0;
+    let xhrRequestCustCare;
+    let AfterTreatDataEmployee;
+    let CustCareCustid = 0;
+    let DataMainSlice;
+    let IndexTable = 0;
+    let CustCareTypeDate = [
+        {"ID" : 1 , "Name": "@Local["Ngày nhận"]"}
+        , {"ID" : 2 , "Name": "@Local["Ngày xử lý"]"}
+        , {"ID" : 3 , "Name": "@Local["Ngày gọi lại"]"}
+    ];
+    //#endregion
+    //#region // Load Data
+    $(document).ready(function () {
+        CSeft_EventHandle();
+        $("#CS_Date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        let dateNow = new Date();
+        $("#CS_Date").val(formatDateClient(dateNow) + ' to ' + formatDateClient(dateNow));
+        Master_IndexDB_Reads(_Session_Data, [ _Session_Employee]
+            , function (data) {
+                AfterTreatDataEmployee = data[0];
+                CSeft_Initialization();
+            }
+        );
+    })
+    function CSeft_Initialization() {
+        AjaxLoad(url = "/CustomerCare/CustomerCare_Self/?handler=Initialization"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '[]') {
+                    let data = JSON.parse(result);
+                    let DtStatus = data?.StatusCare.filter(item => item["ParentID"] == 0);
+                    let DtStatusCall = data?.StatusCare.filter(item => item["ParentID"] != 0);
+                    CustCareTypeCare = (data?.StatusCare).reduce((pre, acc) => {pre[acc.ID] = acc; return pre;}, {})
+                    CustCareDataBranch = (data.Branch).reduce((pre, acc) => { pre[acc.ID] = acc; return pre; }, {})
+                    Load_Combo(data.Branch, "CS_CbbBranchID", true, '@Local["Chi nhánh"]');
+                    Load_Combo(data.ParaCall, "CS_CbbCallID", true, '@Local["Trạng thái gọi"]');
+                    Load_Combo(data.TeleCare, "CS_CbbCCStaff", true, '@Local["Nhân viên chăm sóc"]');
+                    Load_Combo(CustCareTypeDate, "CS_CbbTypeDate", true, '@Local["Ngày"]');
+                    Load_Combo(DtStatus, "CS_CbbStatusID", true, '@Local["Trạng thái"]');
+                    Load_Combo(DtStatusCall, "CS_CbbStatusCallID", true, '@Local["Trạng thái chi tiết"]');
+
+
+                    $("#CS_BranchID").dropdown("refresh");
+                    $("#CS_BranchID").dropdown("set selected", "0");
+
+                    $("#CS_CallID").dropdown("refresh");
+                    $("#CS_CallID").dropdown("set selected", "0");
+
+                    $("#CS_CCStaff").dropdown("refresh");
+                    $("#CS_CCStaff").dropdown("set selected", "0");
+
+                    $("#CS_TypeDate").dropdown("refresh");
+                    $("#CS_TypeDate").dropdown("set selected", "0");
+
+                    $("#CS_StatusID").dropdown("refresh");
+                    $("#CS_StatusID").dropdown("set selected", "0");
+
+                    $("#CS_StatusCallID").dropdown("refresh");
+                    $("#CS_StatusCallID").dropdown("set selected", "0");
+                    CSeft_LoadData();
+                }
+            }
+        );
+    }
+    async function CSeft_LoadData (currentID = "0", isLoadMore = 0) {
+        return new Promise((resolve, reject) => {
+            if (xhrRequestCustCare && xhrRequestCustCare.readyState != 4) xhrRequestCustCare.abort();
+            if (currentID == "0" && isLoadMore == 0) {
+                CustCareBeginID = 0;
+                $('#CS_Body').html('');
+                CS_DTCus = [];
+                CustCareExport= [];
+            }
+            if (currentID != "0") CustCareBeginID = 0;
+
+            let data = new Object();
+            let branchid = $('#CS_BranchID').dropdown('get value') ? $('#CS_BranchID').dropdown('get value') : "0";
+            let branchToken = branchid == 0 ? Object.values(CustCareDataBranch).map(e => e.ID).join(',') : '';
+            let SearchText = $("#CS_SearchText").val() ? $("#CS_SearchText").val() : "";
+
+            data.BranchID = branchid;
+            data.BranchToken = branchToken;
+            data.CCStaffID = Number($('#CS_CCStaff').dropdown('get value')) ? Number($('#CS_CCStaff').dropdown('get value')) : "0";
+            data.CallID = $('#CS_CallID').dropdown('get value') ? Number($('#CS_CallID').dropdown('get value')) : "0";
+            data.TypeDate = $('#CS_TypeDate').dropdown('get value') ? Number($('#CS_TypeDate').dropdown('get value')) : "0";
+            data.SearchText = xoa_dau(SearchText).toLowerCase().trim().replace(/[^a-zA-Z0-9 ]/g, '');
+            data.statusCallID = $('#CS_StatusCallID').dropdown('get value') ? Number($('#CS_StatusCallID').dropdown('get value')) : "0";
+            data.statusID = $('#CS_StatusID').dropdown('get value') ? Number($('#CS_StatusID').dropdown('get value')) : "0";
+
+            let date = $("#CS_Date").val() ? $("#CS_Date").val() : new Date();
+            let dateFrom;
+            let dateTo;
+
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "#");
+                dateFrom = date.split('#')[0];
+                dateTo = date.split('#')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+
+            xhrRequestCustCare = AjaxLoad(url = "/CustomerCare/CustomerCare_Self/?handler=LoadData"
+                , data = {
+                    'data': JSON.stringify(data)
+                    , 'DateFrom': dateFrom
+                    , 'DateTo': dateTo
+                    , 'currentID': currentID
+                    , 'BeginID': CustCareBeginID
+                    , 'Limit': CustCareLimit
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data != undefined) {
+                        if (data.length != 0) {
+                            let stringContent = '';
+                            if (currentID == "0") {
+                                fnRenderBlock(data, "CS_Body"
+                                    , blocknum = 30
+                                    , fnrender = CSeft_RenderData
+                                    , fnsuccess = null
+                                );
+                                CS_DTCus = CS_DTCus.concat(data);
+                            }
+                            else {
+                                let _id = $('#CustCareRow_' + currentID);
+                                if (_id != undefined && _id.length != 0) {
+                                    for (let i = 0; i < CS_DTCus.length; i++) {
+                                        if (CS_DTCus[i].CustID == currentID) {
+                                            CS_DTCus[i] = data[0];
+                                        }
+                                    }
+                                    stringContent = CSeft_RenderEach(data[0]);
+                                    _id.replaceWith(stringContent);
+                                    $("input[name=inlineRadioOptions]").trigger("change");
+                                    $('#CustCareRow_' + currentID).trigger('click');
+                                }
+                                ToolPopper();
+                            }
+                            $("#CSeft_BtnLoadMore").removeClass("d-none");
+                        }
+                        else {
+                            if (currentID != "0") {
+                                CS_DTCus = CS_DTCus.filter((item) => {return (item.CustID != currentID)})
+                                let _id = 'CustCareRow_' + currentID;
+                                $("#" + _id).remove();
+                                $("input[name=inlineRadioOptions]").trigger("change");
+                            }
+                            else {
+                                if (isLoadMore == 0) {
+                                    $('#dtContentCustCare').hide();
+                                }
+                            }
+                            if (CS_DTCus && CS_DTCus.length == 0 && $('#CS_Empty').hasClass('d-none')){
+                                $('#CS_AreaDetail').addClass('d-none');
+                                $('#CS_Empty').removeClass('d-none');
+                                $("#CSeft_BtnLoadMore").addClass("d-none");
+                            }
+                        }
+                        CustCareBeginID = (CS_DTCus && CS_DTCus.length > 0) ? CS_DTCus[CS_DTCus.length - 1].CustID : 0;
+                        $("#CS_TotalCustCare").html(formatNumber($(".CustCareRow:visible").length))
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CS_Waiting').show();
+                }
+                , complete = function (e) {
+                    $('#CS_Waiting').hide();
+                }
+            );
+
+        });
+    }
+    async function CSeft_RenderData(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CSeft_RenderEach(item);
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                            Checking_TabControl_Permission();
+                        }
+                    }
+                }
+                $("input[name=inlineRadioOptions]").trigger("change");
+                $('#CS_Body').find('.CustCareRow:visible:first').trigger("click");
+                ToolPopper();
+                resolve();
+            }, 10)
+        });
+    }
+    function CSeft_RenderEach(item) {
+        let isexecuted = 'checklist-item-secondary', iscallback = '';
+        if (item.IsTakeCare == 1) isexecuted = 'checklist-item-success';
+        if (item.IsCallback == 1){
+            iscallback = `
+            <div class="ms-3">
+                            <p class="text-xs mb-0 text-secondary font-weight-bold">@Local["Ngày gọi lại"]</p>
+                        <span class="text-sm text-dark">${GetDateTime_String_DMY(item.CallBackTime)}</span>
+                     </div>
+                     `
+        }
+        let tr = `
+            <li id="CustCareRow_${item.CustID}" data-custid="${item.CustID}"  class="CustCareRow checklist-item ${item.IsTakeCare == 0 ? `checknone` : `CheckHas`} ${isexecuted} list-group-item border-0 flex-column align-items-start py-0 mt-2 py-2 border-radius-lg cursor-pointer">
+                <div class="d-flex align-items-center">
+                    <a class="border-bottom border-primary code col-auto fw-bold mb-0 mt-0 my-auto text-primary text-sm" target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}">${item.CustCode}</a> <span class="text-sm ms-2 text-dark"> - ${item.CustName} </span>
+                </div>
+                <div class="d-flex align-items-center mt-1">
+                    <div>
+                    <p class="text-xs mb-0 text-secondary font-weight-bold">@Local["Ngày nhận"]</p>
+                    <span class="text-sm text-dark">${ConvertYMDInt_ToDate(item.NumDevide)}</span>
+                    <span data-name="phone" class="_tab_control_ cursor-pointer d-none" data-tab="phone_customer" data-checkper="1"></span>
+                    </div>
+                    ${iscallback}
+                </div>
+
+            </li>
+        `
+        return tr;
+    }
+    //#endregion
+
+
+    //#region // Load data Detail
+    async function CSeft_LoadDetail(cus) {
+        return new Promise((resolve, reject) => {
+            if (xhrRequestCustCare && xhrRequestCustCare.readyState != 4) xhrRequestCustCare.abort();
+            IndexTable = 0;
+            xhrRequestCustCare = AjaxLoad(url = "/CustomerCare/CustomerCare_Self/?handler=LoadDetail"
+                , data = {
+                    'cus': cus
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let datas = JSON.parse(result);
+                    if (datas != undefined) {
+                        CSeft_FillInfo(datas.Table);
+                        let detailData = [...datas.Table1];
+                        DataMainSlice = sliceIntoChunks(detailData, 500);
+
+                        $("#CS_Detailarea").empty();
+                        $('#CS_BtnLoadmore').removeClass('d-none');
+
+                        if (DataMainSlice && DataMainSlice.length != 0) {
+                            //fnRenderBlock(DataMainSlice[IndexTable], "CS_Detailarea"
+                            //    , blocknum = 100
+                            //    , fnrender = CSeft_RenderDetail
+                            //    , fnsuccess = null
+                            //);
+                            CSeft_RenderDetail(DataMainSlice[IndexTable], "CS_Detailarea");
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CS_Waiting').show();
+                }
+                , complete = function (e) {
+                    $('#CS_Waiting').hide();
+                }
+            );
+
+        });
+    }
+
+    function CSeft_RenderMore() {
+        IndexTable += 1;
+        if (DataMainSlice && DataMainSlice[IndexTable]) {
+            //fnRenderBlock(DataMainSlice[IndexTable], "CS_Detailarea"
+            //    , blocknum = 100
+            //    , fnrender = CSeft_RenderDetail
+            //    , fnsuccess = null
+            //);
+            CSeft_RenderDetail(DataMainSlice[IndexTable], "CS_Detailarea");
+        }
+        if (!$('#CS_BtnLoadmore').hasClass('d-none') && IndexTable >= DataMainSlice.length - 1) {
+            $('#CS_BtnLoadmore').addClass('d-none');
+        }
+    }
+
+    async function CSeft_FillInfo(dataInfo) {
+        new Promise((resolve, reject) => {
+            let item = dataInfo[0];
+            if (item != undefined) {
+                let birth = '';
+                let _age = Distance_Year_2Date(new Date(item.Birthday), new Date());
+                let groupname = (item.GroupName != '') ? item.GroupName : 'no group';
+                if (_age > 0 && _age < 100) {
+                    birth = ' [ ' + _age + ' @Local["Tuổi"] ] ';
+                    $('#actionticket_birthday').html(birth);
+                }
+                $('#CS_Custgender').html(item.GenderName + (birth != '' ? birth : ''));
+
+                $('#CS_Custphone').attr('data-info', (item.Phone.length > 0 ? encrypt_phone(item.Phone.replace(" ", "")) : ""));
+                $('#CS_Custphone').html('<span class="_tab_control_ cursor-pointer" data-tab="phone_customer" > ' + item.Phone + '</span>');
+
+                $('#CS_Custname').html(item.Name);
+                $('#CS_Custcode').html(item.CustomerCode + ((item.DocCode != '') ? (' [ ' + item.DocCode + ' ] ') : '') + ((item.Cust_Code_Old != '') ? (' [' + item.Cust_Code_Old + ']') : ''));
+                $('#CS_Custcode').attr('href', '/Customer/MainCustomer?CustomerID=' + item.CustomerID);
+
+                $('#CS_Groupimg').attr('src', ((item.ImageGroup != '') ? item.ImageGroup : Master_Default_Pic));
+                $('#CS_Groupname').prop("title", groupname)
+                $('#CS_Groupname').attr('data-bs-original-title', groupname);
+            }
+            Checking_TabControl_Permission();
+            resolve();
+        });
+    }
+    async function CSeft_RenderDetail(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let classname = '';
+                            let classchilname = '';
+                            let creator = '';
+                            let servicename = '';
+                            let timeCallRepeat = !item.time_repeat_call.includes("1900") ? GetDateTime_String_DMY(item.time_repeat_call) : '';
+                            if (item.ServiceID == 0) {
+                                classname = 'justify-content-end text-right';
+                                creator = `<div class="align-items-center text-sm">
+                                                    <div><span class="mt-1 text-sm">@Local["Xử lý"]:</span><span class="text-dark ms-1">${item.CreatedName} ${GetDateTime_String_DMY(item.Created)}</span></div>
+                                                    ${(timeCallRepeat != '') ? `<div><span class="mt-1 text-sm">@Local["Gọi lại"]:</span><span class="text-dark ms-1">${timeCallRepeat}</span></div>` : ""}
+                                                </div>`;
+                                classchilname = 'card shadow-none bg-gray-100';
+                            }
+                            else {
+                                servicename = `<span class="text-dark fw-bold me-2">${item.ServiceName}</span>`;
+                                classname = 'justify-content-start';
+                                classname = 'justify-content-start';
+                                creator = `<div class="align-items-center text-sm">
+                                                ${item.DocName != '' ? `<div><span class="mt-1 text-sm">BS:</span><span class="text-dark ms-1">${item.DocName}</span></div>` : ''}
+                                                ${item.AssName != '' ? `<div><span class="mt-1 text-sm">PT:</span><span class="text-dark ms-1">${item.AssName}</span></div>` : ''}
+                                                <div><span class="text-dark">${GetDateTime_String_DMY(item.Created)}</span></div>
+                                            </div>`;
+                                classchilname = 'rounded-3 bg-gray-200';
+                            }
+                            let tr = `
+                                    <div class="row ${classname} mb-4">
+                                        <div class="col-auto">
+                                            <div class="${classchilname}">
+                                                <div class="card-body py-2 px-3">
+                                                    <p class="text-dark mb-0">
+                                                        ${servicename}
+                                                        ${item.Content}
+                                                    </p>
+                                                    ${creator}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                    }
+                }
+                resolve();
+            }, 10)
+        });
+    }
+    //#endregion
+
+    //#region // Event
+    function CSeft_Filter () {
+        let IdStatus = Number($("input[name=inlineRadioOptions]:checked").val());
+        let y = document.getElementsByClassName("CustCareRow");
+
+        for (let i = 0; i < y.length; i++) {
+            $(y[i]).show();
+            let className = $(y[i]).attr('class');
+            if (IdStatus == 2 && className.includes("checknone")) {
+                $(y[i]).hide();
+            } else if (IdStatus == 1 && className.includes("CheckHas")) {
+                $(y[i]).hide();
+            }
+        }
+        if (IdStatus == 1){
+            CustCareExport = CS_DTCus.filter((item) => {return item["IsTakeCare"] == 0});
+        } else if (IdStatus == 2){
+            CustCareExport = CS_DTCus.filter((item) => {return item["IsTakeCare"] == 1});
+        } else {
+            CustCareExport = CS_DTCus;
+        }
+        $("#CS_TotalCustCare").html(formatNumber($(".CustCareRow:visible").length));
+
+    }
+    function CSeft_EventHandle() {
+        $('#CS_Body').on('click', '.CustCareRow', function () {
+            let cus = $(this).attr("data-custid");
+            $('#CS_AreaDetail').removeClass('d-none');
+            $('#CS_Empty').addClass('d-none');
+            $('.CustCareRow').removeClass('active');
+            $(this).addClass('active');
+            CustCareCustid = cus;
+            CSeft_LoadDetail(cus);
+        });
+
+    }
+    function CSeft_New () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/CallDetailInput?MasterID=" + 0
+            + "&CustomerID=" + CustCareCustid
+            + "&Type=" + 12
+            + "&AppID=" + 0
+            + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CSeft_SendSMS() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/SMS/SmsDetail?CustomerID=" + CustCareCustid + "&TicketID=" + 0 + "&Type=" + 'SMSContentGeneral' + "&TypeCare=" + 1 + "&AppID=" + 0 + "&TreatID=" + 0 + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function CSeft_Call(e) {
+        if (typeof CCF_OutcomCall !== 'undefined' && $.isFunction(CCF_OutcomCall)) {
+            let phone = $(e).attr("data-info");
+            CCF_OutcomCall(phone, CustCareCustid, 0, 0);
+        }
+
+    }
+    function CSeft_CloseCollap () {
+        $('#CustCareColLists').collapse('hide');
+    }
+        //#endregion
+    function CSeft_Export () {
+        try {
+            if (CustCareExport && CustCareExport.length != 0) {
+                var dataHeader = {
+                    "#": ["@Local["#"]", (value, { }, index) => {return index + 1;}]
+                    , "CustName": "@Local["Tên"]"
+                    , "DocCode": "@Local["Mã hồ sơ"]"
+                    , "BranchName": "@Local["Chi nhánh"]"
+                    , "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]"]
+                    }
+                    , "IsTakeCare": ["@Local["Tình trạng"]", (v) => {return v == 1 ? decodeHtml("@Local["Đã chăm sóc"]") : decodeHtml("@Local["Chưa chăm sóc"]")}]
+                    , "CallBackTime": ["@Local["Ngày gọi lại"]", (v) => {return !GetDateTime_String_DMY(v).includes("1900") ? GetDateTime_String_DMY(v) : ""}]
+                    , "Content": "@Local["Nội dung gần nhất"]"
+                    , "EmpCare": ["@Local["Nhân viên"] @Local["Xử lý"]", (v) => {return Fun_GetObject_ByID(AfterTreatDataEmployee, v).Name != "unknown" ? Fun_GetObject_ByID(AfterTreatDataEmployee, v).Name : ""}]
+                    , "CCID": ["@Local["Nhân viên chăm sóc"]", (v) => {return Fun_GetObject_ByID(AfterTreatDataEmployee, v).Name != "unknown" ? Fun_GetObject_ByID(AfterTreatDataEmployee, v).Name : ""}]
+                    , "statusID": ["@Local["Trạng thái"]", (v) => {return Fun_GetName_ByID(CustCareTypeCare, v)}]
+                    , "StatusCallID": ["@Local["Trạng thái chi tiết"]", (v) => {return Fun_GetName_ByID(CustCareTypeCare, v)}]
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'CS_Body', PermissionTable_TabControl);
+                exportJsonToExcel(Outlang["Sys_sau_dieu_tri"], CustCareExport, dataHeader);
+            }
+            else { notiWarning('@Local["Không xuất được file"]'); }
+        }
+
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]');
+        }
+    }
+</script>

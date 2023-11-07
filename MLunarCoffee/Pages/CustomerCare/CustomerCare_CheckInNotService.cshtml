@@ -1,0 +1,795 @@
+﻿@page
+@model MLunarCoffee.Pages.CustomerCare.CustomerCare_CheckInNotServiceModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<div class="row">
+    <div class="col px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <ul class="nav nav-pills p-0 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item me-3" role="presentation">
+                            <a class="nav-link cursor-pointer active" data-bs-toggle="collapse" href="#CNot_AreaFill">
+                                <i class="text-gradient text-primary fas fa-filter"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <h6 class="mb-0 mt-1">@Local["Khách hàng không phát sinh dịch vụ"]</h6>
+                            <p class="text-sm mb-0">@Local["Danh sách khách hàng"]</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="right">
+                    <div class="wrap">
+                        <div class="wrapblock pb-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="CNFillOption" value="0" onchange="event.preventDefault();return CNot_EventFillter();" checked="">
+                                <label class="mb-0 form-check-label">@Local["Tất cả"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="CNFillOption" value="1" onchange="event.preventDefault();return CNot_EventFillter();">
+                                <label class="mb-0 form-check-label">@Local["Chưa xử lý"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input type_show" type="radio" name="CNFillOption" value="2" onchange="event.preventDefault();return CNot_EventFillter();">
+                                <label class="mb-0 form-check-label">@Local["Đã xử lý"]</label>
+                            </div>
+                        </div>
+                        <div class="wrapblock pb-2">
+                            <div class="form-group mb-0  ">
+                                <div class="input-group mb-0">
+                                    <span class="input-group-text fw-bold text-primary ">@Local["Tổng"]</span>
+                                    <span class="form-control fw-bolder text-dark ps-2" style="width:100px; max-width:100px;" id="CN_Total">0</span>
+                                </div>
+                            </div>
+                            <div class="py-0 ms-0 ms-lg-1">
+                                <button class="btn w-100 btn-dark m-0" onclick="event.preventDefault();return CNot_Export();">@Local["Xuất"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="vtcondition">
+                    <div class="row collapsesticky z-index-sticky collapse" id="CNot_AreaFill">
+                        <div class="d-lg-flex">
+                            <div class="w-100">
+                                <div class="row px-2 form3">
+                                    <div class="col-12 col-md-12 col-xl-4 p-1 ps-1">
+                                        <div class="input-group">
+                                            <div class="input-group-text input-group-text px-2">
+                                                <i class="fas fa-search" aria-hidden="true"></i>
+                                                <div class="spinner-border spinner-border-sm d-none"></div>
+                                            </div>
+                                            <input id="CN_SearchInput" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm khách hàng"]" autocomplete="off">
+                                            <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_Branch">
+                                            <input type="hidden" name="branch" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbBranch" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_Employee">
+                                            <input type="hidden" name="employee" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbEmployee" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_CCStaffID">
+                                            <input type="hidden" name="" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbCCStaffID" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_CallID">
+                                            <input type="hidden" name="" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbCall" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 p-1 ps-1">
+                                        <div class="input-group mb-0 flex-nowrap">
+                                            <div class="ui fluid search selection dropdown" id="CN_TypeDate" style="width:30%;">
+                                                <input type="hidden" name="employee" />
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text"></div>
+                                                <div id="CN_CbbTypeDate" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                            <input id="CN_CusDate" class="form-control flatpickr" type="text" placeholder="eg .@Local["Ngày"]" />
+                                            <div class="input-group-text p-0 pe-2">
+                                                <div class="position-relative d-inline">
+                                                    <a class="cursor-pointer px-2" data-bs-toggle="collapse" role="tab" data-bs-target="#DivSearchDate">
+                                                        <i class="text-gradient text-primary fas fa-filter"></i>
+                                                    </a>
+                                                    <div class="collapse collapsesticky position-absolute z-index-3 end-1 top-100 mt-1" id="DivSearchDate" style="min-width:285px;">
+                                                        <div class="card card-body text-dark text-capitalize opacity-10">
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="input-group w-100">
+                                                                    <div class="input-group-text position-relative cursor-pointer CN-DateLast w-60" data-value="1">
+                                                                        <div class="fw-bold">@Local["Một ngày trước"]</div>
+                                                                    </div>
+                                                                    <div class="input-group-text position-relative cursor-pointer _tab_control_ CN-DateLast w-40" data-value="0">
+                                                                        <div class="fw-bold">@Local["Hôm nay"]</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_StatusID">
+                                            <input type="hidden" name="" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbStatusID" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <div class="ui fluid search selection dropdown form-control" id="CN_StatusCallID">
+                                            <input type="hidden" name="" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text"></div>
+                                            <div id="CN_CbbStatusCallID" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-2 p-1">
+                                        <button class="btn bg-gradient-primary m-0" onclick="event.preventDefault();return CNot_LoadData();">@Local["OK"]</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="m-0 mt-1 position-relative">
+                        <div id="CN_Loading" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x z-index-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]...</span>
+                            </div>
+                        </div>
+                        <div class="row px-2 h-100">
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3 p-1">
+                                <div class="overflow-auto stickytable" style="max-height:calc(100vh - 289px);">
+                                    <ul id="CN_BodyCustomerList" class="list-group block-horizontal ShowHasHandle ShowNoHandle ShowTreat ShowCons">
+                                    </ul>
+                                </div>
+                                <button class="btn btn-secondary btnsysmore w-100 p-1 mt-2 mb-0 d-none" id="CNot_BtnShowMore" onclick="CNot_LoadData(0, 1)">@Local["Xem thêm"]</button>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-8 col-xl-9 p-1">
+                                <div id="CB_DivDetailNonData" class="mx-auto text-center">
+                                    <h5 class="mb-0">@Local["Danh sách khách hàng"]</h5>
+                                    <p>@Local["Chọn khách hàng để tiến hành chăm sóc"]</p>
+                                </div>
+                                <div id="CN_DivDetail" class="card h-100 d-none">
+                                    <div class="card-header  p-2">
+                                        <div class="d-lg-flex">
+                                            <div class=" col-auto my-auto">
+                                                <div class="text-dark ms-2  text-sm">
+                                                    <div>
+                                                        <a id="CN_CustCode" target="_blank" href="#" class="border-1 border-primary border-bottom cursor-pointer"></a>
+                                                        <i class="text-sm text-dark vtt-icon vttech-icon-call-action"></i>
+                                                        <a id="CN_CustPhone" onclick="CNot_Call(this);" class="text-dark cursor-pointer">
+
+                                                        </a>
+                                                        <i class="fas fa-sms text-md text-md text-dark ms-2"></i>
+                                                        <a class="ms-1 cursor-pointer text-dark text-sm" onclick="CNot_SendSMS();">
+                                                            SMS
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="d-block text-sm fw-bold mt-1">
+                                                        <span id="CN_CustName" class="mb-0 mt-2"></span> - 
+                                                        <span id="CN_CustGender" class="mb-0 mt-2"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-auto my-auto mt-1 d-flex justify-content-center">
+                                                <div id="CN_GroupName" class="p-1" data-bs-toggle="tooltip" title="" data-bs-original-title="">
+                                                    <img class="cursor-pointer icon icon-shape icon-sm me-2 shadow text-center" id="CN_Img" src="/default.png" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                                                </div>
+                                                <button class="btn bg-gradient-primary btn-sm ms-2 my-1" onclick="CNot_New()">@Local["Thêm mới"]</button>
+
+                                            </div>
+                                        </div>
+                                        <hr class="horizontal dark mt-3 mb-2">
+                                    </div>
+                                    <div id="CN_DivDetailBody" class=" card-body overflow-auto overflow-x-hidden" style="height:calc(100vh - 330px);">
+                                    </div>
+                                    <button id="CN_DivLoadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-absolute bottom-0" onclick="event.preventDefault(); return ();">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>
+    let CN_SysPermission = @Model.sys_Permission_Tele;
+    let CN_Sysuser = @Model.sys_UserID;
+    let CN_XhrRequest;
+    let CN_DataMain = [];
+    let CN_BranchToken = {};
+    let CN_DtTypeCare = {};
+    let CN_BeginID = 0;
+    let CN_Limit = 200;
+    let CN_CustomerID = 0;
+    let CN_CareID = 0;
+    let CN_AppID = 0;
+    let CN_DataExport = [];
+    let CN_DataEmployee;
+    let CN_DetailIndex = 0;
+    let CN_MainSlide;
+    let CN_TypeDate = [
+        {"ID" : 1 , "Name": "@Local["Ngày tạo"]"}
+        , {"ID" : 2 , "Name": "@Local["Ngày xử lý"]"}
+        , {"ID" : 3 , "Name": "@Local["Ngày gọi lại"]"}
+    ];
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                CN_DataEmployee = data[0];
+                CNot_EventInit();
+                CNot_EventFlatpickr();
+                CNot_LoadInit();
+                ToolPopper();
+            })
+    });
+
+    $(document).mouseup(function (e) {
+        let DivFillDate = $('#DivSearchDate');
+        if (!DivFillDate.is(e.target ) && DivFillDate.has(e.target).length === 0){
+            $('#DivSearchDate').collapse('hide');
+        }
+    })
+    //#region //Load Init
+
+    function CNot_LoadInit () {
+        AjaxLoad(url = "/CustomerCare/CustomerCare_CheckInNotService/?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '[]') {
+                    let data = JSON.parse(result);
+                    let DtStatus = data?.TypeCare.filter(item => item["ParentID"] == 0);
+                    let DtStatusDetail = data?.TypeCare.filter(item => item["ParentID"] != 0);
+                    CN_DtTypeCare = (data?.TypeCare).reduce((pre, acc) => {pre[acc.ID] = acc; return pre;}, {});
+                    CN_BranchToken = (data.Branch).reduce((pre, acc) => {pre[acc.ID] = acc; return pre;}, {});
+                    Load_Combo(data.Branch, "CN_CbbBranch", true, '@Local["Chi nhánh"]');
+                    Load_Combo(data.Tele, "CN_CbbEmployee", true, '@Local["Tele phụ trách"]');
+                    Load_Combo(data.ParaCall, "CN_CbbCall", true, '@Local["Trạng thái gọi"]');
+                    Load_Combo(data.TeleCare, "CN_CbbCCStaffID", true, '@Local["Nhân viên chăm sóc"]');
+                    Load_Combo(CN_TypeDate, "CN_CbbTypeDate", true, '@Local["Ngày"]');
+                    Load_Combo(DtStatus, "CN_CbbStatusID", true, '@Local["Trạng thái"]');
+                    Load_Combo(DtStatusDetail, "CN_CbbStatusCallID", true, '@Local["Trạng thái chi tiết"]');
+
+
+                    $("#CN_CCStaffID").dropdown("refresh");
+                    $("#CN_CCStaffID").dropdown("set selected", "0");
+                    $("#CN_Branch").dropdown("refresh");
+                    $("#CN_Branch").dropdown("set selected", "0");
+                    $("#CN_Employee").dropdown("refresh");
+                    $("#CN_Employee").dropdown("set selected", (Number(CN_SysPermission) == 0 ? "0" : CN_Sysuser));
+                    $("#CN_CallID").dropdown("refresh");
+                    $("#CN_CallID").dropdown("set selected", "0");
+                    $("#CN_TypeDate").dropdown("refresh");
+                    $("#CN_TypeDate").dropdown("set selected", "0");
+                    $("#CN_StatusID").dropdown("refresh");
+                    $("#CN_StatusID").dropdown("set selected", "0");
+                    $("#CN_StatusCallID").dropdown("refresh");
+                    $("#CN_StatusCallID").dropdown("set selected", "0");
+
+                    CNot_LoadData();
+                }
+            }
+        );
+    }
+
+
+    async function CNot_LoadData (currentID = 0, isLoadMore = 0) {
+        return new Promise((resolve, reject) => {
+            let SearchText = $("#CN_SearchInput").val() ? $("#CN_SearchInput").val() : "";
+
+            if (CN_XhrRequest && CN_XhrRequest.readyState != 4) CN_XhrRequest.abort();
+            if (currentID == 0 && isLoadMore == 0) {
+                CN_DataMain = [];
+                CN_BeginID = 0;
+                $('#CN_BodyCustomerList').html('');
+                CN_DataExport = [];
+            }
+            if (currentID != 0) CN_BeginID = 0;
+
+            let data = new Object();
+            let branchid = $('#CN_Branch').dropdown('get value') ? $('#CN_Branch').dropdown('get value') : "0";
+            let branchToken = branchid == 0 ? Object.values(CN_BranchToken).map(e => e.ID).join(',') : '';
+            data.BranchID = branchid;
+            data.BranchToken = branchToken;
+            data.StaffID = Number($('#CN_Employee').dropdown('get value')) ? Number($('#CN_Employee').dropdown('get value')) : "0";
+            data.CallID = $('#CN_CallID').dropdown('get value') ? Number($('#CN_CallID').dropdown('get value')) : "0";
+            data.CCStaffID = $('#CN_CCStaffID').dropdown('get value') ? Number($('#CN_CCStaffID').dropdown('get value')) : "0";
+            data.TypeDate = $('#CN_TypeDate').dropdown('get value') ? $('#CN_TypeDate').dropdown('get value') : "0";
+            data.SearchText = xoa_dau(SearchText).toLowerCase().trim().replace(/[^a-zA-Z0-9 ]/g, '');
+            data.statusID = $('#CN_StatusID').dropdown('get value') ? $('#CN_StatusID').dropdown('get value') : "0";
+            data.statusCallID = $('#CN_StatusCallID').dropdown('get value') ? $('#CN_StatusCallID').dropdown('get value') : "0";
+
+            let date = $("#CN_CusDate").val() ? $("#CN_CusDate").val() : new Date();
+            let dateFrom;
+            let dateTo;
+
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "#");
+                dateFrom = date.split('#')[0];
+                dateTo = date.split('#')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+
+            CN_XhrRequest = AjaxLoad(url = "/CustomerCare/CustomerCare_CheckInNotService/?handler=LoadData"
+                , data = {
+                    'data': JSON.stringify(data)
+                    , 'DateFrom': dateFrom
+                    , 'DateTo': dateTo
+                    , 'currentID': currentID
+                    , 'BeginID': CN_BeginID
+                    , 'Limit': CN_Limit
+                }
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data != "0") {
+                        if (data.length != 0) {
+                            $("#CNot_BtnShowMore").removeClass("d-none");
+                            let stringContent = '';
+                            if (currentID == 0) {
+                                fnRenderBlock(data, "CN_BodyCustomerList"
+                                    , blocknum = 30
+                                    , fnrender = CNot_Render
+                                    , fnsuccess = null
+                                );
+                                CN_DataMain = CN_DataMain.concat(data);
+                            }
+                            else {
+                                let _id = $('#CustCareRow_' + currentID);
+                                if (_id != undefined && _id.length != 0) {
+                                    for (let i = 0; i < CN_DataMain.length; i++) {
+                                        if (CN_DataMain[i].AppID == currentID) {
+                                            CN_DataMain[i] = data[0];
+                                        }
+                                    }
+                                    stringContent = CNot_RenderEach(data[0]);
+                                    _id.replaceWith(stringContent);
+                                    CNot_Event();
+                                    $("input[name=CNFillOption]").trigger("change");
+                                    $('#CustCareRow_' + currentID).trigger('click');
+
+                                }
+                                ToolPopper();
+                            }
+                        }
+                        else {
+                            if (currentID != 0) {
+                                let _id = 'CustCareRow_' + currentID;
+                                $("#" + _id).remove();
+                                CN_DataMain = CN_DataMain.filter((item) => {return (item.AppID != currentID)})
+                                $("input[name=CNFillOption]").trigger("change");
+                            }
+                            CNot_Event();
+                            if (CN_DataMain && CN_DataMain.length == 0 && $('#CB_DivDetailNonData').hasClass('d-none')){
+                                $('#CN_DivDetail').addClass('d-none');
+                                //$('#CB_DivDetailNonData').removeClass('d-none');
+                                $("#CNot_BtnShowMore").addClass("d-none");
+                            }
+                        }
+                        CN_BeginID = (CN_DataMain && CN_DataMain.length > 0) ? CN_DataMain[CN_DataMain.length - 1].AppID : 0;
+                        $("#CN_Total").html(formatNumber($(".CustCareRow:visible").length))
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CN_Loading').show();
+                }
+                , complete = function (e) {
+                    $('#CN_Loading').hide();
+                }
+            );
+
+        });
+    }
+
+
+    async function CNot_LoadDetail (CusID) {
+        return new Promise((resolve, reject) => {
+            if (CN_XhrRequest && CN_XhrRequest.readyState != 4) CN_XhrRequest.abort();
+            CN_DetailIndex = 0;
+            CN_XhrRequest = AjaxLoad(url = "/CustomerCare/CustomerCare_CheckInNotService/?handler=LoadDetail"
+                , data = {
+                    'cus': CusID
+                }
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    let datas = JSON.parse(result);
+                    if (datas != undefined) {
+
+                        CNot_FillInfo(datas.Table);
+
+                        let detailData = [...datas.Table1];
+                        CN_MainSlide = sliceIntoChunks(detailData, 500);
+                        $("#CN_DivDetailBody").empty();
+                        $('#CN_DivLoadMore').removeClass('d-none');
+
+                        if (CN_MainSlide && CN_MainSlide.length != 0) {
+                            //fnRenderBlock(CN_MainSlide[CN_DetailIndex], "CN_DivDetailBody"
+                            //    , blocknum = 100
+                            //    , fnrender = CNot_RenderDetail
+                            //    , fnsuccess = null
+                            //);
+                            CNot_RenderDetail(CN_MainSlide[CN_DetailIndex], "CN_DivDetailBody");
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#CN_Loading').show();
+                }
+                , complete = function (e) {
+                    $('#CN_Loading').hide();
+                }
+            );
+
+        });
+    }
+
+    //#endregion
+
+    //#region //Render
+
+    async function CNot_Render (data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CNot_RenderEach(item);
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                            Checking_TabControl_Permission();
+                        }
+                    }
+                }
+
+                CNot_Event();
+                $("input[name=CNFillOption]").trigger("change");
+
+                resolve();
+            }, 10)
+        });
+    }
+
+    function CNot_RenderEach (item) {
+        let isexecuted = 'checklist-item-secondary', iscallback = '';
+        if (item.IsTakeCare == 1) isexecuted = 'checklist-item-success';
+        if (item.IsCallback == 1){
+            iscallback = `
+            <div class="ms-3">
+                            <p class="text-xs mb-0 text-secondary font-weight-bold">@Local["Ngày gọi lại"]</p>
+                        <span class="text-sm text-dark">${GetDateTime_String_DMY(item.CallBackTime)}</span>
+                     </div>
+                     `
+        }
+        let tr = `
+            <li id="CustCareRow_${item.AppID}" data-AppID="${item.AppID}" data-CareID="${item.CareID}" data-date="${item.NumDateFrom}" data-custid="${item.CustID}" class="CustCareRow checklist-item ${item.IsTakeCare == 0 ? `checknone` : `CheckHas`} ${isexecuted} list-group-item border-0 flex-column align-items-start py-0 mt-2 py-2 border-radius-lg cursor-pointer">
+                <div class="d-flex align-items-center">
+                    <a class="border-bottom border-primary code col-auto fw-bold mb-0 mt-0 my-auto text-primary text-sm" target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}">${item.CustCode}</a> <span class="text-sm ms-2 text-dark"> - ${item.CustName} </span>
+                </div>
+                <div class="d-flex align-items-center mt-1">
+                    <div>
+                    <p class="text-xs mb-0 text-secondary font-weight-bold">@Local["Ngày tư vấn"]</p>
+                    <span class="text-sm text-dark">${ConvertYMDInt_ToDate(item.NumDateFrom)}</span>
+                    <span data-name="phone" class="_tab_control_ cursor-pointer d-none" data-tab="phone_customer">0909999999</span>
+                    </div>
+                    ${iscallback}
+                </div>
+
+            </li>
+        `
+        return tr;
+    }
+
+    async function CNot_FillInfo (dataInfo) {
+        new Promise((resolve, reject) => {
+            let item = dataInfo[0];
+            if (item != undefined) {
+
+                let birth = '';
+                let groupname = (item.GroupName != '') ? item.GroupName : 'no group';
+
+                $('#CN_CustGender').html(item.GenderName + (birth != '' ? birth : ''));
+                $('#CN_CustPhone').html('<span class="_tab_control_ cursor-pointer" data-tab="phone_customer" > ' + item.Phone + '</span>');
+                $('#CN_CustPhone').attr('data-info', (item.Phone.length > 0 ? encrypt_phone(item.Phone.replace(" ", "")) : ""));
+
+                $('#CN_CustName').html(item.Name);
+                $('#CN_CustCode').html(item.CustomerCode + ((item.DocCode != '') ? (' [ ' + item.DocCode + ' ] ') : '') + ((item.Cust_Code_Old != '') ? (' [' + item.Cust_Code_Old + ']') : ''));
+                $('#CN_CustCode').attr('href', '/Customer/MainCustomer?CustomerID=' + item.CustomerID);
+
+                $('#CN_Img').attr('src', ((item.ImageGroup != '') ? item.ImageGroup : Master_Default_Pic));
+                $('#CN_GroupName').prop("title", groupname)
+                $('#CN_GroupName').attr('data-bs-original-title', groupname);
+            }
+            Checking_TabControl_Permission();
+            resolve();
+        });
+    }
+    function CNot_RenderMore () {
+        CN_DetailIndex += 1;
+        if (CN_MainSlide && CN_MainSlide[CN_DetailIndex]) {
+            //fnRenderBlock(CN_MainSlide[CN_DetailIndex], "CN_DivDetailBody"
+            //    , blocknum = 100
+            //    , fnrender = CNot_RenderDetail
+            //    , fnsuccess = null
+            //);
+            CNot_RenderDetail(CN_MainSlide[CN_DetailIndex], "CN_DivDetailBody");
+        }
+        if (!$('#CN_DivLoadMore').hasClass('d-none') && CN_DetailIndex >= CN_MainSlide.length - 1) {
+            $('#CN_DivLoadMore').addClass('d-none');
+        }
+    }
+
+    async function CNot_RenderDetail (data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let classname = '';
+                            let classchilname = '';
+                            let creator = '';
+                            if (item.IsConsult == 0) {
+                                classname = 'justify-content-end text-right';
+                                creator = `<div class="d-flex align-items-center text-sm">
+                                                    <span class="text-secondary">${item.CreatedName} ${GetDateTime_String_DMY(item.Created)}
+                                                    </span>
+                                                </div>`;
+                                classchilname = 'card';
+                            }
+                            else {
+                                classname = 'justify-content-start';
+                                creator = `<div class="align-items-center text-sm">
+                                                    ${(item.CreatedName != '') ? `<span class="d-block text-secondary">BS:${item.CreatedName}</span>` : ''}
+                                                    <span class="d-block text-secondary">${GetDateTime_String_DMY(item.Created)}</span>
+                                               </div>`;
+                                classchilname = 'rounded-3 bg-gray-200';
+                            }
+                            let tr = `
+                                    <div class="row ${classname} mb-4">
+                                        <div class="col-auto">
+                                            <div class="${classchilname}">
+                                                <div class="card-body py-2 px-3">
+                                                    <p class="text-dark mb-1">
+                                                        ${item.Content}
+                                                    </p>
+                                                    ${creator}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                    }
+                }
+                resolve();
+            }, 10)
+        });
+    }
+
+
+    //#endregion
+
+    //#region //Event
+
+    function CNot_EventFillter () {
+        let IdStatus = Number($("input[name=CNFillOption]:checked").val());
+        let y = document.getElementsByClassName("CustCareRow");
+        for (let i = 0; i < y.length; i++) {
+            $(y[i]).show();
+            let className = $(y[i]).attr('class');
+            if (IdStatus == 2 && className.includes("checknone")) {
+                $(y[i]).hide();
+            } else if (IdStatus == 1 && className.includes("CheckHas")) {
+                $(y[i]).hide();
+            }
+        }
+        if (IdStatus == 1){
+            CN_DataExport = CN_DataMain.filter((item) => {return (item["IsTakeCare"] == 0)});
+        } else if (IdStatus == 2){
+            CN_DataExport = CN_DataMain.filter((item) => {return (item["IsTakeCare"] == 1)});
+        } else {
+            CN_DataExport = CN_DataMain;
+        }
+        $("#CN_Total").html(formatNumber($(".CustCareRow:visible").length))
+    }
+
+    function CNot_Event () {
+        $("#CN_BodyCustomerList .CustCareRow").unbind("click").click(function () {
+            let CustID = $(this).attr("data-custid");
+            let AppID = $(this).attr("data-AppID");
+            let CareID = $(this).attr("data-CareID");
+
+            $('#CN_DivDetail').removeClass('d-none');
+            $('#CB_DivDetailNonData').addClass('d-none');
+            $('.CustCareRow').removeClass('active');
+            $(this).addClass('active');
+
+            CN_CustomerID = CustID;
+            CN_CareID = CareID;
+            CN_AppID = AppID;
+
+            CNot_LoadDetail(CustID);
+        })
+        $('#CN_BodyCustomerList').find('.CustCareRow:visible:first').trigger("click");
+    }
+
+    function CNot_EventInit () {
+        $(".CN-DateLast").unbind("click").click(function () {
+            let days = 0;
+            $(".CN-DateLast").removeClass("CNot_Active");
+            let datadays = Number($(this).attr('data-value'));
+            if (!isNaN(datadays)) {
+                days = datadays;
+                let CN_DateNow = new Date();
+                CN_DateNow.setDate(CN_DateNow.getDate() - days);
+                $("#CN_CusDate").val(formatDateClient(CN_DateNow) + ' to ' + formatDateClient(CN_DateNow));
+            }
+            localstorage_set('CN-DateLast', days);
+            $(this).addClass("CNot_Active");
+        })
+    }
+
+    //#endregion
+
+    //#region //Handle
+
+    function CNot_Call (e) {
+        if (typeof CCF_OutcomCall !== 'undefined' && $.isFunction(CCF_OutcomCall)) {
+            let phone = $(e).attr("data-info");
+            CCF_OutcomCall(phone, CN_CustomerID, 0, 0);
+        }
+    }
+
+    function CNot_SendSMS () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/SMS/SmsDetail?CustomerID=" + CN_CustomerID + "&TicketID=" + 0 + "&Type=" + 'SMSContentGeneral' + "&TypeCare=" + 2 + "&AppID=" + CN_AppID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CNot_New () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/CallDetailInput?MasterID=" + CN_CareID
+            + "&CustomerID=" + CN_CustomerID
+            + "&Type=" + 2
+            + "&AppID=" + CN_AppID
+            + "&TreatID=" + 0
+            + "&TreatmentDate=" + ""
+            + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //#endregion
+
+
+    //#region //Flatpick
+
+    function CNot_EventFlatpickr () {
+        $("#CN_CusDate").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        let CN_LastDate = 0;
+        let CN_DefaultDate = localstorage_get('CN-DateLast');
+        if (CN_DefaultDate != '') {
+            CN_LastDate = Number(JSON.parse(CN_DefaultDate).data);
+            $('.CN-DateLast[data-value="' + CN_LastDate + '"]').trigger('click');
+        } else {
+            $('.CN-DateLast[data-value="0"]').trigger('click');
+        }
+
+    }
+
+    //#endregion
+    function CNot_Export () {
+        try {
+            if (CN_DataExport && CN_DataExport.length != 0) {
+
+                var dataHeader = {
+                    "#": ["@Local["#"]", (value, { }, index) => {return index + 1;}]
+                    , "CustName": "@Local["Tên"]"
+                    , "DocCode": "@Local["Mã hồ sơ"]"
+                    , "BranchName": "@Local["Chi nhánh"]"
+                    , "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]"]
+                    }
+                    , "CallBackTime": ["@Local["Ngày gọi lại"]", (v) => {return !GetDateTime_String_DMY(v).includes("1900") ? GetDateTime_String_DMY(v) : ""}]
+                    , "Content": "@Local["Nội dung gần nhất"]"
+                    , "EmpCare": ["@Local["Người xử lý"]", (v) => {return Fun_GetObject_ByID(CN_DataEmployee, v).Name != "unknown" ? Fun_GetObject_ByID(CN_DataEmployee, v).Name : ""}]
+                    , "CCStaffID": ["@Local["Nhân viên chăm sóc"]", (v) => {return typeof(CN_DataEmployee[v]) != "undefined" ? CN_DataEmployee[v].Name : ""}]
+                    , "IsTakeCare": ["@Local["Tình trạng"]", (v) => {return v == 1 ? decodeHtml("@Local["Đã chăm sóc"]") : decodeHtml("@Local["Chưa chăm sóc"]")}]
+                    , "statusID": ["@Local["Trạng thái"]", (v) => {return Fun_GetName_ByID(CN_DtTypeCare, v)}]
+                    , "StatusCallID": ["@Local["Trạng thái chi tiết"]", (v) => {return Fun_GetName_ByID(CN_DtTypeCare, v)}]
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'CN_BodyCustomerList', PermissionTable_TabControl);
+                exportJsonToExcel(Outlang["Sys_khong_lam_dich_vu"], CN_DataExport, dataHeader);
+            }
+            else { notiWarning('@Local["Không xuất được file"]'); }
+        }
+
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]');
+        }
+    }
+
+</script>
+<style>
+    .CNot_Active {
+        background-image: linear-gradient(310deg, rgb(var(--bs-primary-from)) 0%, rgb(var(--bs-primary-to)) 100%);
+        color: white;
+    }
+</style>

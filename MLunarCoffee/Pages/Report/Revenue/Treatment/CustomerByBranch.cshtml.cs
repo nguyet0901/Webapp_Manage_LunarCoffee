@@ -1,0 +1,59 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json;
+using SourceMain.Comon.Session;
+
+namespace SourceMain.Pages.Report.RevenuePayment.Treatment
+{
+    public class CustomerByBranchModel : PageModel
+    {
+        public string _dateFrom { get; set; }
+        public string _dateTo { get; set; }
+        public string _SheetID { get; set; }
+        public string _branch { get; set; }
+        public string sys_isDetailTeeth { get; set; }
+        public void OnGet()
+        {
+            _dateFrom = Request.Query["dateFrom"].ToString();
+            _dateTo = Request.Query["dateTo"].ToString();
+            _SheetID = Request.Query["sheet"].ToString();
+            _branch = Request.Query["branch"].ToString();
+            sys_isDetailTeeth = Comon.Global.sys_isDetailTeeth.ToString();
+        }
+
+
+         public async Task<IActionResult> OnPostLoadata(int branchID, string dateFrom, string dateTo)
+        {
+            try
+            {
+                DataSet ds = new DataSet();
+                var user = Session.GetUserSession(HttpContext);
+                using (Models.ExecuteDataBase confunc = new Models.ExecuteDataBase())
+                {
+                    ds = await confunc.ExecuteDataSet("[ZZZ_sp_Report_Customer_Treatment]", CommandType.StoredProcedure,
+                        "@datefrom", SqlDbType.DateTime, Comon.Comon.DateTimeDMY_To_YMD(dateFrom)
+                        , "@dateto", SqlDbType.DateTime, Comon.Comon.DateTimeDMY_To_YMD(dateTo)
+                        , "@branch_id", SqlDbType.DateTime, Convert.ToInt32(branchID)
+                        , "@user_id", SqlDbType.Int, user.sys_userid);
+                }
+                if (ds != null)
+                {
+                    return Content(JsonConvert.SerializeObject(ds, Formatting.Indented));
+                }
+                else
+                {
+                    return Content("[]");
+                }
+            }
+            catch (Exception)
+            {
+                return Content("[]");
+            }
+        }
+    }
+}

@@ -1,0 +1,693 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.ServiceStatus.Installment.InstallmentGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="collapsesticky collapse show" id="IG_General">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Trả góp"]</h6>
+            <p class="text-sm mb-0">@Local["Báo cáo trả góp dịch vụ/sản phẩm khách hàng"]</p>
+        </div>
+        <div class="right">
+            <div class="wrap">
+                <div class="wrapblock">
+                    <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                        <span id="IG_currentdata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="IG_totaldata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#IG_GeneralDiv" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Tải lại"]">
+                        <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); return IG_LoadData()"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); IG_PrintReport()"></i>
+                    </div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return IG_Export(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return IG_Export(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div> 
+            </div>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Ngày tạo"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="createdby" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người tạo"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="custcode" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã khách hàng"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0 pt-0 collapsesticky collapse show" id=IG_GeneralDiv>
+        <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+            <table class="table vt-table mb-0" id="IG_Grid">
+                <thead>
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th>#</th>
+                        <th style="min-width: 180px">@Local["Khách hàng"]</th>
+                        <th style="min-width: 180px" data-name="custcode">@Local["Mã khách hàng"]</th>
+                        <th style="min-width: 250px">@Local["Dịch vụ/sản phẩm"]</th>
+                        <th>@Local["Giá tiền"]</th>
+                        <th style="min-width: 85px">@Local["Trả trước"]</th>
+                        <th>@Local["Tiền góp"]</th>
+                        <th>@Local["Tiền góp/1 kỳ"]</th>
+                        <th>@Local["Ngày góp"]</th>
+                        <th>@Local["Tiền đã góp"]</th>
+                        <th style="min-width: 100px">@Local["Tiền còn nợ"]</th>
+                        <th style="min-width: 120px">@Local["Tiến trình (tháng)"]</th>
+                        <th style="min-width: 100px">@Local["Tỷ lệ phần trăm"]</th>
+                        <th data-name="branch">@Local["Chi nhánh"]</th>
+                        <th data-name="created">@Local["Ngày tạo"]</th>
+                        <th data-name="createdby">@Local["Người tạo"]</th>
+                    </tr>
+                </thead>
+                <tbody id="IG_GridBody">
+                </tbody>
+            </table>
+        </div>
+        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return IG_RenderMore();">
+            @Local["Xem thêm"]
+        </button>
+    </div>
+</div>
+<div id="IG_GeneralDetail" style="display:none;">
+    <div class="vtcardheader card-header pb-0 px-0">
+    <div class="left">
+        <p id="IG_DetailInstallment" class="text-md text-dark font-weight-bold mb-1"></p>
+    </div>
+    <div class="right">
+        <div class="text-primary fw-bold d-inline mx-2 text-nowrap">
+            <span id="IG_currentdetaildata">0</span>
+            <span class="mx-2">/</span>
+            <span id="IG_totaldetaildata">0</span>
+        </div>
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["Thu gọn"]">
+            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+               data-bs-toggle="collapse" href="#IG_GeneralDetailDiv" aria-expanded="true"></i>
+        </div>
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["Xuất excel"]">
+            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+               onclick="event.preventDefault(); return IG_ExportDetail()"></i>
+        </div>
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["In báo cáo"]">
+            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+               onclick="event.preventDefault(); IG_DetailPrintReport()"></i>
+        </div>
+    </div>
+</div>
+    <div class="collapsesticky collapse show" id="IG_GeneralDetailDiv">
+        <div class="card-body p-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table data-name="IG_GridDetail" class="table vt-table mb-0" id="IG_GridDetail">
+                    <thead>
+                        <tr>
+                            <th class="col-1">#</th>
+                            <th>@Local["Khách hàng"]</th>
+                            <th>@Local["Dịch vụ"]</th>
+                            <th class="col-2">@Local["Lần thanh toán"]</th>
+                            <th>@Local["Kỳ hạn"]</th>
+                            <th>@Local["Tiền phải thanh toán"]</th>
+                            <th>@Local["Thanh toán"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="IG_GridDetailBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return IG_RenderMoreDetail();">
+            @Local["Xem thêm"]
+        </button>
+    </div>
+</div>
+<script type="text/javascript">
+    let _branchID = "@Model._branchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let xhrLoadList, xhrLoadDetail;
+    let shtable;
+    let DataReportMain, DataReportMainSlice, DataReportMainDetail, DataReportMainDetailSlice;
+    let IndexReport = 0; IndexReportDetail = 0;
+    let timeoutCount, timeoutCountDetail;
+    let totalPayment = 0; totalPrepay = 0; totalInstall = 0; totalDate = 0; totalInstalled = 0; totalDebt = 0; totalProcessing = 0; totalMonth = 0; totalStep = 0; totalPay1Time = 0;
+    let dataExportDetail = []; dataExportMaster = [];
+    $(document).ready(function ()
+    {
+        shtable = $("#IG_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        IG_LoadData();
+
+    });
+
+    function IG_LoadData()
+    {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        IndexReport = 0;
+        xhrLoadList = AjaxLoad(url = "/Report/ServiceStatus/Installment/InstallmentGrid?handler=Loadata"
+            , data = {
+                'branchID': _branchID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let data = JSON.parse(result)['Table'];
+                    Count_Up("IG_totaldata", data.length);
+                    DataReportMainSlice = sliceIntoChunks(data, 500);
+                    $("#IG_GridBody").empty();
+                    if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "IG_GridBody"
+                            , blocknum = 100
+                            , fnrender = IG_RenderMaster
+                            , fnsuccess = null
+                        );
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function IG_RenderMore()
+    {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "IG_GridBody"
+                , blocknum = 100
+                , fnrender = IG_RenderMaster
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function IG_RenderMaster(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let installAmount = item.Payment - item.PrepayAmount;
+                            let install1time = Math.floor(installAmount / item.Installment_Term);
+                            install1time = Math.round(install1time / 1000) * 1000;
+                            let debtAmount = 0;
+                            let timespaid = Math.floor((item.Install_AmoutPaid - item.PrepayAmount) / install1time);
+                            timespaid = timespaid < 0 ? 0 : timespaid;
+                            let processingPercent = (timespaid / item.Installment_Term) * 100
+                            debtAmount = item.Payment - item.Install_AmoutPaid;
+
+                            //calc total
+                            totalPayment += item.Payment;
+                            totalPrepay += item.PrepayAmount;
+                            totalInstall += installAmount;
+                            totalInstalled += item.Install_AmoutPaid;
+                            totalDebt += debtAmount;
+                            totalPay1Time += install1time;
+                            let objDataMaster = [];
+                            objDataMaster.CustName = item.CustName;
+                            objDataMaster.CustCode = item.CustCode;
+                            objDataMaster.ServiceCode = item.ServiceCode;
+                            objDataMaster.Payment = item.Payment;
+                            objDataMaster.PrepayAmount = item.PrepayAmount;
+                            objDataMaster.installAmount = installAmount;
+                            objDataMaster.install1time = install1time;
+                            objDataMaster.InstallmentDate = item.InstallmentDate;
+                            objDataMaster.Install_AmoutPaid = item.Install_AmoutPaid;
+                            objDataMaster.debtAmount = debtAmount;
+                            objDataMaster.timespaid = timespaid;
+                            objDataMaster.processingPercent = processingPercent;
+                            objDataMaster.branch = RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '';
+                            objDataMaster.InstallCreated = ConvertDateTimeUTC_DMY(item.InstallCreated);
+                            objDataMaster.InstallPerCreated = RP_DataEmployee[item.InstallPerCreated] != undefined ? RP_DataEmployee[item.InstallPerCreated].Name : '';
+                            dataExportMaster.push(objDataMaster);
+                            tr = `<tr class="vt-number" role="row">
+                                              <td class="d-none">${item.TabID}</td>
+                                              <td class="vt-number-order"></td>
+                                              <td>
+                                                  <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-custid="${item.CustID}" data-tabid="${item.TabID}" data-name="${item.CustName} [${item.ServiceName}]">
+                                                     ${item.CustName}
+                                                  </a>
+                                              </td>
+                                              <td data-name="custcode">${item.CustCode}</td>
+                                              <td>
+                                                    ${item.ServiceName}
+                                              </td>
+                                              <td>${formatNumber(item.Payment)}</td>
+                                              <td>${formatNumber(item.PrepayAmount)}</td>
+                                              <td>${formatNumber(installAmount)}</td>
+                                              <td>${formatNumber(install1time.toFixed(0))}</td>
+                                              <td>${item.InstallmentDate}</td>
+                                              <td>${formatNumber(item.Install_AmoutPaid)}</td>
+                                              <td>${formatNumber(debtAmount)}</td>
+                                              <td>${timespaid}/${item.Installment_Term} </td>
+                                              <td>${processingPercent.toFixed(2)} %</td>
+                                              <td data-name="branch">${RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                                              <td data-name="created">${ConvertDateTimeUTC_DMY(item.InstallCreated)}</td>
+                                              <td data-name="createdby">${RP_DataEmployee[item.InstallPerCreated] != undefined ? RP_DataEmployee[item.InstallPerCreated].Name : ''}</td>
+
+                                          </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        tr = `<tr class="vt-number text-white bg-gradient bg-primary mt-2 IG_RowTotal" role="row">
+                                          <td></td>
+                                          <td class="text-start" colspan="2">
+                                              <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white" data-custid="0" data-tabid="0">@Local["Tất cả"]</a>
+                                          </td>
+                                          <td data-name="custcode"></td>
+                                          <td>${formatNumber(totalPayment)}</td>
+                                          <td>${formatNumber(totalPrepay)}</td>
+                                          <td>${formatNumber(totalInstall)}</td>
+                                          <td>${formatNumber(totalPay1Time.toFixed(0))}</td>
+                                          <td></td>
+                                          <td>${formatNumber(totalInstalled)}</td>
+                                          <td>${formatNumber(totalDebt)}</td>
+                                          <td></td>
+                                          <td></td>
+                                          <td data-name="branch"></td>
+                                          <td data-name="created"></td>
+                                          <td data-name="createdby"></td>
+
+                                      </tr>`;
+                        if ($('.IG_RowTotal').length) {
+                            $('.IG_RowTotal').remove();
+                        }
+
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                        IG_GeneralEvent();
+                    }
+                }
+                shtable.Refresh();
+                clearTimeout(timeoutCount);
+                timeoutCount = setTimeout(() =>
+                {
+                    Count_Up("IG_currentdata", $("#" + id).children().length - 1);
+                }, 300)
+                resolve();
+            }, 10)
+        })
+    }
+
+    //#region // LOAD DETAIL AND RENDER
+    function IG_LoadDataDetail(tabID)
+    {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        IndexReportDetail = 0;
+        xhrLoadDetail = AjaxLoad(url = "/Report/ServiceStatus/Installment/InstallmentGrid/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'tabID': tabID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let totalTerm = 0;
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            totalTerm += data[i].Installment_Term;
+                        }
+                    }
+                    Count_Up("IG_totaldetaildata", data.length + totalTerm);
+                    $('#IG_GridDetailBody').html('');
+                    DataReportMainDetailSlice = sliceIntoChunks(data, 30);
+                    $("#IG_GridDetailBody").empty();
+                    if (DataReportMainDetailSlice && DataReportMainDetailSlice.lenth != 0) {
+                        fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "IG_GridDetailBody"
+                            , blocknum = 100
+                            , fnrender = IG_RenderDetail
+                            , fnsuccess = null
+                        );
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function IG_RenderDetail(data, id)
+    {
+        let stringContent = '';
+        let myNode = document.getElementById(id);
+        if (data && data.length != 0) {
+            for (let i = 0; i < data.length; i++) {
+                let data1cust = data[i];
+                data1cust = IG_CalAmountInstallmet(data1cust);
+                stringContent += IG_RenderblockCust(data1cust);
+            }
+        }
+        myNode.insertAdjacentHTML('beforeend', stringContent)
+        clearTimeout(timeoutCount);
+        timeoutCount = setTimeout(() =>
+        {
+            Count_Up("IG_currentdetaildata", $("#" + id).children().length);
+        }, 300)
+    }
+    function IG_RenderblockCust(data)
+    {
+        let stringContent = '';
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            let tr = `<tr class="vt-number ${i == 0 ? 'bg-light' : ''}" role="row">
+                            <td class="vt-number-order"></td>
+                            <td>
+                                 <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustName}</a>
+                            </td>
+                            <td>${item.SerName}</td>
+                            <td>${i == 0 ? '@Local["Trả trước"]' : i}</td>
+                            <td>${item.DateDefault}</td>
+                            <td>${formatNumber(item.Amount1time.toFixed(0))}</td>
+                            <td>${formatNumber(item.AmountPaid1Time.toFixed(0))}</td>
+                        </tr>
+                    `;
+            stringContent += tr;
+            dataExportDetail.push(data[i]);
+        }
+        return stringContent;
+    }
+
+    function IG_CalAmountInstallmet(data)
+    {
+        let dataInstall = [];
+        if (data && data.length != 0) {
+            let Amount1time = Math.floor((data.PriceSer - Number(data.PrepayAmount)) / Number(data.Installment_Term));
+            Amount1time = Math.round(Amount1time / 1000) * 1000;
+            let AmountPaid1time = 0;
+            let dateActive = new Date(data.DateActive)
+            let MonthActive = dateActive.getMonth();
+            let YearActive = dateActive.getFullYear();
+            let DateDefault = new Date(YearActive, MonthActive, data.DateBegin);
+            for (let i = 0; i <= data.Installment_Term; i++) {
+                let newData = {};
+
+                if (i == 0) {
+                    newData.DateDefault = ConvertDateTimeUTC_DMY(dateActive);
+                    newData.Amount1time = data.PrepayAmount;
+                    AmountPaid1time = data.AmountPaid >= data.PrepayAmount ? data.PrepayAmount : data.AmountPaid;
+                }
+                else {
+                    if (data.AmountPaid <= Amount1time) AmountPaid1time = data.AmountPaid;
+                    else AmountPaid1time = Amount1time;
+                    Amount1time = i == data.Installment_Term ? (data.PriceSer - Number(data.PrepayAmount) - (Amount1time * (i - 1))) : Amount1time;
+                    DateDefault.setMonth(DateDefault.getMonth() + 1);
+                    newData.Amount1time = Amount1time;
+                    newData.DateDefault = ConvertDateTimeUTC_DMY(DateDefault);
+                }
+                newData.AmountPaid1Time = AmountPaid1time;
+                newData.CustName = data.CustName;
+                newData.CustID = data.CustID;
+                newData.SerName = data.SerName;
+                dataInstall.push(newData);
+
+                data.AmountPaid = data.AmountPaid - AmountPaid1time > 0 ? data.AmountPaid - AmountPaid1time : 0;
+            }
+        }
+        return dataInstall;
+    }
+    function IG_RenderMoreDetail()
+    {
+        IndexReportDetail += 1;
+        if (DataReportMainDetailSlice && DataReportMainDetailSlice[IndexReportDetail]) {
+            fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "IG_GridDetailBody"
+                , blocknum = 100
+                , fnrender = IG_RenderDetail
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region //Event
+    function IG_GeneralEvent()
+    {
+        $("#IG_GridBody .buttonViewClass").unbind('click').on("click", function ()
+        {
+            dataExportDetail = [];
+
+            let tabid = $(this).attr('data-tabid');
+            let name = $(this).attr('data-name');
+            $("#IG_GeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#IG_GeneralDetail").offset().top
+            }, 300);
+            if (tabid == "0") {
+                $("#IG_DetailInstallment").html('@Local["Tất cả trường hợp trả góp"]');
+            }
+            else {
+                $("#IG_DetailInstallment").html(name);
+            }
+            IG_LoadDataDetail(tabid);
+        })
+    }
+
+    async function IG_Export(isOption = 0) {
+        try {
+            if (dataExportMaster && dataExportMaster.length != 0) {
+                let eleContainer = $('#IG_General');
+                let isAll = (isOption == 0);
+                var dataHeader = {
+                    "NO": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcode']`)).is(":checked"),
+                        data: ["@Local["Mã khách hàng"]"]
+                    },
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "Payment": ["@Local["Giá tiền"]"],
+                    "PrepayAmount": ["@Local["Trả trước"]"],
+                    "InstallAmount": ["@Local["Tiền góp"]"],
+                    "install1time": ["@Local["Tiền góp/1 tháng"]"],
+                    "InstallmentDate": ["@Local["Ngày góp"]"],
+                    "Install_AmoutPaid": ["@Local["Tiền đã góp"]"],
+                    "debtAmount": ["@Local["Tiền còn nợ"]"],
+                    "timespaid": ["@Local["Lần thanh toán"]"],
+                    "processingPercent": ["@Local["Tỷ lệ phần trăm"]"],
+                    "branch": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]"]
+                    },
+                    "InstallCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo"]"]
+                    },
+                    "InstallPerCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='createdby']`)).is(":checked"),
+                        data: ["@Local["Người tạo"]"]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'IG_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Bao_cao_tra_gop"]);
+                exportJsonToExcel(Outlang["Bao_cao_tra_gop"], dataExportMaster, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function IG_PrintReport()
+    {
+        try {
+            if (dataExportMaster && dataExportMaster.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustCode": ["@Local["Mã khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='custcode']`).is(":checked")
+                    }],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "Payment": ["@Local["Giá tiền"]"],
+                    "PrepayAmount": ["@Local["Trả trước"]"],
+                    "InstallAmount": ["@Local["Tiền góp"]"],
+                    "install1time": ["@Local["Tiền góp/1 tháng"]"],
+                    "InstallmentDate": ["@Local["Ngày góp"]"],
+                    "Install_AmoutPaid": ["@Local["Tiền đã góp"]"],
+                    "debtAmount": ["@Local["Tiền còn nợ"]"],
+                    "timespaid": ["@Local["Lần thanh toán"]"],
+                    "processingPercent": ["@Local["Tỷ lệ phần trăm"]"],
+                    "branch": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked")
+                    }],
+                    "InstallCreated": ["@Local["Ngày tạo"]", {
+                        isShow: $(`.shtoogle[data-name='created']`).is(":checked")
+                    }],
+                    "InstallPerCreated": ["@Local["Người tạo"]", {
+                        isShow: $(`.shtoogle[data-name='createdby']`).is(":checked")
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr)
+                    {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Bao_cao_tra_gop"], dataExportMaster, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    async function IG_ExportDetail()
+    {
+        try {
+            if (dataExportDetail && dataExportDetail.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "SerName": ["@Local["Dịch vụ"]"],
+                    "DateDefault": ["@Local["Kỳ hạn"]"],
+                    "Amount1time": ["@Local["Tiền phải thanh toán"]"],
+                    "AmountPaid1Time": ["@Local["Đã thanh toán"]"],
+                }
+                let fileName = xoa_dau($("#IG_DetailInstallment").text()).replaceAll(' ', '-');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(fileName, dataExportDetail, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+    async function IG_DetailPrintReport()
+    {
+        try {
+            if (dataExportDetail && dataExportDetail.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "SerName": ["@Local["Dịch vụ"]"],
+                    "DateDefault": ["@Local["Kỳ hạn"]"],
+                    "Amount1time": ["@Local["Tiền phải thanh toán"]"],
+                    "AmountPaid1Time": ["@Local["Đã thanh toán"]"],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr)
+                    {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let fileName = Outlang["Bao_cao_tra_gop"] + ' ' + $("#IG_DetailInstallment").text();
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = fileName, dataExportDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+            //#endregion
+</script>

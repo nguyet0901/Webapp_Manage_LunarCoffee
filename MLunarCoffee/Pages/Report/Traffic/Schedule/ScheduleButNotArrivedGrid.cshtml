@@ -1,0 +1,128 @@
+﻿@page
+@model SourceMain.Pages.Report.Traffic.Schedule.ScheduleButNotArrivedGridModel
+@{
+    Layout = null;
+}
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="list_app_customer_not_arrived_header"
+                   class="text-md text-dark font-weight-bold mb-1">Danh sách khách hàng hẹn không đến trong tháng</p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#ScheduleButNotArrivedGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_ScheduleNotArrivedGrid()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_ScheduleNotArrivedGrid()"></i>
+ 
+            </div>
+        </div>
+        <div class="row p-2 pb-0 ps-0">
+            <div class="col-lg-12">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 data-languagedyn="total" class="text-sm text-primary text-gradient mb-0">Tổng</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalNotArrived">0</span></h6>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="collapsesticky collapse show" id="ScheduleButNotArrivedGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="Report_ScheduleNotArrivedGrid">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;display:none;">ScheduleID</th>
+                            <th style="width:30px">#</th>
+                            <th data-languagestatic="cust_code">MSKH</th>
+                            <th data-languagestatic="cust">Tên</th>
+                            <th data-languagestatic="phone" style="min-width:120px;">Số Điện Thoại</th>
+                            <th data-languagestatic="app_date" style="min-width:150px;">Ngày Hẹn</th>
+                            <th data-languagestatic="branch" style="min-width:150px;">Chi Nhánh</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportBody_ScheduleNotArrivedGrid">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+ 
+
+        LoadDataReport_ScheduleNotArrivedGrid();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function LoadDataReport_ScheduleNotArrivedGrid() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branchToken = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/Traffic/Schedule/ScheduleButNotArrivedGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _branchToken  }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let dataBranch = JSON.parse(result)["Table"];
+                let dataDetail = JSON.parse(result)["Table1"];
+                Count_Up('lbTotalNotArrived', dataDetail.length)
+ 
+                RenderReport_RevenueCustomer_SourceGrid(dataBranch, dataDetail, "dtContentReportBody_ScheduleNotArrivedGrid");
+            }
+        );
+
+        return false;
+    }
+
+    function RenderReport_RevenueCustomer_SourceGrid(dataBranch, dataDetail, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (dataDetail && dataDetail.length > 0) {
+                for (var i = 0; i < dataDetail.length; i++) {
+                    let item = dataDetail[i];
+                    let tr = '<td style="display:none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td style="width:140px;"><a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + '&ver' + versionofWebApplication + '">'
+                        + item.CustCode
+                        + '</a></td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td>' + item.Phone + '</td>'
+                        + '<td>' + item.DateSchedule + '</td>'
+                        + '<td>' + item.BranchName + '</td>'
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function exportData_ScheduleNotArrivedGrid() {
+        exportToExcel("Report_ScheduleNotArrivedGrid", 'Danh-Sach-Khach-Hen-Khong-Den');
+    }
+</script>
+

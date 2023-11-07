@@ -1,0 +1,521 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.General.Course.CourseStatusModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-3">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0  fw-bold">
+                                <span>@Local["Khoá học"]</span>
+                                <span id="cousta_code" class="text-primary"></span>
+                                <span> (</span>
+                                <span id="cousta_time"></span>
+                                <span>)</span>
+                            </h6>
+                            <p class="text-sm mb-0">@Local["Cập nhật trạng thái và đánh giá từng học viên trên khóa học"].</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="row px-2 ">
+                    <div class="col-12 col-sm-12 col-lg-3 mt-2 px-1">
+                        <div class="input-group" id="CouSta_InputSearchBlock">
+                            <div class="input-group-text input-group-text px-2 icon-search">
+                                <i class="fas fa-search" aria-hidden="true" style="display: block;"></i>
+                                <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                            </div>
+                            <input id="CouSta_InputSearch" type="text" class="form-control ps-2" placeholder="eg .search">
+                            <span class="input-group-text"><i class="btn_clear fas fa-minus-circle"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="cousta_CertiSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Certificate</div>
+                            <div id="cbbcousta_Certi" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="cousta_ReviSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Revision</div>
+                            <div id="cbbcousta_Revi" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="cousta_LevelSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Level</div>
+                            <div id="cbbcousta_Level" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 px-1 my-3 min-height-300">
+                        <table id="CouSta_dtTableCourseStatus" class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-1" colspan="3">
+                                        <p class="mb-0 text-sm text-dark fw-bold">@Local["Học viên"]</p>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Cấp chứng chỉ"]</span>
+                                        <div id="CertiStatusAll" data-key="CertiStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbCertiStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Tình trạng"]</span>
+                                        <div id="ReviStatusAll" data-key="ReviStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbReviStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Đánh giá"]</span>
+                                        <div id="LevelStatusAll" data-key="LevelStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbLevelStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="cousta_TBodyContent">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton">
+            <div class="action_Save">
+                <div class="action_Save-Content">
+                    <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CouSta_CloseDetail()">@Local["Đóng"]</button>
+                    <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return CouSta_Execute()">@Local["Lưu"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>js_require('/js/main.js');</script>
+
+<script>
+
+    //#region // INIT
+
+    let CouSta_CurrentID = '@Model._CourseID';
+    let CouSta_DataStudent = [];
+    let CouSta_DataMain = {};
+    let CouSta_DataStaRevi, CouSta_DataStaLevel, CouSta_DataStaCerti;
+    let CouSta_TimeOutSearch;
+
+    let CouSta_KeyClass = {
+        'LevelStatus': 'stuLevel',
+        'ReviStatus': 'stuRevi',
+        'CertiStatus': 'stuCerti',
+    }
+
+    $(document).ready(function () {
+        CouSta_Event();
+        CouSta_Init();
+    })
+
+    function CouSta_Init() {
+        if (CouSta_CurrentID && CouSta_CurrentID != '0') {
+            AjaxLoad(url = "/Student/General/Course/CourseStatus/?handler=Init"
+                , data = {
+                    'classid': CouSta_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        CouSta_DataStaCerti = data.StatusCerti;
+                        CouSta_DataStaLevel = data.StatusLevel;
+                        CouSta_DataStaRevi = data.StatusRevi;
+
+                        let dataStuLevel = JSON.parse(JSON.stringify(data.StatusLevel));
+                        let dataStuRevi = JSON.parse(JSON.stringify(data.StatusRevi));
+                        let dataStuCerti = JSON.parse(JSON.stringify(data.StatusCerti));
+                        dataStuLevel.unshift({ ID: -1, Name: '@Local["Chưa đánh giá"]' });
+                        dataStuRevi.unshift({ ID: -1, Name: '@Local["Chưa có tình trạng"]' });
+
+                        Load_Combo(dataStuLevel, 'cbbcousta_Level', true, '@Local["Tất cả đánh giá"]');
+                        $("#cousta_LevelSta").dropdown('refresh');
+                        $("#cousta_LevelSta").dropdown('set selected', '0');
+
+                        Load_Combo(dataStuRevi, 'cbbcousta_Revi', true, '@Local["Tất cả tình trạng"]');
+                        $("#cousta_ReviSta").dropdown('refresh');
+                        $("#cousta_ReviSta").dropdown('set selected', '0');
+
+                        Load_Combo(dataStuCerti, 'cbbcousta_Certi', true, '@Local["Tất cả chứng chỉ"]');
+                        $("#cousta_CertiSta").dropdown('refresh');
+                        $("#cousta_CertiSta").dropdown('set selected', '0');
+
+                        $("#cbbCertiStatusAll").html(CouSta_RenderEach_ComboData(CouSta_DataStaCerti));
+                        $("#cbbReviStatusAll").html(CouSta_RenderEach_ComboData(CouSta_DataStaRevi));
+                        $("#cbbLevelStatusAll").html(CouSta_RenderEach_ComboData(CouSta_DataStaLevel));
+
+                        CouSta_LoadData();
+
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // LOAD DETAIL
+
+    function CouSta_LoadData() {
+        if (CouSta_CurrentID && CouSta_CurrentID != '0') {
+            AjaxLoad(url = "/Student/General/Course/CourseStatus/?handler=LoadDetail"
+                , data = {
+                    'courseid': CouSta_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        let dataInfo = data.Table;
+                        CouSta_DataStudent = data.Table1;
+                        let dataClass = data.Table2;
+                        if (CouSta_DataStudent && CouSta_DataStudent.length != 0) {
+                            CouSta_DataMain = CouSta_DataStudent.reduce((pre, arr) => {
+                                if (arr.ID) pre[arr.ID] = arr;
+                                return pre;
+                            }, {});
+                        }
+                        CouSta_FillData(dataInfo, dataClass);
+                        CouSta_Render(CouSta_DataStudent, 'cousta_TBodyContent');
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // SEARCH
+
+
+    function CouSta_Event() {
+
+        $('#CouSta_InputSearch').unbind('keyup').keyup(function () {
+            let btnClear = $("#CouSta_InputSearchBlock .btn_clear");
+            if ($(this).val().length > 0) btnClear.removeClass('opacity-1');
+            else btnClear.addClass('opacity-1');
+            $("#CouSta_InputSearchBlock .fa-search").hide();
+            $("#CouSta_InputSearchBlock .spinner-border").show();
+            clearTimeout(CouSta_TimeOutSearch);
+            CouSta_TimeOutSearch = setTimeout(function (e) {
+                CouSta_SearchStu();
+            }, 500);
+        });
+
+        $("#CouSta_InputSearchBlock .btn_clear").unbind('click').on('click', function (e) {
+            $('#CouSta_InputSearch').val('');
+            $(this).children(".btn_clear").addClass('opacity-1');
+            CouSta_SearchStu();
+        });
+
+        $("#cousta_ReviSta, #cousta_LevelSta, #cousta_CertiSta").unbind('change').change(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            CouSta_SearchStu();
+        })
+
+        $("#CertiStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (CouSta_DataMain && Object.entries(CouSta_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(CouSta_DataMain)) {
+                        $("#stuCerti_" + key).dropdown('refresh');
+                        $("#stuCerti_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+        $("#ReviStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (CouSta_DataMain && Object.entries(CouSta_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(CouSta_DataMain)) {
+                        $("#stuRevi_"+ key).dropdown('refresh');
+                        $("#stuRevi_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+        $("#LevelStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (CouSta_DataMain && Object.entries(CouSta_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(CouSta_DataMain)) {
+                        $("#stuLevel_" + key).dropdown('refresh');
+                        $("#stuLevel_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+    }
+
+    function CouSta_SearchStu() {
+        let text = xoa_dau($('#CouSta_InputSearch').val().toLowerCase()).trim();
+        let _revi = $('#cousta_ReviSta').dropdown('get value') ? Number($('#cousta_ReviSta').dropdown('get value')) : 0;
+        let _level = $('#cousta_LevelSta').dropdown('get value') ? Number($('#cousta_LevelSta').dropdown('get value')) : 0;
+        let _certi = $('#cousta_CertiSta').dropdown('get value') ? Number($('#cousta_CertiSta').dropdown('get value')) : 0;
+        if (text == '' && _revi == 0 && _level == 0 && _certi == 0) {
+            $("#Course_Detail #CouSta_dtTableCourseStatus").removeClass('search');
+            $("#Course_Detail #CouSta_dtTableCourseStatus tr.row-hidden").removeClass('row-hidden');
+        }
+        else {
+            $("#Course_Detail #CouSta_dtTableCourseStatus").addClass('search');
+            let a = Object.values(CouSta_DataMain).filter(s => {
+                if ((xoa_dau(s.Name).trim().toLowerCase().includes(text)
+                    || xoa_dau(s.Code).trim().toLowerCase().includes(text)
+                    || xoa_dau(s.Phone).trim().toLowerCase().includes(text))
+                    && (_revi == 0 || (_revi == -1 && s.ReviStatus == 0) || _revi == s.ReviStatus)
+                    && (_level == 0 || (_level == -1 && s.LevelStatus == 0) || _level == s.LevelStatus)
+                    && (_certi == 0 || (_certi == -1 && s.CertiStatus == 0) || _certi == s.CertiStatus)
+                    ) {
+                    $("#rowStudent_" + s.ID).removeClass('row-hidden');
+                }
+                else $("#rowStudent_" + s.ID).addClass('row-hidden');
+            });
+        }
+        $("#CouSta_InputSearchBlock .fa-search").show();
+        $("#CouSta_InputSearchBlock .spinner-border").hide();
+    }
+
+    //#endregion
+
+    //#region // FILL DATA
+
+    function CouSta_FillData(data, dataClass) {
+        if (data && data.length != 0) {
+            let item = data[0];
+            let nameClass = dataClass && dataClass.length != 0 ? dataClass.map((item) => item.SubjectName).join(', ') : '';
+            $("#cousta_code").html(item.Code);
+            $("#cousta_time").html(ConvertYMDInt_ToDate(item.TimeBegin) + ' to ' + ConvertYMDInt_ToDate(item.TimeEnd));
+            $("#cousta_subject").html(nameClass);
+        }
+    }
+
+    //#endregion
+
+    //#region // RENDER DATA
+
+    async function CouSta_Render(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CouSta_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                $('#' + id + ' .dropdown-item').dropdown();
+                CouSta_FillDataStudent();
+                CouSta_EventChange();
+                resolve();
+            }, 100)
+        })
+    }
+
+    function CouSta_RenderEach(item) {
+        try {
+            let tr = `
+                <td class="ps-1" colspan="3">
+                    <div class="my-auto">
+                        <h6 class="text-dark text-sm mb-0 fw-bold">
+                            <span class="text-primary" >${item.Code}</span>
+                            <span> - </span>
+                            <span>${item.Name}</span>
+                        </h6>
+                        <span class="text-xs">${item.Phone}</span>
+                    </div>
+                </td>
+
+                <td>${CouSta_RenderEach_Combo(item.ID, CouSta_DataStaCerti, CouSta_KeyClass['CertiStatus'], "CertiStatus")}</td>
+                <td>${CouSta_RenderEach_Combo(item.ID, CouSta_DataStaRevi, CouSta_KeyClass['ReviStatus'], "ReviStatus")}</td>
+                <td>${CouSta_RenderEach_Combo(item.ID, CouSta_DataStaLevel, CouSta_KeyClass['LevelStatus'], "LevelStatus")}</td>
+            `
+            return `<tr id="rowStudent_${item.ID}" data-id="${item.ID}" >${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function CouSta_RenderEach_Combo(id, data, clsName, type) {
+        try {
+            let result = `
+                <div id="${clsName}_${id}" data-id="${id}" data-key="${type}" class="${clsName} ui dropdown ps-0 text-dark fw-bold text-sm border-0 dropdown-item w-auto" tabindex="0">
+                    <i class="dropdown icon"></i>
+                    <input type="hidden" value="0">
+                    <div class="text">selected</div>
+                    <div class="menu" tabindex="-1">${CouSta_RenderEach_ComboData(data)}</div>
+                </div>
+            `
+            return result;
+        }
+        catch (ex) {
+            return ''
+        }
+    }
+
+    function CouSta_RenderEach_ComboData(data) {
+        try {
+            let result = ``;
+            if (data && data.length != 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    result += `<div class="item" data-value="${item.ID}">${item.Name}</div>`
+                }
+            }
+            return result
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region // EVENT CHANGE
+
+    function CouSta_EventChange() {
+        $("#cousta_TBodyContent .dropdown-item").unbind('change').change(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            let _id = Number($(this).attr('data-id'));
+            let _keyAttr = $(this).attr('data-key');
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_id && !isNaN(_id) && _id != 0) {
+                if (CouSta_DataMain && CouSta_DataMain[_id] != undefined) {
+                    CouSta_DataMain[_id][_keyAttr] = _value;
+                }
+            }
+        })
+    }
+
+    //#endregion
+
+    //#region // FILL DATA STUDENTS
+
+    function CouSta_FillDataStudent() {
+        if (CouSta_DataMain && Object.entries(CouSta_DataMain).length != 0) {
+            for ([key, value] of Object.entries(CouSta_DataMain)) {
+                let staCerti = value.CertiStatus;
+                let staLevel = value.LevelStatus;
+                let staRevi = value.ReviStatus;
+                if (staCerti != undefined && staCerti != 0) {
+                    $('#stuCerti_' + key).dropdown("refresh")
+                    $('#stuCerti_' + key).dropdown("set selected", staCerti.toString())
+                }
+                if (staLevel != undefined && staLevel != 0) {
+                    $('#stuLevel_' + key).dropdown("refresh")
+                    $('#stuLevel_' + key).dropdown("set selected", staLevel.toString())
+                }
+                if (staRevi != undefined && staRevi != 0) {
+                    $('#stuRevi_' + key).dropdown("refresh")
+                    $('#stuRevi_' + key).dropdown("set selected", staRevi.toString())
+                }
+            }
+        }
+    }
+
+    //#endregion
+
+    //#region // EXECUTE
+
+    function CouSta_Execute() {
+        AjaxLoad(url = "/Student/General/Course/CourseStatus/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(Object.values(CouSta_DataMain))
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result == '1') {
+                    notiSuccess();
+                    if (typeof Course_LoadViewDetail == 'function') Course_LoadViewDetail();
+                    CouSta_CloseDetail();
+                }
+                else notiError_SW();
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+
+    //#endregion
+
+    //#region // OTHER
+
+    function CouSta_CloseDetail() {
+        if (typeof Genstu_CloseDetail === 'function') Genstu_CloseDetail();
+        if (typeof Course_Close === 'function') Course_Close();
+    }
+
+    //#endregion
+
+</script>
+
+<style>
+
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: transparent !important;
+    }
+
+    .icon-search {
+        min-width: 40px;
+    }
+
+    #Course_Detail #CouSta_dtTableCourseStatus.search tr.row-hidden {
+        display: none !important;
+    }
+</style>

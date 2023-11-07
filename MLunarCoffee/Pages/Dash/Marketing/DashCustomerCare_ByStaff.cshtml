@@ -1,0 +1,187 @@
+﻿@page
+@model SourceMain.Pages.Dash.Marketing.DashCustomerCare_ByStaffModel
+@{
+    Layout = null;
+}
+
+<div class="row" style="background-color: white">
+    <div class="ui segments">
+        <div class="ui segment">
+            <div class="row" style="min-height: 350px;">
+                <div class="dash_title_view">
+                    <div class="example title_dash">
+                        <h2 class="ui header" data-languagestatic="care_statistics">Thống Kê Chăm Sóc Theo Tele</h2>
+                        <p data-languagestatic="handle_care_statistics">Thống Kê Xử Lý Các Loại Chăm Sóc Theo Tele</p>
+                    </div>
+                    <div class="dash_title_view_action">
+                        <div class="dash_title_view_content">
+                            <span id="TotalTakeCare_ByStaff" class="dash_title_view_total" style="color:#007fffc2"></span>
+                            <span data-languagestatic="total_execute" style="color: #767676;">Tổng Xử Lý</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui buttons right floated button_list_date" id="btn_filter_customercare_ByStaff" style="margin-top: -50px; display: none !important;">
+                        <button class="ui button" data-filter="1">To Day</button>
+                        <button class="ui button" data-filter="2">7 Days</button>
+                        <button class="ui button" data-filter="3">30 Days</button>
+                    </div>
+                    <div id="dtDashCustomerCareByStaff" data-languagedyn="customercare_statistics">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    let Total_takecare_Bsf = 0;
+    let Total_CusCare_Bsf = 0;
+    $(document).ready(function () {
+        Dash_CustomerCare_Bsf_Filter();
+        Dash_CustomerCare_Bsf_Filter_Click();
+    });
+    function Dash_CustomerCare_Bsf_Filter_Click() {
+        $("#btn_filter_customercare_ByStaff .button:nth-child(1)").click();
+    }
+    function Dash_CustomerCare_Bsf_Filter() {
+        $("#btn_filter_customercare_ByStaff .button").on("click", function () {
+            $(this).addClass("primary").siblings().removeClass("primary");
+            let data_filter = Number($(this).attr("data-filter"));
+            let date_now = new Date();
+            let date_from;
+            let date_to;
+            let date_past;
+            switch (data_filter) {
+                case 1:
+                    date_from = GETDATE_NOW_DMYHM();
+                    date_to = GETDATE_NOW_DMYHM();
+                    break;
+                case 2:
+                    date_past = date_now.getDate() - 6;
+                    date_from = formatDateClient(new Date(date_now.setDate(date_past)));
+                    date_to = GETDATE_NOW_DMYHM();
+                    break;
+                case 3:
+                    date_past = date_now.getDate() - 29;
+                    date_from = formatDateClient(new Date(date_now.setDate(date_past)));
+                    date_to = GETDATE_NOW_DMYHM();
+                    break;
+                default:
+                    date_from = GETDATE_NOW_DMYHM();
+                    date_to = GETDATE_NOW_DMYHM();
+                    break;
+            }
+            Dash_CustomerCare_Bsf_Load(date_from, date_to);
+            $("#dtCustomerCare_ByStaff").html("");
+            Total_takecare_Bsf = 0;
+            Total_CusCare_Bsf = 0;
+        })
+    }
+
+    function Dash_CustomerCare_Bsf_Load(_dateFrom, _dateTo) {
+        AjaxLoad(url="/Dash/Marketing/DashCustomerCare_ByStaff/?handler=Loadata"
+            , data={'StaffID': 0, 'dateFrom': _dateFrom, 'dateTo': _dateTo }
+            , async=true
+            , error=function () {notiError_SW()}
+            , success=function (result) {
+                if (result!="") {
+                    let Remind_Appointment=JSON.parse(result)["Table"][0];
+                    let TakeCare_AfterTreatment=JSON.parse(result)["Table1"][0];
+                    let TakeCare_AppointmentCancel=JSON.parse(result)["Table2"][0];
+                    let TakeCare_Complaint=JSON.parse(result)["Table3"][0];
+                    let Follow_NotCheckIn=JSON.parse(result)["Table4"][0];
+                    let Follow_NotService=JSON.parse(result)["Table5"][0];
+                    Dash_Render_CustomerCare_By_Staff(Remind_Appointment.TOTAL, Remind_Appointment.IsTakeCare, "Chăm Sóc Nhắc Lịch", "#2d67ac");
+                    Dash_Render_CustomerCare_By_Staff(TakeCare_AfterTreatment.TOTAL, TakeCare_AfterTreatment.IsTakeCare, "Chăm Sóc Sau Điều Trị", "#44ab44");
+                    Dash_Render_CustomerCare_By_Staff(TakeCare_AppointmentCancel.TOTAL, TakeCare_AppointmentCancel.IsTakeCare, "Chăm Sóc Lịch Hủy", "#e40428");
+                    Dash_Render_CustomerCare_By_Staff(TakeCare_Complaint.TOTAL, TakeCare_Complaint.IsTakeCare, "Chăm Sóc Complaint", "#ff7f0e");
+                    Dash_Render_CustomerCare_By_Staff(Follow_NotCheckIn.TOTAL, Follow_NotCheckIn.IsTakeCare, "Chăm Sóc Khách Hẹn Không Đến", "#910caa");
+                    Dash_Render_CustomerCare_By_Staff(Follow_NotService.TOTAL, Follow_NotService.IsTakeCare, "Chăm Sóc Khách Không Làm Dịch Vụ", "#f2c61f");
+                    $("#TotalTakeCare_ByStaff").html(Dash_Render_CustomerCare_By_Staff_TakeCare(Total_CusCare_Bsf, Total_takecare_Bsf));
+                }
+            }
+ 
+        );
+ 
+    }
+
+    //function Render_CustomerCare_Bsf(Total, TakeCare, Content, color) {
+    //    let StringContent = "";
+    //    let percent = (Total != 0) ? (Number(TakeCare) * 100 / Total).toFixed(2) : 0;
+    //    Total_takecare_Bsf += TakeCare;
+    //    Total_CusCare_Bsf += Total;
+    //    StringContent += '<div class="ui indicating progress small active" data-percent="' + percent + '">'
+    //        + '<div class="label ellipsis_one_line progress_label" style="position: absolute !important;">' + Content + '</div>'
+    //        + ' <div class="propress_percent">' + TakeCare + '/' + Total + '</div>'
+    //        + ' <div class="bar" style="transition-duration: 300ms; width: ' + percent + '%; background-color: ' + color + '"></div>'
+    //        + ' </div>'
+    //    $("#dtCustomerCare_ByStaff").append(StringContent);
+    //}
+
+
+    function Dash_Render_CustomerCare_By_Staff(Total, TakeCare, Title, color) {
+        let StringContent = "";
+        let percent = Number((Total != 0) ? (Number(TakeCare) * 100 / Total).toFixed(2) : 0);
+        percent = Number.isInteger(percent) ? parseInt(percent) : percent;
+        Total_takecare_Bsf += TakeCare;
+        Total_CusCare_Bsf += Total;
+        StringContent += `
+            <div class="row_dash_item">
+                <div class="row_dash_content">
+                    <div class="row_dash_hex" style="background-color: ${color}"> ${ Dash_Leading_Zeros(percent) }% </div>
+                    <div class="row_dash_title">
+                        <span class="row_dash_title_header" style="color: ${color}">${ Dash_Render_CustomerCare_By_Staff_TakeCare(Total, TakeCare) }</span>
+                        <span class="row_dash_title_sub" >${Title}</span>
+                    </div>
+                </div>
+            </div>
+        `
+        $("#dtDashCustomerCareByStaff").append(StringContent);
+    }
+
+
+    function Dash_Render_CustomerCare_By_Staff_TakeCare(Total, TakeCare) {
+        let result = "";
+        if (Total != 0) {
+            if (TakeCare != 0) {
+                result = '<span class="row_dash_title_total">' + Dash_Leading_Zeros(Total) + '</span> đã xử lý ' + Dash_Leading_Zeros(TakeCare);
+            }
+            else {
+                result = '<span class="row_dash_title_total">' + Dash_Leading_Zeros(Total) + '</span> chưa xử lý';
+            }
+        }
+        else {
+            result = '<i class="minus icon grey"></i>'
+        }
+        return result;
+    }
+</script>
+<style type="text/css">
+    .Executed_Main {
+        display: flex;
+        width: 100%;
+    }
+
+    .item_cercle {
+        width: 40px;
+        height: 40px;
+        display: inline-block;
+    }
+
+    .item_content {
+        display: inline-block;
+        vertical-align: super;
+    }
+
+    .item_name {
+        margin-top: 5px;
+        color: #2196f3;
+    }
+
+        .item_name a {
+            text-decoration: none;
+        }
+</style>

@@ -1,0 +1,103 @@
+﻿@page
+@model SourceMain.Pages.Marketing.TicketStatusCallDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Trạng thái gọi"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="form3">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Trạng thái gọi"]</label>
+                            <input id="SourceCount" class="form-control" name="name" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="NoteSourceCount" class="form-control" name="content"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_ticket_status_call" onclick="return ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_StatusCallDetailID;
+
+     $(document).ready(function () {
+        ser_StatusCallDetailID = '@Model._StatusCallDetailID';
+        TicketStatus_LoadDataDetail();
+        Checking_TabControl_Permission();
+     });
+
+    function ExcuteData() {
+        var data = new Object();
+        data.Name = $('#SourceCount').val() ? $('#SourceCount').val() : "";
+        data.Note = $('#NoteSourceCount').val() ? $('#NoteSourceCount').val() : "";
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Marketing/TicketStatusCallDetail/?handler=ExcuteData"
+                , data = { 'data': JSON.stringify(data), 'CurrentID': ser_StatusCallDetailID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        LoadTicketStatusCallAjax();
+                    } else if (result == "-1") {
+                        notiError("Tên hoặc mã đã tồn tại");
+                    }
+                    else {
+                        notiError("");
+                    }
+                }
+            );
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+        }
+        return false;
+    }
+
+    function TicketStatus_LoadDataDetail() {
+        if (ser_StatusCallDetailID != "0") {
+            AjaxLoad(url = "/Marketing/TicketStatusCallDetail/?handler=Loadata"
+                , data = { "id": ser_StatusCallDetailID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        $('#SourceCount').val((data[0].Name));
+                        $('#NoteSourceCount').val((data[0].Note));
+                    }
+                }
+            );
+        }
+    }
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>

@@ -1,0 +1,238 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.Finance.ExpenseAdsListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chi phí ads"]</h6>
+                        <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="return AddNewExpenseAds()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local[" Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row px-2">
+                                <div class="col-12 col-lg-4 col-xl-3 p-1">
+                                    <input id="dateFilterADS" class="flatpickr flatpickrADS form-control" type="text" onchange="LoadExpenseAds()" />
+                                </div>
+                                <div class="col-12 col-lg-4 col-xl-3 p-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="BranchID" onchange="LoadExpenseAds()" readonly="readonly">
+                                        <input type="hidden" name="branch">
+                                        <input class="search" autocomplete="off" tabindex="0">
+                                        <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                        <div id="cbbBranchFilter" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="waiting_ads_list" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentExpenseAds">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>#</th>
+                                    <th>@Local["Ngày"]</th>
+                                    <th>@Local["Dịch vụ quan tâm"]</th>
+                                    <th>@Local["Ngân sách"]</th>
+                                    <th>@Local["Kênh tương tác"]</th>
+                                    <th>@Local["Tổng dữ liệu"]</th>
+                                    <th>@Local["Tổng hiển thị"]</th>
+                                    <th>@Local["Tổng tương tác"]</th>
+                                    <th>CMT</th>
+                                    <th>IB</th>
+                                    <th>@Local["Chi phí"]</th>
+                                    <th>@Local["Doanh thu"]</th>
+                                    <th>@Local["Chi nhánh"]</th>
+                                    <th class="no-sort">@Local["Sửa"]</th>
+                                    <th class="no-sort">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentExpenseAdsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var FlagExpenseAds = 0;
+    $(document).ready(function () {
+        $(".flatpickrADS").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#dateFilterADS").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        $('#dtContentExpenseAds tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditExpenseAds(ID);
+        });
+        $('#dtContentExpenseAds tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteExpenseAds(ID)
+        });
+
+        ExpenseAds_LoadComboMain();
+    });
+
+    function ExpenseAds_LoadComboMain() {
+        AjaxLoad(url = "/Marketing/Finance/ExpenseAdsList/?handler=LoadDataCombo"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let data_Branch = data.Branch;
+
+                Load_Combo(data_Branch, "cbbBranchFilter", true, '@Local["Tất cả chi nhánh"]');
+                $("#BranchID").dropdown("refresh");
+                $("#BranchID").dropdown("set selected", '0');
+                FlagExpenseAds = 1;
+                LoadExpenseAds();
+            }
+        );
+
+    }
+
+    function LoadExpenseAds() {
+        if (FlagExpenseAds == 1) {
+            let date = $('#dateFilterADS').val() ? $('#dateFilterADS').val() : new Date()
+            let Branch_ID = Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0;
+            LoadExpenseAdsAjax(Branch_ID, date);
+        }
+    }
+
+    function LoadExpenseAdsAjax(branchId, date) {
+        AjaxLoad(url = "/Marketing/Finance/ExpenseAdsList/?handler=LoadData"
+            , data = { "branchId": branchId, "date": date }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    RenderTableExpenseAds(data, "dtContentExpenseAdsBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#waiting_ads_list").show();
+            }
+            , complete = function (e) {
+                $("#waiting_ads_list").hide();
+            }
+        );
+    }
+
+    function RenderTableExpenseAds(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="text-center" data-sortvalue="' + (i + 1) + '">' + (i + 1) + '</td>'
+                        + '<td data-sortvalue="' + item.DateAdsNum + '">' + item.DateAds + '</td>'
+                        + '<td style="text-align:left">' + item.ServiceCare + '</td>'
+                        + '<td data-sortvalue="' + item.Budget + '" >' + formatNumber(item.Budget) + '</td>'
+                        + '<td>' + item.Channel + '</td>'
+                        + '<td>' + item.TotalData + '</td>'
+                        + '<td>' + item.TotalDisplay + '</td>'
+                        + '<td>' + item.TotalClick + '</td>'
+                        + '<td data-sortvalue="' + item.Comment + '">' + item.Comment + '</td>'
+                        + '<td data-sortvalue="' + item.Inbox + '">' + item.Inbox + '</td>'
+                        + '<td data-sortvalue="' + item.Cost + '" >' + formatNumber(item.Cost) + '</td>'
+                        + '<td data-sortvalue="' + item.Revenue + '" >' + formatNumber(item.Revenue) + '</td>'
+                        + '<td class="text-center">' + item.Branch_Name + '</td>'
+                        + ((item.EditButton === 1)
+                            ? ('<td class="text-center"><button class="buttonGrid py-0" value="'
+                                + item.ID
+                                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button></td>')
+                            : '<td></td>')
+                        + ((item.DeleteButton === 1)
+                            ? ('<td class="text-center"><button class="buttonGrid py-0" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        $('#dtContentExpenseAds').tablesort();
+    }
+    
+    function AddNewExpenseAds() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/Finance/ExpenseAdsDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EditExpenseAds(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/Finance/ExpenseAdsDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function DeleteExpenseAds(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteExpenseAds(id); }, function () { });
+    }
+    
+    function ExecuteDeleteExpenseAds(id) {
+        AjaxLoad(url = "/Marketing/Finance/ExpenseAdsList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadExpenseAds();
+                } else {
+                    notiError();
+                }
+            }
+        );
+    }
+
+</script>

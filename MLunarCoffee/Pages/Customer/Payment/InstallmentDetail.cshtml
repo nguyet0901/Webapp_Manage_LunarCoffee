@@ -1,0 +1,279 @@
+﻿@page
+@model SourceMain.Pages.Customer.Payment.InstallmentDetailModel
+@{
+    Layout = null;
+}
+<div class="card-body pt-2 px-0">
+    <div class="m-0 my-3 mobile-responsive">
+        <div id="installment_detail_waiting" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+
+        </div>
+        <table class="table vt-table mb-0" id="dtTableInstallmentDetail">
+            <thead>
+                <tr>
+                    <th class="d-none">ID</th>
+                    <th>@Local["Kỳ hạn"] ( @Local["Tháng"] )</th>
+                    <th>@Local["Số tiền"]</th>
+                    <th>@Local["Xác nhận"]</th>
+                    <th>@Local["Ghi chú"]</th>
+                </tr>
+            </thead>
+            <tbody id="dtTableInstallmentDetailBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card-footer fixed-botombutton">
+    <div class="action_Save">
+        <div class="action_Save-Content">
+            <button id="button_save_installment_detail" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteData()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+<script src="/js/comon/initialize_setting.js"></script>
+<script type="text/javascript">
+    var ser_CustomerID = '@Model._CustomerID';
+    var ser_CurrentTabID = '@Model._CurrentTabID';
+    var _dataInstallmentJson = [];
+    var totalStep = 0;
+    var data_installment_selected = {};
+
+    $(document).ready(function () {
+        Load_Data_Installment_Detail();
+    });
+
+    function Load_Data_Installment_Detail() {
+        AjaxLoad(url = "/Customer/Payment/InstallmentDetail/?handler=LoadDataUpdate"
+            , data = { 'CurrentID': ser_CurrentTabID }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        if (data[0].DataInstallment != '') {
+                            _dataInstallmentJson = JSON.parse(data[0].DataInstallment);
+                            RenderTableInstallmentDetail(_dataInstallmentJson, 'dtTableInstallmentDetailBody');
+                            CheckTableInstallmentDetail();
+                        }
+
+                    }
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#installment_detail_waiting").show();
+            }
+            , complete = function (e) {
+                $("#installment_detail_waiting").hide();
+            }
+        );
+
+
+    }
+
+
+    function ExcuteData() {
+        CalculatorAmountConfirm();
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Customer/Payment/InstallmentDetail/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify(_dataInstallmentJson)
+                    , 'currentTab': ser_CurrentTabID
+                    , 'totalStep': totalStep }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        if (typeof LoadTabInstallmentAjax !== 'undefined' && $.isFunction(LoadTabInstallmentAjax)) {
+                            LoadTabInstallmentAjax(ser_CurrentTabID);
+                        }
+                    } else {
+                        notiError_SW();
+                    }
+                }
+                , sender = $("#button_save_installment_detail")
+
+            );
+        }
+        return false;
+    }
+
+    function RenderTableInstallmentDetail(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.id + '</td>'
+                        + '<td class="text-center">' + item.month + '</td>'
+                        + '<td>' + AddCell_AmountPay(item.id) + '</td>'
+                        + '<td>' + AddCell_CheckBox(item.id, item.paid,item.dateconfirm) + '</td>'
+                       // + '<td><a id="date_' + item.id + '">' + item.dateconfirm + '</a></td>'
+                        + '<td>' + AddCell_Note(item.id) + '</td>'
+                    stringContent = stringContent + '<tr class="rowVTTH" id=row_' + item.id + '>' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        renderAmountFirst(data);
+    }
+
+    function AddCell_AmountPay(randomNumber) {
+        let resulf = '<input class="form-control tableftMoney" data-id="' + randomNumber + '" id="AmountPay_' + randomNumber + '" min="0" disabled=""/>';
+        resulf = resulf;
+        return resulf;
+    }
+
+    function AddCell_Note(randomNumber) {
+        let resulf = '<input class="form-control noteMembership" id="note_' + randomNumber + '" onchange="PushResultInstallment_Note(' + randomNumber + ')" type="text"/>';
+        resulf = resulf;
+        return resulf;
+    }
+
+    function AddCell_CheckBox (randomNumber, ischeck,date) {
+        let resulf = '<div class="input-group">'
+            + '<div class="input-group-text">'
+            + '<div class="form-check pt-1">'
+            + '<input class="isPaid form-check-input mt-0" type="checkbox" value="' + randomNumber + '" id="checkedPaid_' + randomNumber + '" ' + ((ischeck == 1) ? 'checked' : '') + '>'
+            + '</div>'
+            + '</div>'
+            + '<input class="text-center  form-control" type="text" value="' + date+'" id="date_' + randomNumber + '" disabled />'
+            + '</div>';
+
+
+        return resulf;
+    }
+
+    function renderAmountFirst(data) {
+        if (data && data.length > 0) {
+            for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                $('#AmountPay_' + item.id).val(item.amount);
+                $('#note_' + item.id).val(item.note);
+            }
+        }
+    }
+
+    function CheckTableInstallmentDetail() {
+        $('.tableftMoney').divide();
+        $(".tableftMoney").change(function () {
+            var value = Number(this.value.replace(/,/g, ''));
+            var idrow = $(this).attr("data-id");
+            if (!(!isNaN(parseFloat(value)) && isFinite(value))) {
+                $(this).val(0);
+            }
+            else {
+                for (var i = 0; i < _dataInstallmentJson.length; i++) {
+                    if (_dataInstallmentJson[i].id == idrow) {
+                        _dataInstallmentJson[i].amount = value;
+                        break;
+                    }
+                }
+            }
+        });
+
+        $("#dtTableInstallmentDetailBody").on('click', '.isPaid', function (event) {
+            let idPaid = this.value;
+            var datetime = '';
+            var paid = 0;
+            if (this.checked == true) {
+                var currentdate = new Date();
+                datetime = currentdate.getFullYear() + "-"
+                    + (currentdate.getMonth() + 1) + "-"
+                    + currentdate.getDate() + " "
+                    + currentdate.getHours() + ":"
+                    + currentdate.getMinutes() + ":"
+                    + currentdate.getSeconds();
+
+                $('#date_' + idPaid).val(datetime);
+                paid = 1;
+            }
+            else {
+                $('#date_' + idPaid).val(datetime);
+            }
+            for (var i = 0; i < _dataInstallmentJson.length; i++) {
+                if (_dataInstallmentJson[i].id == idPaid) {
+                    _dataInstallmentJson[i].dateconfirm = datetime;
+                    _dataInstallmentJson[i].paid = paid;
+                    break;
+                }
+            }
+        });
+    }
+    function CalculatorAmountConfirm() {
+        totalStep = 0;
+        for (var i = 0; i < _dataInstallmentJson.length; i++) {
+            if (_dataInstallmentJson[i].paid == 1) {
+                totalStep++;
+            }
+        }
+    }
+
+    function PushResultInstallment_Note(id) {
+
+        for (var i = 0; i < _dataInstallmentJson.length; i++) {
+            var item = _dataInstallmentJson[i];
+            if (id == item.id) {
+                var Note = $('#note_' + item.id).val() ? $('#note_' + item.id).val() : '';
+                _dataInstallmentJson[i].note = Note;
+                break;
+            }
+        }
+    }
+
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+@*<style>
+        .final_price_text {
+            color: #2e3d49;
+            font-size: 11px;
+        }
+
+        .final_price_num {
+            color: #06528b;
+            font-size: 15px;
+            text-align: left;
+            width: 100%;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ecebeb9e;
+        }
+
+        #final_price {
+            text-align: left;
+            margin: 10px;
+        }
+
+        .final_price_title {
+            text-align: center;
+            background: #0060a9;
+            height: 30px;
+            font-size: 13px;
+            color: white;
+            line-height: 30px;
+        }
+
+        .PrePayment {
+            height: 33px;
+            background: #2185d021;
+            border-radius: 5px;
+            border: solid #d4d4d5 1px;
+            line-height: 33px;
+            font-size: 12px;
+            padding-left: 15px;
+            color: #0060a9;
+        }
+    </style>*@

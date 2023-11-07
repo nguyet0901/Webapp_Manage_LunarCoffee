@@ -1,0 +1,654 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.General.Detail.EnrollmentModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Ghi danh học viên"]</h6>
+                            <p class="text-sm mb-0">@Local["Ghi danh học viên vào lớp học trong khóa học"]</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2">
+                        <div class="col-12 p-1">
+                            <div class="row px-2">
+                                <div class="col-12 col-md-4 col-sm-6 p-1">
+                                    <label>@Local["Chi nhánh"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="StuEnroll_Branch">
+                                        <input type="hidden" name="statusType" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg. @Local["Chi nhánh"]</div>
+                                        <div id="StuEnroll_CbbBranch" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4 col-sm-6 p-1">
+                                    <label>@Local["Ngày"]</label>
+                                    <input id="StuEnroll_Date" onchange="event.preventDefault(); return false;" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày"]">
+                                </div>
+                                <div class="col-12 col-md-4 col-sm-12 p-1">
+                                    <label class="d-block">&nbsp;</label>
+                                    <button class="btn bg-gradient-primary mt-1 mb-0 mt-0 col-w-200" onclick="event.preventDefault(); StuEnroll_LoadCourse();" style="pointer-events: auto;">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <div class="row px-2">
+                                <div class="field col-12 col-md-8 col-sm-12 p-1">
+                                    <label>@Local["Khoá học"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="StuEnroll_Course">
+                                        <input type="hidden" name="course" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg. @Local["Khoá học"]</div>
+                                        <div id="StuEnroll_CbbCourse" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-4 col-sm-12 p-1">
+                                    <label>@Local["Khuyến mãi"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="StuEnroll_Discount" onchange="event.preventDefault;return StuEnroll_ChangeDiscount();">
+                                        <input type="hidden" name="course" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg. @Local["Khuyến mãi"]</div>
+                                        <div id="StuEnroll_CbbDiscount" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 px-1">
+                            <div class="d-lg-flex">
+                                <div class="w-70 col-auto my-auto">
+                                    <label>@Local["Danh sách lớp học"]</label>
+                                </div>
+                            </div>
+                            <div id="StuEnroll_WattingDiv" class="waitingdiv text-center d-none ">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="StuEnroll_WattingSaveDiv" class="waitingdiv text-center" style="display: none;">
+                                <div>
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                    <span class="text-sm ps-1">@Local["Lưu"]...</span>
+                                </div>
+                            </div>
+                           @* <div id="StuEnroll_ClassList" onscroll="StuEnroll_RenderDetailMore()">
+                                <table id="StuEnroll_dtContentDetail" class="table vt-table mb-0 mt-2">
+                                    <thead class="hiddenCollapse">
+                                        <tr role="row">
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">#</th>
+                                            <th style="width: 50px;">@Local["Chọn"]</th>
+                                            <th>@Local["Môn học"]</th>
+                                            <th>@Local["Học phí"]</th>
+                                            <th>@Local["Giảm"]</th>
+                                            <th>@Local["Học phí còn lại"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="form3" id="StuEnroll_dtContentDetailBody">
+                                    </tbody>
+                                </table>
+                            </div>*@
+
+                            <ul id="StuEnroll_dtContentDetailBody" class="list-group my-3">
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save m-3">
+                    <div class="action_Save-Content">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); StuEnroll_Close()">@Local["Đóng"]</button>
+                        <button id="StuEnroll_BtnSave" form="formConfigOption" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault(); StuEnroll_ExcutedData()" data-checkper="1" data-fontchanged="true">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    //#region //INIT - DEFINE
+    var StuEnroll_ClassSelected = {};
+    let StuEnroll_xhrLoadList;
+    let StuEnroll_FlagLoad = 0;
+    let StuEnroll_FlagChange = 0;
+    var StuEnroll_DataDiscount = {};
+    var StuEnroll_DataCourse = {};
+
+    $(document).ready(function () {
+        $("#StuEnroll_Date.flatpickr").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                } else {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31)
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+
+        });
+        let date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#StuEnroll_Date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        StuEnroll_Init();
+    });
+
+
+    function StuEnroll_Init() {
+        AjaxLoad(url = "/Student/General/Detail/Enrollment?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data, "StuEnroll_CbbBranch", true);
+                    if(data && data.length != 0){
+                        $("#StuEnroll_Branch").dropdown("refresh");
+                        $("#StuEnroll_Branch").dropdown("set selected", data[0].ID);
+                    }
+                    StuEnroll_FlagLoad = 1;
+                    StuEnroll_LoadCourse();
+                }
+                else { }
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+    //#endregion
+
+    //#region //LOAD CLASS IN COURSE
+
+    function StuEnroll_LoadCourse() {
+        if(StuEnroll_FlagLoad == 0) return;
+        $("#StuEnroll_Course").dropdown("clear");
+        $("#StuEnroll_Course").dropdown("refresh");
+        $("#StuEnroll_dtContentDetailBody").empty();
+        let branchID = $("#StuEnroll_Branch").dropdown('get value') ? Number($("#StuEnroll_Branch").dropdown('get value')) : 0;
+        let date = $('#StuEnroll_Date').val() ? $('#StuEnroll_Date').val() : new Date();
+        let dateFrom;
+        let dateTo;
+        if (date.includes(" to ")) {
+            date = date.replace(" to ", "#");
+            dateFrom = date.split('#')[0];
+            dateTo = date.split('#')[1];
+        }
+        else {
+            dateFrom = date;
+            dateTo = date;
+        }
+        AjaxLoad(url = "/Student/General/Detail/Enrollment?handler=LoadComboCourse"
+            , data = {
+                "BranchID": branchID,
+                "DateFrom": dateFrom,
+                "DateTo": dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    let dataCourse = data.Course;
+                    let dataDiscount = data.Discount;
+                    if(dataCourse && dataCourse.length != 0){
+                        StuEnroll_DataCourse = dataCourse.reduce((pre, arr) => {
+                            if (arr.ID) arr.Name = '<span class="fw-bold text-primary text-uppercase me-1">' + arr.Code + '</span> - ' + arr.Name;
+                            pre[arr.ID] = (arr);
+                            return pre;
+                        }, {} );
+                        Load_Combo(Object.values(StuEnroll_DataCourse), "StuEnroll_CbbCourse", true);
+                        StuEnroll_HandleChangeCourse();
+                        $("#StuEnroll_Course").dropdown("refresh");
+                        $("#StuEnroll_Course").dropdown("set selected", Number(dataCourse[0].ID));
+                    }
+                    $("#StuEnroll_Discount").dropdown("clear");
+                    $("#StuEnroll_Discount").dropdown("refresh");
+                    if(dataDiscount && dataDiscount.length){
+                        StuEnroll_DataDiscount = dataDiscount.reduce((pre, arr) => {
+                            if(arr.ID){
+                                pre[arr.ID] = arr;
+                            }
+                            return pre;
+                        }, {})
+                        Load_Combo(dataDiscount, "StuEnroll_CbbDiscount", false);
+                    }
+                }
+                else { }
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+
+
+    async function StuEnroll_LoadDataTable(courseID) {
+        return new Promise((resolve) => {
+            if (StuEnroll_xhrLoadList && StuEnroll_xhrLoadList.readyState != 4) StuEnroll_xhrLoadList.abort();
+            StuEnroll_IndexTable = 0;
+            StuEnroll_xhrLoadList = AjaxLoad(url = "/Student/General/Detail/Enrollment?handler=LoadData"
+                , data = {
+                    "CourseID": courseID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "[]") {
+                        let data = JSON.parse(result);
+                        let dataSelected = JSON.parse(result);
+                        StuEnroll_ClassSelected = dataSelected.reduce((pre, arr)=>{
+                            if(arr.ID){
+                                let e = {};
+                                let price = Math.floor(arr.ItemPrice * (arr.TimeTeach - arr.LearnedLesson));
+                                e.ClassID = arr.ID;
+                                e.Subject = arr.Subject;
+                                e.TimeTeach = arr.TimeTeach;
+                                e.ItemPrice = arr.ItemPrice;
+                                e.LearnedLesson = arr.LearnedLesson;
+                                e.PriceInit = price;
+                                e.Price = price;
+                                e.Status = true;
+                                e.DiscountPer = 0;
+                                e.DiscountAmount = 0;
+                                e.StudentLimit = arr.StudentLimit;
+                                e.TotalStudent = arr.TotalStudent;
+                                e.Note = '';
+                                pre[arr.ID] = e;
+                            }
+                            return pre;
+                        }, {});
+
+                        StuEnroll_RenderTable(Object.values(StuEnroll_ClassSelected), 'StuEnroll_dtContentDetailBody')
+
+                    }
+                    else {
+
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#StuEnroll_dtContentDetailBody").hide();
+                    $("#StuEnroll_WattingDiv").show();
+                }
+                , complete = function (e) {
+                    $("#StuEnroll_dtContentDetailBody").show();
+                    $("#StuEnroll_WattingDiv").hide();
+                }
+            );
+            resolve();
+        })
+    }
+    //#endregion
+
+    //#region // HANDLE DISCOUT
+
+    function StuEnroll_ChangeDiscount(){
+        let discountID = $("#StuEnroll_Discount").dropdown('get value') ? Number($("#StuEnroll_Discount").dropdown('get value')) : 0;
+        let courseID = $("#StuEnroll_Course").dropdown('get value') ? Number($("#StuEnroll_Course").dropdown('get value')) : 0;
+        let listcourseid = StuEnroll_DataCourse[courseID] != undefined ? StuEnroll_DataCourse[courseID].ListCourseID : 0;
+        if(StuEnroll_DataDiscount[discountID] != undefined){
+            let discountItem = StuEnroll_DataDiscount[discountID];
+            if(discountItem.Rule != undefined && discountItem.Rule != '' && discountItem.Rule != '[]'){
+                let dataRule = JSON.parse(discountItem.Rule);
+                if (dataRule && dataRule.length == 2){
+                    for(let i = 0 ; i < dataRule.length; i++){
+                        let ruleItem = dataRule[i];
+                        if (ruleItem.type == "listcourse" && ruleItem.active == 1 && listcourseid != 0){
+                            let ruleValue = ruleItem.value;
+                            let dataFilter = ruleValue.find((word) => { return word.id == listcourseid });
+                            if (dataFilter && Object.entries(dataFilter).length != 0) {
+                                StuEnroll_FillDiscount(dataFilter);
+                                return;
+                            }
+                        }
+                        if(ruleItem.type == "all" && ruleItem.active == 1){
+                            StuEnroll_FillDiscount({ percent: ruleItem.percent, amount: ruleItem.amount });
+                            return;
+                        }
+                    }
+                }
+                StuEnroll_FillDiscount({percent: 0, amount: 0});
+            }
+        }
+
+    }
+
+    function StuEnroll_FillDiscount({percent, amount}){
+        try{
+            let inputDiscount = $(".StuEnroll_DiscountInput");
+            let typeDiscount = $(".StuEnroll_DiscountType");
+            if(percent != 0){
+                typeDiscount.dropdown('refresh');
+                typeDiscount.dropdown('set selected', '1');
+                inputDiscount.val(percent).trigger('change');
+            }
+            else{
+                typeDiscount.dropdown('refresh');
+                typeDiscount.dropdown('set selected', '2');
+
+                if(amount != 0){
+                    let totalDiscount = 0;
+                    let discount = Math.floor((amount - (amount % inputDiscount.length)) /inputDiscount.length);
+                    discount = discount > 1000 ? (discount - (discount % 1000)) : discount;
+                    inputDiscount.each(function (index) {
+                        if (index == inputDiscount.length - 1) {
+                            $(this).val((amount - totalDiscount)).trigger('change');
+                            return false;
+                        }
+                        $(this).val((discount)).trigger('change');
+                        totalDiscount+=discount;
+                    });
+                }
+            }
+        }
+        catch(ex){
+
+        }
+    }
+
+
+
+
+    //#endregion
+
+    //#region //RENDER DATA
+    async function StuEnroll_RenderTable(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = "";
+                    if (data && data.length > 0) {
+                        let stringContent = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let price = Math.floor(item.ItemPrice * (item.TimeTeach - item.LearnedLesson));
+
+                            let tr = `
+                            <li class="StuEnroll_ClassID ps-5 pe-0 checklist-item list-group-item border-0 border-radius-lg" data-id="${item?.ClassID}">
+                                <div class="">
+                                    <div class="row col-12  w-100 mx-0">
+                                        <div class="col-12 col-sm-12 col-md-12 col-xl-3 p-1">
+                                            <div class="ui form-check ps-0 mb-0">
+                                                <input type="checkbox" class="form-check-input StuEnroll_ckbClassChoice" checked data-id="${item?.ClassID}">
+                                                <h6 class="text-sm fw-bold mb-0 text-primary">${item?.Subject}</h6>
+                                            </div>
+                                            <p class="text-sm mb-0 text-dark">@Local["Đăng ký"]: ${formatNumber(item.TotalStudent)} </p>
+                                            <p class="text-sm mb-0 text-dark">@Local["Số buổi còn lại"]: ${formatNumber(item?.TimeTeach - item?.LearnedLesson)}</p>
+                                            <p class="mb-0">${StuEnroll_RenderTable_limit(item.StudentLimit, item.TotalStudent)}</p>
+                                        </div>
+                                        <div class="col-12 col-sm-12 col-md-12 col-xl-9">
+                                            <div class="row p-1">
+                                                <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1">
+                                                    <label class="text-dark">@Local["Học phí"]</label>
+                                                        ${StuEnroll_RenderPrice(item?.ClassID, price)}
+                                                </div>
+                                                <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1">
+                                                         <label class="text-dark">@Local["Giảm giá"]</label>
+                                                    <div class="input-group mb-0">
+                                                        <div class="position-relative w-100 col-w-200">
+                                                            <input id="StuEnroll_DiscountInput_${item?.ClassID}" class="border-right-0 form-control money_price StuEnroll_DiscountInput d-block" value="0" type="text" placeholder="@Local["Chiết khấu"]">
+                                                                <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-3 StuEnroll_DiscountType rounded-0 rounded-end" id="StuEnroll_DiscountType_${item?.ClassID}">
+                                                                    <i class="dropdown icon"></i>
+                                                                    <input type="hidden" name="" />
+                                                                    <div class="default text"></div>
+                                                                    <div id="cbbPerformanceDiscounted" class="menu transition hidden" tabindex="-1">
+                                                                        <div class="item" data-value="1">%</div>
+                                                                        <div class="item" data-value="2">VND</div>
+                                                                    </div>
+                                                                </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1">
+                                                    <label class="text-dark">@Local["Thành tiền"]</label>
+                                                    <input type="text" class="form-control StuEnroll_TuitionRemaining money_price d-block disabled" placeholder="eg. @Local["Thành tiền"]"
+                                                            onkeypress="StuEnroll_HandleInput(event)"
+                                                            disabled="disabled"
+                                                            id="StuEnroll_TuitionRemaining_${item?.ClassID}"
+                                                            name="StuEnroll_tuition"
+                                                            value="${formatNumber(price)}" />
+                                                </div>
+                                                <div class="col-12 col-sm-12 col-md-12 col-xl-12 p-1">
+                                                    <label class="text-dark">@Local["Ghi chú"]</label>
+                                                    <input class="form-control d-block StuEnroll_Note" id="StuEnroll_Note${item?.ClassID}" type="text" placeholder="eg. @Local["Ghi chú"]" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <hr class="horizontal dark my-0">
+                            `
+                            stringContent += tr;
+                        }
+                        myNode.insertAdjacentHTML('beforeend', stringContent);
+                        StuEnroll_HandleEvent();
+                        StuEnroll_FlagChange = 1;
+                    }
+                }
+                resolve();
+            }, 100)
+        })
+    }
+
+    function StuEnroll_RenderPrice(classid, price) {
+        return `
+                <input id="StuEnroll_PriceInput_${classid}"
+                    value="${(price)}"
+                        data-priceinit="${price}"
+                    class="border-right-0 form-control money_price StuEnroll_PriceInput d-block" value="0" type="text" placeholder="@Local["Học phí"]">
+        `
+    }
+
+
+    function StuEnroll_RenderTable_limit(limit, totalstudent){
+        try{
+            if(limit == undefined || limit == 0){
+                return '';
+            }
+            return `<span class="badge badge-sm bg-gradient-danger mb-0">@Local["Giới hạn"]: ${formatNumber(limit)} </span>`
+        }
+        catch(ex){
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //EXCUTEDDATA
+    async function StuEnroll_ExcutedData() {
+        return new Promise((resolve) => {
+            let obj = [];
+            if (typeof genstu_currentselect === "undefined" && some_variable === null) return;
+            let stuArr = Object.entries(genstu_currentselect).map(([name, obj]) => ({ ...obj }));
+            let objStu = stuArr.map(({ id: StudentID, ...item }) => { return { StudentID } });
+            let stuSelected = Object.values(StuEnroll_ClassSelected).filter(el => el.Status);
+            if (stuSelected.length == 0) {
+                let notiMessage = '@Local["Vui lòng chọn lớp"]';
+                document.getElementById("textShowMessage").innerHTML = notiMessage;
+                return;
+            }
+            let objClass = stuSelected.map(({ Status, ...item }) => item);
+            let totalPrice = objClass.reduce((r, i) => r + i.Price, 0);
+            let _courseID = $("#StuEnroll_Course").dropdown('get value') ? Number($("#StuEnroll_Course").dropdown('get value')) : 0;
+            for (let i = 0; i < objStu.length; i++) {
+                for (let j = 0; j < objClass.length; j++) {
+                    obj.push({ ...objStu[i],...objClass[j] });
+                }
+            }
+            StuEnroll_ExcutedDataItem(obj, _courseID, totalPrice);
+            resolve();
+        })
+    }
+
+    async function StuEnroll_ExcutedDataItem(obj, courseID, totalPrice) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                AjaxLoad(url = "/Student/General/Detail/Enrollment?handler=ExcutedData"
+                    , data = {
+                        "obj": JSON.stringify(obj),
+                        "courseID": courseID,
+                        "totalPrice": totalPrice
+                    }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            let total = formatNumber(data[0].Total);
+                            let totalSucces = formatNumber(data[0].TotalSuccess);
+                            notiPopup_Type(decodeHtml("@Local["Thêm khoá học thành công"]") + ' ' + totalSucces + '/' + total);
+                            StuEnroll_Close();
+                            if (typeof Studesk_courseload === 'function') Studesk_courseload();
+                            resolve(result);
+                        }
+                    }
+                    , sender = null
+                    , before = function (e) {
+                        $("#StuEnroll_BtnSave").prop('disabled', true);
+                        $("#StuEnroll_WattingSaveDiv").show();
+                    }
+                    , complete = function (e) {
+                        $("#StuEnroll_BtnSave").prop('disabled', false);
+                        $("#StuEnroll_WattingSaveDiv").hide();
+                    }
+                );
+            }, 10)
+        })
+    }
+    //#endregion
+
+    //#region //EVENT
+    function StuEnroll_Close() {
+        CloseModal();
+    }
+
+    function StuEnroll_HandleChangeCourse() {
+        $("#StuEnroll_Course").on('change', function (e) {
+            let CourseID = $("#StuEnroll_Course").dropdown('get value') ? Number($("#StuEnroll_Course").dropdown('get value')) : 0;
+            StuEnroll_LoadDataTable(CourseID);
+        });
+    }
+
+    function StuEnroll_HandleEvent() {
+        //$('.money_price').divide();
+        $('.StuEnroll_PriceInput').divide();
+        $(".StuEnroll_DiscountType").dropdown("refresh");
+        $(".StuEnroll_DiscountType").dropdown("set selected", "1");
+        $("#StuEnroll_dtContentDetailBody .StuEnroll_ckbClassChoice").unbind('change').change(function (e) {
+            let EnrollRow = $(this).closest('.StuEnroll_ClassID')
+            let ID = Number(EnrollRow.attr("data-id"));
+            if(StuEnroll_ClassSelected[ID] != undefined){
+               let isCheck = $(this).is(":checked");
+               StuEnroll_ClassSelected[ID].Status = isCheck;
+               if(isCheck) EnrollRow.removeClass("checklist-item-secondary");
+               else EnrollRow.addClass("checklist-item-secondary");
+            }
+        });
+
+        $("#StuEnroll_dtContentDetailBody .StuEnroll_Note").unbind("change").change(function (e) {
+            if (StuEnroll_FlagChange == 1) {
+                StuEnroll_FlagChange = 0;
+                let ID = Number($(this).closest('.StuEnroll_ClassID').attr("data-id"));
+                let Val = $("#StuEnroll_Note" + ID).val() ? $("#StuEnroll_Note" + ID).val() : "";
+                StuEnroll_ClassSelected[ID].Note = Val;
+                StuEnroll_FlagChange = 1;
+            }
+        })
+
+        $("#StuEnroll_dtContentDetailBody .StuEnroll_DiscountInput, #StuEnroll_dtContentDetailBody .StuEnroll_DiscountType").unbind('change').change(function (e) {
+            if(StuEnroll_FlagChange == 1){
+                StuEnroll_FlagChange = 0;
+                let ID = Number($(this).closest('.StuEnroll_ClassID').attr("data-id"));
+                let Val = ($("#StuEnroll_DiscountInput_" + ID).val()) ? Number($("#StuEnroll_DiscountInput_" + ID).val()) : 0;
+                let Type = Number($("#StuEnroll_DiscountType_" + ID).dropdown("get value"))
+                         ? Number($("#StuEnroll_DiscountType_" + ID).dropdown("get value"))
+                         : 0;
+                if (isNaN(Val) || (Type == 1 && Val > 100 ) || Val < 0 ) {
+                    let priceinit = StuEnroll_ClassSelected[ID] != undefined ? StuEnroll_ClassSelected[ID].PriceInit : 0;
+                    StuEnroll_ClassSelected[ID].Price = priceinit;
+                    $("#StuEnroll_DiscountInput_" + ID).val("0").trigger('change');
+                    $("#StuEnroll_TuitionRemaining_" + ID).val(formatNumber(priceinit));
+                }
+                else {
+                    if(StuEnroll_ClassSelected[ID] != undefined){
+                        if (Type == 1) {
+                            let pricediscount = (Val > 0)
+                                ? Math.floor(StuEnroll_ClassSelected[ID].PriceInit - (StuEnroll_ClassSelected[ID].PriceInit * Val) / 100)
+                                : StuEnroll_ClassSelected[ID].PriceInit
+                            StuEnroll_ClassSelected[ID].DiscountPer = Val;
+                            StuEnroll_ClassSelected[ID].DiscountAmount = 0;
+                            StuEnroll_ClassSelected[ID].Price = pricediscount;
+                            $("#StuEnroll_TuitionRemaining_" + ID).val(formatNumber(pricediscount));
+                        }
+                        else{
+                            let pricediscount = StuEnroll_ClassSelected[ID].PriceInit - Val;
+                            StuEnroll_ClassSelected[ID].DiscountPer = 0;
+                            StuEnroll_ClassSelected[ID].DiscountAmount = Val;
+                            StuEnroll_ClassSelected[ID].Price = pricediscount;
+                            $("#StuEnroll_TuitionRemaining_" + ID).val(formatNumber(pricediscount));
+                        }
+                    }
+                }
+                StuEnroll_FlagChange = 1;
+            }
+        });
+
+        $("#StuEnroll_dtContentDetailBody .StuEnroll_PriceInput").unbind("change").change(function (e) {
+            if (StuEnroll_FlagChange == 1) {
+                StuEnroll_FlagChange = 0;
+                let ID = Number($(this).closest('.StuEnroll_ClassID').attr("data-id"));
+                let Val = Number($("#StuEnroll_PriceInput_" + ID).val()) ? Number($("#StuEnroll_PriceInput_" + ID).val()) : 0;
+                let PriceInit = Number($("#StuEnroll_PriceInput_" + ID).attr("data-priceinit"))
+                    ? Number($("#StuEnroll_PriceInput_" + ID).attr("data-priceinit"))
+                    : 0;
+                if (isNaN(Val)) {
+                    Val = PriceInit != undefined ? PriceInit : 0;
+                }
+                StuEnroll_ClassSelected[ID].PriceInit = Val;
+                StuEnroll_FlagChange = 1;
+                $("#StuEnroll_DiscountInput_" + ID).trigger('change');
+            }
+        })
+
+    }
+
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    #StuEnroll_ClassList {
+        height: auto;
+        max-height: calc(100vh - 22rem);
+        overflow-y: scroll;
+    }
+</style>

@@ -1,0 +1,278 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Require.ImportSupplier
+@{
+    Layout=null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row m-0 viewcontent border-dashed border-1 border-secondary border-radius-md p-0">
+    <div class="col-12">
+        <div id="importsupwait" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="importsupmaster" class="mb-3">
+            <div class="card-header p-3 pb-0">
+                <div class="text-md  font-weight-bold text-center position-relative">
+                    <span class="text-md  text-primary text-uppercase">@Local["Phiếu nhập kho từ phiếu yêu cầu"]</span>
+                    <span id="importsup_ordernum" class="text-md text-uppercase ps-2 text-primary "></span>
+                    <div>
+                        <span class="pt-2 text-xs text-muted">@Local["Chứng từ nhập kho"]</span>
+                        <span id="importsup_inputnum" class="text-xs ps-2 text-primary"></span>
+                    </div>
+                    <i class="position-absolute text-gradient text-primary fas fa-redo end-1 top-0" onclick="ImportSupReload()"></i>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-md-12 col-xl-8 px-1 mt-2">
+                        <div class="text-md text-dark">
+                            <span class="text-sm text-secondary">@Local["Người nhận"]</span>
+                            <span id="importsh_createname" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark">
+                            <span class="text-sm text-secondary">@Local["Kho nhận"]</span>
+                            <span id="importsh_warename" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark">
+                            <span class="text-sm text-secondary">@Local["Ngày nhận"]</span>
+                            <span id="importsup_dateimport" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-2 my-3">
+                <table class="table vt-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 45px;">@Local["#"]</th>
+                            <th id="importsuppackage">@Local["Số lô"]</th>
+                            <th>@Local["Tên"]</th>
+                            <th>@Local["Đvị"]</th>
+                            <th>@Local["Đơn giá"]</th>
+                            <th>@Local["SL"]</th>
+                            <th>@Local["Thành tiền"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="importsupContent">
+                    </tbody>
+                </table>
+                <div class="d-flex  mt-3">
+                    <div class="d-flex ms-auto my-auto mt-1">
+                        <div id="importsup_foimport" class="text-center text-md text-dark" style="min-width: 250px;">
+                            <span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Duyệt nhập kho"]</span>
+                            <div style="height: 100px;">
+                                <img id="importsup_foimportimg" class="cursor-pointer border-dashed border-1 border-secondary border-radius-md" style="height: 100px;" src="/default.png" />
+                            </div>
+                            <span id="importsup_foimportname" class="text-sm text-dark font-weight-bold"></span>
+                            <div id="importsup_foimportdate" class="text-center text-sm text-dark"> </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action_Save mt-3">
+                    <div class="action_Save-Content">
+                        <button id="btnimsup_unimport" style="display:none" form="form3" type="button" class="btn bg-gradient-success mt-2 me-2" onclick="return ImSup_UnImport()">@Local["Hủy nhập kho"]</button>
+                        <button id="btnimsup_cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();ImSup_Cancel()">@Local["Đóng"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let data_importsup = {};
+    let IsPackageNumber = 0;
+    let importsup_DetailID = "@Model._Detail";
+    let importsup_OrderID = "@Model._DetailOrder";
+
+    let datasignimport = '';
+    let importsupedit = 0;
+    //#region // Load
+    $(document).ready(function () {
+        ImSup_GetData(importsup_DetailID);
+    });
+    function ImportSupReload () {
+        ImSup_GetData(importsup_DetailID);
+    }
+    function ImSup_GetData (id) {
+        data_importsup = {};
+        IsPackageNumber = 0;
+        $("#importsupContent").html('');
+
+        importsupedit = 0;
+        datasignimport = '';
+        AjaxLoad(url = "/WareHouse/Require/ImportSupplier/?handler=Initialize"
+            , data = {'DetailID': id}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result).Table;
+                    let datadetail = JSON.parse(result).Table1;
+                    if (data != undefined && data.length == 1 && data[0][0] != 0) {
+                        let item = data[0];
+                        IsPackageNumber = item.IsPackageNumber;
+                        $("#importsup_inputnum").html(item.Code);
+                        $("#importsup_ordernum").html(item.OrderCode);
+
+                        $("#importsh_warename").html(item.WareName);
+                        $("#importsh_createname").html(item.CreatedName);
+                        $("#importsup_dateimport").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.ImportDate));
+                        if (item.Isedit == 1) {
+                            importsupedit = 1;
+                            $("#btnimsup_unimport").show();
+
+                        }
+                        else {
+                            $("#btnimsup_unimport").hide();
+                        }
+                        if (item.ImportSignName != "") {
+                            $("#importsup_foimportdate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.ImportSignDate));
+                            $("#importsup_foimportname").html(item.ImportSignName);
+                            $("#importsup_foimportimg").attr("src", item.ImportSignData);
+                            datasignimport = item.ImportSignData;
+                        }
+                        else {
+                            $("#importsup_foimportimg").attr("src", "data:image/png;base64," + preload_circleAvatar);
+                        }
+                        if (IsPackageNumber == 1) {
+                            $("#importsuppackage").show();
+                        }
+                        else {
+                            $("#importsuppackage").hide();
+                        }
+
+                    }
+
+                    if (datadetail != undefined && datadetail.length!=0)
+                        for (let i = 0; i < datadetail.length; i++) {
+                            let element = {};
+                            element.current = datadetail[i].ID;
+                            element.productID = datadetail[i].ProductID;
+                            element.productName = datadetail[i].ProductName;
+                            element.unitName = datadetail[i].UnitName;
+                            element.number = datadetail[i].Number;
+                            element.package = datadetail[i].PackageNumber;
+                            element.price = datadetail[i].Price;
+                            element.amount = datadetail[i].Amount;
+                            data_importsup[datadetail[i].ID] = element;
+                            ImSup_RenderRow(datadetail[i].ID, element, 'importsupContent');
+
+                        }
+                    ImSup_Sign();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#importsupmaster").hide();
+                $("#importsupwait").show();
+            }
+            , complete = function (e) {
+                $("#importsupwait").hide();
+                $("#importsupmaster").show();
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // Render
+    function ImSup_RenderRow (key, value, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let ex = formatNumber(Math.round(Number(value.number) * 100) / 100);
+            let tr =
+                 '<td class="vt-number-order"></td>'
+                + ((IsPackageNumber == 1) ? ('<td>' + AddCell_Package(key, value.package) + '</td>'): '')
+                + '<td>' + value.productName + '</td>'
+                + '<td>' + value.unitName + '</td>'
+                + '<td>' + formatNumber(value.price) + '</td>'
+                + '<td>' + ex + '</td>'
+                + '<td>' + formatNumber(value.amount) + '</td>'
+
+            tr = '<tr role="row" class="vt-number">' + tr + '</tr>';
+            myNode.innerHTML += tr;
+        }
+        ImSup_EventRow();
+    }
+
+    function AddCell_Package (randomNumber, value) {
+        let resulf = '<input class=" packageNumber form-control" placeholder="eg .@Local["Số lô"]" '
+            + ((IsPackageNumber == 0) ? "disabled" : "disabled")
+            + ' id="packageNumber_' + randomNumber + '" value="' + value + '" type="text" />';
+        resulf = resulf;
+        return resulf;
+    }
+
+    function ImSup_EventRow () {
+        $(".packageNumber").unbind('change').change(function () {
+            let id = this.id.replace("packageNumber_", "")
+            data_importsup[id].package = this.value + "-" + data_product[id].productID;
+        });
+
+    }
+
+    //#endregion
+
+    //#region // Main Event
+
+    function ImSup_UnImport() {
+        const promise = notiConfirm('@Local["Chứng từ nhập kho"] ' + $("#importsup_inputnum").html() + ' @Local["Sẽ bị xóa"]');
+        promise.then(function () {
+            AjaxLoad(url = "/WareHouse/Require/ImportSupplier/?handler=UnImport"
+                , data = {
+                    'DetailID': importsup_DetailID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        RequireList_Load(ismore = 0, curid = importsup_OrderID,1);
+                        ImSup_Cancel();
+                    }
+                    else {
+                        notiError('@Local["Không thể hủy chứng từ"] ' + $("#importsup_inputnum").html());
+                    }
+                }
+            );
+        }, function () { });
+
+    }
+
+    function ImSup_Cancel () {
+        $('#re_view').empty()
+    }
+
+    function ImSup_Sign () {
+        $("#importsup_foimportimg").unbind("click").bind('click', function () {
+            if (importsupedit == 1) {
+                ImSup_SignExe(importsup_DetailID, datasignimport);
+            }
+        });
+    }
+
+    async function ImSup_SignExe (id, signdata) {
+        await Signature_Action(signdata, 1);
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/WareHouse/Require/ImportSupplier/?handler=UpdateSign"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        RequireList_Load(ismore = 0, curid = importsup_OrderID, 1);
+                        ImSup_GetData(importsup_DetailID);
+                    }
+                    else {
+                        notiError("@Local["Phiếu chưa được nhập kho"]");
+                    }
+                }
+            );
+
+        }
+
+    }
+
+    //#endregion
+
+</script>

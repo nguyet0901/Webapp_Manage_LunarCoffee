@@ -1,0 +1,563 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.General.Course.CourseListModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card" id="Course_Main">
+            <div class="card-body p-4">
+                <div class="row px-2 form3" id="">
+                    <div class="col-12 col-sm-12 col-xl-6 p-1">
+                        <div class="input-group" id="CouList_InputSearchBlock">
+                            <div class="input-group-text input-group-text px-2">
+                                <i class="fas fa-search" aria-hidden="true" style="display: block;"></i>
+                                <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                            </div>
+                            <input id="CouList_InputSearch" type="text" class="form-control ps-2" placeholder="eg .search">
+                            <span class="input-group-text"><i class="btn_clear fas fa-minus-circle"></i></span>
+                            <div class="input-group-text cursor-pointer type text-primary nav-link-heading" data-heading="course" data-bs-toggle="tooltip" title="" data-bs-original-title="@Local["Danh sách khóa học"]">
+                                @Local["Khoá học"]
+                            </div>
+                            <div class="input-group-text cursor-pointer type nav-link-heading" data-heading="class" data-bs-toggle="tooltip" title="" data-bs-original-title="@Local["Danh sách lớp học"]">
+                                @Local["Lớp học"]
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="CourseBranch" onchange="event.preventDefault(); return CouList_Load();">
+                            <input type="hidden" name="statusType" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Branch</div>
+                            <div id="cbbCourseBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <input class="flatpickr form-control" id="CourseDate" name="" type="text" placeholder="eg. Date" onchange="event.preventDefault(); return CouList_Load();" />
+                    </div>
+                </div>
+                <div id="CouList_TableContent" class="m-0 mb-3 position-relative px-1">
+                    <div id="CouList_Waiting" class="waitingdiv text-center position-absolute translate-middle-x top-5 start-50 z-index-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="HeadingBlock">
+                        <div class="headingCourse py-2" data-heading="course">
+                            <a id="CouList_Home" class="d-inline text-primary text-sm me-2" onclick="event.preventDefault(); return CouList_CloseClass();">
+                                <span class="fw-bold">@Local["Khoá học"] /</span>
+                            </a>
+                            <div class="d-inline text-sm" id="CouList_Nav"></div>
+                        </div>
+                        <div class="headingCourse py-2" data-heading="class" style="display: none;">
+                            <a id="CouList_Class_Home" class="d-inline text-primary text-sm me-2" onclick="event.preventDefault(); return;">
+                                <span class="fw-bold">@Local["Lớp học"] /</span>
+                            </a>
+                            <div class="d-inline text-sm" id="CouList_Class_Nav"></div>
+                        </div>
+                    </div>
+                    <div id="CouList_Container" class="overflow-y">
+                        <div id="CouList_CourseContent" class="row bodyCourse overflow-auto" data-body="course"></div>
+                        <div id="CouList_ClassContent" class="bodyCourse" data-body="class" style="display: none;">
+                            <table class="table vt-table mb-0 mt-2">
+                                <thead>
+                                    <tr>
+                                        <th style="max-width: 45px;">#</th>
+                                        <th>@Local["Tên"]</th>
+                                        <th style="min-width: 100px;">@Local["Thời gian"]</th>
+                                        <th style="min-width: 30px;">@Local["Số HV"]</th>
+                                        <th>@Local["Tình trạng"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="CouList_ClassContentBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btnsysmore btn btn-secondary w-100 p-1 my-1 cursor-pointer position-absolute top-100 start-50 translate-middle-x z-index-3" onclick="event.preventDefault();return CouList_Load(1);">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                    <div id="CouList_ContainerDetail" style="display:none;" class="overflow-y">
+                        <table class="table vt-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="max-width: 45px;">#</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th style="min-width: 100px;">@Local["Thời gian"]</th>
+                                    <th style="min-width: 30px;">@Local["Số HV"]</th>
+                                    <th>@Local["Tình trạng"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="CouList_ContainerDetailBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="Course_Detail">
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    //#region // DECLARE & INIT
+
+    let CouList_Branch;
+    let CouList_Flag = 0;
+    let CouList_CurrentID = 0, CouList_CurrentClassID = 0;
+    let xhrCourseList;
+    var CouList_DataMainCourse, CouList_DataMainClass;
+    let CouList_Limit = 20, CouList_BeginID = 0, CouList_BeginClassID = 0;
+    let CouList_TimeOutSearch;
+
+    $(document).ready(function () {
+        CouList_Init();
+        CouList_Load();
+    });
+
+    function CouList_Init() {
+        ToolPopper();
+        $("#CourseDate").flatpickr({
+            mode: "range"
+            , dateFormat: 'd-m-Y'
+            , enableTime: false
+        });
+        let date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#CourseDate").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+
+        if (stugen_Branch != undefined) {
+            let dataBranch = Object.values(stugen_Branch) ?? [];
+            Load_Combo(dataBranch, 'cbbCourseBranch', true);
+            $("#CourseBranch").dropdown('refresh')
+            $("#CourseBranch").dropdown('set selected', Master_branchID);
+        }
+
+        $('#CouList_InputSearch').unbind().keyup(function () {
+            let btnClear = $("#CouList_InputSearchBlock .btn_clear");
+            if ($(this).val().length > 0) btnClear.removeClass('opacity-1');
+            else btnClear.addClass('opacity-1');
+            $("#CouList_InputSearchBlock .fa-search").hide();
+            $("#CouList_InputSearchBlock .spinner-border").show();
+            clearTimeout(CouList_TimeOutSearch);
+            CouList_TimeOutSearch = setTimeout(function (e) {
+                CouList_SearchCourse(xoa_dau($('#CouList_InputSearch').val().toLowerCase()).trim());
+            }, 500);
+        });
+
+        $("#CouList_InputSearchBlock .btn_clear").on('click', function (e) {
+            $('#CouList_InputSearch').val('');
+            $(this).children(".btn_clear").addClass('opacity-1');
+            CouList_SearchCourse('');
+        });
+
+        $(".nav-link-heading").on('click', function () {
+            CouList_CloseClass();
+            $(this).addClass('text-primary').siblings(".nav-link-heading").removeClass("text-primary");
+            let dataHeading = $(this).attr('data-heading');
+            let heading = $('#Course_Main .headingCourse[data-heading="' + dataHeading + '"]');
+            let body = $('#CouList_Container .bodyCourse[data-body="' + dataHeading + '"]');
+            if (heading && heading.length != 0 && body && body.length != 0) {
+                heading.fadeIn(100).siblings('.headingCourse').hide();
+                body.fadeIn(100).siblings('.bodyCourse').hide();
+            }
+        })
+        $('.nav-link-heading[data-heading="course"]').trigger('click');
+
+        $(window).resize(function () {
+            let main = $("#Gen_SectionStu")
+            let tableContainer = $("#CouList_TableContent");
+            let blockTable = $("#CouList_Container, #CouList_ContainerDetail");
+            if (tableContainer.length != 0 && main.length != 0 && blockTable.length != 0) {
+                let posTop = tableContainer.position().top;
+                let height = main.height() - posTop - 80;
+                blockTable.css("height", height)
+            }
+        }).trigger('resize');
+
+        CouList_Flag = 1;
+    }
+
+    function CouList_SearchCourse(text) {
+        $("#CouList_CourseContent, #CouList_ClassContentBody").empty();
+        if (text == '') {
+            CouList_Render(CouList_DataMainCourse, 'CouList_CourseContent');
+            CouList_RenderClass(CouList_DataMainClass, 'CouList_ClassContentBody');
+        }
+        else {
+            let _detail = CouList_DataMainCourse.filter(s => (xoa_dau(s.Name).trim().toLowerCase().includes(text)
+                || xoa_dau(s.Code).trim().toLowerCase().includes(text)));
+            CouList_Render(_detail, 'CouList_CourseContent');
+
+            let _detailClass = CouList_DataMainClass.filter(s => (xoa_dau(s.Name).trim().toLowerCase().includes(text)));
+            CouList_RenderClass(_detailClass, 'CouList_ClassContentBody');
+        }
+        $("#CouList_InputSearchBlock .fa-search").show();
+        $("#CouList_InputSearchBlock .spinner-border").hide();
+    }
+
+    function CouList_Load(isLoadMore = 0) {
+        if (CouList_Flag == 1) {
+            if (xhrCourseList && xhrCourseList.readyState != 4) xhrCourseList.abort();
+            let dateFrom = "";
+            let dateTo = "";
+            let date = $('#CourseDate').val() ? $('#CourseDate').val() : new Date()
+            if (date.includes(" to ")) {
+                dateFrom = date.split(" to ")[0];
+                dateTo = date.split(" to ")[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            let branchID = Number($("#CourseBranch").dropdown('get value')) ? Number($("#CourseBranch").dropdown('get value')) : 0;
+
+            if (isLoadMore == 0) {
+                CouList_DataMainCourse = [];
+                CouList_DataMainClass = [];
+                CouList_BeginID = 0;
+                CouList_BeginClassID = 0;
+                $("#CouList_CourseContent, #CouList_ClassContentBody").empty();
+            }
+
+            xhrCourseList = AjaxLoad(url = "/Student/General/Course/CourseList/?handler=LoadData"
+                , data = {
+                    'branchID': branchID,
+                    'dateFrom': dateFrom,
+                    'dateTo': dateTo,
+                    'limit': CouList_Limit,
+                    'beginID': CouList_BeginID,
+                    'beginClassID': CouList_BeginClassID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            let dataCourse = data.Table;
+                            let dataClass = data.Table1;
+                            if (dataCourse && dataCourse.length != 0) {
+                                CouList_DataMainCourse = CouList_DataMainCourse.concat(dataCourse);
+                                CouList_BeginID = dataCourse[dataCourse.length - 1].ID;
+                                CouList_Render(dataCourse, 'CouList_CourseContent');
+                            }
+                            if (dataClass && dataClass.length != 0) {
+                                CouList_DataMainClass = CouList_DataMainClass.concat(dataClass);
+                                CouList_BeginClassID = dataClass[dataClass.length - 1].ID;
+                                CouList_RenderClass(dataClass, 'CouList_ClassContentBody');
+                            }
+
+                        }
+                        else {
+
+                        }
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#CouList_Waiting").show();
+                }
+                , complete = function (e) {
+                    $("#CouList_Waiting").hide();
+                }
+            );
+        }
+    }
+
+
+    function CouList_LoadClass(id) {
+        $("#CouList_ContainerDetailBody").empty();
+        AjaxLoad(url = "/Student/General/Course/CourseList/?handler=LoadCourseClass"
+            , data = {
+                'courseID': id
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        CouList_RenderClass(data, 'CouList_ContainerDetailBody');
+                    }
+                }
+                else notiError_SW();
+            }
+            , sender = null
+            , before = function (e) {
+                $("#CouList_Waiting").show();
+            }
+            , complete = function (e) {
+                $("#CouList_Waiting").hide();
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // FUNC ACTION COURSE
+
+    function CouList_LoadDetailCourse() {
+        if (CouList_CurrentID && CouList_CurrentID != 0) {
+            let _dataFilter = CouList_DataMainCourse.filter((item) => { return item.ID == CouList_CurrentID });
+            CouList_OpenClass();
+            CouList_SetNav(_dataFilter && _dataFilter.length == 1 ? _dataFilter[0].Code : '');
+            CouList_LoadClass(CouList_CurrentID);
+        }
+    }
+
+    function CouList_CourseStatusOpen() {
+        if (CouList_CurrentID && CouList_CurrentID != 0) {
+            if (isFunction(Genstu_OpenDetail)) {
+                let urlDetail = "/Student/General/Course/CourseStatus?CourseID=" + CouList_CurrentID + "&ver=" + versionofWebApplication;
+                Genstu_OpenDetail(urlDetail);
+            }
+            return false;
+        }
+    }
+
+
+
+    //#endregion
+
+
+    //#region //  RENDER DATA
+
+    async function CouList_Render(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CouList_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                CouList_Event();
+                resolve();
+            }, 100)
+        })
+    }
+
+    function CouList_RenderEach(item) {
+        try {
+            let tr = `
+                <div class="d-flex align-items-center py-1 w-100 position-relative" >
+                    <div class="d-flex flex-column justify-content-center">
+                        <h6 class="mb-0 text-sm ellipsis_one_line">
+                            <span class="detail cursor-pointer fw-bold text-primary text-uppercase border-bottom border-primary">
+                                ${item.Code}
+                            </span>
+                            <span class="fw-bold"> - ${item.Name}</span>
+                            <span>${formatNumber(item.Price)}</span>
+                        </h6>
+                        <p class="mb-0 text-sm">
+                            <span class="opacity-7">@Local["Khai giảng"]":</span> <span class="text-dark">${ConvertYMDInt_ToDate(item.TimeBegin)} </span>
+                        </p>
+                    </div>
+                    <span class="badge bg-gradient-info badge-sm ms-auto me-3 cursor-pointer statusCourse">Đánh giá</span>
+                 </div>
+                <hr class="horizontal dark mt-2 opacity-2 mb-0" />
+            `
+            tr = `<div class="rowCourseItem col-12 col-lg-6 mb-3" id="blockCourse_${item.ID}" data-id="${item.ID}">${tr}</div>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    async function CouList_RenderClass(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            item.Name = Fun_GetName_ByID(stugen_Subject, item.SubjectID);
+                            let tr = CouList_RenderClassEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                CouList_EventClass();
+                resolve();
+            }, 100)
+        })
+    }
+
+    function CouList_RenderClassEach(item) {
+        try {
+            let tr = `
+             <tr id="blockClass_${item.ID}" data-id="${item.ID}" role="row" class="vt-number blockClassItem class-item"  >
+                <td class="vt-number-order"></td>
+                <td > <span class="text-primary border-bottom border-primary cursor-pointer fw-bold detail">${item.Name}</span> </td>
+                <td class="">${ConvertBetweenYMDInt_ToDate(item.TimeBegin, item.TimeEnd)}</td>
+                <td class="text-center">${item.TotalStudents}</td>
+                <td class="">${item.TimeAttend} / ${item.TimeTeach} buổi</td>
+            </tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+
+
+
+    //#region // EVENT
+
+    function CouList_Event() {
+
+        $('#CouList_CourseContent .detail').unbind('click').on('click', function (event) {
+            let _parent = $(this).closest('.rowCourseItem');
+            let _id = Number(_parent.attr('data-id'));
+            if (_id && !isNaN(_id) && _id != 0) {
+                CouList_CurrentID = _id;
+                CouList_LoadDetailCourse();
+            }
+        });
+
+        $('#CouList_CourseContent .statusCourse').unbind('click').on('click', function (event) {
+            let _parent = $(this).closest('.rowCourseItem');
+            let _id = Number(_parent.attr('data-id'));
+            if (_id && !isNaN(_id) && _id != 0) {
+                CouList_CurrentID = _id;
+                CouList_CourseStatusOpen();
+            }
+        });
+    }
+
+    function CouList_EventClass() {
+
+
+        $("#CouList_ContainerDetailBody .detail, #CouList_ClassContentBody .detail").unbind('click').on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            let parent = $(this).closest('.class-item');
+            let _id = Number(parent.attr('data-id'));
+            if (_id && !isNaN(_id) && _id != 0) {
+                CouList_CurrentClassID = _id;
+                CouList_Class_Student();
+            }
+        });
+
+    }
+
+    function CouList_SetNav(name) {
+        if (name && name != '') $("#CouList_Nav").html(name)
+        else $("#CouList_Nav").empty();
+    }
+
+    //#endregion
+
+
+    //#region // EXECUTE CLASS
+
+    function CouList_Class_ChangeTeacher() {
+        if (CouList_CurrentClassID && CouList_CurrentClassID != 0) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Student/General/Course/ClassTeacher?CurrentID=" + CouList_CurrentClassID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+    }
+
+    function CouList_Class_Student() {
+        if (CouList_CurrentClassID && CouList_CurrentClassID != 0) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Student/General/Course/StudentList?ClassID=" + CouList_CurrentClassID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+    }
+
+    //#endregion
+
+
+    //#region // OTHER
+
+    function CouList_OpenClass() {
+        $("#CouList_Container").hide();
+        $("#CouList_ContainerDetail").fadeIn(100);
+    }
+
+    function CouList_CloseClass() {
+        $("#CouList_Container").fadeIn(100);
+        $("#CouList_ContainerDetail").hide();
+        CouList_SetNav();
+    }
+
+    function CouList_OpenDetail() {
+        $("#Course_Main").hide();
+        $("#Course_Detail").empty().fadeIn(100);
+    }
+
+    function CouList_OpenDetail() {
+        $("#Course_Main").fadeIn(100);
+        $("#Course_Detail").empty().hide();
+    }
+
+    //#endregion
+
+
+
+
+</script>
+
+
+<style>
+
+
+
+    .btnCourseMore {
+        opacity: 0.3;
+        min-width: 35px;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #888 !important;
+        background: transparent;
+        transition: background 0.3s ease, opacity 0.2s linear;
+    }
+
+    .rowCourseItem:hover .btnCourseMore {
+        opacity: 1;
+    }
+
+    .btnCourseMore:hover {
+        background: #6f6f6fc9;
+        color: #fff !important;
+    }
+
+    .rowCourseItem .statusCourse{
+        opacity: 0;
+        transform:translateX(-10px);
+        transition:0.3s;
+        position:absolute;
+        right:0;
+        top:0;
+    }
+
+    .rowCourseItem:hover .statusCourse{
+        opacity:1;
+        transform:translateX(0);
+    }
+</style>

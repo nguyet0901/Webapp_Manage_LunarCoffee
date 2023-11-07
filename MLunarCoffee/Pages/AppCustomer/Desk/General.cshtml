@@ -1,0 +1,204 @@
+﻿@page
+@model MLunarCoffee.Pages.AppCustomer.Desk.GeneralModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0 position-relative">
+            <div class="card card-plain">
+                <div id="ACDG_MainContainer" class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <div id="AC_DG_MenuContontainer" class="flex-fill flex-grow-1 overflow-auto ms-n2">
+                            <ul id="AC_DG_Menu" class="bg-transparent nav nav-horizontal nav-pills pb-0 permissionlist pt-0" role="tablist">
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="right overflow-unset">
+                        <div class="vtcondition w-100">
+                            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                            <div class="fulllap collapse collapsesticky show">
+                                <div class="wrap overflow-unset">
+                                    <div class="wrapblock overflow-unset">
+                                        <div class="row m-0 form3 w-100">
+                                            <div class="col-12 col-md-5 p-1 pe-md-1">
+                                                <div class="ui fluid search selection dropdown form-control" id="AC_DG_BranchID">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input id="searchConsult1" class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                                    <div id="ccbAC_DG_BranchID" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-7 p-1 pe-md-1">
+                                                <input id="AC_DG_ipDate" class="form-control flatpickr " type="text" placeholder="eg .@Local["Ngày"]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="wrapblock overflow-unset">
+                                        <div class="ms-0 col-auto my-auto flex-grow-0">
+                                            <div class="h-100">
+                                                <div class="d-flex me-2 mt-lg-0 ">
+                                                    <button id="AC_DG_btnOK" class="btn bg-gradient-primary mb-0" onclick="AC_DG_LoadDetail()">OK</button>
+                                                    <button id="AC_DG_btnReset" class="btn bg-gradient-dark ms-2 mb-0" style="min-width: 100px;" onclick="AC_DG_Reset()">@Local["Đặt lại"]</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div id="AC_DG_DetailContainer" class="card-body pt-2 px-0" style="display: none">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //#region //INIT_DEFINE
+    let AC_DG_dataTabMenu = [
+        { ID: 1, Name: "@Local["Lịch hẹn"]", UrlPage: "/AppCustomer/Desk/Appointment/AppList" }
+        , { ID: 2, Name: "@Local["Đánh giá"]", UrlPage: "/AppCustomer/Desk/Rating/RatingList" }
+        , { ID: 3, Name: "@Local["Hồ sơ khách hàng"]", UrlPage: "/AppCustomer/Desk/Profile/ProfileList" }
+        , { ID: 4, Name: "@Local["Tài khoản"]", UrlPage: "/AppCustomer/Desk/User/UserList" }
+    ];
+    let AC_DG_objTabMenu = {};
+    var AC_DG_objBranchs = {};
+    let AC_DG_InputDate;
+    let AC_DG_MenuID = 0;
+    $(document).ready(function () {
+        AC_DG_Init();
+        AC_DG_LoadData();
+    })
+
+    function AC_DG_Init() {
+        AC_DG_InitDate();
+        AjaxLoad(url = "/AppCustomer/Desk/General/?handler=Init"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    let dataBranch = data.Branch;
+                    if (dataBranch && dataBranch.length != 0) {
+                        AC_DG_objBranchs = dataBranch.reduce((pre, arr) => { if (arr.ID) pre[arr.ID] = arr; return pre; }, {});
+                        Load_Combo(dataBranch, 'ccbAC_DG_BranchID', true, "@Local["Tất cả chi nhánh"]");
+                        $("#AC_DG_BranchID").dropdown("refresh");
+                        $("#AC_DG_BranchID").dropdown("set selected", "0");
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#WaitingDeskGeneral").show();
+            }
+            , complete = function (e) {
+                $("#WaitingDeskGeneral").hide();
+            }
+        );
+    }
+
+    function AC_DG_InitDate() {
+        AC_DG_InputDate = $("#AC_DG_ipDate").flatpickr({
+            mode: "range"
+            , dateFormat: 'd-m-Y'
+            , enableTime: false
+        })
+        let date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        AC_DG_InputDate.setDate([firstDay, lastDay]);
+    }
+
+    //#endregion
+
+    //#region //LOADDATA
+    function AC_DG_LoadData() {
+        let data = [...AC_DG_dataTabMenu];
+        AC_DG_objTabMenu = data.reduce((pre, arr) => { if (!pre[arr.ID]) pre[arr.ID] = arr; return pre; }, {})
+        AC_DG_RenderMenu(data, "AC_DG_Menu")
+    }
+    async function AC_DG_RenderMenu(data, id) {
+        return new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = AC_DG_RenderMenu_Each(item);
+                        myNode.insertAdjacentHTML("beforeend", tr);
+                    }
+
+                    AC_DG_Event();
+                    $('#AC_DG_Menu .AC_DG_MenuList_Class:first').trigger("click");
+                    $('#AC_DG_Menu .AC_DG_MenuList_Class:first').addClass("active");
+                }
+            }
+            resolve();
+        })
+    }
+
+    function AC_DG_RenderMenu_Each(item) {
+        let result = '';
+        if (item && Object.keys(item).length > 0) {
+            result = `<li class="nav-item" role="presentation">
+                            <a class="AC_DG_MenuList_Class linkgroup nav-link cursor-pointer nav-item-text" data-bs-toggle="pill" role="tab" data-bs-target="#AC_DG_Menu_Child${item.ID}" data-id="${item.ID}">${item.Name}</a>
+                        </li>`;
+        }
+        return result;
+    }
+    //#endregion
+
+    //#region //EVENT
+    function AC_DG_Event() {
+        $('#AC_DG_Menu .AC_DG_MenuList_Class').unbind('click').on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            AC_DG_MenuID = $(this).attr('data-id');
+            AC_DG_LoadDetail();
+        });
+    }
+
+    function AC_DG_LoadDetail() {
+        let UrlPage = AC_DG_objTabMenu[AC_DG_MenuID]?.UrlPage ?? '';
+        if (UrlPage != '') {
+            let dateFrom = "";
+            let dateTo = "";
+            let date = $('#AC_DG_ipDate').val() ? $('#AC_DG_ipDate').val() : new Date()
+            if (date.includes(" to ")) {
+                dateFrom = date.split(" to ")[0];
+                dateTo = date.split(" to ")[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            let branchID = Number($('#AC_DG_BranchID').dropdown('get value')) ? Number($('#AC_DG_BranchID').dropdown('get value')) : 0;
+            $("#AC_DG_DetailContainer").html('');
+            $("#AC_DG_DetailContainer").load(`${UrlPage}?` + 'branchID=' + branchID + '&dateFrom=' + dateFrom + '&dateTo=' + dateTo + '&ver=' + versionofWebApplication);
+            $("#AC_DG_DetailContainer").show();
+        }
+        return false;
+    }
+
+    function AC_DG_Reset() {
+        AC_DG_InitDate();
+        $("#AC_DG_BranchID").dropdown("refresh");
+        $("#AC_DG_BranchID").dropdown("set selected", "0");
+        AC_DG_LoadDetail();
+    }
+            //#endregion
+</script>

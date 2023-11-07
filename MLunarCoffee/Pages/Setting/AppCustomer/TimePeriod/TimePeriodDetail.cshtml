@@ -1,0 +1,250 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.TimePeriod.TimePeriodDetailModel
+@{
+    Layout = null;
+}
+
+<div class="row " id="ATD_DetailDiv">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Danh sách khung thời gian đặt lịch hẹn"]</h6>
+                    <p class="text-sm mb-0">@Local["Tối đa 4 khung giờ"]</p>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <div class="overflow-hidden">
+                        <div class="pb-0 mt-4">
+                            <div class="d-lg-flex">
+                                <div class="ms-auto my-auto mt-1">
+                                    <button id="btnNewTimePeriod" class="btn bg-gradient-primary btn-sm mt-1" onclick="return ATD_AddElement()">@Local["Thêm mới"]</button>
+                                </div>
+                            </div>
+                        </div>
+                        <table data-name="" class="table vt-table mb-0 mt-2" id="ATD_DtContentTimePeriod">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th>#</th>
+                                    <th>@Local["Thời gian bắt đầu"]</th>
+                                    <th>@Local["Thời gian kết thúc"]</th>
+                                    <th>@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ATD_DtContentTimePeriodBody" class="form3">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fixed-botombutton">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" form="ATD_FormTimePeriodDetail" onclick="event.preventDefault();ATL_CloseDetail()">@Local["Đóng"]</button>
+                                <button form="ATD_FormTimePeriodDetail" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault();ATD_ExcuteData()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let ATD_MinTime = '00:00', ATD_MaxTime = '23:59';
+    let ATD_Today;
+    let ATD_ScheduleTime = [];
+
+    $(document).ready(function () {
+        ATD_Today = new Date();
+        let dd = String(ATD_Today.getDate()).padStart(2, '0');
+        let mm = String(ATD_Today.getMonth() + 1).padStart(2, '0');
+        let yyyy = ATD_Today.getFullYear();
+
+        ATD_Today = yyyy + '-' + mm + '-' + dd;
+        ATD_Load();
+    });
+
+    //#region //Load Data
+    function ATD_Load() {
+        AjaxLoad(url = "/Setting/AppCustomer/TimePeriod/TimePeriodList/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                ATD_ScheduleTime = JSON.parse(result);
+                ATD_Render(data, "ATD_DtContentTimePeriodBody");
+            }
+        );
+    }
+
+    function ATD_SettingTimePicker(data) {
+        for (i = 0; i < data.length; i++) {
+            let item = data[i];
+            let date = new Date();
+            ATD_SettingTimePickerItem(item.ID, item.HourStart, item.HourEnd);
+        }
+    }
+
+    function ATD_SettingTimePickerItem(id, ...value) {
+        let datePickerStart = $(`#ATD_Time_Start_${id}`).flatpickr({
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            minTime: ATD_MinTime,
+            time_24hr: true,
+            inline: true,
+            defaultDate: value.HourStart,
+            maxTime: ATD_MaxTime,
+            onChange: function (selectedDates, dateStr, instance) {
+                let objIndex = ATD_ScheduleTime.findIndex((obj => obj.ID == id));
+                //datePickerEnd.set('minTime', dateStr);
+                let e = {};
+                e.start = ConvertDateTime_To_Timespan_TimeZone((new Date(ATD_Today + ' ' + $(`#ATD_Time_Start_${id}`).val())));
+                e.stop = ConvertDateTime_To_Timespan_TimeZone((new Date(ATD_Today + ' ' + $(`#ATD_Time_End_${id}`).val())));
+                e._id = "ATD_Ext_" + id;
+
+                ATD_ScheduleTime[objIndex].HourStart = $(`#ATD_Time_Start_${id}`).val();
+                ATD_ScheduleTime[objIndex].HourEnd = $(`#ATD_Time_End_${id}`).val();
+            }
+        });
+        let datePickerEnd = $(`#ATD_Time_End_${id}`).flatpickr({
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            minTime: ATD_MinTime,
+            time_24hr: true,
+            inline: true,
+            defaultDate: value.HourEnd,
+            maxTime: ATD_MaxTime,
+            onChange: function (selectedDates, dateStr, instance) {
+                let objIndex = ATD_ScheduleTime.findIndex((obj => obj.ID == id));
+                //datePickerStart.set('maxTime', dateStr);
+                let e = {};
+                e.start = ConvertDateTime_To_Timespan_TimeZone((new Date(ATD_Today + ' ' + $(`#ATD_Time_Start_${id}`).val())));
+                e.stop = ConvertDateTime_To_Timespan_TimeZone((new Date(ATD_Today + ' ' + $(`#ATD_Time_End_${id}`).val())));
+                e._id = "ATD_Ext_" + id;
+
+                ATD_ScheduleTime[objIndex].HourStart = $(`#ATD_Time_Start_${id}`).val();
+                ATD_ScheduleTime[objIndex].HourEnd = $(`#ATD_Time_End_${id}`).val();
+            }
+        });
+        $(".flatpickr-calendar").addClass('shadow-none');
+        $(".flatpickr-time").addClass('border-top-0');
+    }
+
+    async function ATD_Render(data, id) {
+        new Promise((reslove) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        if(item.State != 0){
+                            let tr = ATD_RenderTableItem(item);
+                            stringContent = stringContent + `<tr class="vt-number field" role="row"> ${tr} </tr>`;
+                        }
+                    }
+
+                }
+                myNode.innerHTML = stringContent;
+                ATD_Event();
+                ATD_SettingTimePicker(data);
+            }
+        })
+    }
+
+    function ATD_RenderTableItem(item) {
+        return tr = `<td class="d-none ATD_ID"> ${item.ID} </td>
+                    <td class="vt-number-order"></td>
+                    <td class="col col-md-5 mx-auto">
+                        <div class="d-flex justify-content-center pb-1 ATD_PickerDiv">
+                          <input id="ATD_Time_Start_${item.ID}" class="flatpickr d-none ATD_Time" type="text" placeholder="eg .date" value="${item.HourStart}" />
+                        </div>
+                    </td>
+                    <td class="col col-md-5 mx-auto">
+                        <div class="d-flex justify-content-center pb-1 ATD_PickerDiv">
+                          <input id="ATD_Time_End_${item.ID}" class="flatpickr d-none ATD_Time" type="text" placeholder="eg .date" value="${item.HourEnd}" />
+                        </div>
+                    </td>
+                    <td> ${Render_Button_Grid(['<button class="buttonGrid" value="item.ID"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])}
+                    </td>`;
+    }
+    //#endregion
+
+    //#region //Event
+    function ATD_ExcuteData(){
+        let data = new Object();
+        data.Name = $("#APD_Name").val() ? $("#APD_Name").val() : "";
+        data.Image = Image;
+        AjaxLoad(url = "/Setting/AppCustomer/TimePeriod/TimePeriodDetail/?handler=Execute"
+            , data = {
+                data: JSON.stringify(ATD_ScheduleTime)
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    ATL_Load();
+                    ATL_CloseDetail();
+                    syslog_mob("u", "@Local["Thời gian lịch hẹn"]");
+                } else {
+                    $("#textShowMessage").html("@Local["Trùng dữ liệu"]");
+                }
+            });
+
+        return false;
+    }
+    function ATD_AddElement() {
+        let date = new Date();
+        let lastID = $('#ATD_DtContentTimePeriodBody tr:last').find('.ATD_ID')[0].innerHTML.trim();
+        let startHour = $(`#ATD_Time_End_${lastID}`).val();
+        let endHour = ATD_GetTime(startHour, addMinute = 30);
+        if (([...ATD_ScheduleTime].filter(x => x.State==1)).length < 4 && endHour <= ATD_MaxTime) {
+            let item = [...ATD_ScheduleTime].filter(x => x.State==0)[0];
+            item.HourStart = startHour;
+            item.HourEnd = endHour;
+            item.State = 1;
+            let td = ATD_RenderTableItem(item);
+            let tr = `<tr class="vt-number" role="row"> ${td} </tr>`;
+            $('#ATD_DtContentTimePeriodBody tr:last').after(tr);
+            ATD_SettingTimePickerItem(id = item.ID, startHour, endHour);
+        }
+        else{
+            notiWarning('@Local["Quá giới hạn số lượng khung giờ"]');
+        }
+    }
+
+    function ATD_Event() {
+        $('#ATD_DtContentTimePeriod tbody').on('click', '.buttonDeleteClass', function () {
+            $(this).closest('tr').remove();
+            let ID = Number($(this).closest('tr').find('.ATD_ID')[0].innerHTML);
+            for (let i = 0; i < ATD_ScheduleTime.length; i++){
+                if(ATD_ScheduleTime[i].ID == ID){
+                    ATD_ScheduleTime[i].State = 0;
+                }
+            }
+        });
+    }
+
+    function ATD_GetTime(time, addMinute = 0) {
+        let [h, m] = time.split(':');
+        let date = new Date();
+        date.setHours(h, m, 0)
+        date.setMinutes( date.getMinutes() + addMinute );
+        date.toString();
+        let hour = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours();
+        let min = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
+        let res = `${hour}:${min}`;
+        return res;
+    }
+
+
+    //endregion
+</script>

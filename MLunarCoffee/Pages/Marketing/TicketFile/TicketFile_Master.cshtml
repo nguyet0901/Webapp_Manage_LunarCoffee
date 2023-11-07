@@ -1,0 +1,136 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketFile.TicketFile_MasterModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-plain" id="TFM_Main">
+            <div class="card-header pt-3 px-2 pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">Ticket Files</h6>
+                            <p class="text-sm mb-0">@Local["Quản lý tải tập tin và xử lý tập tin excel tickets"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 px-2 ">
+                <div class="row px-2 form3">
+                    <div class="col-12 col-sm-12 col-lg-5 col-xl-4 p-1">
+                        <div id="TFM_WaitingImport" class="waitingdiv text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="TFM_ImportMain" class="d-none"></div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-lg-7 col-xl-8 p-1">
+                        <div id="TFM_WaitingFile" class="waitingdiv text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="TFM_FileMain" class="d-none"></div>
+                    </div>
+                </div>
+                <div id="TFM_Detail" class="row d-none">
+                    <div class="col-12">
+                        <div class="card card-plain">
+                            <div class="card-header pb-0 px-2">
+                                <h6 class="align-items-center d-flex mb-0">
+                                    <i class="vtt-icon vttech-icon-export-ex me-2" style="color: #2c8153"></i>
+                                    <span id="TFM_Title"></span>
+                                </h6>
+                            </div>
+                            <div class="card-body pt-2 px-2">
+                                <div id="TFM_DetailContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card card-plain px-2 d-none">
+            <div id="TFM_MainDetail" class="card-body pt-2 px-0 d-none">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var TFM_UserID = 0
+
+    $(document).ready(function () {
+        TFM_Init();
+        TFM_Event();
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+    })
+
+    async function TFM_Init() {
+        return new Promise((resolve) => {
+            $("#TFM_WaitingImport, #TFM_WaitingFolder").removeClass('d-none');
+            $("#TFM_ImportMain").load('/Marketing/TicketFile/TicketFile_Import?ver=' + versionofWebApplication,
+                () => {
+                    $("#TFM_WaitingImport").addClass('d-none');
+                    $("#TFM_ImportMain").removeClass('d-none');
+                }
+            );
+
+            $("#TFM_FileMain").load('/Marketing/TicketFile/TicketFile_File_Manage' + '?ver=' + versionofWebApplication,
+                () => {
+                    $("#TFM_WaitingFolder").addClass('d-none');
+                    $("#TFM_FileMain").removeClass('d-none');
+                }
+            );
+            resolve();
+        })
+    }
+
+    function TFM_Event() {
+
+        $("#TFM_Nav > li.nav-item").bind('click', function () {
+            let href = $(this).children('a').attr('data-href');
+            $("#TFM_FileMain").load(href + '?ver=' + versionofWebApplication,
+                () => {
+                    $("#TFM_WaitingFolder").addClass('d-none');
+                    $("#TFM_FileMain").removeClass('d-none');
+                }
+            );
+        });
+
+    }
+
+    function TFM_ViewTable(title = '') {
+        $("#TFM_Title").html(title)
+        $("#TFM_Detail").removeClass('d-none');
+        $([document.documentElement, document.body]).animate({
+            scrollTop: $("#TFM_Detail").offset().top
+        }, 300);
+    }
+
+    function TFM_ViewTableClose() {
+        $("#TFM_Title").html('')
+        $("#TFM_Detail").addClass('d-none');
+    }
+
+    function TFM_OpenDetail(url = '') {
+        if (url != '') {
+            $("#TFM_Main").hide();
+            $("#TFM_MainDetail").parent().removeClass('d-none');
+            $("#TFM_MainDetail").removeClass('d-none')
+            $("#TFM_MainDetail").load(url);
+        }
+    }
+
+    function TFM_CloseDetail() {
+        $("#TFM_Main").show();
+        $("#TFM_MainDetail").parent().addClass('d-none')
+        $("#TFM_MainDetail").addClass('d-none').empty();
+    }
+
+</script>

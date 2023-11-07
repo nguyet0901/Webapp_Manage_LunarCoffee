@@ -1,0 +1,236 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Language.AppCustomerEditLanguageModel
+@{
+    Layout = null;
+}
+<link href="/assests/icon-app/style.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Cấu hình ngôn ngữ app"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách cấu hình"] (Label, Button, Icon)</p>
+                </div>
+                <div class="right">
+                    <a class="align-items-center p-0 text-body ms-2 d-flex" id="AE_Radio">
+                        <div class="form-check pe-1">
+                            <input checked="checked" onchange="event.preventDefault();return EditLanguage_Fill();" name="radioChooseFill"
+                                   class="form-check-input cursor-pointer" type="radio" id="AppAll" value="0">
+                            <label class="text-sm mb-0 me-3" for="AppAll">
+                                All
+                            </label>
+                        </div>
+                        <div class="form-check pe-1">
+                            <input onchange="event.preventDefault();return EditLanguage_Fill();" name="radioChooseFill"
+                                   class="form-check-input cursor-pointer" type="radio" id="AppLabel" value="3">
+                            <label class="text-sm mb-0 me-3" for="AppLabel">
+                                Label
+                            </label>
+                        </div>
+                        <div class="form-check pe-1">
+                            <input onchange="event.preventDefault();return EditLanguage_Fill();" name="radioChooseFill"
+                                   class="form-check-input cursor-pointer" type="radio" id="AppIcon" value="1">
+                            <label class="text-sm mb-0 me-3" for="AppIcon">
+                                Icon
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input onchange="event.preventDefault();return EditLanguage_Fill();" name="radioChooseFill"
+                                   class="form-check-input cursor-pointer" type="radio" id="AppButton" value="2">
+                            <label class="text-sm mb-0 me-3" for="AppButton">
+                                Button
+                            </label>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <table class="table vt-table mb-0 showdivIcon showdivButton showdivLabel" id="AE_DtContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th>#</th>
+                                <th>@Local["Tên"]</th>
+                                <th>@Local["Tiếng việt"]</th>
+                                <th>@Local["Tiếng anh"]</th>
+                                <th>@Local["Loại"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="AE_DtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let DataUser;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                EditLanguage_Load(0, 0);
+            }
+        )
+    })
+
+    //#region //LOAD
+    function EditLanguage_Load (ID, Type) {
+        AjaxLoad(url = "/Setting/AppCustomer/Language/AppCustomerEditLanguage/?handler=LoadData"
+            , data = {ID, ID}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (ID == 0) {
+                        EditLanguage_Render(data, "AE_DtContentBody");
+                    }
+                    else {
+                        if (data && data.length != 0) {
+                            if ($("#AE_LanguageType_" + Type + "ID_" + ID).length) {
+                                let dataFillType = data.filter(word => {
+                                    return word.Type == Type
+                                })
+                                $("#AE_LanguageType_" + Type + "ID_" + ID).replaceWith(EditLanguage_RenderEach(dataFillType[0]))
+                                EditLanguage_Event();
+                            }
+                        }
+                    }
+                } else notiError_SW()
+            }
+        )
+    }
+
+    //#endregion
+
+
+    //#region //RENDER
+
+    async function EditLanguage_Render (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = "";
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = EditLanguage_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        EditLanguage_Event();
+                        ToolPopper();
+                    }
+                }
+            }, 100)
+        })
+    }
+    function EditLanguage_RenderEach (item) {
+        try {
+            let clasType = '';
+            if (item.Type == 1) clasType = 'ActiveIcon'
+            else if (item.Type == 2) clasType = 'ActiveButton'
+            else clasType = 'ActiveLabel'
+
+            let tr = `
+                    <td class="d-none">${item.ID}</td>
+                    <td class="vt-number-order"></td>
+                    <td><span class="text-sm border-bottom border-primary text-primary btnEdit cursor-pointer">${item.Description}</span></td>
+                    <td>${item.TextVN}</td>
+                    <td>${item.TextEN}</td>
+                    <td class="text-center">${EditLanguage_Type(item.Name, item.Type)}</td>
+                `
+            tr = `<tr role="row" class="vt-number ${clasType}" id="AE_LanguageType_${item.Type}ID_${item.ID}" data-type="${item.Type}">${tr}</tr>`
+            return tr;
+        }
+        catch {
+            return '';
+        }
+    }
+
+    function EditLanguage_Type (NameIcon, Type) {
+        let tr = '';
+        try {
+            switch (Type) {
+                case 1:
+                    tr = `<div class="icon icon-xs border-radius-sm bg-gradient-primary" data-bs-toggle="tooltip" title="Icon"><img src="${NameIcon}" style="max-width: 15px; max-height: 15px;"></div>`
+                    break;
+                case 2:
+                    tr = `<span class="" data-bs-toggle="tooltip" title="Button">Button</span>`
+                    break;
+                case 3:
+                    tr = `<span class="" data-bs-toggle="tooltip" title="Label">Label</span>`
+                    break;
+                default:
+                    tr = ''
+                    break;
+            }
+            return tr;
+        }
+        catch {
+            return "";
+        }
+    }
+
+    //#endregion
+
+
+    //#region //HANDLE
+
+    function EditLanguage_Fill () {
+        let ValueRadio = $('input[name=radioChooseFill]:checked', '#AE_Radio').val();
+        if (ValueRadio != 0) {
+            $("#AE_DtContent").removeClass("showdivIcon showdivButton showdivLabel");
+            if (ValueRadio == 1) $("#AE_DtContent").addClass("showdivIcon");
+            else if (ValueRadio == 2) $("#AE_DtContent").addClass("showdivButton");
+            else $("#AE_DtContent").addClass("showdivLabel");
+        }
+        else $("#AE_DtContent").addClass("showdivIcon showdivButton showdivLabel");
+    }
+
+    //#endregion
+
+    //#region //EVENT
+
+    function EditLanguage_Event () {
+        $("#AE_DtContentBody .btnEdit").unbind('click').on("click", function () {
+            let ID = $(this).closest('tr').children()[0].innerHTML;
+            let Type = $(this).closest("tr").attr("data-type");
+            EditLanguage_Edit(ID, Type);
+        })
+    }
+    //#endregion
+
+    //#region //EVENT
+
+    function EditLanguage_Edit (ID, Type) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/AppCustomer/Language/AppCustomerEditLanguageDetail?CurrentID=" + ID + "&Type=" + Type + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    //#endregion
+
+</script>
+<style>
+    .ActiveIcon, .ActiveButton, .ActiveLabel {
+        display: none;
+    }
+
+    .showdivIcon .ActiveIcon {
+        display: table-row;
+    }
+
+    .showdivButton .ActiveButton {
+        display: table-row;
+    }
+
+    .showdivLabel .ActiveLabel {
+        display: table-row;
+    }
+</style>

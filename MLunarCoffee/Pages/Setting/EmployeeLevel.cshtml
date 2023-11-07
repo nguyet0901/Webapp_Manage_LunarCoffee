@@ -1,0 +1,132 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.EmployeeLevelModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chức vụ"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách chức vụ"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="btnAddPosition" class="btn bg-gradient-primary btn-sm mt-1 _tab_control_ setting_projectclosure" data-tab="add_tab_facebook_tag" data-value="fade up" onclick="return EmployeeLevelAddNew()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="dtContentEmployeeLevel" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width:40px;">@Local["#"]</th>
+                                    <th>@Local["Chức vụ"]</th>
+                                    <th>@Local["Ghi chú"]</th>
+                                    <th>@Local["Ngày tạo"]</th>
+                                    <th style="width:40px;" class="setting_projectclosure">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentEmployeeLevelBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        EmployeeLevelLoad();
+        $('#dtContentEmployeeLevel tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EmployeeLevelEdit(ID);
+        });
+        $('#dtContentEmployeeLevel tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EmployeeLevelDelete(ID)
+        });
+
+    });
+    function EmployeeLevelLoad() {
+        AjaxLoad(url = "/Setting/EmployeeLevel/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    EmployeeLevelRender(data, 'dtContentEmployeeLevelBody');
+                }
+            });
+    }
+
+    function EmployeeLevelRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.LevelName + '</a></td>'
+                        + '<td>' + item.Note + '</td>'
+                        + '<td>'
+                        + '<div class="d-flex">'
+
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + item.NguoiTao + '</h6>'
+                        + '<span class="text-xs">' + item.CreatedString+ '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        + '<td class="setting_projectclosure">'
+                        + ((item.buttonDelete === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        +'</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Checking_TabControl_Permission();
+    }
+
+    function EmployeeLevelDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { EmployeeLevelDeleteExecute(id); }, function () { });
+    }
+    function EmployeeLevelDeleteExecute(id) {
+        AjaxLoad(url = "/Setting/EmployeeLevel/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    EmployeeLevelLoad();
+                } else {
+                    notiError(result);
+                }
+            });
+    }
+    function EmployeeLevelEdit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/EmployeeLevelDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EmployeeLevelAddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/EmployeeLevelDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script src="/js/main.js" async></script>

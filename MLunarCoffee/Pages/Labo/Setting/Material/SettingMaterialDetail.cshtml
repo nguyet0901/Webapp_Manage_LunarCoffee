@@ -1,0 +1,120 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Setting.Material.SettingMaterialDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Loại"]</h6>
+                                <p class="text-sm mb-0">@Local["Loại chi tiết"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="form3">
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>@Local["Tên"]</label>
+                            <input class="form-control" id="MD_Name" name="name" />
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>@Local["Đơn giá"]</label>
+                            <input class="form-control" id="MD_Value" name="basicsalary"/>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="MD_Note" class="form-control" name="content"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+                        <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return MDetail_Executed()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let MD_CurrentID = Number("@Model._CurrentID");
+
+    $(document).ready(function () {
+        if (MD_CurrentID != 0) {
+            MDetail_Load();
+        }
+        $('#MD_Value').divide();
+    })
+
+    //#region //Load
+    function MDetail_Load () {
+        AjaxLoad(url = "/Labo/Setting/Material/SettingMaterialDetail/?handler=LoadData"
+            , data = {"CurrentID": MD_CurrentID}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        $('#MD_Name').val(data[0].Name);
+                        $('#MD_Value').val(data[0].UnitPrice);
+                        $('#MD_Note').val(data[0].Note)
+                    }
+                }
+            }
+        )
+    }
+    //#endregion
+
+    //#region Executed
+    function MDetail_Executed () {
+        $('#textShowMessage').html('');
+        let obj = {};
+        obj.Name = $('#MD_Name').val() ? $('#MD_Name').val() : '';
+        obj.Value = $('#MD_Value').val() ? Number($('#MD_Value').val()) : 0;
+        obj.Note = $('#MD_Note').val() ? $('#MD_Note').val() : '';
+
+        MDetail_CheckExecuted();
+
+        let arr = [];
+        arr.push(obj);
+
+        if ($('#textShowMessage').html() == '') {
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Labo/Setting/Material/SettingMaterialDetail/?handler=Executed"
+                    , data = {
+                        "CurrentID": MD_CurrentID
+                        , "Data": JSON.stringify(arr)
+                    }
+                    , async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccess();
+                            CloseModal();
+                            SMaterial_Load();
+                        } else notiError_SW();
+                    }
+                )
+            }
+        }
+    }
+
+    function MDetail_CheckExecuted () {
+        let UnitPrice = $('#MD_Value').val() ? Number($('#MD_Value').val()) : 0;
+        if (UnitPrice < 0) {
+            $('#textShowMessage').html('@Local["Đơn giá không được nhỏ hơn hoặc bằng 0"]');
+        }
+    }
+    //#endregion
+</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

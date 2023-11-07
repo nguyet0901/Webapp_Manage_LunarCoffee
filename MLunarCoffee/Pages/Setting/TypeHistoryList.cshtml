@@ -1,0 +1,119 @@
+﻿@page
+@model SourceMain.Pages.Setting.TypeHistoryListModel
+@{
+    Layout = null;
+}
+
+<div class="pusher">
+    <div class="row" style="background-color: white">
+        <div class="ui form segment form3">
+            <h2 class="ui center aligned header" style="padding-top: 10px; font-family: 'Times New Roman'">
+                Loại Lịch Sử
+                <div class="sub header" style="font-family: 'Times New Roman'">Loại Lịch Sử Khách Hàng</div>
+            </h2>
+            <div class="four fields">
+                <div class="field" style="min-width: 120px">
+                    <button class="ui teal button" data-value="fade up" onclick="return AddNewTypeHistory()">Thêm Mới</button>
+                </div>
+            </div>
+
+
+            <table id="dtContentHistory" class="ui selectable celled table">
+                <thead class="hiddenCollapse">
+                    <tr role="row">
+                        <th style="text-align: center; display: none">ID</th>
+                        <th style="text-align: center; width: 25px;">STT</th>
+                        <th style="text-align: center">Loại</th>
+                        <th style="text-align: center">Ghi Chú</th>
+                        <th style="text-align: center">Người Tạo</th>
+                        <th style="text-align: center">Ngày Tạo</th>
+                    </tr>
+                </thead>
+                <tbody id="dtContentTypeHistoryBody">
+                </tbody>
+            </table>
+
+
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function LoadTypeHistoryAjax() {
+        AjaxLoad(url = "/Setting/TypeHistoryList/?handler=LoadData"
+            , data = { }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                RenderTypeHistoryList(data, "dtContentTypeHistoryBody");
+            });
+        //GetDataTypeHistory("/Setting/TypeHistoryList/LoadData", function (data) {
+        //    RenderTypeHistoryList(data, "dtContentTypeHistoryBody");
+        //})
+    }
+
+    function RenderTypeHistoryList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none !important">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td>' + item.Note + '</td>'
+                        + '<td>' + item.NguoiTao + '</td>'
+                        + '<td>' + item.CreatedString + '</td>'
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function DeleteTypeHistory(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteTypeHistory(id); }, function () { });
+    }
+    function ExecuteDeleteTypeHistory(id) {
+        AjaxLoad(url = "/Setting/TypeHistoryList/?handler=DeleteItem"
+            , data = { id: id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadTypeHistoryAjax();
+                } else {
+                    notiError(result);
+                }
+            });
+      
+    }
+    $(document).ready(function () {
+        LoadTypeHistoryAjax();
+        //$('#dtContentHistory tbody').on('click', '.buttonEditClass', function () {
+        //    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //    EditTypeHistory(ID);
+        //});
+        //$('#dtContentHistory tbody').on('click', '.buttonDeleteClass', function () {
+        //    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //    DeleteTicketSource(ID)
+        //});
+    });
+    function AddNewTypeHistory() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/TypeHistoryDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EditTypeHistory(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/TypeHistoryDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js');</script>

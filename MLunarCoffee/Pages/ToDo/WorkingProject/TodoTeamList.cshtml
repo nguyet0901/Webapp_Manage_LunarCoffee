@@ -1,0 +1,163 @@
+﻿@page
+@model SourceMain.Pages.ToDo.WorkingProject.TodoTeamListModel
+@{ Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js?ver=@DateTime.Now.Ticks');</script>
+
+<div class="card">
+    <div class="card-header pb-0">
+        <div class="d-lg-flex">
+            <div class="w-50 col-auto my-auto">
+                <div class="h-100">
+                    <h6 class="mb-0">Group List</h6>
+                    <p class="text-sm mb-0">Some text of detail sub</p>
+                </div>
+            </div>
+            <div class="ms-auto my-auto">
+                <button data-languagestatic="create_new" id="btnNewTypeAccount" class="btn bg-gradient-primary btn-sm mt-1" onclick="return TodoTeam_AddNew()">Thêm Mới</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-0 ">
+        <div class="m-0 my-3 mobile-responsive">
+            <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <table class="table vt-table mb-0" id="TodoTeam_Content">
+                <thead>
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th data-languagestatic="no">STT</th>
+                        <th data-languagestatic="name">Tên Nhóm</th>
+                        <th data-languagestatic="member">Thành Viên</th>
+                        <th data-languagestatic="handlelname">Người Sửa</th>
+                        <th>#</th>
+                    </tr>
+                </thead>
+                <tbody data-languagedyn="" id="TodoTeam_BodyContent">
+                </tbody>
+            </table>
+        </div>
+        <!-- #endregion -->
+
+    </div>
+
+
+</div>
+<script type="text/javascript">
+    let DataEmployee;
+    let DataUser;
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee, _Session_User]
+            , function (data) {
+                DataUser = data[1];
+                DataEmployee = data[0];
+                TodoTeam_LoadData();
+            })
+
+        $('#TodoTeam_Content tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            TodoTeam_Edit(ID);
+        });
+        $('#TodoTeam_Content tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            TodoTeam_Delete(ID)
+        });
+    });
+
+    function TodoTeam_LoadData() {
+        AjaxLoad(url = "/ToDo/WorkingProject/TodoTeamList/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                data = JSON.parse(result);
+                TodoTeam_Render(data, "TodoTeam_BodyContent");
+            }
+            , sender = null
+            , before = function (e) {
+                $("#TodoTeam_Content").hide();
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#TodoTeam_Content").show();
+                $("#loaderList").hide();
+            }
+        );
+        return false;
+    }
+
+    function TodoTeam_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_circleAvatar;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="buttonEditClass">' + item.Name + '</a></td>'
+                        + '<td>' + Fun_GetString_ByToken(DataEmployee, item.Employee_ID) + '</td>'
+                        + '<td><div class="d-inline">'
+                        + '<img title="'
+                        + name + '" class="avatar avatar-xs me-2" src="data:image/png;base64, ' + img + '" alt="label-image" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="' + name + '"/>'
+                        + '<span title="' + GetDateTime_String_DMYHM(item.DayEditor) + '" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="' + GetDateTime_String_DMYHM(item.DayEditor) + '">'
+                        + GetDateTime_String_DMY(item.DayEditor) + '</span>'
+                        + '</div></td>'
+                        + '<td>'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Delete"></i></button>']) : '')
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            ToolPopper();
+        }
+    }
+
+    function TodoTeam_AddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoTeamDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function TodoTeam_Edit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoTeamDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function TodoTeam_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { TodoTeam_ExcuteDelete(id); }, function () { });
+    }
+
+    function TodoTeam_ExcuteDelete(id) {
+        AjaxLoad(url = "/ToDo/WorkingProject/TodoTeamList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    TodoTeam_LoadData();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+</script>
+
+<script src="/js/main.js" async></script>

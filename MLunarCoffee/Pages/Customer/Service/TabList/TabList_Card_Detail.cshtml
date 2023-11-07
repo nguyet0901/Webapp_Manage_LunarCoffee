@@ -1,0 +1,1093 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Service.TabList.TabList_Card_DetailModel
+@{
+    Layout = null;
+}
+
+<div class="card-body pt-0 ">
+    <div class="d-lg-flex">
+        <div class="flex-grow-1 px-1">
+            <div class="mb-2">
+                <div class="pt-2 ">
+                    <div class="row">
+                        <div class="col-auto ms-auto">
+                            <ul class="nav nav-pills p-1 bg-transparent Card_Detail_TabList" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#Card_Detail_Info" role="tab">
+                                        @Local["Thông tin chung"]
+                                    </a>
+                                </li>
+                                <li id="Card_Detail_InfoLi" class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#Card_Detail_Other" role="tab">
+                                        @Local["Khác"]
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-12 col-lg-6 px-1 mt-2 position-relative" id="tabcard_div">
+                            <label>@Local["Thẻ trả trước"]</label>
+                            <input id="tabcard_input" class="form-control" name="name" onfocus="event.preventDefault();return Card_Detail_On_Focus_Input(event);"
+                                   onkeyup="event.preventDefault();return Card_Detail_On_Keyup_Card_Search();" autocomplete="off">
+                            <div id="tabcard_result" class="stickytable card shadow-lg mt-4">
+                                <div class="card-header pb-0 p-3">
+                                    <h6 class="mb-0">@Local["Danh sách thẻ trả trước"]</h6>
+                                </div>
+                                <div class="contentsearch card-body p-0 mt-3">
+                                    <table class="table vt-table mb-0" id="tabservice_table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th class="no-sort">@Local["Thẻ"]</th>
+                                                <th class="vt_amount no-sort" style="width: 120px; min-width: 120px; max-width: 120px;">@Local["Giá mua"]</th>
+                                                <th class="no-sort" style="width: 120px; min-width: 120px; max-width: 120px;">@Local["Giá trị"]</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabservice_table_Body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="per_input_qrcardcode" class="field px-1 mt-2 col-12 col-md-6 col-lg-3">
+                            <label>QR<i class="ps-2">@Local["Quét QR code"]</i></label>
+                            <div class="form-group mb-0">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i id="TC_CodeCardQRValid" class="text-success fw-bold fas fa-qrcode"></i>
+                                    </span>
+                                    <input id="TC_CodeCardQR" class="ps-2 form-control" type="text" placeholder="eg. @Local["Quét QR code"]" />
+                                    <span class="input-group-text px-3 p-0">
+                                        <i id="TC_CodeCardQRRemove" class="cursor-pointer text-danger fw-bold fas fa-minus-circle d-none"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field px-1 mt-2 col-12 col-md-6 col-lg-3 flex-grow-1">
+                            <label>@Local["Mã thẻ"]</label>
+                            <input id="TC_CodeCard" class="form-control disabled" disabled="true" type="text" placeholder="eg. @Local["Mã thẻ"]" onchange="event.preventDefault(); Card_Detail_CardCode_Change();" />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field px-1 mt-2 col-sm-12 col-md-3 col-xl-3 flex-grow-1">
+                            <label>@Local["Tư vấn"]</label>
+                            <div class="ui fluid search selection dropdown form-control Consult" id="ConsultID">
+                                <input type="hidden" name="" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchConsult" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Tư vấn"]</div>
+                                <div id="ccbConsult" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-sm-12 col-md-3 col-xl-3 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Hoa hồng tư vấn"]</label>
+                            <div class="position-relative">
+                                <input id="AmountConsult" class="border-right-0 form-control" type="text">
+                                <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerformanceConsult">
+                                    <input type="hidden" name="name" />
+                                    <i class="dropdown icon"></i>
+                                    <div class="default text">@Local["Hoa hồng tư vấn"]</div>
+                                    <div id="cbbPerformanceDiscounted" class="menu transition hidden" tabindex="-1">
+                                        <div class="item" data-value="1">%</div>
+                                        <div class="item" data-value="2">VND</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field px-1 mt-2 col-12 col-md-6">
+                            <label>@Local["Mã in thẻ"]</label>
+                            <input id="TC_CodeCardPrint" class="form-control" type="text" placeholder="eg. @Local["Mã in thẻ"]" />
+                        </div>
+                    </div>
+                    <div class="nav-wrapper position-relative end-0">
+                        <div class="tab-content" id="pills-tabContent">
+                            <div class="tab-pane fade" id="Card_Detail_Info" role="tabpanel"></div>
+                            <div class="tab-pane fade" id="Card_Detail_Other" role="tabpanel">
+                                <div class="row px-1">
+                                    <div class="field col-12 col-sm-12 col-md-3 col-xl-3 flex-grow-1 px-1 mt-2">
+                                        <label>@Local["Tư vấn"] 2</label>
+                                        <div class="ui fluid search selection dropdown form-control Consult" id="ConsultID1">
+                                            <input type="hidden" name="" />
+                                            <i class="dropdown icon"></i>
+                                            <input id="searchConsult" class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">@Local["Tư vấn"] 2</div>
+                                            <div id="ccbConsult1" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-sm-12 col-md-3 col-xl-3 flex-grow-1 px-1 mt-2">
+                                        <label>@Local["Tư vấn"] 3</label>
+                                        <div class="ui fluid search selection dropdown form-control Consult" id="ConsultID2">
+                                            <input type="hidden" name="" />
+                                            <i class="dropdown icon"></i>
+                                            <input id="searchConsult" class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">@Local["Tư vấn"] 3</div>
+                                            <div id="ccbConsult2" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                        <label>@Local["Nguồn dịch vụ"]</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="SourceService">
+                                            <input type="hidden" name="" />
+                                            <i class="dropdown icon"></i>
+                                            <i class="remove icon"></i>
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">eg .@Local["Nguồn dịch vụ"]</div>
+                                            <div id="cbbSourceService" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div id="divBlockCreated" class="field px-1 mt-2 col-12 col-md-3 col-xl-3">
+                            <label>@Local["Ngày tạo"]</label>
+                            <input id="CreatedCard" class="flatpickr form-control" disabled name="date" type="text" placeholder="eg. @Local["Ngày tạo"]" onchange="event.preventDefault(); return Card_Detail_OnChangeEndLess();" />
+                        </div>
+                        <div class="field col-12 col-sm-12 col-md-3 col-xl-3 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Số lượng"]</label>
+                            <input id="Quantity" min="1" name="quantity" type="number" class="form-control" />
+                        </div>
+                        <div class="field col-12 col-sm-6 col-xl-3 px-1 mt-2">
+                            <label>@Local["Tiền tự giảm"]</label>
+                            <div class="position-relative">
+                                <input id="DiscountedAmountOrder" class="border-right-0 form-control" name="discountOther" type="text" placeholder="eg .@Local["Tiền tự giảm"]">
+                                <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerformanceDiscounted">
+                                    <i class="dropdown icon"></i>
+                                    <input type="hidden" name="name" />
+                                    <div class="default text">@Local["Tiền tự giảm"]</div>
+                                    <div id="cbbPerformanceDiscounted" class="menu transition hidden" tabindex="-1">
+                                        <div class="item" data-value="1">%</div>
+                                        <div class="item" data-value="2">VND</div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <div class="field col-12 col-sm-6 col-xl-3 px-1 mt-2">
+                            <label>@Local["Thành tiền"]</label>
+                            <input id="PriceDiscounted" class="form-control" type="text" placeholder="@Local["Thành tiền"]" disabled>
+                        </div>
+                    </div>
+                    <div class="row px-1 ">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>
+                                <span>@Local["Tối đa số ngày sử dụng"]</span>
+                                <span id="cardDateExpired"></span>
+                            </label>
+                            <div class="input-group">
+                                <div class="input-group-text ps-2 cursor-pointer">
+                                    <div class="form-check mb-0 me-0 ms-1">
+                                        <input id="chbEndLess" class="form-check-input" type="checkbox" onchange="event.preventDefault(); return Card_Detail_OnChangeEndLess();">
+                                    </div>
+                                </div>
+                                <input id="txtEndLess" type="number" class="form-control ps-2" placeholder="@Local["Số ngày"]" min="1" onchange="event.preventDefault(); return Card_Detail_OnChangeEndLess();">
+                            </div>
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Tối đa số lần sử dụng"]</label>
+                            <div class="input-group">
+                                <div class="input-group-text ps-2 cursor-pointer">
+                                    <div class="form-check mb-0 me-0 ms-1">
+                                        <input id="chbTimesUsed" class="form-check-input" type="checkbox" onchange="event.preventDefault(); return Card_Detail_OnChangeTimesUsed();">
+                                    </div>
+                                </div>
+                                <input id="txtTimesUsed" type="number" class="form-control ps-2" placeholder="@Local["Số lần"]" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="Note" class="form-control" type="text" rows="3" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-w-400 px-1 ms-0 ms-lg-2">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Thông tin thẻ"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết thông tin thẻ"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="card bg-transparent ">
+                        <div class="overflow-hidden position-relative border-radius-xl">
+                            <span class="mask bg-gradient-primary"></span>
+                            <div class="card-body position-relative z-index-1 p-3">
+                                <img id="logoCompanyCard" src="#" class="avatar avatar-xs me-2 rounded-0" alt="logo image">
+                                <h5 id="card_codegenre" class="text-white mt-4 mb-5 pb-2"></h5>
+                                <div class="d-flex">
+                                    <div class="d-flex">
+                                        <div class="me-4">
+                                            <p class="text-white text-sm opacity-8 mb-0">@Local["Chủ thẻ"]</p>
+                                            <h6 id="card_holder" class="text-white mb-0">-</h6>
+                                        </div>
+                                        <div class="me-4">
+                                            <p class="text-white text-sm opacity-8 mb-0">@Local["Giá trị"]</p>
+                                            <h6 id="card_amount_use" class="text-white mb-0">0</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field mt-3" id="TL_UsedCardDiv">
+                        <label>@Local["Giá trị sử dụng"]</label>
+                        <div class="input-group flex-nowrap">
+                            <input id="card_priceused" class="form-control" type="text" placeholder="eg .@Local["Giá trị sử dụng"]" onkeyup="event.preventDefault(); return Card_Detail_OnchangePriceUse();">
+
+                        </div>
+                    </div>
+                    <div class="border-0 p-2 mt-3 bg-gray-100 border-radius-lg" id="final_price_card">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="fixed-botombutton pe-2 ">
+        <div class="action_Save mt-2">
+            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage_Card"></div>
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" form="form3" onclick="Tab_List_Close_Detail()">@Local["Đóng"]</button>
+                <button id="button_save_card_block" class="btn bg-gradient-danger" form="form3" onclick="event.preventDefault(); return Card_Detail_Service_Card_Lock()" style="display:none;">@Local["Khóa"]</button>
+                <button id="button_save_card_detail" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteDataCustomerCard()" style="display: none;">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    //#region // DECLARE && INIT
+
+    var dataServiceCard = {};
+    var dataEmployee = [];
+    var ischangeCard = 0;
+    var changingFlag = 0;
+    var ser_CardCustomerID ='@Model._CardCustomerID' ;
+    var ser_CardCurrentID = '@Model._CardCurrentID';
+    var ser_ChooseDateCustomer = '@Model._ChooseDateCustomer'
+    var CurrentCard_Choose = 0;
+    var CurrentCard_UsingIssue = 0;
+    var CurrentCard_QRIssue = 0;
+    var final_PriceRoot = 0;
+    var final_PriceUse = 0;
+    var final_PriceDiscounted = 0;
+    var final_Discount = 0;
+    var final_Discount_per = 0;
+
+    $(document).ready(function () {
+        $('.Card_Detail_TabList a:first').tab('show');
+        $("#CreatedCard").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+        (_SoftwareLogo != '') ? $('#logoCompanyCard').attr('src', _SoftwareLogo) : $('#logoCompanyCard').attr('src', Master_Default_Pic);
+        $("#PerformanceConsult").dropdown("set selected", 2);
+        $("#PerformanceDiscounted").dropdown("set selected", 2);
+        $('#PriceDiscounted,#card_priceused').divide();
+        if (ser_ChooseDateCustomer == "1" && ser_CardCurrentID == '0'){
+            $("#CreatedCard").prop("disabled", false);
+        }
+        Card_Detail_Init();
+        Card_Detail_Event_Handle();
+        Card_Detail_Reset_All();
+
+        CheckPermissionControlInPage(sys_PerControl, '@Model._dtPermissionCurrentPage');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+    });
+
+    async function Card_Detail_Init() {
+        new Promise((resolve) => {
+            AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Detail/?handler=LoadComboMain"
+                , data = {
+                    'CustomerID': ser_CardCustomerID
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "[]") {
+                        let data = JSON.parse(result);
+                        dataServiceCard = (data.ServiceCard).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        dataEmployee = data.EmployeeCard;
+
+                        Card_Detail_Render_Service_Card_List(CurrentCard_Choose, Object.values(dataServiceCard), "tabservice_table_Body");
+                        Load_Combo(data.SourceService, "cbbSourceService", false)
+                        Load_Combo(dataEmployee, "ccbConsult", true);
+                        Load_Combo(dataEmployee, "ccbConsult1", false);
+                        Load_Combo(dataEmployee, "ccbConsult2", false);
+                        $("#ConsultID").dropdown("refresh");
+                        $("#ConsultID1").dropdown("refresh");
+                        $("#ConsultID2").dropdown("refresh");
+                        $("#SourceService").dropdown("refresh");
+
+                        ischangeCard = 1;
+                        changingFlag = 1;
+                        Card_Detail_Load();
+                        Card_Detail_Render_PaymentPreview();
+                    }
+                    CheckView();
+                }
+            );
+        })
+    }
+
+    //#endregion
+
+
+    //#region // LOAD DATA DETAIL
+
+    async function Card_Detail_Load() {
+        new Promise((resolve) => {
+            if (ser_CardCurrentID != "0") {
+                AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Detail/?handler=LoadDetail"
+                    , data = {
+                        'CardCurrentID': ser_CardCurrentID
+                    }
+                    , async = true
+                    , error = function () {notiError_SW()}
+                    , success = function (result) {
+                        if (result != "[]") {
+                            let data = JSON.parse(result);
+                            if (data && data.length == 1) {
+                                Card_Detail_LoadDetail(data[0]);
+                                $('#card_priceused').prop('disabled', true);
+                            }
+                        }
+                    }
+                );
+            }
+            else {
+                $(".TL_PlusPrice").remove();
+                $(".TL_ElimiPrice").remove();
+            }
+        })
+    }
+
+    function Card_Detail_LoadDetail(data) {
+        $('#textShowMessage_Card').html('');
+        if ($("#tabservice_table_Body .rowtabcard[data-value=" + data.CardID + "]").length) {
+            $("#tabservice_table_Body .rowtabcard[data-value=" + data.CardID + "]").trigger("click");
+        }
+        changingFlag = 0;
+        ischangeCard = 0;
+        $('#ConsultID').dropdown('set selected', data.EmployeeID);
+        $('#ConsultID1').dropdown('set selected', data.EmployeeID1);
+        $('#ConsultID2').dropdown('set selected', data.EmployeeID2);
+
+        $('#SourceService').dropdown('set text', data.ServiceSourceName);
+        $('#SourceService').dropdown('set value', data.ServiceSourceID);
+
+        $('#Note').val(data.Note);
+        $('#PriceRoot').val(data.PriceRoot);
+        $('#DiscountedAmountOrder').val(((data.DiscountPercent != 0) ? (data.DiscountPercent) : (data.DiscountAmount)));
+        $('#PerformanceDiscounted').dropdown('set selected', ((data.DiscountPercent != 0) ? (1) : (2)));
+        $('#Quantity').val(data.Quantity);
+        $('#AmountConsult').val((data.PerConsult != 0) ? (data.PerConsult) : (data.AmountConsult));
+        $("#PerformanceConsult").dropdown("set selected", ((data.PerConsult != 0) ? (1) : (2)));
+        $("#card_priceused").val(data.Quantity != 0 ? Math.floor(data.PriceUse / data.Quantity) : 0).trigger('keyup')
+        $('#card_codegenre').html(data.Code);
+        $('#TC_CodeCardPrint').val(data.Print_Code);
+        $('#TC_CodeCard').val(data.Code);
+        $('#TC_CodeCard').attr("disabled", false);
+        final_PriceUse = data.PriceUse // GIÁ TRỊ SỬ DỤNG
+        final_PriceRoot = data.PriceRoot; // GIÁ GỐC
+        final_PriceDiscounted = data.PriceDiscounted; // GIÁ SAU KHI GIẢM
+        final_Discount = data.DiscountAmount;
+        final_Discount_per = data.DiscountPercent;
+        //$("#chbEndLess").prop("checked", (data.EndLess != 1));
+        //if (data.EndLess != 1) $("#txtEndLess").html("Đến Hết Ngày " + ConvertDateTimeUTC_DMY(data.ExpiredDate));
+
+        //$("#chbTimesUsed").prop("checked", (data.IsTimesUsed != 0));
+        //if (data.IsTimesUsed != 0) $("#txtTimesUsed").html("Tối Đa " + data.TimesUsed + " Lần");
+
+        $("#CreatedCard").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date(data.Created)
+        });
+        $("#CreatedCard").prop("disabled",true);
+        $("#chbEndLess").prop("checked", (data.EndLess != 1));
+        if (data.EndLess != 1) {
+            $("#txtEndLess").prop("disabled", false);
+            let dateDiff = dateDiffInDays(new Date(data.Created), new Date(data.ExpiredDate));
+            $("#txtEndLess").val(dateDiff).trigger('change');
+            //$("#txtEndLess").html("Đến Hết Ngày " + ConvertDateTimeUTC_DMY((new Date()).addDays(Number(dataCard.ExpiredDate))));
+        }
+        else {
+            $("#txtEndLess").prop("disabled", true);
+            $("#txtEndLess").val(0)
+        }
+
+        $("#chbTimesUsed").prop("checked", (data.IsTimesUsed != 0));
+        if (data.IsTimesUsed != 0) {
+            $("#txtTimesUsed").prop("disabled", false);
+            $("#txtTimesUsed").val(data.TimesUsed);
+        }
+        else {
+            $("#txtTimesUsed").prop("disabled", true);
+            $("#txtTimesUsed").val(0);
+        }
+        CurrentCard_UsingIssue = data.CardIssue;
+        if (CurrentCard_UsingIssue == 0) CardDetail_RemoveQR();
+        else {
+            $("#TC_CodeCardQR").val(data.CardCodeQR);
+            CardDetail_UseQR(data.CardCodeQR)
+        };
+
+        Card_Detail_CheckButtonBlock(data.IsUsing);
+        Card_Detail_Render_PaymentPreview();
+        changingFlag = 1;
+        ischangeCard = 1;
+    }
+
+
+    //#endregion
+
+
+    //#region // EVENT
+
+    function Card_Detail_Event_Handle() {
+
+        $(document).on("click", function (e) {
+            let tabcard = $("#tabcard_div");
+            if (!$(tabcard).is(e.target) && $(tabcard).has(e.target).length === 0) {
+                $('#tabcard_result').removeClass("active");
+            }
+        })
+
+        $("#tabservice_table_Body").on("click", '.rowtabcard', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $(this).addClass("selected").siblings().removeClass("selected");
+            CurrentCard_Choose = Number($(this).attr("data-value"));
+            if (dataServiceCard && dataServiceCard[CurrentCard_Choose] != undefined) {
+                let data = dataServiceCard[CurrentCard_Choose]
+                if (data != undefined && data.length != 0) {
+                    $("#tabcard_input").val(data.Code + ' - ' + data.Name);
+                    Card_Detail_OnchangeServiceCard();
+                }
+                $('#tabcard_result').removeClass("active");
+            }
+        })
+
+        $("#TL_UsedCardDiv .TL_PlusPrice").unbind("click").on("click", function () {
+            Card_Detail_EditPriceUseCard(ser_CardCustomerID, ser_CardCurrentID, 1);
+        })
+        $("#TL_UsedCardDiv .TL_ElimiPrice").unbind("click").on("click", function () {
+            Card_Detail_EditPriceUseCard(ser_CardCustomerID, ser_CardCurrentID, 2);
+        })
+        $('#Quantity').change(() => { Card_Detail_ChangingEvent(); Card_Detail_OnchangePriceUse(); });
+        $('#DiscountedAmountOrder').change(() => Card_Detail_ChangingEvent());
+        $('#PerformanceDiscounted').change(() => Card_Detail_ChangingEvent());
+        $('#PerformanceConsult').change(() => Card_Detail_ChangingEvent());
+        $('#AmountConsult').change(() => Card_Detail_ChangingEvent());
+        CardDetail_QREvent();
+
+    }
+
+    function Card_Detail_CardCode_Change(){
+        let cardCode =  $("#TC_CodeCard").val() ? $("#TC_CodeCard").val() : '';
+        $('#card_codegenre').html(cardCode);
+    }
+    //#endregion
+    //#region // RENDER DATA
+
+    async function Card_Detail_Render_Service_Card_List(_selectedid, data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length  != 0) {
+                    let trselected = '';
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                            <td class="vt-number-order"></td>
+                            <td>
+                                <span class="code_name_card">
+                                    <span>${item.Code}</span>
+                                    ${(item.IsIssue == 1) ? `<span class="text-primary">${item.IssueCode}</span>`: ``}
+                                    - ${item.Name}
+                                </span>
+                            </td>
+                            <td>${formatNumber(item.PriceSale)}</td>
+                            <td>${formatNumber(item.PriceUse)}</td>
+                        `
+                        if (Number(item.ID) == _selectedid) {
+                            trselected = `<tr role="row" data-value="${item.ID}" class="vt-number selected rowtabcard">${tr}</tr>`;
+                        }
+                        else {
+                            stringContent = stringContent + `<tr role="row" data-value="${item.ID}" class="vt-number rowtabcard">${tr}</tr>`
+                        }
+                    }
+                    stringContent = trselected + stringContent;
+                }
+                myNode.innerHTML = stringContent;
+            }
+            resolve();
+        })
+
+    }
+
+    function Card_Detail_Render_PaymentPreview() {
+        $('#final_price_card').empty();
+        let stringcontent = '<div class="d-flex justify-content-between">'
+            + '<span class="mt-1 text-sm">@Local["Tổng tiền"]</span>'
+            + '<span class="text-dark ms-4">' + formatNumber(final_PriceRoot) + '</span></div>'
+            + '<div class="d-flex justify-content-between">'
+            + '<span class="mt-1 text-sm">@Local["Tiền tự giảm"]</span>'
+            + '<span class="text-dark ms-4">'
+            + ((final_Discount_per == 0) ? '' : '<span class="pe-2 text-primary">(' + final_Discount_per + '%)</span>') + formatNumber(final_Discount)
+            + '</span></div>'
+            + '<hr class="horizontal dark my-2"><div class="d-flex justify-content-between">'
+            + '<span class="mt-1 text-sm">@Local["Thành tiền"]</span>'
+            + '<span class="text-dark font-weight-bold ms-4">' + formatNumber(final_PriceDiscounted) + '</span></div>'
+        $('#final_price_card').html(stringcontent);
+        $('#cardPriceUse').html(formatNumber(final_PriceUse));
+        $('#PriceDiscounted').val(final_PriceDiscounted);
+    }
+
+    //#endregion
+
+    //#region // EVENT HANDLE CHOOSE CARD
+
+    function Card_Detail_On_Focus_Input (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (dataServiceCard != undefined && dataServiceCard != null) {
+            Card_Detail_Render_Service_Card_List(CurrentCard_Choose, Object.values(dataServiceCard), "tabservice_table_Body");
+            $('#tabcard_result').addClass("active");
+            Event_SearchRowService_Div();
+        }
+        else {
+            $('#tabcard_result').removeClass("active");
+        }
+    }
+
+    function Card_Detail_On_Keyup_Card_Search() {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+
+                    let searchtext = $('#tabcard_input').val();
+                    let search = xoa_dau(searchtext).trim().toLowerCase();
+                    let data = Object.values(dataServiceCard).filter(function (item) {
+                        let _id = Number(item.ID)
+                        let _name = xoa_dau(item.Name).toLowerCase();
+                        let _code = xoa_dau(item.Code).toLowerCase();
+                        let _issueCode = xoa_dau(item.IssueCode.toString()).toLowerCase();
+
+                        if (CurrentCard_Choose == _id || _name.includes(search) || _code.includes(search) || _issueCode.includes(search)) return true;
+                        else return false;
+
+                    }).sort((a, b) => {
+                        if (a.Name.toLowerCase().indexOf(search) > b.Name.toLowerCase().indexOf(search)) {
+                            return 1;
+                        } else if (a.Name.toLowerCase().indexOf(search) < b.Name.toLowerCase().indexOf(search)) {
+                            return -1;
+                        } else {
+                            if (a.name > b.name)
+                                return 1;
+                            else
+                                return -1;
+                        }
+                    });
+                    if (data != undefined && data != null) {
+                        Card_Detail_Render_Service_Card_List(CurrentCard_Choose, data, "tabservice_table_Body");
+                        $('#tabcard_result').addClass("active");
+                        Event_SearchRowService_Div();
+                    }
+                    else {
+                        $('#tabcard_result').removeClass("active");
+                    }
+                    ColorSearchFilterText_Combo(searchtext, '.code_name_card');
+
+                    resolve()
+                }
+            )
+        })
+    }
+
+    function Card_Detail_OnchangeServiceCard() {
+        if (ischangeCard == 1 && CurrentCard_Choose != 0 && dataServiceCard[CurrentCard_Choose] != undefined) {
+            let dataCard = dataServiceCard[CurrentCard_Choose] != undefined && dataServiceCard[CurrentCard_Choose];
+            Card_Detail_Reset_All();
+            $('#card_codegenre').html(
+                (ser_CardCurrentID != 0 ? ser_CardCurrentID : '')
+                + ' ' + ser_CardCustomerID
+                + ' ' + ser_MainCustomerCode);
+            $('#card_amount_use').html(formatNumber(dataCard.PriceUse));
+            $('#card_priceused').val(dataCard.PriceUse);
+            $('#card_holder').html(NameCustomer);
+            $('#PerformanceConsult').dropdown('set selected', ((dataCard.PerConsult != 0) ? (1) : (2)));
+            $('#AmountConsult').val(((dataCard.PerConsult != 0) ? (dataCard.PerConsult) : (dataCard.AmountConsult)));
+
+            $("#chbEndLess").prop("checked", (dataCard.EndLess != 1));
+            if (dataCard.EndLess != 1) {
+                $("#txtEndLess").prop("disabled", false);
+                $("#txtEndLess").val(dataCard.ExpiredDate)
+
+            }
+            else {
+                $("#txtEndLess").prop("disabled", true);
+                $("#txtEndLess").val(0)
+            }
+
+            $("#chbTimesUsed").prop("checked", (dataCard.IsTimesUsed != 0));
+            if (dataCard.IsTimesUsed != 0) {
+                $("#txtTimesUsed").prop("disabled", false);
+                $("#txtTimesUsed").val(dataCard.TimesUsed);
+            }
+            else {
+                $("#txtTimesUsed").prop("disabled", true);
+                $("#txtTimesUsed").val(0);
+            }
+
+            Card_Detail_Render_PaymentPreview();
+        }
+    }
+    function Card_Detail_OnChangeEndLess() {
+
+        if ($("#chbEndLess").is(":checked")) {
+            $("#txtEndLess").prop("disabled", false);
+            let date = $("#CreatedCard").val() ? ConvertString_DMYHM_To_DateTime($("#CreatedCard").val()) : "";
+            let dateNum = $("#txtEndLess").val() ? Number($("#txtEndLess").val()) : 0;
+            let dateEnd = ConvertDateTimeUTC_DMY(date.addDays(dateNum))
+            $("#cardDateExpired").html(`<span class="badge bg-gradient-danger">${dateEnd}</span>`)
+        }
+        else {
+            $("#txtEndLess").prop("disabled", true);
+            $("#cardDateExpired").html("")
+        }
+    }
+    function Card_Detail_OnChangeTimesUsed() {
+        if ($("#chbTimesUsed").is(":checked")) $("#txtTimesUsed").prop("disabled", false);
+        else $("#txtTimesUsed").prop("disabled", true);
+    }
+    function Card_Detail_OnchangePriceUse() {
+        let val = Number($("#card_priceused").val()) ? Number($("#card_priceused").val()) : 0;
+        let Quantity = $('#Quantity').val() ? Number($('#Quantity').val()) : 1;
+        $('#card_amount_use').html(formatNumber(val * Quantity))
+    }
+
+    //#endregion
+    //#region // CARD ISSUE QR
+    async function Card_Detail_CardCodeQR () {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    CardDetail_RemoveQR();
+                    let searchtext = $('#TC_CodeCardQR').val();
+                    if (!isNaN(searchtext)) {
+                        let _numcard = Number(searchtext);
+                        let data = Object.values(dataServiceCard).filter(function (item) {
+                            let IssueCodeBegin = Number(item.IssueCodeBegin);
+                            let IssueCodeEnd = Number(item.IssueCodeEnd)
+                            if (_numcard >= IssueCodeBegin && _numcard <= IssueCodeEnd) return true;
+                            else return false;
+                        });
+                        if (data.length == 1) {
+                            if ($("#tabservice_table_Body .rowtabcard[data-value=" + data[0].ID + "]").length) {
+                                $("#tabservice_table_Body .rowtabcard[data-value=" + data[0].ID + "]").trigger("click");
+                                CardDetail_UseQR(searchtext);
+                            }
+                        }
+                    }
+
+                    resolve()
+                }
+            )
+        })
+    }
+    function CardDetail_QREvent () {
+        $('#TC_CodeCardQR').keypress(function (e) {
+            if (changingFlag==1)
+                if (e.which == 13) {
+                    Card_Detail_CardCodeQR();
+                    return false;
+                }
+        });
+        $('#TC_CodeCardQR').change(function (e) {
+            if (changingFlag == 1) {
+                Card_Detail_CardCodeQR();
+            }
+            return false;
+        });
+        $('#TC_CodeCardQRRemove').click(function (e) {
+            if (changingFlag == 1) {
+                CardDetail_RemoveQR();
+                return false;
+            }
+        });
+        $("#TC_CodeCardQR").on("paste", function (e) {
+            if (changingFlag == 1) {
+                QRcatchPaste(e, this, function (clipData) {
+                    Card_Detail_CardCodeQR();
+                })
+            }
+        });
+    }
+    function CardDetail_RemoveQR () {
+        $('#TC_CodeCardQRValid').removeClass("fa-check").addClass("fa-qrcode");
+        $('#TC_CodeCardQRRemove').addClass("d-none");
+        CurrentCard_UsingIssue = 0;
+        CurrentCard_QRIssue = 0;
+        $("#tabcard_input").prop("disabled", false);
+        $("#Quantity").prop("disabled", false);
+    }
+    function CardDetail_UseQR (qrcode) {
+        $('#TC_CodeCardQRValid').removeClass("fa-qrcode").addClass('fa-check');
+        $('#TC_CodeCardQRRemove').removeClass("d-none");
+        CurrentCard_UsingIssue = 1;
+        CurrentCard_QRIssue = Number(qrcode);
+        $("#tabcard_input").prop("disabled", true);
+        $('#Quantity').closest('.field').removeClass("error");
+        $('#Quantity').val(1);
+        $("#Quantity").prop("disabled", true);
+     
+    }
+    function QRcatchPaste (evt, elem, callback) {
+        if (evt.originalEvent && evt.originalEvent.clipboardData) {
+            callback(evt.originalEvent.clipboardData.getData('text'));
+        } else if (evt.clipboardData) {
+            callback(evt.clipboardData.getData('text/plain'));
+        } else if (window.clipboardData) {
+            callback(window.clipboardData.getData('Text'));
+        } else {
+            setTimeout(function () {
+                callback(elem.value)
+            }, 100);
+        }
+    }
+   //#endregion
+    //#region // VALIDATE
+
+    function Card_Detail_ChangingEvent() {
+        if (changingFlag == 1) {
+            changingFlag = 0;
+            $('#textShowMessage_Card').html('');
+            $('#Quantity').closest('.field').removeClass("error");
+            $('#DiscountedAmountOrder').closest('.field').removeClass("error");
+            $('#AmountConsult').closest('.field').removeClass("error")
+            let Quantity = $('#Quantity').val() ? Number($('#Quantity').val()) : 1;
+            if (CurrentCard_Choose != 0 && dataServiceCard[CurrentCard_Choose] != undefined && Quantity > 0) {
+                let dataCard = dataServiceCard[CurrentCard_Choose];
+                let quantity = Number($('#Quantity').val()) ? Number($('#Quantity').val()) : 0;
+                final_PriceRoot = Number(dataCard.PriceSale * Quantity);
+                final_PriceUse = dataCard.PriceUse * Quantity;
+                $('#ConsultID').removeClass('disabled');
+                $('#DiscountedAmountOrder').attr('disabled', false);
+                $('#PerformanceDiscounted').removeClass('disabled');
+                $('#ConsultID').removeClass('disabled');
+                let amountConsult = Number($('#AmountConsult').val()) ? Number($('#AmountConsult').val()) : 0;
+                let TypeConsult = Number($('#PerformanceConsult').dropdown('get value')) ? Number($('#PerformanceConsult').dropdown('get value')) : 2;
+                if (TypeConsult == 1 && amountConsult > 100) {
+                    $('#textShowMessage_Card').html('@Local["Sai định dạng"]');
+                    $('#AmountConsult').closest('.field').addClass("error")
+                }
+                if (quantity < 0 || quantity > 1000) {
+                    $('#textShowMessage_Card').html('@Local["Sai định dạng"]');
+                    $('#Quantity').closest('.field').addClass("error");
+                }
+
+                let TypeDiscount = Number($('#PerformanceDiscounted').dropdown('get value')) ? Number($('#PerformanceDiscounted').dropdown('get value')) : 2;
+                let DiscountNum = $('#DiscountedAmountOrder').val() ? Number($('#DiscountedAmountOrder').val()) : 0;
+                if (TypeDiscount != 1 && DiscountNum >= 0) {
+                    final_Discount = DiscountNum;
+                }
+                else {
+                    if (DiscountNum <= 100 && DiscountNum >= 0) {
+                        final_Discount_per = DiscountNum;
+                        final_Discount = Math.floor(DiscountNum * final_PriceRoot / 100);
+                    } else {
+                        final_Discount = 0;
+                        final_Discount_per = 0;
+                        $('#textShowMessage_Card').html('@Local["Sai định dạng"]');
+                        $('#DiscountedAmountOrder').closest('.field').addClass("error")
+                    }
+                }
+                final_PriceDiscounted = final_PriceRoot - Number(final_Discount);
+                if (final_PriceDiscounted < 0) {
+                    $('#textShowMessage_Card').html('@Local["Tiền giảm tối đa"]: ' + formatNumber(final_PriceRoot));
+                    $('#DiscountedAmountOrder').closest('.field').addClass("error")
+                }
+                else $('#DiscountedAmountOrder').closest('.field').removeClass("error")
+                Card_Detail_Render_PaymentPreview();
+            }
+            else {
+                $('#textShowMessage_Card').html('@Local["Kiểm tra dữ liệu"]');
+            }
+            //$('#TC_CodeCardQRValid').removeClass("fa-check").addClass("fa-qrcode");
+            //$('#TC_CodeCardQRRemove').addClass("d-none");
+            //CurrentCard_UsingIssue = 0;
+            changingFlag = 1;
+        }
+    }
+
+    //#endregion
+
+
+    //#region // EXECUTE DATA
+
+    function ExcuteDataCustomerCard() {
+        Card_Detail_ChangingEvent();
+        var data = new Object();
+        data.CardID = CurrentCard_Choose ? CurrentCard_Choose : 0;
+        data.ConsultID = Number($('#ConsultID').dropdown('get value')) ? Number($('#ConsultID').dropdown('get value')) : 0;
+        data.ConsultID1 = Number($('#ConsultID1').dropdown('get value')) ? Number($('#ConsultID1').dropdown('get value')) : 0;
+        data.ConsultID2 = Number($('#ConsultID2').dropdown('get value')) ? Number($('#ConsultID2').dropdown('get value')) : 0;
+        Card_Detail_CheckValueConsult(data);
+        data.SourceService = Number($('#SourceService').dropdown('get value')) ? Number($('#SourceService').dropdown('get value')) : 0;
+        let TypeDiscount = Number($('#PerformanceDiscounted').dropdown('get value')) ? Number($('#PerformanceDiscounted').dropdown('get value')) : 2;
+        let TypeConsult = Number($('#PerformanceConsult').dropdown('get value')) ? Number($('#PerformanceConsult').dropdown('get value')) : 2;
+        if (document.getElementById("textShowMessage_Card").innerHTML == "") {
+            if (data.ConsultID != 0) {
+                $('#form3').form('validate form');
+                if ($('#form3').form('is valid')) {
+                    data.Quantity = $('#Quantity').val() ? Number($('#Quantity').val()) : 1;
+                    data.PriceDiscounted = final_PriceDiscounted;
+                    data.PriceRoot = final_PriceRoot;
+                    data.PriceUse = Number($("#card_priceused").val()) ? Number($("#card_priceused").val()) * data.Quantity : 0;
+                    data.PerDiscount = 0;
+                    data.AmountDiscount = 0;
+                    data.AmountConsult = 0;
+                    data.PerConsult = 0;
+                    data.CodeCardPrint = $("#TC_CodeCardPrint").val() ? $("#TC_CodeCardPrint").val() : '';
+                    data.CodeCard = $("#TC_CodeCard").val() ? $("#TC_CodeCard").val() : '';
+                    data.CodeCardQR = CurrentCard_QRIssue;
+                    data.UsingIssue = CurrentCard_UsingIssue;
+
+                    //*** Hạn Sử Dụng. EndLess=1 Không có hạn sử dụng ***//
+                    data.EndLess = $("#chbEndLess").is(":checked") ? 0 : 1;
+                    data.NumExpired = data.EndLess == 1 ? 0 : Number($("#txtEndLess").val());
+
+                    //*** Giới Hạn Sử Dụng (Lần) ***//
+                    data.IsTimesUsed = $("#chbTimesUsed").is(":checked") ? 1 : 0;
+                    data.TimesUsed = data.IsTimesUsed == 1 ? ($("#txtTimesUsed").val() ? Number($("#txtTimesUsed").val()) : 0) : 0;
+
+                    data.Note = $('#Note').val();
+                    data.Created = $('#CreatedCard').val() ? $('#CreatedCard').val() : "";
+                    if (TypeConsult != 2) {
+                        data.PerConsult = $('#AmountConsult').val();
+                        data.AmountConsult = data.PerConsult * data.PriceRoot / 100;
+                    }
+                    else data.AmountConsult = $('#AmountConsult').val();
+                    if (TypeDiscount != 2) {
+                        data.PerDiscount = $('#DiscountedAmountOrder').val();
+                        data.AmountDiscount = Math.floor((data.PerDiscount * data.PriceRoot) / 100);
+                    }
+                    else data.AmountDiscount = $('#DiscountedAmountOrder').val();
+                    AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Detail/?handler=ExcuteData"
+                        , data = {
+                            "data": JSON.stringify([data])
+                            , 'CustomerID': ser_CardCustomerID
+                            , 'CurrentID': ser_CardCurrentID
+                        }
+                        , async = true
+                        , error = function () { notiError_SW() }
+                        , success = function (result) {
+                            if (result !== "0") {
+                                if (result == "-1") {
+                                    notiError('@Local["Thẻ trả trước đã bị khoá hoặc bị chuyển không thể thao tác"]')
+                                }
+                                else if (result == "-2") {
+                                    notiError('@Local["Giá trị sử dụng nhỏ hơn số tiền đã sử dụng trên thẻ"]');
+                                }
+                                else {
+                                    notiSuccess();
+                                    syslog_cutcard(ser_CardCurrentID == 0 ? 'i' : 'u', result, ser_CardCustomerID, '');
+                                    if (typeof Tab_List_Close_Detail === 'function') Tab_List_Close_Detail();
+                                    if (typeof Tab_List_Customer_Card === 'function') Tab_List_Customer_Card(ser_CardCurrentID, 0);
+                                    if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                                }
+                            }
+                            else {
+                              notiWarning('@Local["Kiểm tra dữ liệu"]')
+                            }
+                        }
+                        , sender = $("#button_save_card_detail")
+                    );
+                }
+                else {
+                    $('#textShowMessage_Card').html('@Local["Kiểm tra dữ liệu"]');
+                }
+            }
+            else {
+                $('#textShowMessage_Card').html('@Local["Chọn"] @Local["Tư vấn"]');
+                $('#ConsultID').css('background-color', 'rgb(255 216 216)');
+            }
+        }
+        return false;
+    }
+
+    //#endregion
+
+
+
+    //#region // LOCK & UNLOCK CARD
+
+    //lock and unlock service card
+    function Card_Detail_Service_Card_Lock() {
+        const promise = notiConfirm("Lock Card?");
+        promise.then(function () { Card_Detail_Execute_Lock(ser_CardCurrentID, 1); }, function () { });
+    }
+    function Card_Detail_Execute_Lock(id, type) {
+        AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Detail/?handler=TogglelockCard"
+            , data = {
+                'id': id,
+                'type': type
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    syslog_cutcard('u', result, ser_MainCustomerID, type == 1 ? 'lock' : 'unlock');
+                    if (typeof Tab_List_Close_Detail === 'function') Tab_List_Close_Detail();
+                    if (typeof Tab_List_Customer_Card === 'function') Tab_List_Customer_Card(id, 0);
+                    if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //MODAL
+
+    function Card_Detail_EditPriceUseCard (CustomerID, CardID, Type) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Customer/Service/TabList/TabList_Card_UpdatePrice?CustomerID=" + CustomerID + "&CurrentID=" + CardID + "&Type=" + Type + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //#endregion
+
+    function CheckView() {
+        let type = '@Model._Type';
+        if (type == "view") {
+            $('#button_save_card_detail').remove();
+            $('#button_save_card_block').remove();
+
+        } else {
+            $('#button_save_card_detail').show();
+        }
+    }
+
+    function Card_Detail_Reset_All() {
+        $('#PriceRoot').val(0);
+        $('#DiscountedAmountOrder').val(0);
+        $('#Quantity').val(1);
+        $('#AmountConsult').val(0);
+        $('#PriceRoot').divide();
+        $('#DiscountedAmountOrder').divide();
+        $('#AmountConsult').divide();
+        $("#txtEndLess").html('');
+        $("#txtTimesUsed").html('');
+    }
+
+
+    function Card_Detail_CheckButtonBlock(isUsing) {
+        if (isUsing == 0) $("#button_save_card_block").show();
+        else $("#button_save_card_block").hide();
+    }
+
+    function dateDiffInDays(a, b) {
+        const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+        const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
+    }
+    function Card_Detail_CheckValueConsult(data){
+        $(".Consult").parent().removeClass('error');
+        let e = [data.ConsultID, data.ConsultID1, data.ConsultID2];
+        e.forEach((item, index) => {
+            if (item != 0 && e.indexOf(item) != index) {
+                document.getElementById("textShowMessage_Card").innerHTML = "@Local["Trùng dữ liệu"]";
+                $("#ConsultID" + (index == 0 ? "" : index)).parent().addClass('error');
+            }
+        })
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<style>
+    #tabcard_result {
+        z-index: 100;
+        width: 99%;
+        position: absolute;
+        overflow-x: hidden;
+        opacity: 0;
+        visibility: hidden;
+        -webkit-transition: opacity .2s ease, visibility 0.2s ease;
+        box-shadow: rgb(0 0 0 / 35%) 0px 5px 15px !important;
+    }
+
+    .contentsearch {
+        overflow-y: auto;
+        max-height: 350px;
+    }
+
+    .rowtabcard.selected {
+        background-color: #9e9e9e1a;
+    }
+
+
+
+    #tabcard_result.active {
+        opacity: 1;
+        height: auto;
+        visibility: visible;
+    }
+    @@media only screen and (max-width:990px) {
+        #tabcard_result {
+            width: 100% !important;
+        }
+    }
+    @@media only screen and (max-width:1199px) {
+        #tabcard_result {
+            width: 900px;
+        }
+    }
+
+    @@media only screen and (min-width:1200px) {
+        #tabcard_result {
+            width: 99%;
+            min-width:900px;
+        }
+    }
+    #textShowMessage_Card {
+        text-transform: lowercase;
+    }
+    #textShowMessage_Card:first-letter {
+        text-transform: uppercase;
+    }
+</style>

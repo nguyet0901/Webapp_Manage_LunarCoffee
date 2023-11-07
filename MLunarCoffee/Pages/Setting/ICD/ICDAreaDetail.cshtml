@@ -1,0 +1,92 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ICD.ICDAreaDetailModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["ICD"] - @Local["Vị trí"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3">
+                    <div class="col-12 col-sm-6 p-1">
+                        <label>@Local["Mã"] ICD</label>
+                        <input id="ICDAreaD_Name" type="text" name="name" class="form-control" disabled>
+                    </div>
+                    <div class="col-12 col-sm-6 p-1">
+                        <label>@Local["Vị trí"]</label>
+                        <div class="ui fluid search selection dropdown multiple form-control" id="ICDAreaD_Area">
+                            <input type="hidden" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="ICDAreaD_CbbArea" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault(); return CloseModal()">@Local["Hủy"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ICDAreaD_Executed();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let AreaD_CurrentID = '@Model._CurrentID'
+    $(document).ready(function () {
+        ICDAreaD_Init();
+        ICDAreaD_LoadDataDetail();
+    });
+    function ICDAreaD_Init(){
+        Load_Combo(ICDArea_DataArea, "ICDAreaD_CbbArea", true);
+    }
+    function ICDAreaD_LoadDataDetail() {
+        AjaxLoad(url = "/Setting/ICD/ICDAreaDetail?handler=AreaLoadDetail"
+            , data = { CurrentID: AreaD_CurrentID }
+            , async = true, error = null
+            , success = function (_r) { 
+                if (_r != "0" && _r != "") {
+                    let data = JSON.parse(_r);                    
+                    ICDArea_FillData(data[0]);
+                }
+            }
+        )
+    }
+    function ICDArea_FillData(item) {
+        $("#ICDAreaD_Name").val(item.MaChuong);
+
+        $("#ICDAreaD_Area").dropdown("refresh");
+        $('#ICDAreaD_Area').dropdown('set selected', item.Area.split(","));
+    }
+    function ICDAreaD_Executed(){ 
+        let Area = $("#ICDAreaD_Area").dropdown("get value") ? $("#ICDAreaD_Area").dropdown("get value") + ',' : '';
+        AjaxLoad(url = "/Setting/ICD/ICDAreaDetail?handler=Executed"
+            , data = { Area : Area
+                , CurrentID : AreaD_CurrentID
+            }
+            , async = true, error = null
+            , success = function (_r) {
+                if (_r != "0") {
+                    notiSuccess();
+                    ICDArea_LoadData(AreaD_CurrentID);
+                    CloseModal();
+                }
+            }
+        )
+    }
+</script>

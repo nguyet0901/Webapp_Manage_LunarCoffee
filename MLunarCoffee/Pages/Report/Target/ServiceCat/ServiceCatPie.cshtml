@@ -1,0 +1,85 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Target.ServiceCat.ServiceCatPieModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain pb-3">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#ServiceCatPieDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadData_ReportServiceCatPie()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="ServiceCatPieDiv">
+        <div class="card-body p-0">
+            <div class="d-lg-flex">
+                <div class="col-w-300 text-center mx-auto position-relative" style="min-height: 250px;">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh số"]:
+                        <span id="ServiceCatPieTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="chart position-absolute mt-5 top-50 start-50 translate-middle">
+                        <canvas id="ServiceCatPie" class="chart-canvas" height="250"></canvas>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ">
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="ServiceCatPieList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        ToolPopper();
+        LoadData_ReportServiceCatPie();
+    });
+    function LoadData_ReportServiceCatPie() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branch = "@Model._branch";
+        AjaxLoad(url = "/Report/Target/ServiceCat/ServiceCatPie/?handler=Loadata"
+            , data = { 'branchID': _branch, 'dateFrom': _dateFrom, 'dateTo': _dateTo }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result)["Table"];
+                    let TotalPaid = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        data[i]['Amount'] = Number(data[i]['Amount']);
+                        TotalPaid += Number(data[i]['Amount']);
+                    }
+
+                    $('#ServiceCatPieTotal').html(formatNumberToMilion(TotalPaid));
+                    ReportPie_Description(data, 'Name', 'Amount', 'ServiceCatPieList');
+                    rp_pie("ServiceCatPie", data, 'Name', 'Amount')
+
+                }
+            }
+        );
+    }
+
+
+</script>
+

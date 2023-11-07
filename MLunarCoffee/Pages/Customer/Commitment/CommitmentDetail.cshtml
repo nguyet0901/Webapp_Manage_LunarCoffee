@@ -1,0 +1,427 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Commitment.CommitmentDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Cam kết khách hàng"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết cam kết khách hàng"]</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body pt-2">
+                    <div class="d-lg-flex mt-2">
+                        <div class="col-w-200 mx-auto" id="comit_listitem" style="display:none;">
+                            <div class="card-body p-0">
+                                <ul class="list-group" id="commitment_form_list">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 overflow-auto">
+                            <div class="card mx-2 border-dashed border-1 border-secondary border-radius-md p-3 px-0 ">
+                                <div id="div_commitment_waiting" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+
+                                </div>
+
+
+
+                                <div id="commitment_form_content_div">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="formcustomer" onclick="CloseDetailCustomerInfo()">@Local["Đóng"]</button>
+                            <button class="btn btn-secondary" form="formcustomer" onclick="Print_Customer_Commitment()">@Local["In"]</button>
+                            <button id="divSaveCommitment" form="formcustomer" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                    onclick="ExcuteData_Customer_Commitment()">
+                                @Local["Lưu"]
+                                </button>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    let _dataForm = {};
+    let _data_Customer_Commitment = {};
+    let _data_Commitment = {};
+    let _Commitment_Cust_Sign = '';
+    let _Commitment_CustomerID = "@Model._Commitment_CustomerID";
+    let _Commitment_CurrentID = "@Model._Commitment_CurrentID";
+    let _Commitment_Current_Form = "0";
+    let flag_Change_Commitment_Form = 0;
+    let is_edit_commitment = 1;
+
+    function Print_Customer_Commitment() {
+        $('#commitment_form_content_div').print();
+    }
+    function RenderControlCommitment() {
+        for ([key, value] of Object.entries(_data_Commitment)) {
+            switch (value.type) {
+                case 'attr':
+                    $("#commitment_form_content_div").append('<div style="' + value.style + '" id="' + value.type + '_' + value.name + '"></div>');
+                    break;
+                case 'text':
+                    $("#commitment_form_content_div").append('<input type="text" style="' + value.style + '" id="' + value.type + '_' + value.name + '"/>');
+                    break;
+                case 'img':
+                    $("#commitment_form_content_div").append('<img style="' + value.style + '" id="' + value.type + '_' + value.name + '"/>');
+                    break;
+                case 'sign':
+                    $("#commitment_form_content_div").append('<img class="_sign_customer_" style="' + value.style + '" id="' + value.type + '_' + value.name + '"/>');
+                    break;
+                default:
+                    break;
+            }
+        }
+        RenderDataForm();
+        $('#divPrint').show();
+        if (is_edit_commitment == 0) {
+            $("#commitment_form_content_div input").attr('disabled', 'disabled');
+            $('._sign_customer_').removeClass('_sign_customer_');
+        }
+    }
+    function LoadataUpdateForm () {
+
+        AjaxLoad(url = "/Customer/Commitment/CommitmentDetail/?handler=LoadataUpdate"
+            , data = {
+                "CustomerID": _Commitment_CustomerID,
+                "CurrentID": _Commitment_CurrentID }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    if (data.Table1)
+                        _data_Customer_Commitment = data.Table[0];
+                    if (data.Table1.length > 0) {
+                        _data_Commitment = JSON.parse(data.Table1[0].Data);
+                        _Commitment_Cust_Sign = data.Table1[0].Sign;
+                        let linkForm = _dataForm[data.Table1[0].FormID].Link
+                        is_edit_commitment = data.Table1[0].isEdit;
+                        _Commitment_Current_Form = data.Table1[0].FormID;
+                        //$("#commitment_form_menu").hide();
+                        $("#commitment_form_content_div").empty();
+                        ReadFormCommitment(linkForm);
+                    } else {
+                        //$("#commitment_form_menu").show();
+
+                    }
+                    flag_Change_Commitment_Form = 1;
+                    if (is_edit_commitment != 1) {
+                        $("#divSaveCommitment").empty();
+                    }
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#form_commitment").hide();
+                $("#div_commitment_waiting").show();
+            }
+            , complete = function (e) {
+                $("#form_commitment").show();
+                $("#div_commitment_waiting").hide();
+            }
+        );
+
+
+    }
+    function ReadFormCommitment(Link) {
+        AjaxLoad(url = "/Customer/Commitment/CommitmentDetail/?handler=ReadFormCommitment"
+            , data = { "Link": Link }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "[]") {
+                    $("#commitment_form_content_div").html(result);
+                    RenderControlCommitment();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#div_commitment_waiting").show();
+            }
+            , complete = function (e) {
+                $("#div_commitment_waiting").hide();
+            }
+        );
+
+
+    }
+    function RenderDataForm() {
+        for ([key, value] of Object.entries(_data_Commitment)) {
+            switch (value.type) {
+                case 'attr':
+                    $('#' + value.type + '_' + value.name).html((value.value ? value.value : _data_Customer_Commitment[value.name]));
+                    break;
+                case 'text':
+                    $('#' + value.type + '_' + value.name).val((value.value ? value.value : ""));
+                    break;
+                case 'img':
+                    $('#' + value.type + '_' + value.name).attr('src', (value.value ? value.value : ""));
+                    break;
+                case 'sign':
+                    if (_Commitment_Cust_Sign != '') {
+                        $('#' + value.type + '_' + value.name).attr('src', _Commitment_Cust_Sign);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    $(document).ready(function () {
+        InitializeCommitmentForm();
+        $('#commitment_form_content_div').on('click', '._sign_customer_', function () {
+            Signature_Executed_Commitment(this);
+        });
+        $('#commitment_form_list').on('click', '.commitment_form_item', function () {
+            _Commitment_Cust_Sign = '';
+            _Commitment_Current_Form = '';
+            _data_Commitment = '';
+            if (flag_Change_Commitment_Form == 1) {
+                $('.commitment_form_item').removeClass('selected');
+                $(this).addClass('selected');
+                _Commitment_Current_Form = $(this).attr('data-id');
+                let linkForm = _dataForm[_Commitment_Current_Form].Link
+                _data_Commitment = JSON.parse(_dataForm[_Commitment_Current_Form].Data_Input);
+                $("#commitment_form_content_div").empty();
+                ReadFormCommitment(linkForm);
+            }
+        });
+    })
+    async function Signature_Executed_Commitment(elm) {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            _Commitment_Cust_Sign = Signature_ResultSignation;
+            $(elm).attr('src', _Commitment_Cust_Sign);
+        }
+    }
+    function InitializeCommitmentForm() {
+        AjaxLoad(url = "/Customer/Commitment/CommitmentDetail/?handler=LoadComboMain"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    let dtForm = data.dtForm;
+                    for (let i = 0; i < dtForm.length; i++) {
+                        _dataForm[dtForm[i].ID] = dtForm[i];
+                    }
+                    RenderCommitmentForm(dtForm, "commitment_form_list");
+                    LoadataUpdateForm();
+                    if (Number(_Commitment_CurrentID) != 0)
+                        $('#comit_listitem').hide();
+
+                    else $('#comit_listitem').show();
+
+                }
+            }
+
+        );
+
+
+    }
+    function RenderCommitmentForm(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<li data-id="' + item.ID + '" class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg commitment_form_item">'
+                        + '<div class="d-flex ms-2">'
+                        + '<div class="icon icon-shape icon-sm me-3   text-center">'
+                       + '<div class="icon icon-shape icon-sm me-3 bg-gradient-dark shadow text-center">'
+                        + '<i class="vtt-icon vttech-icon-pdf"></i>'
+                        +'</div>'
+                        + '</div>'
+                        + '<div class="d-flex flex-column my-auto">'
+                        + '<h6 class="text-dark text-sm mb-0">' + item.Name + '</h6>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="d-flex">'
+                        + '<button class="btn btn-link btn-icon-only btn-rounded btn-sm text-dark icon-move-right my-auto"><i class="ni ni-bold-right" aria-hidden="true"></i></button>'
+                        + '</div>'
+                        + '</li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function ExcuteData_Customer_Commitment() {
+        if (_Commitment_Current_Form != "0" && _Commitment_Current_Form != "") {
+            for ([key, value] of Object.entries(_data_Commitment)) {
+                switch (value.type) {
+                    case 'attr':
+                        _data_Commitment[key].value = $('#' + value.type + '_' + value.name).html();
+                        break;
+                    case 'text':
+                        _data_Commitment[key].value = $('#' + value.type + '_' + value.name).val();
+                        break;
+                    case 'img':
+                        _data_Commitment[key].value = $('#' + value.type + '_' + value.name).attr('src');
+                        break;
+                    default:
+                        break;
+                }
+            }
+            $('#form_commitment').form('validate form');
+            if ($('#form_commitment').form('is valid') && _data_Commitment != null) {
+                AjaxLoad(url = "/Customer/Commitment/CommitmentDetail/?handler=ExcuteData"
+                    , data = {
+                        "CurrentID": _Commitment_CurrentID,
+                        "CustomerID": _Commitment_CustomerID,
+                        "CustSign": _Commitment_Cust_Sign,
+                        "FormID": _Commitment_Current_Form,
+                        "Data": JSON.stringify(_data_Commitment)}
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccess();
+                            if (typeof GeneralInfo_ComitLoad !== 'undefined' && $.isFunction(GeneralInfo_ComitLoad)) {
+                                GeneralInfo_ComitLoad();
+                            }
+                            CloseDetailCustomerInfo();
+                        }
+                    }
+                );
+            }
+        } else {
+            $('#textShowMessage').html('Chọn Mẫu');
+        }
+    }
+</script>
+<style>
+    #commitment_form_content_div input {
+        padding: 0 !important;
+        background: transparent;
+        border: 1px dotted #1b85d6;
+    }
+
+        #commitment_form_content_div input[disabled] {
+            padding: 0 !important;
+            background: transparent !important;
+            border: unset !important;
+        }
+
+    #commitment_form_content_div {
+        position: relative;
+        width: 852px;
+        margin: 0 auto;
+        min-height: calc(100vh - 210px);
+    }
+
+    @@media print {
+        @@page {
+            margin: 0 !important;
+            background: transparent;
+        }
+
+        #commitment_form_content_div input {
+            padding: 0 !important;
+            background: transparent !important;
+            border: unset !important;
+        }
+
+        #commitment_form_content_div {
+            border: unset;
+        }
+    }
+
+    .pusher .pushable {
+        overflow-x: auto;
+    }
+
+    /* #form_commitment .commitment_form_menu {
+        width: 100%;
+        display: flex;
+        background: aliceblue;
+        border: solid 0.5px cadetblue;
+        border-radius: 12px;
+        margin: 5px;
+        padding: 0 10px;
+    }*/
+
+    #form_commitment .side_bar_left_desk {
+        display: flex;
+        background: #f9f9f9;
+    }
+
+    #form_commitment .commitment_form_list {
+        width: 100% !important;
+        height: 60px !important;
+        border-radius: 0px 12px 12px 0px;
+        overflow-x: auto;
+    }
+
+    #form_commitment .commitment_form_img {
+        width: 20px;
+        height: 28px;
+        vertical-align: middle;
+    }
+
+    #form_commitment .commitment_form_item {
+        display: inline-block !important;
+        margin: auto 4px !important;
+        color: #1b044d !important;
+        font-size: 13px !important;
+        padding: unset !important;
+        width: 100px;
+        height: 50px;
+        text-align: center;
+        z-index: 10;
+        min-width: 100px;
+    }
+
+    #form_commitment ._sign_customer_ {
+        border: 1px dotted #1b85d6 !important;
+    }
+
+    #form_commitment img {
+        block-size: auto;
+    }
+
+    .commitment_form_item:hover {
+        background: #dff1ff !important;
+    }
+
+    .commitment_form_item.selected {
+        background: #dff1ff;
+        border: 1px dotted #0a3a5f;
+    }
+</style>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/assests/dist/Print/jQuery.print.js');</script>

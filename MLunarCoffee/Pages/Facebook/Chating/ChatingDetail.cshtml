@@ -1,0 +1,505 @@
+﻿@page
+@model MLunarCoffee.Pages.Facebook.Chating.ChatingDetailModel
+@{
+    Layout = null;
+}
+ @Html.AntiForgeryToken()
+<div class="align-items-stretch d-flex flex-column h-100 justify-content-evenly mess_box">
+    <div class="mess_header d-flex border-bottom px-3 py-2 align-items-center z-index-3">
+        <div class="col-auto">
+            <div class="avatar rounded-circle position-relative me-2">
+                <img id="fmb_conurl" onerror="Master_OnLoad_Error_Image(this)" src="/default.png" alt="profile_image" class="avatar avatar-sm w-100">
+            </div>
+        </div>
+        <div class="flex-auto">
+            <div class="h-100">
+                <h6 id="fmb_conname" class="mb-0 text-md fw-bold ellipsis_one_line"></h6>
+            </div>
+        </div>
+        <div class="col-auto me-sm-0 ms-auto ms-sm-auto  ">
+            <div class="d-flex gap-2">
+                <div class="fbm_btnlist d-flex flex-column flex-lg-row flex-grow-1 position-relative">
+                    <button onclick="FBM_ExtenInfoAction();" class="fbm_btnac d-block d-lg-none dropdown-toggle" >
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div id="fbm_btncontent" class="fbm_btncontent">
+                        <button id="fbm_blockuser" onclick="FBM_BlockAndUn()" title="Chặn / Bỏ chặn" data-bs-toggle="tooltip" data-bs-placement="top" class="fbm_btnac position-relative">
+                            <i class="sign fas fa-lock"></i>
+                            <span class="fbm_btnactitle text-sm">Chặn / Bỏ chặn</span>
+                            <div class="ms-2 top-50 translate-middle-y opacity-0 position-absolute start-0 text-center top-0 waitingdiv">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </button>
+                        <button id="fbm_staruser" title="@Local["Đánh dấu là theo dõi"]" onclick="FBM_MarkStar()" data-bs-toggle="tooltip" data-bs-placement="top" class="fbm_btnac">
+                            <i class="fas fa-star"></i>
+                            <span class="fbm_btnactitle text-sm">@Local["Đánh dấu là theo dõi"]</span>
+                        </button>
+                        <button id="fbm_hideuser" title="@Local["Hoạt động"] / @Local["Không hoạt động"]" onclick="FBM_MarkHide()" data-bs-toggle="tooltip" data-bs-placement="top" class="fbm_btnac">
+                            <i class="fas fa-eye"></i>
+                            <span class="fbm_btnactitle text-sm">@Local["Hoạt động"] / @Local["Không hoạt động"]</span>
+                        </button>
+                        <button id="fbm_readuser" title="@Local["Đánh dấu chưa đọc"]" onclick="FBM_Markread(0)" data-bs-toggle="tooltip" data-bs-placement="top" class="fbm_btnac">
+                            <i class="fas fa-bookmark"></i>
+                            <span class="fbm_btnactitle text-sm">@Local["Đánh dấu chưa đọc"]</span>
+                        </button>
+
+                    </div>
+                </div>
+                
+                <button id="fbm_userextent" onclick="FBM_Exteninfo()" data-bs-toggle="tooltip" data-bs-placement="top" class="fbm_btnac">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="flex-fill mess_body d-flex flex-column overflow-hidden position-relative">
+        <div id="fbm_wait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x d-none z-index-2">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="fbm_nonexist" class="text-center position-absolute top-0 start-50 translate-middle-x d-none z-index-2">
+            <div class="mt-5 mx-auto text-center">
+                <img class="mb-2" src="/Image/faceempty.png" />
+                <h2>Empty!</h2>
+                <p>Cuộc trò chuyện này không tồn tại</p>
+            </div>
+        </div>
+
+       
+        <div id="fbm_chatbox_container" class="flex-fill bg-white position-relative  overflow-auto">
+            <div id="fbm_content" class="card-body px-0" style="overflow-y: auto; overflow-x: hidden; ">
+
+            </div>
+        </div>
+        <div class="mess_chatbox w-100 ps-0 py-2 pe-2 text-sm">
+            <div class="border rounded-2 bg-white position-relative">
+                <div class="position-absolute bottom-100 start-0 w-100 max-height-150 mb-1 overflow-auto bg-white mb-0 shadow rounded-2">
+                    <div>
+                        <ul id="fcd_fileview" class="nav nav-pills flex-column border-radius-lg px-0 block-horizontal"></ul>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 p-2 pb-0">
+                    <div>
+                        <img id="fmb_meurl" class="avatar rounded-circle avatar-xs" src="/default.png">
+                    </div>
+                    <textarea id="fcd_message" class="mess_chatbox_area w-100 border-0 rounded-0" style="height: 20px;" placeholder="@Local["Trả lời trong Messenger"]..."></textarea>
+                </div>
+                <div id="fcd_action" class="position-relative">
+                    <div>
+                        <input id="fcd_filemultiple" class="d-none opacity-0" multiple type="file" />
+                    </div>
+                    <div class="align-items-center d-flex d-lf justify-content-end px-2 pb-1">
+                        <div class="icon-hover" onclick="event.preventDefault();return FCD_Files_Trigger();" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Đính kèm file">
+                            <i class="fas fa-paperclip fs-6 text-primary"></i>
+                        </div>
+                        <div class="fcd_actionitem icon-hover" data-target="#fcd_messtempcontent" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Tin trả lời lưu sẳn">
+                            <i class="fa-comment-alt far fs-6 text-primary"></i>
+                        </div>
+                        <div id="fcd_action_emoji" class="fcd_actionitem icon-hover" data-target="#fcd_emojicontent" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Nhãn gián">
+                            <i class="far fa-smile fs-6 text-primary"></i>
+                        </div>
+                        <div class="icon-hover" onclick="event.preventDefault();return FBM_Send();">
+                            <span class="fw-bold text-primary">Gửi</span>
+                        </div>
+                    </div>
+                    <div id="fcd_emojicontent" class="fcd_actionpopupitem position-absolute bottom-100 mb-2" style="display: none;">
+                    </div>
+                    <div id="fcd_messtempcontent" class="fcd_actionpopupitem shadow-lg position-absolute bottom-100 mb-2" style="display: none;">
+                        <div class="card col-w-350 rounded-2">
+                            <div class="card-header p-3 pb-0">
+                                <div class="d-lg-flex">
+                                    <ul id="fcd_tab_mess" class="nav nav-pills p-1 bg-transparent" role="tablist" data-target="#fcd_messtempcontent">
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#fcd_tab_messtemp" role="tab">
+                                                @Local["Mẫu tin nhắn"]
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#fcd_tab_messtemptag" role="tab">
+                                                @Local["Mẫu tin nhắn tag"]
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body p-3 pt-2">
+                                <div class="tab-content" id="pills-tabContent">
+                                    <div class="tab-pane fade" id="fcd_tab_messtemp" role="tabpanel">
+                                        <ul id="fcd_messtemp" class="bg-transparent block-horizontal border-radius-lg d-block flex-column max-height-250 nav nav-pills overflow-auto px-0">
+                                        </ul>
+                                    </div>
+                                    <div class="tab-pane fade" id="fcd_tab_messtemptag" role="tabpanel">
+                                        <ul id="fcd_messtemptag" class="bg-transparent block-horizontal border-radius-lg d-block flex-column max-height-250 nav nav-pills overflow-auto px-0">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var fcd_MessAvatar = '';
+    var fcd_MessTemplate = {};
+    var fcd_FormFiles = new FormData();
+    let fcd_EmojiOptions = {
+        set: 'facebook',
+        onEmojiSelect: function (e) {
+            $("#fcd_message").val(function () {
+                return this.value + (e?.native || "");
+            })
+        },
+        onClickOutside: function (e) {
+            let _action_emoji = $("#fcd_action_emoji");
+            if (!_action_emoji.is(e.target) && _action_emoji.has(e.target).length === 0) {
+                FCD_PopupClose('fcd_emojicontent');
+            }
+        },
+        locale: author_get("UserLang"),
+        theme: MSVDarkmode_Get(),
+        previewPosition: 'none',
+        perLine: 8,
+        maxFrequentRows: 5
+    }
+    var fcd_UrlMessNext = '';
+   
+
+    $(document).ready(function () {
+        FCD_Meinfo();
+        FCD_InitEvent();
+        FCD_Init();
+        FCD_EmojiInit();
+       
+    });
+
+    function FMB_Ini (mconid, mname, murl) {
+        fcd_MessAvatar = murl
+        FBM_CheckBlock();
+        FBM_Load(mconid, ismore = 0);
+        FBM_Filluserinfo(mname, murl);
+    }
+
+    async function FBM_Filluserinfo (mname, murl) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                $('#fmb_conname').html(mname);
+                $('#fmb_conurl').attr('src', murl);
+            }, 10);
+        });
+    }
+
+    async function FCD_Meinfo () {
+        let info = author_get("fb_accountinfo");
+        if (info != undefined && info != "") {
+            var _obj = JSON.parse(info);
+            $('#fmb_meurl').attr("src", _obj.avatar);
+        }
+    }
+
+    async function FCD_Init () {
+        AjaxLoad(url = "/Facebook/Chating/ChatingDetail/?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let dataMessTemplate = data.MessTemplate;
+
+                fcd_MessTemplate = dataMessTemplate.reduce((pre, arr) => {
+                    if(arr.ID) pre[arr.ID] = arr; return pre;
+                }, {});
+                let messTemplate = dataMessTemplate.filter((word) => {
+                    return word.Type == 0;
+                });
+                let messTag = dataMessTemplate.filter((word) => {
+                    return word.Type == 1;
+                });
+                FCD_MessTemp_Render(messTemplate, 'fcd_messtemp');
+                FCD_MessTemp_Render(messTag, 'fcd_messtemptag');
+            }
+        );
+    }
+
+    function FCD_FieldMessage(content){
+        $("#fcd_message").val(content);
+    }
+
+    
+
+    //#region // EVENT INIT
+
+    function FCD_InitEvent() {
+        $('#fcd_tab_mess a:first').tab('show');
+        $("#fcd_message").on("input", function () {
+            this.style.height = 0;
+            this.style.height = (this.scrollHeight) + "px";
+        });
+
+        $("#fcd_message").on("focus", function () {
+            FBM_Typingon();
+        });
+
+        $("#fcd_filemultiple").unbind('change').on('change', function (event) {
+            var files = event.target.files;
+            $.each(files, function (i, file) {
+                if (FCD_CheckAttachment(file))
+                    fcd_FormFiles.append('file_' + file.name, file);
+                else
+                    notiError('Không tải file quá 25M');
+            });
+            FCD_Files_Render(fcd_FormFiles, 'fcd_fileview')
+            this.value = null;
+        });
+        $("#fcd_action .fcd_actionitem").unbind('click').on('click', function (e) {
+            let _target = $(this).attr('data-target');
+            FCD_PopupOpen(_target, this);
+        });
+        $(document).click(function (e) {
+            let _action = $(".fcd_messtempcontent");
+            let _actionItem = $('[data-target="#fcd_messtempcontent"]')
+            if (!$(_actionItem).is(e.target) && $(_actionItem).has(e.target).length === 0
+                && !$(_action).is(e.target) && $(_action).has(e.target).length === 0) {
+                FCD_PopupClose("fcd_messtempcontent")
+            }
+            let _itemgetchat = $('[data-target="#fbc_chatlistmaster"]')
+            if (!$(_itemgetchat).is(e.target) && $(_itemgetchat).has(e.target).length === 0){
+                $("#fbc_chatlistmaster").removeClass('active');
+            }
+        });
+        let scrollTop = 0;
+        $("#fbm_chatbox_container").unbind('scroll touchmove mousewheel').on('scroll touchmove mousewheel', function (event) {
+            if (fbl_flag == 1) {
+                let _scroll = $(this).scrollTop();
+                let _maxscroll = $("#fbm_content").height() * 0.1;
+                if (!(_scroll > scrollTop) && _scroll < _maxscroll && fcd_UrlMessNext != '' && !$("#fbm_wait").hasClass('d-none')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+
+                scrollTop = _scroll
+                if ((_scroll < _maxscroll) && fcd_UrlMessNext != '') {
+                    if (fb_scrolltimer) clearTimeout(fb_scrolltimer);
+                    fb_scrolltimer = setTimeout(() => {
+                        FBM_Load(fbm_conid, 1);
+                    }, 20);
+                }
+            }
+
+
+        });
+
+        FCD_MessInput_Event();
+        ToolPopper();   
+    }
+
+    function FCD_MessInput_Event(){
+        $("#fcd_message").unbind('change').change(function (e) {
+            if ($(this).val().trim() == '')
+                this.style.height = 'unset';
+        });
+        $("#fcd_message").unbind('keypress').bind('keypress ', function (e) {
+            var code = e.keyCode || e.which;
+            if ([13].includes(code) && e.shiftKey) {
+                return;
+            }
+            else if([13].includes(code)){
+                e.preventDefault();
+                e.stopPropagation();
+                FBM_Send();
+            }
+        });
+    }
+
+    function FCD_CheckAttachment(file) {
+        let byte = file.size / 1024 / 1024;
+        if (byte > 25){
+            return false;
+        }
+        /// Kiểm tra dung lượng < 25M
+        return true;
+    }
+    //#endregion
+
+
+    //#region // ACTIVE USER
+
+    function FCD_ActiveProfile(){
+        console.log("ACTIVE");
+    }
+
+    //#endregion
+
+
+    //#region // HANDLE FILES
+
+    function FCD_Files_Render(data, id){
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            for(let [key, value] of data.entries()){
+                let tr = `
+                    <li id="cdfile_${key}" data-key="${key}" class="itemfile nav-item me-0" role="presentation">
+                        <div class="d-flex text-sm nav-link cursor-pointer" data-hover >
+                            ${FCD_Files_Render_Ext(value)}
+                            <div class="my-auto ms-3">
+                                <div class="h-100">
+                                    <p class="mb-0 text-sm">${value.name}</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-secondary ms-auto me-3 my-auto">
+                                <div class="icon-hover buttonDeleteClass">
+                                    <i class="opacity-6 text-danger fas fa-times px-3 py-2"></i>
+                                <div>
+                            </p>
+                        </div>
+                    </li>
+                    <hr class="horizontal dark my-0 opacity-2">
+                `
+                stringContent = stringContent + tr;
+            }
+            myNode.innerHTML = stringContent;
+            FCD_Files_Event();
+        }
+    }
+
+    function FCD_Files_Render_Ext(file){
+        try{
+            let _ext = FBM_GetAttachmentExt(file);
+            let _result = ''
+            switch(_ext){
+                case "image":
+                    _result = `<i class="avatar avatar-sm fas fa-image opacity-4 fs-5 text-dark"></i>`
+                    break;
+                case "file":
+                case "audio":
+                case "video":
+                    _result = `<i class="avatar avatar-sm fas fa-paperclip opacity-4 fs-5 text-dark"></i>`
+                    break;
+                default:
+                    _result = `<i class="avatar avatar-sm fas fa-paperclip opacity-4 fs-5 text-dark"></i>`
+            }
+            return _result
+        }
+        catch(ex){
+            return `<i class="avatar avatar-sm fas fa-paperclip opacity-4 fs-5 text-dark"></i>`;
+        }
+    }
+
+    function FCD_Files_Event() {  
+        $("#fcd_fileview .buttonDeleteClass").unbind('click').click(function () {
+            let _parent = $(this).closest('.itemfile')
+            let _key = _parent.attr('data-key');
+            if(fcd_FormFiles.has(_key)) {
+                fcd_FormFiles.delete(_key);
+                _parent.remove();
+            }
+        });
+    }
+
+    function FCD_Files_Trigger(){
+        $("#fcd_filemultiple").trigger('click');
+    }
+
+    //#endregion
+
+    //#region // HANDLE EMOJI
+
+    async function FCD_EmojiInit(){
+        let emoji = new EmojiMart.Picker(fcd_EmojiOptions)
+        $("#fcd_emojicontent").append(emoji)
+    }
+
+    //#endregion
+
+
+    //#region // HANDLE Message Templete
+
+    async function FCD_MessTemp_Render(data, id){
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if(data && data.length != 0){
+                for(let i=0; i < data.length; i++){
+                    let item = data[i];
+                    let tr = `
+                        <li id="cdmesstemp_${item.ID}" data-key="${item.ID}" data-type=${item.Type} class="messtempitem nav-item me-0" role="presentation">
+                            <a class="d-flex text-sm nav-link cursor-pointer align-items-center" data-hover >
+                                <div class="my-auto">
+                                    <div class="h-100">
+                                        <h6 class="text-sm fw-bold mb-n1">#${item.Title}</h6>
+                                        <p class="mb-0 text-xs ellipsis_one_line">${item.Description}</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-secondary ms-auto my-auto">
+                                    <i class="fas fa-long-arrow-alt-right opacity-6 text-secondary "></i>
+                                </p>
+                            </a>
+                        </li>
+                        <hr class="horizontal dark my-0 opacity-2">
+                    `
+                    stringContent = stringContent + tr;
+                }
+            }
+            myNode.innerHTML = stringContent;
+            FCD_MessTemp_Event();
+        }
+    }
+
+    function FCD_MessTemp_Event(){
+        $("#fcd_messtemp .messtempitem, #fcd_messtemptag .messtempitem").unbind('click').click(function () {
+            let _key = $(this).attr('data-key');
+            let _type = Number($(this).attr('data-type'));
+            if(fcd_MessTemplate[_key]) {
+                let _mess = fcd_MessTemplate[_key].Description;
+                if(_type == 1){
+                    if (typeof FBM_SendMesssage === 'function') {
+                        let _idRandom = FBM_Randomid();
+                        FBM_SendMesssage(_mess, '', '',  _idRandom, 'MESSAGE_TAG');
+                    }
+                }
+                else{
+                    FCD_FieldMessage(fcd_MessTemplate[_key].Description);
+                    $("#fcd_message").focus();
+                }
+                FCD_PopupClose("fcd_messtempcontent");
+            }
+        });
+    }
+
+    //#endregion
+
+
+    //#region // OTHER
+
+    function FCD_PopupOpen(id, event){
+        let popup = $(id);
+        if (popup.is(":visible")) return;
+        let parentWidth = $("#fcd_action").width();
+        let width = $(event).width();
+        let position = $(event).position();
+        let left = parentWidth - position.left - width;
+        popup.animate({ right: `${left - 20}px` }, 100);
+        popup.show();
+        popup.animate({ right: `${left}px` }, 200);
+    }
+
+    function FCD_PopupClose(id){
+        $("#" + id).hide();
+    }
+
+    //#endregion
+     
+</script>
+
+
+ 

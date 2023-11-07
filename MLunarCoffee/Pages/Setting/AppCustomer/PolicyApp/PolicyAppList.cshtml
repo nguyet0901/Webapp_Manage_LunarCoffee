@@ -1,0 +1,204 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.PolicyApp.PolicyAppListModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Danh sách chính sách ứng dụng"]</h6>
+                    <p id="ACSPolicy_Note" class="text-sm mb-0"></p>
+                </div>
+                <div class="right">
+                    <button id="ACSPolicy_btnNew" class="btn bg-gradient-primary btn-sm mt-1" onclick="return ACSPolicy_AddNew()">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center w-100 mt-2 position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table data-name="" class="table vt-table mb-0" id="ACSPolicy_dtContent">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th>#</th>
+                                <th style="min-width: 200px;">@Local["Chính sách"]</th>
+                                <th style="min-width: 250px;">@Local["Mô tả"]</th>
+                                <th>@Local["Nội dung"]</th>
+                                <th style="min-width: 180px;">@Local["Thông tin sửa"]</th>
+                                <th style="min-width: 100px;">@Local["Xử Lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ACSPolicy_dtContentBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //#region //INIT - DEFINE
+    let ACSPolicy_DataEmployee;
+    let ACSPolicy_xhrList;
+    let ACSPolicy_Data;
+    let ACSPolicy_DataLimit = (ser_AcceptSettingApp['policy'] != undefined && ser_AcceptSettingApp['policy']['limit'] != undefined)
+        ? ser_AcceptSettingApp['policy']['limit']
+        : {
+            Dimensions: "",
+            Format: "",
+            Key: "limit",
+            Limit: 10,
+            Size: 0,
+            Type: "policy",
+            format: [],
+            height: 0,
+            width: 0,
+        }
+    $(document).ready(function () {
+        $('#ACSPolicy_Note').html(`@Local["Hiển thị tối đa"] ${ACSPolicy_DataLimit.Limit} @Local["Chính sách"]`);
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                ACSPolicy_DataEmployee = data[0];
+                ACSPolicy_LoadData();
+            }
+        );
+    });
+    //#endregion
+
+    //#region //LOADDATA
+    function ACSPolicy_LoadData() {
+        AjaxLoad(url = "/Setting/AppCustomer/PolicyApp/PolicyAppList/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                ACSPolicy_Data = JSON.parse(result);
+                ACSPolicy_RenderData(data, "ACSPolicy_dtContentBody");
+            }
+        );
+    }
+
+    async function ACSPolicy_RenderData(data, id)
+    {
+        new Promise((reslove) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let itemContent = ACSPolicy_RenderDataItem(item);
+                        stringContent = stringContent + `<tr id="QuestionContent_${item.ID}" class="vt-number" role="row" data-id="${item.ID}"> ${itemContent} </tr>`;
+                    }
+                }
+                myNode.innerHTML = stringContent;
+                ACSPolicy_Event();
+            }
+            reslove();
+        })
+    }
+
+    function ACSPolicy_RenderDataItem(item)
+    {
+        let obj = Fun_GetObject_ByID(ACSPolicy_DataEmployee, item.ModifiedBy);
+        let name = (obj != null) ? obj.Name : 'unknown';
+        let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+        let tr =
+            '<td class="d-none ACSPolicy_MasterID">' + item.ID + '</td>'
+            + '<td class="vt-number-order"></td>'
+            + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Policy + '</a></td>'
+            + '<td >' + item.ShortDescription + '</td>'
+            + '<td><span class="content_line_clamp">' + item.Content + '</span></td>'
+            + '<td>'
+            + '<div class="d-flex">'
+            + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+            + '<img class="avatar avatar-xs mt-2" src="' + img + ' " alt="label-image">'
+            + '</div>'
+            + '<div class="d-flex flex-column">'
+            + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+            + '<span class="text-xs">' + GetDateTime_String_DMYHM(ConvertToDateRemove1900(item.Modified)) + '</span>'
+            + '</div>'
+            + '</div>'
+            + '<td>'
+            + '<div class="text-nowrap cursor-pointer text-center">'
+            + '<button class="buttonGrid">'
+            + '<i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i>'
+            + '</button>'
+            + '</div>'
+            + '</td>';
+        return tr;
+    }
+    //#endregion
+
+    //#region //CRUD
+    function ACSPolicy_Delete(id)
+    {
+        const promise = notiConfirm();
+        promise.then(function () { ACSPolicy_ExcuteDelete(id); }, function () { });
+    }
+
+    function ACSPolicy_ExcuteDelete(id)
+    {
+        AjaxLoad(url = "/Setting/AppCustomer/PolicyApp/PolicyAppList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result)
+            {
+                if (result == "1") {
+                    notiSuccess();
+                    ACSPolicy_LoadData();
+                    syslog_mob("d", "@Local["Chính sách"]");
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function ACSPolicy_AddNew()
+    {
+        if (ACSPolicy_Data && ACSPolicy_Data.length >= 0 && ACSPolicy_Data.length < ACSPolicy_DataLimit.Limit) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Setting/AppCustomer/PolicyApp/PolicyAppDetail" + "?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+        else {
+            notiWarning('@Local["Quá giới hạn số lượng chính sách"]');
+            return false;
+        }
+    }
+    function ACSPolicy_Edit(CurrentID)
+    {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/AppCustomer/PolicyApp/PolicyAppDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    //#endregion
+
+    //#region //EVENT
+
+    function ACSPolicy_Event(){
+        $('#ACSPolicy_dtContent tbody').on('click', '.buttonEditClass', function ()
+        {
+            let ID = Number($(this).closest('tr').find('.ACSPolicy_MasterID')[0].innerHTML);
+            ACSPolicy_Edit(ID);
+        });
+        $('#ACSPolicy_dtContent tbody').on('click', '.buttonDeleteClass', function ()
+        {
+            let ID = Number($(this).closest('tr').find('.ACSPolicy_MasterID')[0].innerHTML);
+            ACSPolicy_Delete(ID)
+        });
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+

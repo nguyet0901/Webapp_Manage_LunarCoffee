@@ -1,0 +1,597 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Media.MediaSlideModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Cấu hình slide"]</h6>                            
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1 d-flex ">
+                        @*<div class="form-check form-switch mt-2 me-3">
+                        <input id="SS_SlideDisable" type="checkbox" class="form-check-input ms-auto" />
+                        <label class="coloring green">Ẩn Slide</label>
+                    </div>*@
+                        <button form="SS_InitSlide" class="btn bg-gradient-primary btn-sm mt-1" onclick="event.stopPropagation(); return SSlide_ExecutedSlide()">OK</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row px-2 form3" id="SS_InitSlide">
+                    <div class="field col-12 col-md-6 p-1">
+                        <label>@Local["Mã"]</label>
+                        <input id="SS_SlideCode" name="slidecode" type="text" class="form-control" />
+                    </div>
+                    <div class="field col-12 col-md-6 p-1">
+                        <label>@Local["Tên"]</label>
+                        <input id="SS_SlideName" name="name" type="text" class="form-control" />
+                    </div>
+                    <div class="field col-12 col-md-6 p-1">
+                        <label>@Local["Loại slide"]</label>
+                        <div class="ui fluid search selection dropdown" id="SS_SlideType">
+                            <input type="hidden" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="SS_CbbSlideType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-md-6 p-1">
+                        <label>@Local["Kiểu slide"]</label>
+                        <div class="ui fluid search selection dropdown" id="SS_SlideTag">
+                            <input type="hidden" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="SS_CbbSlideTag" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 p-1">
+                        <label>@Local["Nội dung"]</label>
+                        <input id="SS_SlideNode" name="" type="text" class="form-control" />
+                    </div>
+                    <div class="field col-12 p-1">
+                        <label>@Local["Mô tả"]</label>
+                        <textarea id="SS_SlideContent" data-validation="ContentSlide" class="form-control" rows="4" placeholder="eg .Content"></textarea>
+                    </div>
+                </div>
+                <div class="row px-2 pt-3 d-none" id="SS_DivAttachment">
+                    <div class="col-12 p-1">
+                        <label>AttachmentFile</label>
+                        <input class="d-none" id="SS_InputAttachment" type="file" multiple />
+                        <div class="form-control dropzone dz-clickable" id="SS_UploadFile">
+                            <div class="dz-default dz-message my-0 py-5" id="SS_AttachmentText">
+                                <button class="dz-button" type="button">
+                                    @Local["Thả tệp vào đây để tải lên"]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-2 pt-3 d-none" id="SS_DivContent">
+                    <div class="col-12 col-sm-1 position-relative">
+                        <p class="lo-btnAddLayout">
+                            <i class="fas fa-plus-circle" id="SSlide_AddNew"></i>
+                        </p>
+                        <i class="fas fa-paste" id="SSlide_Paste"></i>
+                    </div>
+                    <div class="col-12 col-sm-11">
+                        <div class="row" id="SS_BodyLayout">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="">@Local["Đóng"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="SSlide_ExecutedContent();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var SS_DataLayout = {};
+    var SS_DataLayoutCopy = {};
+    let SS_btnStatusCtr = false;
+    let SS_SlideCurrentID = 0;
+    let SS_ApiUploadFile = "/Api/Upload/Upload?CustomerID=Sys_Student&FolderName=Folder&FolderNameChild=File&Type=AttachmentFile"
+
+    $(document).ready(function () {
+        SSlide_Event();
+        SSlide_LoadCombo();
+        SSlide_LoadInitUpload();
+
+        FUNCTIONTEST();
+    })
+
+    function FUNCTIONTEST () {
+        $("#SS_DivAttachment").removeClass("d-none");
+        $("#SS_DivContent").removeClass("d-none");
+    }
+
+    //#region //LOADINIT
+    async function SSlide_LoadCombo () {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Student/Settings/Media/MediaSlide/?handler=LoadCombo"
+                , data = {}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        Load_Combo(data.SlideTag, "SS_CbbSlideType", false);
+                        Load_Combo(data.SlideType, "SS_CbbSlideTag", false);
+                        Load_Combo(data.AttachmentType, "SS_CbbAttachType", false);
+                        $("#SS_AttachType, #SS_SlideType, #SS_SlideTag").dropdown("refresh");
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+            resolve();
+        })
+    }
+    function SSlide_LoadInitUpload () {
+        $('#SS_UploadFile').unbind("drop").on("drop", function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var promises = [];
+            let extentiontype = ["pdf", "docx"]
+            let files = e.originalEvent.dataTransfer.files;
+            if (files.length <= 0 || files.length > 5) {
+                notiWarning("Tối đa 5 files");
+            }
+            else {
+                for (let i = 0; i != files.length; i++) {
+                    let ext = files[i].name.split('.').pop();
+                    if (extentiontype.indexOf(ext) > -1) {
+                        promises.push(AjaxUpload_MultiExe(SS_ApiUploadFile
+                            , files[i]
+                            , files[i].name
+                            , success = function (resulf, e) {
+                                if (resulf != "0") {
+                                    let _r = resulf.split("@@");
+                                    $("#SS_AttachmentText").addClass("d-none");
+                                    let URL = sys_HTTPImageRoot + 'Sys_Student/Folder/File/' + _r[0];
+                                    SSlide_InsertFile(_r[2], URL);
+                                } else {
+                                    notiWarning('@Local["Sai định dạng"]');
+                                }
+                            }
+                            , error = function (e) {
+                                notiError_SW();
+                            }
+                        ));
+                    }
+                    else {
+                        notiWarning(OutLang["Sai_dinh_dang"]);
+                    }
+                }
+                Promise.all(promises).then((values) => { });
+            }
+        });
+
+
+        AjaxUpload_Multi(url = SS_ApiUploadFile
+            , inputid = 'SS_InputAttachment'
+            , success = function (resulf, e) {
+                if (resulf != "0") {
+                    let _r = resulf.split("@@");
+                    if (!$("#SS_AttachmentText").hasClass("d-none")) $("#SS_AttachmentText").addClass("d-none");
+                    let URL = sys_HTTPImageRoot + 'Sys_Student/Folder/File/' + _r[0];
+                    SSlide_InsertFile(_r[2], URL);
+                } else {
+                    notiWarning('@Local["Sai định dạng"]');
+                }
+            }
+            , error = function (e) {
+                notiError_SW();
+            }
+            , before = function (e) { }
+            , complete = function (e) { }
+            , extentiontype = ["pdf", "docx"]
+        );
+    }
+
+    //#endregion
+
+    //#region //RENDER
+
+    async function SSlide_RenderFile (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr =
+                                `<div id="SS_LiAttachment_${item.IDMediaAttach}" class="dz-preview dz-file-preview dz-processing">
+                                    <span class="d-none">${item.IDMediaAttach}</span>
+                                    <span class="d-none">${item.IDSlideAttach}</span>
+                                    <span class="d-none">${item.URL}</span>
+                                    <div class="dz-image">
+                                    </div>
+                                    <div class="dz-details">
+                                        <div class="dz-filename">
+                                            <span>${item.Name}</span>
+                                        </div>
+                                    </div>
+                                    <div class="dz-progress">
+                                        <span class="dz-upload"></span>
+                                    </div>
+                                    <div class="dz-success-mark">
+                                        <svg width="54px" height="54px" viewBox="0 0 54 54" version="1.1"><title>Check</title><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path d="M23.5,31.8431458 L17.5852419,25.9283877 C16.0248253,24.3679711 13.4910294,24.366835 11.9289322,25.9289322 C10.3700136,27.4878508 10.3665912,30.0234455 11.9283877,31.5852419 L20.4147581,40.0716123 C20.5133999,40.1702541 20.6159315,40.2626649 20.7218615,40.3488435 C22.2835669,41.8725651 24.794234,41.8626202 26.3461564,40.3106978 L43.3106978,23.3461564 C44.8771021,21.7797521 44.8758057,19.2483887 43.3137085,17.6862915 C41.7547899,16.1273729 39.2176035,16.1255422 37.6538436,17.6893022 L23.5,31.8431458 Z M27,53 C41.3594035,53 53,41.3594035 53,27 C53,12.6405965 41.3594035,1 27,1 C12.6405965,1 1,12.6405965 1,27 C1,41.3594035 12.6405965,53 27,53 Z" stroke-opacity="0.198794158" stroke="#747474" fill-opacity="0.816519475" fill="#FFFFFF"></path></g></svg>
+                                    </div>
+                                    <span class="dz-remove btnDeleteAttach">Remove file</span>
+                                </div>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        SSlide_EventAttach();
+                    }
+                }
+                resolve();
+            }, 30)
+        })
+    }
+
+    function SSlide_RenderContent (key, value, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            let tr = `
+            <div class="col-12 p-1 position-relative lo-hover LayoutCol" id="SS_LayoutCol${key}">
+                <div class="lo-btn-block">
+                    <div class="lo-btn-dot p-2">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <div class="lo-btn-copy p-2 EventClick-Copy">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                    <div class="lo-btn-delete p-2 EventClick-Delete">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                </div>
+                <div class="d-lg-flex">
+                    <div class="ms-auto">
+                        <a class="align-items-center p-0 text-body ms-2 d-flex">
+                            <div class="form-check pe-1">
+                                <input class="form-check-input cursor-pointer EventChange-NumCol" name="rdo_Content${key}" type="radio" value="12">
+                                <label class="text-sm mb-0 me-3">
+                                    100%
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input cursor-pointer EventChange-NumCol" name="rdo_Content${key}" type="radio" value="8">
+                                <label class="text-sm mb-0 me-3">
+                                    70%
+                                </label>
+                            </div>
+                            <div class="form-check pe-1">
+                                <input class="form-check-input cursor-pointer EventChange-NumCol" name="rdo_Content${key}" type="radio" value="6">
+                                <label class="text-sm mb-0 me-3">
+                                    50%
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input cursor-pointer EventChange-NumCol" name="rdo_Content${key}" type="radio" value="4">
+                                <label class="text-sm mb-0 me-3" >
+                                    30%
+                                </label>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="input-group my-1">
+                    <span class="input-group-text bg-gray-200">@Local["Tiêu đề"]</span>
+                    <input type="text" id="SS_Title${key}" class="ps-3 form-control EventChange-Title" placeholder="eg. Title" />
+                </div>
+                <textarea class="form-control ps-2 EventChange-Content" id="SS_Content${key}" rows="3" placeholder="eg. Content"></textarea>
+            </div>
+            `
+            myNode.insertAdjacentHTML('beforeend', tr);
+        }
+        SSlide_EventContent()
+        SSlide_RenderValueContent(key, value);
+    }
+    function SSlide_RenderValueContent (key, value) {
+        $('input:radio[name="rdo_Content' + key + '"]').filter('[value="' + value.numcol + '"]').attr('checked', true);
+        $("#SS_LayoutCol" + key).removeClass("col-12 col-8 col-6 col-4").addClass("col-" + value.numcol);
+        $('#SS_Content' + key).val(value.content);
+        $('#SS_Title' + key).val(value.title);
+    }
+    //#endregion
+
+    //#region //HANDLE
+
+    function SSlide_AddNewLayout () {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.id = id;
+        element.IDLayout = 0;
+        element.title = '';
+        element.content = '';
+        element.numcol = 12;
+        SS_DataLayout[id] = element;
+        SSlide_RenderContent(id, element, "SS_BodyLayout");
+    }
+    function SSlide_PasteFromCopy () {
+        if (Object.keys(SS_DataLayoutCopy).length !== 0 && SS_DataLayoutCopy.constructor === Object) {
+            let element = {};
+            let id = (new Date()).getTime();
+            element.id = id;
+            element.IDLayout = 0;
+            element.title = SS_DataLayoutCopy.title;
+            element.content = SS_DataLayoutCopy.content;
+            element.numcol = SS_DataLayoutCopy.numcol;
+            SS_DataLayout[id] = element;
+            SSlide_RenderContent(id, element, "SS_BodyLayout");
+        }
+    }
+    //#endregion
+
+    //#region //EXECUTED
+
+    function SSlide_ExecutedContent () {
+        let dataContent = [];
+        for ([key, value] of Object.entries(SS_DataLayout)) {
+            dataContent.push(value);
+        }
+        AjaxLoad(url = "/Student/Settings/Media/MediaSlide/?handler=ExecutedContent"
+            , data = {
+                "slideid": SS_SlideCurrentID
+                , "data": JSON.stringify(dataContent)
+            }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data != "1") {
+
+                }
+            }
+        );
+    }
+
+    function SSlide_DeleteFile (IDMediaAttach, IDSlideAttach, URL) {
+        AjaxLoad(url = "/Student/Settings/Media/MediaSlide/?handler=DeleteFile"
+            , data = {
+                "IDMediaAttach": IDMediaAttach
+                , "IDSlideAttach": IDSlideAttach
+                , "Url": URL
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    $("#SS_LiAttachment_" + IDMediaAttach).remove();
+                }
+            }
+        );
+    }
+
+    function SSlide_InsertFile (Name, URL) {
+        AjaxLoad(url = "/Student/Settings/Media/MediaSlide/?handler=InsertFiles"
+            , data = {
+                "Name": Name
+                , "URL": URL
+                , "SlideID": SS_SlideCurrentID
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    fnRenderBlock(data, "SS_UploadFile"
+                        , blocknum = 100
+                        , fnrender = SSlide_RenderFile
+                        , fnsuccess = function (e) { }
+                        , fnbegin = function (e) { }
+                    );
+                }
+            }
+        );
+    }
+
+    function SSlide_ExecutedSlide () {
+        let data_InitSlide = {};
+
+        data_InitSlide.SlideTypeID = Number($('#SS_SlideType').dropdown('get value')) ? Number($('#SS_SlideType').dropdown('get value')) : 0;
+        data_InitSlide.Code = $("#SS_SlideCode").val() ? $("#SS_SlideCode").val() : "";
+        data_InitSlide.Name = $("#SS_SlideName").val() ? $("#SS_SlideName").val() : "";
+        data_InitSlide.TagID = Number($('#SS_SlideTag').dropdown('get value')) ? Number($('#SS_SlideTag').dropdown('get value')) : 0;
+        data_InitSlide.Content = $("#SS_SlideContent").val() ? $("#SS_SlideContent").val() : "";
+        data_InitSlide.Note = $("#SS_SlideNode").val() ? $("#SS_SlideNode").val() : "";
+
+        $("#SS_InitSlide").form("validate form");
+        if ($('#SS_InitSlide').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/Media/MediaSlide/?handler=ExecutedSlide"
+                , data = {
+                    data: JSON.stringify(data_InitSlide)
+                    , CurrentID: SS_SlideCurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data[0].RESULT != "1" && data[0].RESULT != "0") {
+                        SS_SlideCurrentID = data[0].RESULT
+                        $("#SS_DivAttachment").removeClass("d-none");
+                        $("#SS_DivContent").removeClass("d-none");
+
+                        notiSuccess();
+                    } else {
+                        if (data[0].RESULT == "-1") {
+                            notiError('Trùng mã hoặc tên');
+                        } else notiError_SW();
+                    }
+                }
+            );
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function SSlide_Event () {
+        $("#SS_UploadFile").unbind("click").on("click", function () {
+            $("#SS_InputAttachment").click();
+        });
+        $("#SS_UploadFile").unbind("dragover").on("dragover", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        $("#SSlide_AddNew").unbind("click").on("click", function () {
+            SSlide_AddNewLayout();
+        })
+        $("#SSlide_Paste").unbind("click").on("click", function () {
+            SSlide_PasteFromCopy();
+        })
+    }
+    function SSlide_EventAttach () {
+        setTimeout(() => {
+            $(".dz-upload").css("width", "100%");
+            $(".dz-preview").addClass("dz-complete");
+            $(".dz-success-mark").addClass("dz-success-done")
+        }, 50);
+        $("#SS_UploadFile .btnDeleteAttach").unbind("click").on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let IDMediaAttach = $(this).closest("div")[0].childNodes[1].innerHTML;
+            let IDSlideAttach = $(this).closest("div")[0].childNodes[3].innerHTML;
+            let URL = ($(this).closest("div")[0].childNodes[5].innerHTML).split('/').pop();
+            SSlide_DeleteFile(IDMediaAttach, IDSlideAttach, URL);
+        })
+    }
+    function SSlide_EventContent () {
+
+        $("#SS_BodyLayout .EventChange-NumCol").unbind("click").on("click", function () {
+            let ID = $(this).attr("name").replace("rdo_Content", "");
+            let ValueRadio = $('input[name=rdo_Content' + ID + ']:checked').val();
+            if (ValueRadio != 0) {
+                SS_DataLayout[ID].numcol = ValueRadio;
+                $("#SS_LayoutCol" + ID).removeClass("col-12 col-8 col-6 col-4").addClass("col-" + ValueRadio);
+            }
+        });
+        $("#SS_BodyLayout .EventChange-Title").unbind("keyup").on("keyup", function () {
+            let ID = $(this).attr("id").replace("SS_Title", "");
+            let ValueInput = $(this).val();
+            SS_DataLayout[ID].title = ValueInput;
+        });
+
+        $("#SS_BodyLayout .EventChange-Content").unbind("keyup").on("keyup", function () {
+            let ID = $(this).attr("id").replace("SS_Content", "");
+            let ValueInput = $(this).val();
+            SS_DataLayout[ID].content = ValueInput;
+        });
+
+        $("#SS_BodyLayout .EventClick-Delete").unbind("click").on("click", function () {
+            let ID = $(this).closest(".LayoutCol").attr("id").replace("SS_LayoutCol", "");
+            delete SS_DataLayout[ID];
+            $("#SS_LayoutCol" + ID).remove();
+        })
+
+        $("#SS_BodyLayout .EventClick-Copy").unbind("click").on("click", function () {
+            let ID = $(this).closest(".LayoutCol").attr("id").replace("SS_LayoutCol", "");
+            let ValueRadio = $("input[name=rdo_Content" + ID + "]:checked").val();
+            SS_DataLayoutCopy.content = $("#SS_Content" + ID) ? $("#SS_Content" + ID).val() : "";
+            SS_DataLayoutCopy.title = $("#SS_Title" + ID) ? $("#SS_Title" + ID).val() : "";
+            SS_DataLayoutCopy.numcol = ValueRadio
+        })
+
+        $(".LayoutCol").unbind("mouseover").on("mouseover", function () {
+            $(this).addClass("lo-activated");
+        }).unbind("mouseout").on("mouseout", function () {
+            $(this).removeClass("lo-activated");
+        })
+
+        $(".lo-btn-block").unbind("mouseover").on("mouseover", function () {
+            $(this).addClass("lo-activated");
+        }).unbind("mouseout").on("mouseout", function () {
+            $(this).removeClass("lo-activated");
+        })
+    }
+    //#endregion
+
+</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+<style>
+    .bg-lightblue {
+        background-color: #d1f6ff;
+    }
+
+    .lo-btn-block {
+        left: auto;
+        border-radius: 20px 2px 2px 20px;
+        position: absolute;
+        z-index: 20;
+        top: 50%;
+        right: 100%;
+        margin-top: -21px;
+        background: #000000a8;
+        color: #efecec;
+        display: none;
+    }
+
+    .lo-activated.lo-hover {
+        border-radius: 0.25rem !important;
+        border: 1px solid #a7aeb5 !important;
+    }
+
+    .lo-btn-dot {
+        display: inline-block;
+    }
+
+    .lo-btn-block div:hover {
+        background-color: #00000033;
+        color: #efecec;
+    }
+
+    .lo-activated.lo-hover > .lo-btn-block {
+        display: flex;
+    }
+
+    .lo-btn-block.lo-activated > .lo-btn-dot {
+        display: none;
+    }
+
+/*    .lo-btn-block.lo-activated > .lo-btn-edit {
+        display: inline-block !important;
+        border-radius: 20px 0px 0px 20px;
+    }*/
+
+    .lo-btn-block.lo-activated > .lo-btn-copy {
+        display: inline-block !important;
+        border-radius: 20px 0px 0px 20px;
+    }
+
+    .lo-btn-block.lo-activated > .lo-btn-delete {
+        display: inline-block !important;
+    }
+
+    .lo-btn-copy, .lo-btn-delete {
+        display: none;
+    }
+
+    .dz-success-done {
+        opacity: 1 !important;
+        top: 58% !important;
+        transition: all 700ms ease-out;
+    }
+    .lo-btnAddLayout {
+        left: 37%;
+        bottom: 1rem;
+        font-size: 27px;
+        position: sticky;
+    }
+</style>

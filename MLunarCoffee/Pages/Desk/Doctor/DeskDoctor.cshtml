@@ -1,0 +1,456 @@
+﻿@page
+@model MLunarCoffee.Pages.Desk.Doctor.DeskDoctorModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row">
+    <div class="col-12">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header p-0 mt-2 d-none">
+                <div class="right">
+                    <div class="d-flex align-items-center ps-2">
+                        <img id="deskdoc_avatar" src="#" class="rounded-circle border border-1 border-gray avatar avatar-sm" style="object-fit:cover">
+                        <div class="h-100 ps-2 text-dark">
+                            <h6 id="deskdoc_empname" class="mb-0 text-sm fw-bolder"></h6>
+                            <p id="deskdoc_emprole" class="mb-0 text-xs"></p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 px-2 pe-0 pb-0 mt-0">
+
+                <ul class="bg-transparent nav nav-horizontal nav-pills pb-1 mb-3 pt-0">
+                    <li class="nav-item" role="presentation">
+                        <a class="rd_doctab nav-link cursor-pointer py-1 active" data-id="executed" role="tab" aria-selected="true">
+                            @Local["Xử lý"]
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="rd_doctab nav-link cursor-pointer py-1" data-id="history" role="tab" aria-selected="true">
+                            @Local["Lịch sử"]
+                        </a>
+                    </li>
+ 
+                </ul>
+
+                <div id="deskdoc_alltab" class="card-body p-0 overflow-auto">
+                    <div class="text-dark" data-id="executed">
+                        <div  style="--max-height: calc( 100vh - 260px ); --overflow-y: auto;overflow-x: hidden;" class="mobile-responsive d-sm-flex">
+                            <div id="deskdoc_areamaster" class="col-w-450" style="max-height: calc(100vh - 200px);">
+                                <div class="mt-0 vtcardheader">
+                                    <div class="left">
+                                        <div class="mt-1 ps-2">
+                                            <h6 class=" mb-0">@Local["Danh sách"]</h6>
+                                            <div class="d-flex">
+                                                <p class="text-dark mb-0 text-sm">@Local["Khách hàng đợi"]</p>
+                                                <a onclick="event.preventDefault(); return DeskDoc_ChangeRoom();" id="deskdoc_roomname" class="text-sm ms-2 fw-bolder text-primary border-bottom border-primary border-1">
+                                                    @Local["Chọn phòng"]
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="nav-wrapper mt-2 ">
+                                    <ul id="deskdoc_shedulelist" class="nav nav-pills mt-2 ps-2 flex-column bg-white border-radius-lg">
+                                    </ul>
+                                </div>
+                            </div>
+                            <div id="deskdoc_areadetail" class="flex-grow-1 overflow-hidden" style="display: none;">
+                                <div class="d-lg-none text-dark d-flex align-items-center ms-2 mb-2 text-sm cursor-pointer" style="transition: 0.5s all;" onclick="event.preventDefault(); return DeskDoc_CloseDetail();">
+                                    <i class="fas fa-caret-left text-primary pe-2"></i>
+                                    @Local["Quay lại"]
+                                </div>
+                                <div id="deskdoc_loader" class="waitingdiv text-center w-100 mt-2 top-5 position-absolute start-50 translate-middle-x" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div id="deskdoc_condetail" class="overflow-y p-2 w-100" style="max-height:calc(100vh - 220px)">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-dark m-0 my-3 mobile-responsive position-relative vt-header-sticky vt-hs-height overflow-auto" style="display:none;" data-id="history">
+                        <div id="desdoc_histwait" class="position-absolute top-0 start-50 translate-middle-x z-index-3 waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>@Local["Mã lịch hẹn"]</th>
+                                    <th>@Local["Mã khách hàng"]</th>
+                                    <th>@Local["Khách hàng"]</th>
+                                    <th>@Local["Giới tính"]</th>
+                                    <th>@Local["Năm sinh"]</th>
+                                    <th>@Local["STT"]</th>
+                                    <th>@Local["Giờ vào"]</th>
+                                    <th>@Local["Giờ ra"]</th>
+                                    <th>@Local["Trạng thái hiện tại"]</th>
+                                    <th>@Local["Phòng hiện tại"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="desdoc_hist">
+                            </tbody>
+                        </table>
+ 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+    var Desk_CurrentRoom = @Model._CurrentRoom;
+    var Desk_BranchID =@Model._BranchID;
+    var Desk_CurrentAppID = 0;
+
+    $(document).ready(function(){
+        DeskDoc_LoadInit();
+        DeskDoc_LoadSchedule(Desk_CurrentRoom, appid=0);
+        DeskDoc_RoomData(Desk_CurrentRoom);
+        DeskDoc_RoomEvent();
+    });
+
+    async function DeskDoc_LoadInit () {
+        new Promise((reolve) => {
+            try {
+                $("#deskdoc_empname").html(sys_employeeName_Main);
+                $("#deskdoc_emprole").html(Master_roleGroupCurrent);
+                $("#deskdoc_avatar").attr('src', Master_circleAvatar);
+            }
+            catch (ex) { }
+        })
+    }
+    async function DeskDoc_RoomData (roomid) {
+        new Promise((reolve) => {
+            setTimeout(() => {
+                try {
+                    AjaxLoad(url = "/Desk/Doctor/DeskDoctor/?handler=LoadRoom"
+                        , data = {
+                            "RoomID": roomid
+                        }
+                        , async = true
+                        , error = function () {notiError_SW();}
+                        , success = function (result) {
+                            if (result != "0") {
+                                let data = JSON.parse(result);
+                                if (data && data.length == 1) {
+                                    let item = data[0];
+                                    $("#deskdoc_roomname").html(item.RoomName);
+                                }
+                                else {
+                                    $("#deskdoc_roomname").html("--");
+                                }
+                            }
+                        }
+                    );
+                }
+                catch (ex) { }
+            }, 10)
+        })
+    }
+    async function DeskDoc_LoadSchedule (roomid = 0, appid = 0) {
+        new Promise((reolve) => {
+            setTimeout(() => {
+                try {
+                    if (!roomid) return;
+                    AjaxLoad(url = "/Desk/Doctor/DeskDoctor/?handler=LoadSchedule"
+                        , data = {
+                            "RoomID": roomid,
+                            "BranchID": Desk_BranchID,
+                            "AppID": appid,
+                        }
+                        , async = true
+                        , error = function () {notiError_SW();}
+                        , success = function (result) {
+                            if (result != "0") { 
+                                let data = JSON.parse(result);
+                                if (appid == 0) {
+                                    DeskDoc_RenderSchedule(data, 'deskdoc_shedulelist');
+                                }
+                                else {
+                                    if (data.length == 1) {
+                                        let tr = DeskDoc_RenderScheduleEach(data[0]);
+                                        if ($('#desro_' + appid).length) {
+                                            $('#desro_' + appid).replaceWith(tr);
+                                            $(`#deskdoc_shedulelist .detail`).removeClass('active');
+                                            $(`#desro_${Desk_CurrentAppID} .detail`).addClass('active');
+                                        }
+                                        else {
+                                            $("#deskdoc_shedulelist").append(tr);
+                                        }
+
+                                        DeskDoc_Event();
+                                    }
+                                    else {
+                                        if (data.length == 0) {
+                                            $('#desro_' + appid).remove();
+                                        }
+                                    }
+                                }
+                               
+                            }
+                        }
+                        , sender = null
+                        , before = function (e) {
+                        }
+                        , complete = function (e) {
+                        }
+                        , nolimit=1
+                    );
+                }
+                catch (ex) { }
+            }, 10)
+        })
+    }
+
+    //#region // RENDER AND EVENT
+    function  DeskDoc_RoomEvent () {
+ 
+        $(".rd_doctab").unbind('click').on('click', function () {
+            let _id = $(this).attr('data-id');
+            $(".rd_doctab").removeClass("active");
+            $(this).addClass("active");
+            let _tabActive = $("#deskdoc_alltab").children('div[data-id="' + _id + '"]');
+            let _tabHide = _tabActive.siblings();
+            _tabHide.hide();
+            _tabActive.fadeIn(300);
+ 
+            if (_id == "history") {
+                
+                DeskDoc_HisLoad();
+            }
+        })
+    }
+    async function DeskDoc_RenderSchedule(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = DeskDoc_RenderScheduleEach(item);
+                    stringContent = stringContent + tr;
+                }
+            }
+            myNode.innerHTML = stringContent;
+            DeskDoc_Event();
+        }
+    }
+    function DeskDoc_RenderScheduleEach (item) {
+        let status = '';
+        let curroom = '';
+        
+        if (item.IsReceipt == 1 && item.IsDone == 0) {
+            status = `<i class="fas fa-caret-right fs-4 text-success pe-0"></i>`;
+        }
+        if (item.IsReceipt == 1 && item.IsDone == 1) {
+            status = `<i class="fas fa-arrow-alt-circle-right fs-6 text-danger pe-0"></i>`;
+            if (item.CurRoomId != 0 && item.CurRoomId != Desk_CurrentRoom) {
+                curroom = `<span class="ps-2">${item.CurRoomName}</span>`;
+            }
+        }
+        let tr =
+            `<li id="desro_${item.AppID}" class="nav-item" role="presentation">
+          <a data-custid="${item.CustID}" data-appid="${item.AppID}" class="text-sm ps-1 item-menu detail nav-link cursor-pointer" data-hover>
+            
+            <div class="d-flex align-items-center">
+                  <span class="mt-0 col-auto my-auto mb-0 text-dark ms-2 text-sm border-bottom border-success border-1">
+                      ${item.CustCode}
+                  </span>
+                  <div class="dropstart float-lg-end ms-auto pe-0">
+                      <span class="ms-auto my-auto text-sm text-dark">
+                          <span>${DeskDoc_RenderYear(item.Birthday)}</span>
+                          <span class="px-0 text-secondary">/</span>
+                          <span>${DeskDoc_RenderGender(item.GenderID)}</span>
+                      </span>
+                  </div>
+              </div>
+              <div class="d-flex align-items-center mt-1 ps-1">
+                
+                  <div class="ps-1 text-capitalize ellipsis_one_line">
+                     
+                      <span class="text-sm fw-bold pb-1 d-block text-dark">${item.CustName}</span>
+                  </div>
+                  <div class="float-lg-end ms-auto mt-n1 pe-0 d-flex align-items-center">
+                      <span class="fw-bold pe-2 fs-5">${item.IndexRom}</span>
+                      ${status}
+                      ${curroom}
+                  </div>
+              </div>
+          </a>
+          <hr class="horizontal dark my-0">
+      </li>
+      `
+        return tr;
+    }
+    function DeskDoc_RenderGender(genderid){
+        try{
+            let result = "@Local["Nam"]"
+            if (genderid == 61) result = "@Local["Nữ"]";
+            return result;
+        }
+        catch{
+            return "";
+        }
+    }
+    function DeskDoc_RenderYear(birth){
+        try{
+            if(birth && !birth.includes('1900')){
+                return (new Date(birth)).getFullYear();
+            }
+            return ''
+        }
+        catch{
+            return "";
+        }
+    }
+    function DeskDoc_Event () {
+        $('#deskdoc_shedulelist .detail').unbind('click').on('click', function () {
+            $('#deskdoc_shedulelist .detail').removeClass("active");
+            $(this).addClass("active");
+            let custid = $(this).attr("data-custid");
+            Desk_CurrentAppID = $(this).attr("data-appid");
+ 
+            $("#deskdoc_loader").show();
+            $("#deskdoc_areadetail").show();
+            $("#deskdoc_condetail").hide();
+            $("#deskdoc_condetail").empty();
+            $("#deskdoc_condetail").load("/Desk/Doctor/Profile?CustomerID=" + custid
+                + "&appid=" + Desk_CurrentAppID
+                + "&RoomID=" + Desk_CurrentRoom
+                + "&ver=" + versionofWebApplication
+                + "&layout=none"
+                , function () {
+                    $("#deskdoc_loader").hide();
+                    $("#deskdoc_condetail").show(100);
+                });
+        });
+    }
+    //#endregion
+
+    //#region // event
+    function DeskDoc_CloseDetail () {
+        $("#deskdoc_areadetail").hide();
+       
+    }
+    function DeskDoc_ChangeRoom(){
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ChangeBranch/ChangeBranch?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    //#endregion
+
+    //#region // hub
+
+    async function DeskDoc_Hub (json) {
+        new Promise((reolve) => {
+            setTimeout(() => {
+                try {
+                    let obj = JSON.parse(json);
+                    if (obj != undefined) {
+                        
+                        if (obj.branch_id == Desk_BranchID) {
+                            if (obj.oldroom_id != undefined && obj.newroom_id != undefined) {
+                                if (obj.oldroom_id == Desk_CurrentRoom || obj.newroom_id == Desk_CurrentRoom) {
+                                    DeskDoc_LoadSchedule(Desk_CurrentRoom, obj.appointment_id);
+                                }
+                            }
+                        }
+
+                    }
+                }
+                catch (ex) { }
+            }, 10)
+        })
+    }
+//#endregion
+
+    //#region // History
+    async function DeskDoc_HisLoad () {
+        new Promise((reolve) => {
+            AjaxLoad(url = "/Desk/Doctor/DeskDoctor/?handler=LoadHistory"
+                , data = {
+                    "RoomID": Desk_CurrentRoom,
+                     "BranchID": Desk_BranchID 
+                }
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        DeskDoc_HisRender(data,"desdoc_hist");
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#desdoc_histwait").show();
+                }
+                , complete = function (e) {
+                    $("#desdoc_histwait").hide();
+                },
+            );
+        })
+    }
+    async function DeskDoc_HisRender (data, id) {
+        console.log(data)
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let timein = GetDateTime_String_HHMM(item.TimeIn);
+                    timein = timein != '00:00' ? timein : '';
+                    let timeout = GetDateTime_String_HHMM(item.TimeOut);
+                    timeout = timeout != '00:00' ? timeout : '';
+
+                    let tr = `
+                            <td class="vt-number-order text-center"></td>
+                            <td>${item.AppCode}</td>   
+                            <td><a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}"&ver="${versionofWebApplication}">${item.CustCode}</a></td>
+                            <td>${item.CustName}</td>
+                            <td>${item.Gender}</td>
+                            <td>${item.BirthYear}</td>
+                            <td>${item.IndexOrder}</td>
+                            <td>${timein}</td>
+                            <td>${timeout}</td>
+                            <td>${item.CurrStatus}</td>
+                            <td>${item.CurrRoom}</td>
+                        `;
+                    tr = `<tr role="row"  class="vt-number">${tr}</tr>`;
+                    stringContent = stringContent + tr;
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+    //#endregion
+</script>
+<style>
+    @@media (max-width: 768px) {
+        #deskdoc_areadetail {
+            position: absolute;
+            top: 0;
+            background: #ffffff;
+            z-index: 1;
+            left: 0;
+            border-radius: 0;
+            height: 85vh;
+            width: 100% !important;
+        }
+    }
+</style>

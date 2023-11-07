@@ -1,0 +1,669 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Payment.PaymentMedicineDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row m-2 me-0 form3" id="PMD_Container">
+    <div class="col-md-7">
+        <div id="div_waiting" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="PMD_MedListContainer" class="row">
+            <div class="mb-2" id="title_treat_other" style="">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0 ms-2 text-primary fw-bold">@Local["Danh sách đơn thuốc"]</h6>
+                </div>
+                <div class="card-body p-2">
+                    <div>
+                        <div class="row px-1 ps-4">
+                            <div class="field px-1 mt-2">
+                                <label>@Local["Đơn thuốc"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="PMD_CustomerMedicine" onchange="event.preventDefault();return PMD_ChangePrescription();">
+                                    <input type="hidden" name="paymentMethod" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">@Local["Đơn thuốc"]</div>
+                                    <div id="ccbPMD_CustomerMedicine" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-y mt-2" style="height: calc(50vh - 100px)">
+                            <ul class="list-group mt-3 px-1" id="PMD_MedList">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5 mt-md-0 mt-4">
+        <div class="card ">
+            <div class=" position-sticky top-5">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="fw-bold text-primary mb-0">@Local["Thông tin thanh toán"]</h6>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0 form3" id="PMD_InfoPay">
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Chi nhánh"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="PMD_medicineBranchID">
+                                <input type="hidden" name="branch" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chi nhánh"]</div>
+                                <div id="ccbBranch" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2" id="dateCreated" style="display: none;">
+                            <label>@Local["Ngày tạo"]</label>
+                            <input id="PMD_dateCreatedExt" class="form-control flatpickr detail" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Hình thức"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="PMD_medicineMethod" onchange="event.preventDefault();return PMD_ChangeMethod();">
+                                <input type="hidden" name="paymentMethod" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Hình thức"]</div>
+                                <div id="ccbMethod" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Chi tiết"]</label>
+                            <div class="ui fluid search selection dropdown form-control disabled" id="PMD_medicineMethodType">
+                                <input type="hidden" name="paymentMethodType" class="input payment" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chi tiết"]</div>
+                                <div id="ccbMethodType" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Mã ngân hàng"]</label>
+                            <input id="PMD_bankInvoiceCode" class="form-control" placeholder="eg .@Local["Mã ngân hàng"]" type="text" disabled="disabled" />
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Mã hóa đơn"]</label>
+                            <input type="text" class="form-control" placeholder="eg .@Local["Mã hóa đơn"]" id="PMD_txtBillCode" />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Tổng tiền"]</label>
+                            <input id="PMD_PriceRoot" value="0" type="text" class="form-control money" disabled />
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Chiết khấu"]</label>
+                            <div class="position-relative">
+                                <input id="PMD_PresDiscount" class="border-right-0 form-control" placeholder="eg .@Local["Chiết khấu"]" type="text" onchange="event.preventDefault(); PMD_Count_Price_For_All();" value="0" />
+                                <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PMD_PresDiscountAmountPer" onchange="event.preventDefault(); return PMD_Count_Price_For_All();">
+                                    <input type="hidden" value="2">
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0"><div class="text">VND</div>
+                                    <div class="menu transition hidden" tabindex="-1">
+                                        <div class="item" data-value="1">%</div>
+                                        <div class="item active selected" data-value="2">VND</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Thành tiền"]</label>
+                            <input id="PMD_PriceDiscounted" type="text" class="form-control money" value="0" disabled="">
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Đã thanh toán"]</label>
+                            <input id="PMD_AmountPaid" name="discountOther" value="0" type="text" class="form-control money" disabled />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Tiền phải thanh toán"]</label>
+                            <input id="PMD_AmountPaymentReal" class="form-control money" value="0" disabled />
+                        </div>
+                        <div class="field col-12 col-xl-6 px-1 mt-2">
+                            <label>@Local["Thanh toán"]</label>
+                            <input id="PMD_AmountPayment" value="0" name="" type="text" class="form-control money">
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea class="form-control" id="PMD_txtContentPayment" rows="3" name="content" placeholder="eg .@Local["Nội dung"]" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="fixed-botombutton pe-2">
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage_PaymentMedicine"></div>
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="PMD_Close()">@Local["Đóng"]</button>
+            <button id="button_save_card_detail" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="PMD_ExecuteData()">
+                @Local["Lưu"]
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let dataPaymentDetail_MethodType = [];
+
+    let flagChange = 0;
+    let _PaymentCustomerID = '@Model._PaymentCustomerID';
+    let IsChooseDate = '@Model._ChooseDateCustomer';
+    let _CustomerMedID = '@Model._CustomerMedID';
+    let xhrPaymentDetail;
+    let PMD_dataMedicineDetail = {}
+    let PMD_pricechange_flag = 1;
+    let PMD_DiscountAmount = 0;
+    let PMD_DiscountPer = 0;
+    let PMD_PriceDiscounted = 0;
+    let PMD_PriceRoot = 0;
+    let PMD_objPres = {};
+    let PMD_isFirstPay = 0;
+    let PMD_data_payment_method = {};
+    //#region //INIT
+    $(document).ready(function () {
+        $("#PMD_dateCreatedExt").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date(),
+        });
+        $("#PMD_AmountPayment").divide();
+        $("#PMD_AmountPaymentReal").divide();
+        $("#PMD_AmountPaid").divide();
+        $("#PMD_PriceDiscounted").divide();
+        $("#PMD_PriceRoot").divide();
+        $("#PMD_PresDiscount").divide();
+        $('#PMD_PresDiscountAmountPer').dropdown("refresh");
+        $("#PMD_PresDiscountAmountPer").dropdown("set selected", "2");
+        PMD_Initialize();
+    });
+
+    async function PMD_Initialize() {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Payment/PaymentMedicineDetail/?handler=LoadInitialize"
+                , data = {
+                    'CustomerID': _PaymentCustomerID
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    let dataMethod = data.Method;
+                    PMD_data_payment_method = (data.Method).reduce((pre, arr) => {if(arr.ID) pre[arr.ID] = arr; return pre}, {});
+                    dataPaymentDetail_MethodType = data.MethodType;
+                    let dataPrescription = data.Prescription;
+
+                    PMD_objPres = dataPrescription.reduce((pre, acc) => {
+                        acc.Name = `
+                                                <h6 class="mb-0 text-primary text-sm">${acc.Code != '' ? acc.Code : ``} ${acc.Code != '' && acc.Name != '' ? '-' : ''} ${acc.Name} </h6>
+                                                <div class="text-xs text-secondary">${GetDateTime_String_DMY(acc.Created)}</div>
+                                            `;
+                        pre[acc.ID] = acc
+                        return pre;
+                    }, {})
+                    let dataPres = Object.values(PMD_objPres).sort(function (a, b) { return b.ID - a.ID });
+                    Load_Combo(data.Branch, "ccbBranch", true);
+                    $("#PMD_medicineBranchID").dropdown("refresh");
+                    $("#PMD_medicineBranchID").dropdown("set selected", Master_branchID);
+
+                    Load_Combo(dataMethod, "ccbMethod", true);
+                    Load_Combo(dataPres, "ccbPMD_CustomerMedicine", true);
+                    $("#PMD_medicineMethod").dropdown("refresh");
+                    $("#PMD_medicineMethod").dropdown("set selected", (dataMethod[0].ID).toString());
+
+                    if (IsChooseDate == "1") {
+                        $("#dateCreated").show();
+                    }
+                    flagChange = 1;
+                    if (_CustomerMedID != 0) {
+                        $("#PMD_CustomerMedicine").dropdown("refresh");
+                        $("#PMD_CustomerMedicine").dropdown("set selected", (_CustomerMedID).toString());
+                        $("#PMD_CustomerMedicine").addClass('disabled')
+                    }
+                }
+            );
+        })
+    }
+    //#endregion
+
+    //#region // LOADDATA
+    async function PMD_LoadDataMed(ID) {
+        $('#PMD_MedList').empty();
+        PMD_dataMedicineDetail = {};
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Payment/PaymentMedicineDetail/?handler=LoadDataMed"
+                , data = {
+                    'CurrentID': ID
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "[]" && result != "0") {
+                        let data = JSON.parse(result);
+                        let dataInfo = data.Table;
+                        let dataMed = data.Table1;
+                        PMD_FillData(dataInfo);
+                        PMD_RenderMed(dataMed, 'PMD_MedList');
+                    }
+                    else if (result == "[]") {
+                        notiWarning('@Local["Không có dữ liệu"]')
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        })
+    }
+
+    async function PMD_RenderMed(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            PMD_dataMedicineDetail[item.ID] = item;
+                            let tr = `<li id="PMD_MedDetail_${item.ID}" class="PMD_clsMedDetail row border-dashed border-1 position-relative border-secondary border-radius-lg border-0 ps-0 m-0 border-radius-lg" data-id="${item.ID}">
+                                                <div class="mx-0 px-0 row w-100">
+                                                    <div class="col-12 col-sm-4 col-lg-6 col-auto my-auto px-1">
+                                                        <div class="row text-sm text-dark text-normal">
+                                                            <div class="col-auto pe-0 ps-2 ps-3 text-dark text-normal text-sm">
+                                                                <label class="mb-0 pb-0 text-normal text-sm" datatype="label">@Local["Tên thuốc"]</label>
+                                                            </div>
+                                                            <div class="col text-sm text-dark text-normal">
+                                                                <label tabindex="0" class="pb-0 mb-0 text-sm fw-bold w-100 ellipsis_one_line" datatype="label" style="border-bottom: 1px dotted;">
+                                                                    ${item.Product}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-5 col-lg-4 px-1">
+                                                        <div class="d-flex text-sm text-dark text-normal">
+                                                            <div class="col-auto text-sm text-dark text-normal pe-0">
+                                                                <label class="pb-0 text-normal mb-0 text-sm" datatype="label">@Local["Số lượng"]</label>
+                                                            </div>
+                                                            <div class="col text-sm text-dark text-normal">
+                                                                <label tabindex="0" dataid="medicinename" class="pb-0 mb-0 text-sm fw-bold w-100" datatype="label" style="border-bottom: 1px dotted;">
+                                                                        <input type="text" class="border-0 d-inline-block disabled form-control p-0 ps-2 rounded-1" disabled="" min="0" value='${item.Quantity}'>
+                                                                </label>
+                                                            </div>
+                                                            <div class="col">
+                                                                <label tabindex="0" class="pb-0 mb-0 text-sm fw-bold w-100 ellipsis_one_line" datatype="label">
+                                                                    ${item.Unit}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-3 col-lg-2 px-1">
+                                                        <div class="row text-sm text-dark text-normal">
+                                                            <div class="col-auto text-sm text-dark text-normal pe-0 ps-1">
+                                                                <label class="pb-0 text-normal mb-0 text-sm" datatype="label">@Local["Đơn giá"]</label>
+                                                            </div>
+                                                            <div class="col text-sm text-dark text-normal">
+                                                                <label tabindex="0" dataid="medicinename" class="pb-0 mb-0 text-sm fw-bold w-100" datatype="label" style="border-bottom: 1px dotted;">
+                                                                    <input id="PMD_MedicineUnitPrice_${item.ID}" data-id="${item.ID}" class="form-control PMD_MedicineUnitPrice border-0 form-control p-0 rounded-1 d-inline-block" ${PMD_isFirstPay == 0 ? 'disabled' : ''} min="0" value="${item.Price}">
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3 mb-2 border-0"></div>
+                                            </li>`
+                            tr = `<label class="ps-2">@Local["Chi tiết đơn thuốc"]</label> ${tr}`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        $(".PMD_MedicineUnitPrice").divide();
+                        PMD_Event();
+                        PMD_Count_Price_For_All();
+                    }
+                }
+            }, 100);
+        })
+    }
+
+    function PMD_FillData(data) {
+        if (data) {
+            let dataInfoPres = data[0];
+            $('#PMD_AmountPaid').val(formatNumber(dataInfoPres.AmountPaid));
+            PMD_DiscountAmount = dataInfoPres.DiscountAmount;
+            PMD_DiscountPer = dataInfoPres.DiscountPercent;
+            PMD_PriceDiscounted = dataInfoPres.PriceDiscounted;
+            PMD_PriceRoot = dataInfoPres.PriceRoot;
+            // Discount
+            if (dataInfoPres.DiscountAmount != 0) {
+                $('#PMD_PresDiscount').val(dataInfoPres.DiscountAmount)
+
+                $('#PMD_PresDiscountAmountPer').dropdown("refresh");
+                $("#PMD_PresDiscountAmountPer").dropdown("set selected", "2");
+            }
+            else {
+                if (dataInfoPres.DiscountPercent != 0) {
+                    $('#PMD_PresDiscount').val(dataInfoPres.DiscountPercent)
+
+                    $('#PMD_PresDiscountAmountPer').dropdown("refresh");
+                    $("#PMD_PresDiscountAmountPer").dropdown("set selected", "1");
+                }
+                else {
+                    $('#PMD_PresDiscount').val(0)
+                    $('#PMD_PresDiscountAmountPer').dropdown("refresh");
+                    $("#PMD_PresDiscountAmountPer").dropdown("set selected", "2");
+                }
+            }
+        }
+    }
+    //#endregion
+
+    //#region // EVENT CHANGE
+    function PMD_Count_Price_For_All() {
+        if (PMD_pricechange_flag == 1 && Object.keys(PMD_dataMedicineDetail).length > 0) {
+            PMD_Refresh();
+            PMD_pricechange_flag = 0;
+            
+            let totalPrice = Object.values(PMD_dataMedicineDetail).reduce((total, item) => {
+                return total + item.Price * item.Quantity;
+            }, 0)
+            PMD_PriceRoot = totalPrice;
+            $('#PMD_PriceRoot').val(PMD_PriceRoot);
+            let checkValid = PMD_ValidateDiscount();
+            if (checkValid.isValid) {
+                let discountVal = !isNaN(Number($('#PMD_PresDiscount').val())) ? Number($('#PMD_PresDiscount').val()) : 0;
+                let discountUnit = $("#PMD_PresDiscountAmountPer").dropdown("get value") ? Number($("#PMD_PresDiscountAmountPer").dropdown("get value")) : 2;
+                let AmountPaid = Number($('#PMD_AmountPaid').val()) ? Number($('#PMD_AmountPaid').val()) : 0;
+                PMD_DiscountAmount = (discountUnit == 1) ? PMD_PriceRoot * (discountVal / 100) : discountVal;
+                PMD_DiscountPer = (discountUnit == 1) ? discountVal : 0
+                PMD_PriceDiscounted = PMD_PriceRoot - PMD_DiscountAmount;
+                let AmountOwe = PMD_PriceDiscounted - AmountPaid;
+                $('#PMD_PriceDiscounted').val(PMD_PriceDiscounted)
+                $('#PMD_AmountPaymentReal').val(AmountOwe);
+                $('#PMD_AmountPayment').val(AmountOwe);
+                PMD_pricechange_flag = 1;
+            }
+            else {
+                PMD_pricechange_flag = 1;
+                $('#PMD_PresDiscount').val(checkValid.value ?? 0).trigger('change');
+            }
+        }
+    }
+
+    function PMD_ValidateDiscount() {
+        let discountUnit = $("#PMD_PresDiscountAmountPer").dropdown("get value") ? Number($("#PMD_PresDiscountAmountPer").dropdown("get value")) : 2;
+        let discountVal = !isNaN(Number($('#PMD_PresDiscount').val())) ? Number($('#PMD_PresDiscount').val()) : 0;
+        let result = {};
+        result.isValid = false;
+        result.value = 0;
+        if(discountVal < 0) return result;
+
+        if (discountUnit == 1) {
+            //Type %
+            if (discountVal > 100) {
+                result.value = 100;
+                result.isValid = false;
+            }
+            else {
+                result.value = discountVal;
+                result.isValid = true;
+            }
+        }
+        else {
+            //Type VND
+            if (discountVal > PMD_PriceRoot) {
+                result.value = PMD_PriceRoot;
+                result.isValid = false;
+            }
+            else {
+                result.value = discountVal;
+                result.isValid = true;
+            }
+        }
+        return result;
+    }
+
+    function PMD_Event() {
+        $("#PMD_MedList .PMD_MedicineUnitPrice").bind('change').change(function () {
+            let id = Number($(this).attr('data-id')) ? Number($(this).attr('data-id')) : 0;
+            let unitPrice = !isNaN(Number($(this).val())) ? Number($(this).val()) : 0;
+            if(unitPrice >= 0) {
+                PMD_dataMedicineDetail[id].Price = unitPrice;
+                PMD_Count_Price_For_All();
+            }
+            else {
+                $(this).val(0).trigger('change');
+            }
+        });
+    }
+
+    function PMD_Refresh() {
+        $('#textShowMessage_PaymentMedicine').html('');
+        $('#PMD_CustomerMedicine, #PMD_medicineMethod, #PMD_AmountPayment, #TransferType, #PosType,#PMD_bankInvoiceCode').parent().removeClass("error");      
+    }
+
+    function PMD_ChangePrescription() {
+        if (flagChange == 1) {
+            PMD_Refresh();
+            let MedicineID = Number($('#PMD_CustomerMedicine').dropdown('get value')) ? Number($('#PMD_CustomerMedicine').dropdown('get value')) : 0;
+            if (MedicineID != 0 && Object.keys(PMD_objPres).length > 0) {
+                PMD_isFirstPay = PMD_objPres[MedicineID]?.IsFirstPay ?? 0;
+                PMD_CheckFirstPaid(MedicineID);
+                PMD_LoadDataMed(MedicineID);
+            }
+            else {
+                $('#textShowMessage_PaymentMedicine').html('@Local["Chọn đơn thuốc cần thanh toán"]');
+                $('#PMD_CustomerMedicine').parent().addClass("error");
+            }
+        }
+    }
+
+    function PMD_CheckFirstPaid(id) {
+        if (id != 0 && Object.keys(PMD_objPres).length > 0) {
+            PMD_isFirstPay = PMD_objPres[id]?.IsFirstPay ?? 0;
+            if (PMD_isFirstPay == 1) {
+                $("#PMD_PresDiscount").removeAttr('disabled');
+                $("#PMD_PresDiscountAmountPer").removeClass('disabled');
+            }
+            else {
+                $('#PMD_PresDiscount').prop("disabled", true);
+                $("#PMD_PresDiscountAmountPer").addClass('disabled');
+            }
+        }
+    }
+
+    function PMD_CheckingData() {
+        if (flagChange == 1) {
+            PMD_Refresh();
+            let MedicineID = Number($('#PMD_CustomerMedicine').dropdown('get value')) ? Number($('#PMD_CustomerMedicine').dropdown('get value')) : 0;
+            if (MedicineID != 0) {
+                let Amount = Number($('#PMD_AmountPayment').val()) ? Number($('#PMD_AmountPayment').val()) : 0;
+                let AmountPaid = Number($('#PMD_AmountPaid').val()) ? Number($('#PMD_AmountPaid').val()) : 0;
+                let PriceDiscounted = Number($('#PMD_PriceDiscounted').val()) ? Number($('#PMD_PriceDiscounted').val()) : 0;
+                let AmountOwe = PriceDiscounted - AmountPaid;
+                let MethodID = Number($('#PMD_medicineMethod').dropdown('get value')) ? Number($('#PMD_medicineMethod').dropdown('get value')) : 0;
+                if (MethodID == 0) {
+                    $('#PMD_medicineMethod').parent().addClass("error");
+                    $('#textShowMessage_PaymentMedicine').html('@Local["Chọn hình thức thanh toán"]');
+                }
+                if (Amount < 0 || Amount > AmountOwe) {
+                    $('#PMD_AmountPayment').parent().addClass("error");
+                    $('#textShowMessage_PaymentMedicine').html('@Local["Số tiền thanh toán lớn hơn 0 và nhỏ hơn số tiền phải thanh toán"]');
+                }
+            }
+            else {
+                $('#textShowMessage_PaymentMedicine').html('@Local["Chọn đơn thuốc cần thanh toán"]');
+                $('#PMD_CustomerMedicine').parent().addClass("error");
+            }
+        }
+    }
+
+    function PMD_ChangeMethod() {
+        let idMethod = Number($('#PMD_medicineMethod').dropdown('get value')) ? Number($('#PMD_medicineMethod').dropdown('get value')) : 0;
+        $("#PMD_medicineMethodType").dropdown("clear");
+        $("#ccbMethodType").html("");
+
+        let data = dataPaymentDetail_MethodType.filter(a => a.Type == idMethod);
+
+        Load_Combo(data, "ccbMethodType", true);
+
+        if (idMethod == 5)
+            $("#PMD_bankInvoiceCode").prop('disabled', false);
+        else
+            $("#PMD_bankInvoiceCode").prop('disabled', true);
+
+        if (data.length > 0) {
+            $("#PMD_medicineMethodType").removeClass('disabled');
+            $("#PMD_medicineMethodType").dropdown("refresh");
+            $("#PMD_medicineMethodType").dropdown("set selected", data[0].ID.toString());
+
+            $("#PMD_medicineMethodType input.payment").attr('name', "paymentMethodType");
+        }
+        else {
+            $("#PMD_medicineMethodType").addClass('disabled');
+            $("#PMD_medicineMethodType input.payment").attr('name', "");
+        }
+    }
+
+    //#endregion
+
+
+    //#region // Execute data
+
+    function PMD_ExecuteData() {
+        PMD_CheckingData();
+        if (document.getElementById("textShowMessage_PaymentMedicine").innerHTML === "") {
+            $('#PMD_Container').form('validate form');
+            if ($('#PMD_Container').form('is valid')) {
+                PMD_ExcutedSaveData();
+            }
+        }
+        return false;
+    }
+
+    function PMD_ExcutedSaveData() {
+        let data = {};
+        let methodID = Number($('#PMD_medicineMethod').dropdown('get value')) ? Number($('#PMD_medicineMethod').dropdown('get value')) : 0;
+        let methodTypeID = Number($('#PMD_medicineMethodType').dropdown('get value')) ? Number($('#PMD_medicineMethodType').dropdown('get value')) : 0;
+        let AmountPayment = Number($('#PMD_AmountPayment').val()) ? Number($('#PMD_AmountPayment').val()) : 0;
+        data.PrescriptionID = Number($('#PMD_CustomerMedicine').dropdown('get value')) ? Number($('#PMD_CustomerMedicine').dropdown('get value')) : 0;
+        data.AmountPayment = AmountPayment
+        data.DateCreated = $('#PMD_dateCreatedExt').val() ? $('#PMD_dateCreatedExt').val() : "";
+        data.BranchID = Number($('#PMD_medicineBranchID').dropdown('get value')) ? Number($('#PMD_medicineBranchID').dropdown('get value')) : 0;
+        data.MethodID = methodID
+        data.MethodPosType = methodID == 5 ? methodTypeID : 0;
+        data.MethodTransferType = methodID == 4 ? methodTypeID : 0;
+        data.MedthodDetail = ((methodID != 4 && methodID != 5) ? methodTypeID : 0);
+        data.PMD_bankInvoiceCode = $('#PMD_bankInvoiceCode').val() ? ($('#PMD_bankInvoiceCode').val()).trim() : "";
+        data.Content = $('#PMD_txtContentPayment').val() ? ($('#PMD_txtContentPayment').val()).trim() : '';
+        data.BillCode = $('#PMD_txtBillCode').val() ? ($('#PMD_txtBillCode').val()).trim() : '';
+        data.PriceDiscounted = PMD_PriceDiscounted;
+        data.PriceRoot = PMD_PriceRoot;
+        data.DiscountAmount = PMD_DiscountAmount;
+        data.DiscountPercent = PMD_DiscountPer;
+        
+        if (xhrPaymentDetail && xhrPaymentDetail.readyState != 4) xhrPaymentDetail.abort();
+        xhrPaymentDetail = AjaxLoad(url = "/Customer/Payment/PaymentMedicineDetail/?handler=ExcuteData"
+            , data = {
+                'CustomerID': _PaymentCustomerID,
+                'data': JSON.stringify(data),
+                'dataDetail': JSON.stringify(Object.values(PMD_dataMedicineDetail))
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length == 1) {
+                        if (data[0]["Result"] == "1") {
+                            let Code = data[0]["Code"];
+                            let idInserted = data[0]["PaymentID"];
+                            notiSuccess();
+                            if (typeof SMSSYS_AfterPaid === 'function')
+                                SMSSYS_AfterPaid(_customerid = _PaymentCustomerID, _objCurrentID = { PaymentMedID: idInserted })
+                            if (typeof PayMedicine_LoadData === 'function' && typeof PayMedicine_CancelDetail === 'function') {
+                                PayMedicine_LoadData(idInserted, 0);
+                                PayMedicine_CancelDetail();
+                            }
+                            if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                            if (typeof LoadTabDepositAjax === 'function') LoadTabDepositAjax();
+                            if (typeof PMD_Detail_UpdateThirdAccount === 'function') PMD_Detail_UpdateThirdAccount(idInserted);
+                            fcm_sendtopic("payment", Master_circleAvatar, sys_employeeName_Main, formatNumber(AmountPayment));
+                            let paymethod = Fun_GetName_ByID(PMD_data_payment_method, data[0]["PayMethod"]);
+                            let amount = formatNumber(data[0]["Amount"]);
+                            syslog_cutpaid('i', Code, _PaymentCustomerID, `${paymethod} ${amount} `);
+                            if (typeof DSP_LoadData == "function") {
+                                DSP_LoadData()
+                                DSP_CancelDetail();
+                            }
+                            if (typeof DSD_GetInfo == "function") DSD_GetInfo(_CustomerMedID)
+                        }
+                        else if(data[0]["Result"] == "-1") {
+                            notiError('@Local["Đã chốt sổ, không thể thêm thanh toán trước thời gian chốt"]');
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                else notiError_SW();
+            }
+            , sender = $("#button_save_card_detail")
+        );
+    }
+
+    function PMD_Close() {
+        if (typeof DSP_CancelDetail == "function") {
+            DSP_CancelDetail();
+        }
+        if (typeof PayMedicine_CancelDetail == "function") {
+            PayMedicine_CancelDetail();
+        }
+    }
+    //#endregion
+    //#region //ThirdAccount
+    function PMD_Detail_UpdateThirdAccount(id) {
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+            APIAccount_Excute(currentID = id, type = 7, action = "save"
+                , beforefunc = function () { }
+                , successfunc = function (e) {
+                    if (typeof PayMedicine_LoadData == 'function') PayMedicine_LoadData(id, 0);
+                }
+                , failfunc = function (message) { }
+                , completefunc = function () { }
+            );
+        }
+    }
+    //#endregion
+
+
+</script>

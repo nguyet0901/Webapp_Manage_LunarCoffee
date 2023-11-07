@@ -1,0 +1,173 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Properties.PropertiesDetailModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Đặc điểm"]</h6>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3" id="PD_BodyGrid">
+
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();return CloseModal();">@Local["Hủy"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="PDetail_Executed();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let ser_CustomerID = '@Model._CustomerID';
+    let ser_DateCreated = '@Model._DateCreated';
+    //#region //Load
+    $(document).ready(function () {
+        PDetail_Load();
+    })
+
+    function PDetail_Load () {
+        AjaxLoad(url = "/Customer/Properties/PropertiesDetail/?handler=Loadata"
+            , data = {
+                'CustomerID': ser_CustomerID
+                , 'DateCreated' : ser_DateCreated
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let dataInit = JSON.parse(result)["Table"];
+                    let dataUpdate = JSON.parse(result)["Table1"];
+                    PDetail_Render(dataInit, "PD_BodyGrid", function () {PDetail_FillData(dataUpdate)});
+                }
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+    //#endregion
+
+    //#endregion //Render
+    async function PDetail_Render (data, id, callBack) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let Col = (item.Col == 1 || item.Col == 0  ? 'col-12' : 'col-' + item.Col);
+                        let tr = `
+                            <div class="${Col} p-1 position-relative">
+                                <label>${item.Name}</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <div class="badge PD_ColorPro bg-primary" style="background: ${item.Color}2b !important; border-color: ${item.Color};">
+                                        </div>
+                                    </div>
+                                    <input class="form-control ItemPDetail" data-id="${item.ID}" type="text"/>
+                                </div>
+                            </div>
+                        `;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                    if (typeof callBack == "function" && ser_DateCreated != "0") callBack();
+                }
+            }
+            resolve();
+        })
+    }
+
+    function PDetail_FillData (DtUpdate) {
+        if (DtUpdate && DtUpdate.length > 0) {
+            for (let _i = 0; _i < DtUpdate.length; _i++) {
+                let item = DtUpdate[_i];
+                $("#PD_BodyGrid .ItemPDetail[data-id=" + item["ProID"] + "]").val(item.Value);
+            }
+        }
+    }
+
+    //#endregion
+
+    //#region //Executed
+
+    function PDetail_Executed () {
+        let arr = [];
+        arr = Pdetail_GetValue();
+        if (arr && arr.length > 0) {
+            AjaxLoad(url = "/Customer/Properties/PropertiesDetail/?handler=Executed"
+                , data = {
+                    'CustomerID': ser_CustomerID
+                    , 'DtPro': JSON.stringify(arr)
+                    , 'DateCreated': ser_DateCreated
+                }
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        GeneralInfo_LoadPro(ser_DateCreated == "0" ? 1 : 0);
+                        CloseModal();
+                    } else notiError();
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        } else {
+            notiWarning("@Local["Kiểm tra dữ liệu"]");
+        }
+    }
+    function Pdetail_GetValue () {
+        try {
+            let _res = [];
+            let _isVal = 0;
+            let _ele = document.getElementsByClassName("ItemPDetail");
+            if (_ele && _ele.length > 0) {
+                for (let i = 0; i < _ele.length; i++) {
+                    let _ite = $(_ele[i]);
+                    let _obj = {};
+                    _obj.ID = _ite.attr("data-id");
+                    _obj.Value = _ite.val();
+                    _res.push(_obj);
+
+                    if (_ite.val() != '') {
+                        _isVal = 1
+                    }
+                }
+            }
+
+            return _isVal == 1 ? _res : [];
+        } catch {
+            return [];
+        }
+    }
+
+    //#endregion
+</script>
+<style>
+    .PD_ColorPro {
+        width: 19px;
+        height: 20px;
+        border-radius: 10px;
+        display: inline-block;
+        border: 1px solid;
+    }
+</style>

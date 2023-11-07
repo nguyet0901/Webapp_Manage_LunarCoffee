@@ -1,0 +1,105 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketTagDetailModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form class="form form3" id="from_customer_Group" onsubmit="event.preventDefault(); return false;">
+            <div class="card p-3 border-radius-xl bg-white mb-3">
+                <h6 class="font-weight-bolder mb-0">@Local["Cập nhật tag ticket"]</h6>
+                <div class="row">
+                    <div class="field col-12 mt-2 px-1">
+                        <label>Tag</label>
+                        <div class="ui fluid search selection dropdown form-control" id="TagDetailID">
+                            <input type="hidden" name="" />
+                            <i class="dropdown icon"></i>
+                            <i class="remove icon"></i>
+                            <div class="default text"></div>
+                            <div id="cbbTagDetail" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="action_Save">
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+            <button class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return TagDetail_ExcuteData();">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let ser_TicketID = '@Model._TicketID';
+
+    $(document).ready(function () {
+        TagDetail_Init();
+    });
+
+    function TagDetail_Init() {
+        AjaxLoad(url = "/Marketing/TicketTagDetail/?handler=LoadInit"
+            , data = {
+                TicketID : ser_TicketID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataCombo = data.ComboTag;
+                    let dataDetail = data.Detail;
+                    Load_Combo(dataCombo, "cbbTagDetail", false);
+                    if (dataDetail && dataDetail.length == 1) {
+                        $("#TagDetailID").dropdown("refresh");
+                        $("#TagDetailID").dropdown("set selected", dataDetail[0].TagID);
+                    }
+
+                }
+            }
+        );
+    }
+
+    function TagDetail_ExcuteData() {
+        var TagID = Number($('#TagDetailID').dropdown('get value')) ? Number($('#TagDetailID').dropdown('get value')) : 0;
+        AjaxLoad(url = "/Marketing/TicketTagDetail/?handler=ExcuteData"
+            , data = {
+                'TicketID': ser_TicketID,
+                'TagID': TagID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    syslog_cutctt('u', TagDetail_GeneralCode(ser_TicketID));
+                    notiSuccess();
+                    CloseModal();
+                    if (typeof TicketAction_TagLoad === 'function') TicketAction_TagLoad();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TagDetail_GeneralCode(id) {
+        try {
+            let result = '';
+            let stringTemm = '00000000';
+            stringTemm = stringTemm + id.toString();
+            let lengthTemp = stringTemm.length;
+            result = stringTemm.slice(lengthTemp - 8, lengthTemp)
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

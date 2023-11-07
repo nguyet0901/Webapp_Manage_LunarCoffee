@@ -1,0 +1,155 @@
+﻿@page
+@model MLunarCoffee.Pages.Appointment.AppointmentCancelDetailModel
+@{
+    Layout=null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+
+</head>
+
+<body>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class=" col-auto my-auto">
+                            <div class="h-100">
+                                <h6 id="header header_form_main" class="mb-0">
+                                    @Local["Hủy lịch hẹn"]
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Lý do hủy"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="reasonCancel">
+                                <input type="hidden" name="reasonCancel" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Lý do"]</div>
+                                <div id="cbbreasonCancel" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="txtContentReasonCancel" class="form-control" placeholder="eg .@Local["Ghi chú"]" name="note" type="text" />
+                        </div>
+                    </div>
+                </div>
+                <!-- #region button save and text show message-->
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="form3" onclick="CloseModal()">@Local["Đóng"]</button>
+                            <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteData()">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var ser_AppCurrent  = (@Model._AppDetailID);
+        $(document).ready(function () {
+            Initialize();
+        });
+        function Initialize() {
+            AjaxLoad(url = "/Appointment/AppointmentCancelDetail/?handler=Initialize"
+                , data = { }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        data = JSON.parse(result);
+                        if (data.length > 0) {
+                            Load_Combo(data, "cbbreasonCancel", true);
+                            $("#reasonCancel").dropdown("refresh");
+                            $("#reasonCancel").dropdown("set selected", Number(data[0].ID));
+                        }
+                    }
+                }
+                , sender = null
+            );
+        }
+
+        function ExcuteData() {
+            var data = new Object();
+            data.StatusID = Number($('#reasonCancel').dropdown('get value')) ? Number($('#reasonCancel').dropdown('get value')) : 0;
+            data.Content = $('#txtContentReasonCancel').val() ? $('#txtContentReasonCancel').val() : "";
+
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Appointment/AppointmentCancelDetail/?handler=ExcuteData"
+                    , data = { 'data': JSON.stringify(data), 'CurrentID': ser_AppCurrent }, async = true
+                    , error = function () {
+                        notiError_SW();
+                    }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let da = JSON.parse(result);
+                            if (da[0].Result == 1) {
+                                syslog_cutapp('u', da[0].AppCode, da[0].CustID, 'Cancel: '+$('#txtContentReasonCancel').val());
+                                notiSuccess();
+
+                                if (typeof AppInDay_RemoveRow_AppCancel !== 'undefined' && $.isFunction(AppInDay_RemoveRow_AppCancel)) {
+                                    AppInDay_RemoveRow_AppCancel(ser_AppCurrent);
+                                }
+
+                                if (typeof LoadAppointmentListByDayAjax !== 'undefined'  ) {
+                                    LoadAppointmentListByDayAjax(0, ser_AppCurrent);
+                                }
+
+                                if (typeof LoadScheduleAjax !== 'undefined' && $.isFunction(LoadScheduleAjax)) {
+                                    LoadScheduleAjax();
+                                }
+                                if (typeof Calendar_ReloadData !== 'undefined' && $.isFunction(Calendar_ReloadData)) {
+                                    Calendar_ReloadData(ser_AppCurrent);
+                                }
+                                if (typeof idCurrentAppointment !== 'undefined' && idCurrentAppointment == ser_AppCurrent) {
+                                    $("#AppointmentExtra").hide();
+                                }
+
+                                $('#DetailModal').modal('hide');
+                                $("#DetailModal_Content").html('');
+                                if (typeof Appointment_Reset_InDay !== 'undefined' ) {
+                                    Appointment_Reset_InDay();
+                                }
+                            }
+                            else document.getElementById("textShowMessage").innerHTML = "@Local["Lịch hẹn đã đổi trạng thái không thể chỉnh sửa hoặc xóa"]";
+                        }
+                        else {
+                            document.getElementById("textShowMessage").innerHTML = "@Local["Có lỗi xảy ra"]";
+                        }
+
+                    }
+                    , sender = null
+                );
+
+            }
+            return false;
+        }
+
+    </script>
+
+    <script>js_require('/js/comon/initialize_setting.js')</script>
+    <script>js_require('/js/main.js')</script>
+    <script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+
+</body>
+
+</html>

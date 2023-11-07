@@ -1,0 +1,227 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketMoveDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <form class="form form3" id="form3">
+            <div class="card p-3 border-radius-xl bg-white mb-3">
+                <h6 class="font-weight-bolder mb-0">@Local["Chuyển ticket"]</h6>
+                <p class="mb-0 text-sm">@Local["Chuyển ticket giữa các telesale"]</p>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Từ tele"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="InvidualTeleFrom">
+                            <input type="hidden" name="InvidualTeleFrom" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Từ tele"]</div>
+                            <div id="cbbInvidualTeleFrom" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Đến tele"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="InvidualTeleTo">
+                            <input type="hidden" name="InvidualTeleTo" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Đến tele"]</div>
+                            <div id="cbbInvidualTeleTo" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Chọn loại dữ liệu chuyển"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="TypeDataTransfer">
+                            <input type="hidden" name="TypeDataTransfer" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. @Local["Chọn loại dữ liệu chuyển"]</div>
+                            <div id="cbbTypeDataTransfer" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Chọn cách chuyển"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="MovedataType" onchange="OnChangeMoveType()">
+                            <input type="hidden" name="MovedataType" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. @Local["Chọn cách chuyển"]</div>
+                            <div id="cbbMovedataType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 px-1 mt-2 ">
+                        <label>@Local["Thêm tệp"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="ImportFile">
+                            <input type="hidden" name="ImportFile" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. @Local["Thêm tệp"]</div>
+                            <div id="cbbImportFile" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Từ ngày"]</label>
+                        <input id="FromDate" class="flatpickr form-control" type="text" placeholder="eg .@Local["Từ ngày"]" />
+                    </div>
+                    <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                        <label>@Local["Đến ngày"]</label>
+                        <input id="ToDate" class="flatpickr form-control" type="text" placeholder="eg .@Local["Đến ngày"]" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+        <div class="action_Save-Content">
+            <div>
+                <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+            </div>
+            <div>
+                <button class="btn bg-gradient-primary mt-2 me-2" form="form3" type="submit" onclick="return ExcuteData()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#FromDate,#ToDate").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            defaultDate: new Date(),
+        });
+        TicketMoveDetail_LoadInitializeCombo();
+    });
+
+    function TicketMoveDetail_LoadInitializeCombo() {
+        AjaxLoad(url = "/Marketing/TicketMoveDetail/?handler=InitializeCombo"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    let data_ComboTele = data.Tele;
+                    let data_ComboImportFile = data.ImportFile;
+                    let data_ComboExecuteType = data.ExecuteType;
+                    let data_ComboMoveType = data.MoveType;
+
+                    Load_Combo(data_ComboTele, "cbbInvidualTeleTo", true);
+                    Load_Combo(data_ComboTele, "cbbInvidualTeleFrom", true);
+                    Load_Combo(data_ComboImportFile, "cbbImportFile", true);
+
+                    Load_Combo(data_ComboExecuteType, "cbbTypeDataTransfer", true);
+                    $("#TypeDataTransfer").dropdown("refresh");
+                    $("#TypeDataTransfer").dropdown("set selected", Number(data_ComboExecuteType[0].ID));
+
+                    Load_Combo(data_ComboMoveType, "cbbMovedataType", true);
+                    $("#MovedataType").dropdown("refresh");
+                    $("#MovedataType").dropdown("set selected", Number(data_ComboMoveType[0].ID));
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+
+    function OnChangeMoveType() {
+        let type = Number($('#MovedataType').dropdown('get value')) ? Number($('#MovedataType').dropdown('get value')) : 0;
+        if (type === 129) {
+            // Chuyen het
+            $("#FromDate").attr("disabled", true);
+            $("#ToDate").attr("disabled", true);
+            if (!$("#ImportFile").hasClass("disabled")) $('#ImportFile').addClass("disabled");
+        }
+        if (type === 130) {
+            // Theo file import
+            $("#FromDate").attr("disabled", true);
+            $("#ToDate").attr("disabled", true);
+            if ($("#ImportFile").hasClass("disabled")) $('#ImportFile').removeClass("disabled");
+        }
+        if (type === 131) {
+            // Theo thoi gian tao
+            $("#FromDate").attr("disabled", false);
+            $("#ToDate").attr("disabled", false);
+            if (!$("#ImportFile").hasClass("disabled")) $('#ImportFile').addClass("disabled");
+        }
+    }
+
+
+    function ExcuteData() {
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            document.getElementById("textShowMessage").innerHTML = "";
+            var userTo = Number($('#InvidualTeleTo').dropdown('get value')) ? Number($('#InvidualTeleTo').dropdown('get value')) : 0;
+            var userFrom = Number($('#InvidualTeleFrom').dropdown('get value')) ? Number($('#InvidualTeleFrom').dropdown('get value')) : 0;
+            var transferData = Number($('#TypeDataTransfer').dropdown('get value')) ? Number($('#TypeDataTransfer').dropdown('get value')) : 0;
+            var type = Number($('#MovedataType').dropdown('get value')) ? Number($('#MovedataType').dropdown('get value')) : 0;
+            var importFile = Number($('#ImportFile').dropdown('get value')) ? Number($('#ImportFile').dropdown('get value')) : 0;
+            var dateFrom = $('#FromDate').val();
+            var dateTo = $('#ToDate').val();
+            if (userTo == userFrom) document.getElementById("textShowMessage").innerHTML = "@Local["Tele nguồn và đích trùng nhau"]";
+            else {
+                if (type === 129) {
+                    // Chuyen het
+                }
+                if (type === 130) {
+                    // Theo file import
+                    if (importFile === 0) document.getElementById("textShowMessage").innerHTML = "@Local["Chọn file thêm"]";
+                }
+                if (type === 131) {
+                    // Theo thoi gian tao
+                    if (dateFrom > dateTo) document.getElementById("textShowMessage").innerHTML = "@Local["Ngày bắt đầu lớn hơn ngày kết thúc"]";
+                }
+            }
+            if (document.getElementById("textShowMessage").innerHTML === "") {
+                AjaxLoad(url = "/Marketing/TicketMoveDetail/?handler=ExcuteData"
+                    , data = {
+                        'userTo': userTo
+                        , 'userFrom': userFrom
+                        , 'transferData': transferData
+                        , 'type': type
+                        , 'importFile': importFile
+                        , 'dateFrom': dateFrom
+                        , 'dateTo': dateTo
+                    }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccess();
+                            CloseModal();
+                            LoadTicketMove();
+                            let data = JSON.parse(result);
+                            if (Number(data[0].UserTo) == userTo && Number(data[0].UserTo) != 0) {
+                                fcm_senduser(Number(data[0].UserTo), Master_circleAvatar, sys_employeeName_Main, 'Receipt Data (' + data[0].TotalMove + ' records)');
+                            }
+                        } else {
+                            notiError_SW();
+                        }
+                    }
+                );
+            }
+        }
+        return false;
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

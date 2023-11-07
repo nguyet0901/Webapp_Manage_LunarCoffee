@@ -1,0 +1,282 @@
+﻿@page
+@model SourceMain.Pages.DeleteMergeCus.MergeCustomerModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <!--Master-->
+            <div class="card" id="customerMergeList">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <!-- #region header -->
+                                <h6 data-languagestatic="merge_customer_header" class="mb-0">Gộp Khách Hàng</h6>
+                                <p data-languagestatic="merge_customer_header_sub" class="text-sm mb-0">Khách Hàng Đã Gộp Không Thể Khôi Phục</p>
+                                <!-- #endregion -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body pt-2 ">
+                    <!-- #region control search-->
+                    <div class="row px-2 form3" id="######">
+                        <div class="field col-12 col-sm-6 col-xl-4 p-1">
+                            <div class="input-group">
+                                <input type="text" id="txtSearchingCustomerToMerge" placeholder="Name, PhoneNumer, Code..." class="form-control" autocomplete="off">
+                                <div class="input-group-text" onclick="event.preventDefault();SearchingCustomerToMerge()">
+                                    <span class="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                                </div>
+                            </div>
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        </div>
+                        <div class="field col-12 col-sm-6 col-xl-4 p-1">
+                            <input id="dateFilter" class="flatpickr form-control" type="text" placeholder="Đến Ngày.." onchange="LoadCustomerMerge()" />
+                        </div>
+                        <div class="field col-12 col-sm-12 col-xl-4 p-1">
+                            <div class="ui fluid search selection dropdown form-control" id="BranchID" onchange="LoadCustomerMerge()">
+                                <input type="hidden" name="branch" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">Chọn Chi Nhánh</div>
+                                <div id="cbbBranch" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- #endregion -->
+                    <!-- #region table-->
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="#####" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentCustomerMerge">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th data-languagestatic="no" style=" width: 25px;">STT</th>
+                                    <th data-languagestatic="merge_from_customer">Khách Hàng Gộp</th>
+                                    <th data-languagestatic="merge_to_customer">Khách Hàng Đươc Gộp</th>
+                                    <th data-languagestatic="reason">Lý Do Gộp</th>
+                                    <th data-languagestatic="handlelname" >Người Gộp</th>
+                                    <th data-languagestatic="merge" style="width: 30px;">Gộp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentCustomerMergeBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- #endregion -->
+                </div>
+
+            </div>
+            <!--Detail-->
+            <div style="display: none" id="customerMergeDetail" class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="field">
+                            <label data-languagestatic="reason">Lý Do Gộp</label>
+                            <div class="ui fluid search selection dropdown form-control" id="ReasonMerge">
+                                <input type="hidden" name="ReasonMerge" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="ccbReasonMerge" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="action_Save-Content">
+                            <button data-languagestatic="button_cancel" class="btn btn-secondary" form="#####" onclick="event.preventDefault();return CancelMerge();">Cancel</button>
+                            <button id="#####" data-languagestatic="button_ok" form="#####" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return SaveMerge();">Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="customerDetail" class="card-body pt-0"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var CustomerIDMerge = 0;
+    var ser_customerToMerge = 0;
+    let dataReason = [];
+    let Flag_MergeCus = 0;
+    function LoadCustomerMerge() {
+        if (Flag_MergeCus == 1) {
+            let dateFilter = $('#dateFilter').val() ? $('#dateFilter').val() : new Date()
+            var branchid = (Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0)
+
+            AjaxLoad(url = "/DeleteMergeCus/MergeCustomer/?handler=LoadDataMergeCus"
+                , data = { "branchid": branchid, "dateFilter": dateFilter }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    RenderDeleteMergeCusList(data, "dtContentCustomerMergeBody");
+                }
+            );
+        }
+    }
+    function MergeCustomer(ID) {
+        document.getElementById("customerMergeList").style.display = "none";
+        document.getElementById("customerMergeDetail").style.display = "block";
+        $("#customerDetail").empty();
+        $("#customerDetail").load("/DeleteMergeCus/LoadCustomerToMerge?CustomerID=" + ID + "&ver=" + versionofWebApplication);
+        ResetAllFieldWhenMerge();
+        CustomerIDMerge = ID;
+
+    }
+    function SearchingCustomerToMerge() {
+        var SeachingText = $('#txtSearchingCustomerToMerge').val();
+        if (SeachingText.length > 3) {
+
+            AjaxLoad(url = "/DeleteMergeCus/MergeCustomer/?handler=SearchingCustomerToMerge"
+                , data = { "keyword": SeachingText }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    RenderDeleteMergeCusList(data, 'dtContentCustomerMergeBody');
+                }
+            );
+        }
+        else {
+            document.getElementById("textShowMessage").innerHTML = "Nhập Hơn 3 Ký Tự Để Tìm Kiếm";
+        }
+    }
+    function RenderDeleteMergeCusList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none !important;">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        +
+                        (
+                            (item.IsMerge == 0)
+                                ? ('<td>' + item.CustCodeFrom + '</br>' + item.CustNameFrom + '</td>')
+                                : ('<td><a href="/Customer/MainCustomer?CustomerID=' + item.CusIDFrom + "&ver=" + versionofWebApplication + '">' + item.CustCodeFrom + '</a></br>' + item.CustNameFrom + '</td>')
+                        )
+                        +
+                        (
+                            (item.IsMerge == 1)
+                                ? ('<td>' + item.CustCodeTo + '</br>' + item.CustNameTo + '</td>')
+                                : ('<td><a href="/Customer/MainCustomer?CustomerID=' + item.CusIDTo + "&ver=" + versionofWebApplication + '">' + item.CustCodeTo + '</a></br>' + item.CustNameTo + '</td>')
+                        )
+                        + '<td>' + item.ReasonMerge + '</td>'
+                        + '<td>' + item.CreatedInfo + '</td>'
+                        + ((item.IsMerge === 1)
+                            ? ('<td><button class="buttonGrid"><i class="buttonMergeClass vtt-icon vttech-icon-merge"></i></button></td>')
+                            : '<td></td>')
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function CancelMerge() {
+        ResetAllFieldWhenMerge();
+        document.getElementById("customerMergeList").style.display = "block";
+        document.getElementById("customerMergeDetail").style.display = "none";
+    }
+    function SaveMerge() {
+        //ser_customerToMerge ben form datail
+        if (CustomerIDMerge != "0" && ser_customerToMerge != "0") {
+            let ReasonID = 0;
+            ReasonID = Number($('#ReasonMerge').dropdown('get value')) ? Number($('#ReasonMerge').dropdown('get value')) : 0;
+
+            AjaxLoad(url = "/DeleteMergeCus/MergeCustomer/?handler=MergeCustomer"
+                , data = { 'CustomerFrom': CustomerIDMerge, 'CustomerTo': ser_customerToMerge, 'ReasonID': ReasonID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        ResetAllFieldWhenMerge();
+                        document.getElementById("customerMergeList").style.display = "block";
+                        document.getElementById("customerMergeDetail").style.display = "none";
+                        notiSuccess();
+                        LoadCustomerMerge();
+                    } else {
+                        notiError_SW();
+                    }
+                }
+                , sender = null
+                , before = function () {
+                    $("#progressBar").show();
+                }
+                , complete = function (e) {
+                    $("#progressBar").hide();
+                }
+            );
+        }
+        else {
+            // textMessage Ben form detail
+            document.getElementById("textMessage").innerHTML = "Chọn Khách Hàng Đích";
+            document.getElementById("textMessage").style.display = "block";
+        }
+    }
+
+    function ResetAllFieldWhenMerge() {
+        CustomerIDMerge = 0;
+        ser_customerToMerge = 0;
+        if (dataReason != undefined && dataReason.length != 0) {
+            $("#ReasonMerge").dropdown("refresh");
+            $("#ReasonMerge").dropdown("set selected", Number(dataReason[0].ID));
+        }
+    }
+    $(document).ready(function () {
+
+        $(".flatpickr").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            defaultDate: new Date(),
+            weekNumbers: true,
+        });
+
+        $('#dtContentCustomerMerge tbody').on('click', '.buttonMergeClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            MergeCustomer(ID);
+        });
+        MergeCustomer_LoadComboInitialize();
+    });
+
+    function MergeCustomer_LoadComboInitialize() {
+        AjaxLoad(url = "/DeleteMergeCus/MergeCustomer/?handler=LoadComboInitialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let DataBranch = data.Branch;
+                Load_Combo(DataBranch, "cbbBranch", true);
+                $("#BranchID").dropdown("refresh");
+                $("#BranchID").dropdown("set selected", Number(DataBranch[0].ID));
+                dataReason = data.Reason;
+                Load_Combo(dataReason, "ccbReasonMerge", true);
+                $("#ReasonMerge").dropdown("refresh");
+                $("#ReasonMerge").dropdown("set selected", Number(dataReason[0].ID));
+                Flag_MergeCus = 1;
+                LoadCustomerMerge();
+            }
+            , sender = null
+        );
+    }
+
+</script>

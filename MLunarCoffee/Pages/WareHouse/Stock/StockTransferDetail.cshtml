@@ -1,0 +1,1162 @@
+﻿@page
+@model SourceMain.Pages.WareHouse.Stock.StockTransferDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require_notasync('/js/comon/initialize_setting.js', true);</script>
+
+<div class="row">
+    <div class="col-12">
+        <div id="DetailImport" class="card mb-4" style="display:none;">
+            <div class="card-header p-3 pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div class="h-100 ">
+                            <h6 data-languagestatic="detail_exchange_warehouse_header" class="mb-0">Chi Tiết Phiếu Chuyển Kho</h6>
+                            <p data-languagestatic="detail_exchange_warehouse_header_sub1" class="text-sm mb-0">Ngày giờ chuyển không được nhỏ hơn ngày giờ chốt kho gần nhất hoặc lớn hơn ngày giờ hiện tại.</p>
+                            <p data-languagestatic="detail_exchange_warehouse_header_sub2" class="text-sm mb-0">Số lượng tồn thay đổi theo ngày chuyển của kho chuyển đi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-2">
+                <div class="row px-2 form-3">
+                    <div id="ProductSearchBox" class="col-12 col-xl-4 col-md-12 p-1 position-relative ">
+                        <div class="d-flex">
+                            <div class="input-group flex-nowrap" id="wareSearch">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true" style="display: block;"></i>
+                                    <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                </div>
+                                <input id="searchingProduct" type="text" class="form-control" placeholder="eg .search material" autocomplete="off">
+                            </div>
+                        </div>
+                        <div id="TableProduct" class="m-0 my-3 mobile-responsive" style="height:500px;overflow-x:auto;">
+                            <div id="WaitingProduct" class="waitingdiv text-center position-absolute translate-middle-x start-50" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table class="table vt-table mb-0" id="dtContentProduct">
+                                <thead>
+                                    <tr>
+                                        <th class="d-none">ID</th>
+                                        <th data-languagestatic="no" style="max-width:40px;">#</th>
+                                        <th data-languagestatic="product" style="min-width:120px;">Sản Phẩm</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-languagedyn="grid" id="dtContentProductBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="PackageNumBox" class="col-12 col-xl-4 col-md-12 p-1 position-relative" style="display:none">
+                        <div class="input-group flex-nowrap" id="">
+                            <div class="input-group-text input-group-text px-2">
+                                <i class="fa fa-barcode" aria-hidden="true"></i>
+                                <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                            </div>
+                            <input id="searchingPackageNumber" type="text" class="form-control" placeholder="eg .input package number" autocomplete="off" />
+                            <span class="input-group-text px-3 p-0 cursor-pointer" onclick="return ItemDetail_SearchPackageNumber();">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                        <div class="border-0 p-4 mb-2 bg-gray-100 border-radius-md text-center mt-2" id="PackNumber_Empty">
+                            no package
+                        </div>
+                        <ul id="PackageNumberList" class="list-group mt-2 overflow-auto">
+                        </ul>
+                    </div>
+
+                    <div class="col-12 col-xl-8 col-md-12 p-1 flex-grow-1">
+                        <div id="ProductItem" class="card border-1 border-dashed shadow-none rounded-2">
+                            <div class="card-body pt-2">
+
+                                <div class="row">
+                                    <div class="d-none field col-12 col-md-12 col-sm-12 col-lg-12 px-1 mt-2">
+                                        <input type="text" class="form-control disabled" id="PackageNumber" disabled="disabled" />
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-sm-12 col-lg-12 px-1 mt-2">
+                                        <label data-languagestatic="product">Tên Hàng</label>
+                                        <input type="text" class="form-control disabled" id="productDetail" data-productid="0" disabled="disabled" />
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-sm-12 col-lg-6 px-1 mt-2">
+                                        <label data-languagestatic="quantity">Số Lượng Tồn</label>
+                                        <input type="text" class="form-control disabled" id="StockQuantity" disabled="disabled" />
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-sm-12 col-lg-6 px-1 mt-2">
+                                        <label data-languagestatic="product">Ngày Hết Hạn</label>
+                                        <input type="text" class="form-control disabled" id="ExpiredDay" disabled="disabled" />
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="field col-12 col-md-12 col-lg-6 col-sm-12 px-1 mt-2 ">
+                                        <label data-languagestatic="quantity">Số Lượng</label>
+                                        <input id="numberProduct" class="form-control" type="number" name="numberProduct" placeholder="eg.Quantity" />
+                                    </div>
+                                    <div class="field col-12 col-md-12 col-lg-6 col-sm-12 px-1 mt-2">
+                                        <label data-languagestatic="unit">Đơn Vị</label>
+                                        <div class="ui fluid search selection dropdown form-control" id="productUnit">
+                                            <input type="hidden" />
+                                            <i class="dropdown icon"></i>
+                                            <div class="default text">Unit</div>
+                                            <div id="cbbproductUnit" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="field col-12 mt-2 px-1 ">
+                                        <label data-languagestatic="note">Ghi Chú</label>
+                                        <textarea id="noteProduct" name="note" type="text" class="form-control" rows="3" placeholder="eg.Note"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="field col-12 mt-2 px-1">
+                                        <div class="d-flex">
+                                            <div class="d-flex ms-auto align-items-center">
+                                                <div class="mt-1 me-1 text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage" id="textShowMessage"></div>
+                                                <button type="button" class="btn btn-sm bg-gradient-primary mt-2 me-0 mb-0" onclick="event.preventDefault();return ItemDetail_Save();">Add</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="DetailInfo" class="row">
+            <div class="col-12 col-xl-4 col-md-5 mb-4">
+                <div id="StockInfo" class="card ">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="col-auto my-auto flex-grow-1">
+                                <div class="h-100 ">
+                                    <h6 data-languagestatic="detail" class="mb-0">Chi Tiết Phiếu</h6>
+                                </div>
+                            </div>
+                            <div class="ms-auto my-auto mt-0">
+                                <div class="badge badge-pill px-2 bg-gradient-info opacity-0" id="txtDetailCode"> </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="row">
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label class="title title_collapse" data-tab=""><span data-languagestatic="warehouse">Kho</span></label>
+                                <div class="ui fluid search selection dropdown form-control" id="DetailWareID" onchange="WareDetail_UpdateLastLock()">
+                                    <input type="hidden" name="ware" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="cbbDetailWareID" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label data-languagestatic="lock_date_closest">Ngày Chốt Gần Nhất</label>
+                                <input id="lock_date_detail" readonly="readonly" disabled="disabled" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row form3">
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label class="title title_collapse" data-tab=""><span data-languagestatic="warehouse">Kho Nhận</span></label>
+                                <div class="ui fluid search selection dropdown form-control" id="DetailWareID_To" onchange="WareDetail_UpdateLastLock()">
+                                    <input type="hidden" name="ware" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="cbbDetailWareID_To" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-12 px-1 mt-2">
+                                <label data-languagestatic="lock_date_closest">Ngày Chốt Gần Nhất (Kho Nhận)</label>
+                                <input id="lock_date_detail_To" readonly="readonly" disabled="disabled" class="form-control">
+                            </div>
+
+
+                            <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                <label data-languagestatic="createddate">Ngày Thao Tác</label>
+                                <input id="Detail_Date" class="flatpickr detail form-control" type="text" placeholder="Select Date.." />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="field col-12 col-md-12 px-1 mt-2 ">
+                                <label data-languagestatic="note">Ghi Chú</label>
+                                <textarea id="txtWare_Content" name="content" rows="3" type="text" class="form-control"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div id="StockProductList" class="col-12 col-xl-8 col-md-7 mb-4">
+                <div class="card">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <div class="h-100 ">
+                                    <h6 data-languagestatic="material" class="mb-0">Danh Sách Hàng</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="TableStockProduct" class="card-body pt-2 px-3">
+                        <div class="m-0 my-0 mobile-responsive h-100 pt-3">
+                            <div id="" class="waitingdiv text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table class="table vt-table mb-0" id="#####">
+                                <thead>
+                                    <tr>
+                                        <th class="d-none">ID</th>
+                                        <th class="d-none">CusID</th>
+                                        <th data-languagestatic="no" style="width:40px;">#</th>
+                                        <th data-languagestatic="packagenumber">Lô Hàng</th>
+                                        <th data-languagestatic="product">Sản Phẩm</th>
+                                        <th data-languagestatic="quantity">SL</th>
+                                        <th data-languagestatic="unit">Đơn Vị</th>
+                                        <th data-languagestatic="" style="width:50px;" id="thRemoveProduct"></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-languagedyn="grid" id="StockProductBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed-botombutton mt-2">
+            <div class="action_Save">
+                <div class="text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage" id="textShowMessageMaster"></div>
+                <div class="action_Save-Content">
+                    <button data-languagestatic="button_cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();WareHouse_Close()">Cancel</button>
+                    <button data-languagestatic="button_ok" id="btnSaveDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return WareHouse_SaveDetail()">Save</button>
+                    <button data-languagestatic="delete" id="btnDeleteDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-danger mt-2 me-2" onclick="return WareHouse_DeleteDetail()">Xóa</button>
+                    <button data-languagestatic="print" id="btnPrintDetail" style="display:none;" form="form3" type="button" class="btn bg-gradient-info mt-2 me-2" onclick="return WareHouse_PrintDetail()">In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    //#region Declare & Initialize
+
+    let ser_DetailID = "@Model._DetailCurrentID";
+    let ser_WareID = "@Model._WareID";
+    var product_selected = {};
+    var data_TimerOnchange;
+    var data_product;
+    let data_unit;
+    var data_productunit;
+    var data_packageNum = {};
+    let EditButton = 1;
+    var DataComboWare;
+    let Flag_Ware = 0;
+    let ViewDetail = Number("@Model._ViewDetail");
+
+    $(document).ready(function () {
+        WareDetail_Setting(ser_DetailID, ViewDetail);
+        WareDetail_Initialize(ser_DetailID);
+        WareDetail_Event();
+    });
+
+    function WareDetail_Setting(currentid, ViewDetail) {
+
+        if (ViewDetail == 1) {
+            $("#DetailImport").hide();
+            $("#thRemoveProduct").hide();
+        }
+        else $("#DetailImport").css("display", "flex");
+
+        $("#ExpiredDay").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false
+        });
+
+        $("#Detail_Date").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            time_24hr: true,
+            maxDate: new Date(),
+            defaultDate: new Date()
+        });
+
+        let HeightListProduct = $("#StockInfo").outerHeight() - $("#StockProductList").find('.card-header').outerHeight();
+        $("#TableStockProduct").height(HeightListProduct - 32);
+
+        let HeightProductItem = $("#ProductItem").outerHeight() - 55;
+        $("#TableProduct").height(HeightProductItem);
+        $("#PackageNumberList").height(HeightProductItem);
+
+        if (Number(currentid) != 0) {
+            $('#btnPrintDetail').show();
+        }
+        ItemDetail_Refresh();
+    }
+
+    function WareDetail_Initialize(id) {
+        AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=Initialize"
+            , data = { 'currentid': id }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    data_product = data.Product;
+                    data_productunit = data.UnitProduct;
+                    data_unit = data.Unit;
+                    ItemDetail_RenderProductList(data_product, "dtContentProductBody");
+                    DataComboWare = data.Warehouse;
+                    Load_Combo(DataComboWare, "cbbDetailWareID", true);
+                    Load_Combo(DataComboWare, "cbbDetailWareID_To", true);
+
+                    if (DataComboWare && DataComboWare.length > 0) {
+                        let wareID = ser_WareID != "0" ? ser_WareID : DataComboWare[0].ID
+                        $("#DetailWareID").dropdown("refresh");
+                        $("#DetailWareID").dropdown("set selected", wareID.toString());
+                        WareDetail_UpdateLastLock();
+                    }
+                    if (Number(id) != 0) {
+                        WareDetail_RenderData(data.Info, data.Items);
+                    }
+                    else {
+                        $('#btnSaveDetail').show()
+                        $('#detail_Item').show();
+                    };
+                    Flag_Ware = 1;
+                }
+            }
+        );
+
+    }
+
+    function WareDetail_Event() {
+
+        $('#StockProductBody').on('click', '.buttonDeleteClass', function (e) {
+            let idProduct = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            ItemDetail_DeleteRow(idProduct)
+            e.preventDefault();
+        });
+
+        $("#dtContentProductBody").on("click", '.itemProduct', function (e) {
+            e.preventDefault();
+            let id = $(this).attr("data-id");
+            let name = $(this).attr("data-name");
+            $("#productDetail").attr("data-productid", id);
+            $("#productDetail").val(name);
+            $("#PackageNumber").val('');
+            $("#ExpiredDay").val('');
+            $("#DetailWareID").addClass("disabled");
+            ItemDetail_DetectProduct();
+            WareDetail_FocusEditProduct();
+        });
+
+        $("#PackageNumberList").on("click", '.rowPackageNumber', function (e) {
+            let id = Number($(this).attr("data-id"));
+            $("#DetailWareID").addClass("disabled");
+            ItemDetail_ChoosePackage(id);
+        });
+
+        $('.input-group .remove.icon').on('click', function (e) {
+            $(this).parent().siblings().val("");
+            e.stopPropagation();
+        });
+
+        $('#searchingProduct').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            $("#wareSearch .fa-search").hide();
+            $("#wareSearch .spinner-border").show();
+            clearTimeout(data_TimerOnchange);
+            data_TimerOnchange = setTimeout(function (e) {
+                WareDetail_Search(xoa_dau($('#searchingProduct').val().toLowerCase()).trim());
+            }, 500);
+        });
+
+        $('#searchingPackageNumber').keypress(function (e) {
+            if (e.which == 13) {
+                ItemDetail_SearchPackageNumber();
+                return false;
+            }
+        });
+        let oldVal = "";
+        $("#searchingPackageNumber").on("keyup", function (e) {
+            $("#DetailWareID").addClass("disabled");
+            let val = $(this).val();
+            if (val.length - oldVal.length == 5) {
+                ItemDetail_SearchPackageNumber();
+                oldVal = val;
+            }
+            else if(val.length - oldVal.length < 0){
+                oldVal = oldVal.slice(0, oldVal.length - 5)
+            }
+            if (val.length == 0) oldVal = "";
+
+        });
+
+        $("#searchingPackageNumber").on("paste", function (e) {
+            catchPaste(e, this, function (clipData) {
+                ItemDetail_SearchPackageNumber();
+            })
+        });
+    }
+    function catchPaste(evt, elem, callback) {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            // modern approach with Clipboard API
+            navigator.clipboard.readText().then(callback);
+        } else if (evt.originalEvent && evt.originalEvent.clipboardData) {
+            // OriginalEvent is a property from jQuery, normalizing the event object
+            callback(evt.originalEvent.clipboardData.getData('text'));
+        } else if (evt.clipboardData) {
+            // used in some browsers for clipboardData
+            callback(evt.clipboardData.getData('text/plain'));
+        } else if (window.clipboardData) {
+            // Older clipboardData version for Internet Explorer only
+            callback(window.clipboardData.getData('Text'));
+        } else {
+            // Last resort fallback, using a timer
+            setTimeout(function () {
+                callback(elem.value)
+            }, 100);
+        }
+    }
+
+
+    //#endregion
+
+
+    //#region // EXECUTE
+
+    function WareHouse_SaveDetail() {
+
+        var DateExecute = $('#Detail_Date').val() ? $('#Detail_Date').val() : "";
+        let ware = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+        let wareto = Number($('#DetailWareID_To').dropdown('get value')) ? Number($('#DetailWareID_To').dropdown('get value')) : 0;
+        let note = $('#txtWare_Content').val() ? $('#txtWare_Content').val() : '';
+
+        let dataObj = [];
+        for ([key, value] of Object.entries(product_selected)) {
+            dataObj.push(value);
+        }
+        document.getElementById("textShowMessageMaster").innerHTML = "";
+        let error = 0;
+        if (dataObj == undefined || dataObj == null || dataObj.length == 0) {
+            error = 1; $("#textShowMessageMaster").html('Không Có Mặt Hàng Xuất Kho');
+        };
+        if (ware == wareto || ware == 0 || wareto == 0) {
+            error = 1;
+            if (wareto == 0) {
+                $("#textShowMessageMaster").html('Chưa chọn kho nhận');
+                $('#DetailWareID_To').closest('.field').addClass('error');
+            }
+            else {
+                $('#DetailWareID').closest('.field').addClass('error');
+                $('#DetailWareID_To').closest('.field').addClass('error');
+                $("#textShowMessageMaster").html('Kho xuất và kho nhận không trùng nhau');
+            }
+           
+        }
+        else {
+            $('#DetailWareID').closest('.field').removeClass('error');
+            $('#DetailWareID_To').closest('.field').removeClass('error');
+        }
+        if (error == 0) {
+            let dataProduct = [];
+            for ([key, value] of Object.entries(product_selected)) {
+                let _e = {};
+                _e.packageNumber = value.packageNumber != "" ? value.packageNumber + '-' + value.idProduct : "";
+                _e.idProduct = value.idProduct;
+                _e.number = ItemDetail_CheckStockQuantity(value.idProduct, value.UnitCountID, value.Number, 1);
+                dataProduct.push(_e);
+            }
+            AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=CheckQuantityRealTime"
+                , data = {
+                    'data': JSON.stringify(dataProduct)
+                    , 'ware': ware
+                    , 'DateExecute': DateExecute
+                    , 'CurrentID': ser_DetailID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let dataResult = JSON.parse(result);
+                        let dataNext = dataResult.Table;
+                        let dataProductExist = dataResult.Table1;
+                        if (dataNext && dataNext.length != 0 && dataNext[0].RESULT != 1) {
+                            $("#textShowMessageMaster").html('Ngày xử lý phải lớn hơn ngày chốt kho gần nhất');
+                        }
+                        else {
+                            if (WareHouse_StockQuantityError(dataProductExist) == 1) {
+                                WareHouse_SaveDetail_Next(ser_DetailID, ware, wareto, note, DateExecute, dataObj);
+                            }
+                            else {
+                                $("#textShowMessageMaster").html('Số lượng xuất kho không lớn hơn số lượng tồn kho');
+                            }
+                        }
+                    }
+                    else {
+                        notiError("Ngày xử lý phải lớn hơn ngày chốt kho gần nhất");
+                    }
+                }
+            );
+        }
+    }
+
+    function WareHouse_SaveDetail_Next(id, ware, wareto, note, date, data) {
+        AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(data)
+                , 'ware': ware
+                , 'wareto': wareto
+                , 'note': note
+                , 'DateExecute': date
+                , 'CurrentID': id
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    WareHouse_Close();
+                    WareHouse_Load(ser_DetailID, 0);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+
+    //#region // Master
+
+    function WareDetail_FocusEditProduct() {
+        $('#BodyMain').scrollTo($("#ProductItem").offset().top - 50);
+        $("#ProductItem").addClass("border-active");
+        setTimeout(function () {
+            $("#ProductItem").removeClass("border-active");
+        }, 2000)
+    }
+
+    function ItemDetail_SearchPackageNumber() {
+        let packageNumber = $("#searchingPackageNumber").val() ? ($("#searchingPackageNumber").val()).trim() : "";
+        let wareID = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+
+        AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=SearchPackNum"
+            , data = {
+                'PackageNumber': packageNumber,
+                'WareID': wareID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    $("#PackageNumberList").html('');
+                    if (data.length != 0) {
+                        $("#PackNumber_Empty").hide();
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            item.QUANTITY = item.QUANTITY;
+                            data_packageNum[item.ProductID] = item;
+                        }
+                        ItemDetail_RenderPackage(data, 'PackageNumberList');
+                        if (data.length == 1) {
+                            ItemDetail_ChoosePackage(data[0].ProductID);
+                        }
+                    }
+                    else {
+                        $("#PackNumber_Empty").show();
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function ItemDetail_ChoosePackage(ProductID) {
+        if (ProductID && ProductID != 0 && data_packageNum[ProductID] != undefined) {
+            let item = data_packageNum[ProductID];
+            let productID = item.ProductID;
+            let expiredDay = item.ExpiredDay;
+            let packageNumber = item.PackageNumber;
+            let dateExecute = $("#Detail_Date").val();
+            let wareID = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+            if (packageNumber != "" && wareID != 0 && dateExecute != "") {
+                AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=LoadStockPackNumQuantity"
+                    , data = {
+                        'masterID': ser_DetailID,
+                        'packageNumber': packageNumber + '-' + productID,
+                        'wareID': wareID,
+                        'dateExecute': dateExecute
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            if (data.length != 0) {
+                                item.QUANTITY = data[0].QUANTITY;
+                            }
+                            else item.QUANTITY = 0;
+                            let quantity = item.QUANTITY;
+                            let dtProduct = data_product.filter((word) => Number(word["ID"] == productID));
+                            let nameProduct = dtProduct.length != 0 ? dtProduct[0].Name : "";
+                            $("#rowPackageNumber_" + productID).addClass("border-primary").siblings().removeClass("border-primary");
+                            $("#productDetail").attr("data-productid", productID);
+                            $("#productDetail").val(nameProduct);
+                            $("#PackageNumber").val(packageNumber);
+                            $("#ExpiredDay").val(formatDateClient(expiredDay) != "01-01-1900" ? formatDateClient(expiredDay) : "");
+                            $("#StockQuantity").val(quantity);
+                            ItemDetail_DetectUnit();
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                );
+            }
+
+
+
+        }
+    }
+
+    function WareDetail_Search(text) {
+
+        if (text == "") {
+            ItemDetail_RenderProductList(data_product, "dtContentProductBody");
+        }
+        else {
+            let data = data_product.filter((word) => xoa_dau(word["Name"].toLowerCase()).includes(text));
+            ItemDetail_RenderProductList(data, "dtContentProductBody");
+            ColorSearchFilterText(text, "itemProduct");
+        }
+
+        $("#wareSearch .fa-search").show();
+        $("#wareSearch .spinner-border").hide();
+    }
+
+    function WareDetail_UpdateLastLock() {
+        let WareIDChoose = Number($('#DetailWareID').dropdown('get value'));
+        let dataWare = DataComboWare.filter(word => word["ID"] == WareIDChoose);
+        let lastestLock = '';
+        if (dataWare && dataWare.length > 0 && "01-01-1900 00:00" != dataWare[0].LastetLock) {
+            lastestLock = dataWare[0].LastetLock;
+        }
+        else {
+            lastestLock = '';
+        }
+        $("#lock_date_detail").val(lastestLock);
+
+        if (dataWare && dataWare.length > 0 && dataWare[0].IsPackageNumber == 1) {
+            $("#PackageNumBox").show();
+            $("#ProductSearchBox").hide();
+        }
+        else {
+            $("#PackageNumBox").hide();
+            $("#ProductSearchBox").show();
+        }
+       
+
+        let Wareto = Number($('#DetailWareID_To').dropdown('get value'));
+        dataWare = DataComboWare.filter(word => word["ID"] == Wareto);
+        lastestLock = '';
+        if (dataWare && dataWare.length > 0 && "01-01-1900 00:00" != dataWare[0].LastetLock) {
+            lastestLock = dataWare[0].LastetLock;
+        }
+        else {
+            lastestLock = '';
+        }
+        $("#lock_date_detail_To").val(lastestLock);
+
+        $("#Detail_Date").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            time_24hr: true,
+            minDate: lastestLock,
+            maxDate: new Date(),
+            defaultDate: new Date()
+        });
+
+    }
+
+    function WareHouse_StockQuantityError(data) {
+        let isNext = 1;
+        if (data && data.length != 0) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let _id = "row_" + item.ProductID;
+                let _finalNum = Number(item.FinalNum) ? Number(item.FinalNum) : 0;
+                if (_finalNum < 0) {
+                    isNext = 0;
+                    $("#" + _id).addClass("error")
+                }
+                else {
+                    $("#" + _id).removeClass("error")
+                }
+            }
+        }
+        return isNext;
+    }
+
+    function WareHouse_PrintDetail() {
+
+    }
+
+    //#endregion
+
+
+    //#region // DETAIL
+
+    function WareDetail_RenderData(DataMaster, DataDetail) {
+        if (DataMaster.length != 0) {
+            $('#txtDetailCode').html(DataMaster[0].Code);
+            $('#txtDetailCode').addClass("opacity-10");
+            $('#txtWare_Content').val((DataMaster[0].Content));
+            $('#Detail_Date').val(GetDateTime_String_DMYHM(DataMaster[0].DateExecute));
+            $("#DetailWareID").dropdown("refresh");
+            $("#DetailWareID").dropdown("set selected", DataMaster[0].WareID);
+            $("#DetailWareID_To").dropdown("refresh");
+            $("#DetailWareID_To").dropdown("set selected", DataMaster[0].WareIDTo);
+            $('#DetailWareID').addClass("disabled");
+            $('#DetailWareID_To').addClass("disabled");
+            let perlock = Number(DataMaster[0].PerLock);
+            let perPassing = Number(DataMaster[0].PerPassing);
+            let perdate = Number(DataMaster[0].PerDate);
+            let peruser = Number(DataMaster[0].PerUser);
+            if ((perPassing == 1 || (perdate == 1 && peruser == 1)) && perlock == 1 && ViewDetail == 0) {
+                EditButton = 1;
+            } else EditButton = 0;
+            //if (ViewDetail == 1) EditButton = 0;
+            if (EditButton == 0) {
+                $('#detail_Item').hide();
+                $('#DetailInfo').find('input, textarea, button, select').attr('disabled', 'disabled');
+                
+                $('#btnSaveDetail').remove();
+                $('#btnDeleteDetail').remove();
+                $("#Detail_Date").flatpickr({
+                    dateFormat: 'd-m-Y H:i',
+                    enableTime: true,
+                    time_24hr: true,
+                    maxDate: new Date(),
+                    defaultDate: new Date()
+                });
+                $('#Detail_Date').val(GetDateTime_String_DMYHM(DataMaster[0].DateExecute));
+            } else {
+                $('#btnSaveDetail').show();
+                $('#btnDeleteDetail').show();
+                $('#detail_Item').show();
+            }
+        }
+        for (let i = 0; i < DataDetail.length; i++) {
+            let item = DataDetail[i];
+            var element = {};
+            element.id = item.idProduct;
+            element.packageNumber = item.packageNumber != "" ? (item.packageNumber).split("-")[0] : "";
+            element.idProduct = item.idProduct;
+            element.UnitCountID = item.UnitCountID;
+            element.NameProduct = item.NameProduct;
+            element.NameUnit = item.NameUnit;
+            element.Number = Number(item.Number).toString();
+            element.Note = item.Note;
+            element.Unit_Standard = item.Unit_Standard;
+            element.state = item.state.toString();
+            element.idDetail = item.idDetail;
+            element.SupplierID = 0;
+            element.Amount = 0;
+            element.ExpiredDay = '';
+            element.IniAmount = 0;
+            element.DiscountAmount = 0;
+            element.DiscountPer = 0;
+            element.UnitPrice = 0;
+            product_selected[item.idProduct] = element;
+            ItemDetail_Render(item.idProduct, element, "StockProductBody");
+
+        }
+        WareHouse_UpdateInfo();
+    }
+
+    function WareHouse_UpdateInfo() {
+        let data = [];
+        for ([key, value] of Object.entries(product_selected)) {
+            data.push(value);
+        }
+        $('#DetailWareID').addClass("disabled");
+        //$('#DetailWareID_To').addClass("disabled");
+        if (data && data.length == 0) {
+            document.getElementById("Detail_Date").disabled = false;
+        }
+        else {
+            document.getElementById("Detail_Date").disabled = true;
+        }
+    }
+
+    function WareHouse_DeleteDetail() {
+        const promise = notiConfirm();
+        promise.then(function () {
+            let ware = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+            let wareTo = Number($('#DetailWareID_To').dropdown('get value')) ? Number($('#DetailWareID_To').dropdown('get value')) : 0;
+            WareHouse_DeleteExecute(ser_DetailID, ware, wareTo);
+            WareHouse_Close();
+        }, function () { });
+    }
+
+    //#endregion
+
+    //#region // Handle Product List
+
+    function ItemDetail_DetectProduct() {
+        ItemDetail_DetectUnit();
+        ItemDetail_DetectQuantity();
+    }
+
+    function ItemDetail_DetectQuantity() {
+        let productID = Number($("#productDetail").attr("data-productid"));
+        let dateExecute = $("#Detail_Date").val();
+        let wareID = Number($('#DetailWareID').dropdown('get value')) ? Number($('#DetailWareID').dropdown('get value')) : 0;
+        if (productID != 0 && wareID != 0 && dateExecute != "") {
+            AjaxLoad(url = "/WareHouse/Stock/StockTransferDetail/?handler=LoadStockQuantity"
+                , data = {
+                    'masterID': ser_DetailID,
+                    'productID': productID,
+                    'wareID': wareID,
+                    'dateExecute': dateExecute
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let quantityStock = "0";
+                        if (data.length != 0) {
+                            quantityStock = data[0].QUANTITY;
+                        }
+                        let _e = {};
+                        _e.PackageNumber = "";
+                        _e.ProductID = productID;
+                        _e.QUANTITY = quantityStock;
+                        _e.ExpiredDay = "";
+                        data_packageNum[productID] = _e;
+                        $("#StockQuantity").val(_e.QUANTITY);
+                    }
+                }
+            );
+        }
+
+    }
+
+    //#endregion
+
+
+    //#region // PRODUCT UNIT
+
+    function ItemDetail_DetectUnit() {
+        ItemDetail_LoadUnit();
+        return false;
+    }
+
+    function ItemDetail_LoadUnit() {
+        let product = Number($('#productDetail').attr("data-productid")) ? Number($('#productDetail').attr("data-productid")) : 0;
+        let data = ItemDetail_LoadUnitAction(product, data_product, data_productunit)
+        if (data != undefined && data != null && data.length != 0) {
+            Load_Combo(data, "cbbproductUnit", true);
+
+            $("#productUnit").dropdown("refresh");
+            $("#productUnit").dropdown("set selected", Number(data[0].ID));
+        }
+
+        return false;
+    }
+
+    function ItemDetail_LoadUnitAction(idProduct, products, unitproduct) {
+
+        let _data = [];
+        let pro = products.filter(word => word["ID"] == idProduct);
+        if (pro && pro.length > 0) {
+            _data.push({ "ID": pro[0].UnitID, "Name": pro[0].UnitName });
+            let unit = unitproduct.filter(word => word["ProductID"] == idProduct);
+            if (unit != undefined && unit.length > 0) {
+                for (let i = 0; i < unit.length; i++) {
+                    _data.push({
+                        "ID": unit[i].UnitChange,
+                        "Name": unit[i].UnitChangeName + '<a class="btn-link  mb-0 ms-2 p-0 px-1 pe-2" href="javascript:;">'
+                            + ' x' + unit[i].Number + ' '
+                            + pro[0].UnitName
+                            + '</a>'
+                    });
+                }
+            }
+        }
+        return _data;
+    }
+
+    //#endregion
+
+
+    //#region // Item
+
+    function ItemDetail_Refresh() {
+        $('#productDetail').val('');
+        $('#productDetail').attr('data-productid', '');
+        $('#productUnit').dropdown('clear');
+        $('#PackageNumber').val('');
+        $('#ExpiredDay').val('');
+        $('#noteProduct').val('');
+        $('#numberProduct').val(0);
+        $('#StockQuantity').val(0);
+    }
+
+    function ItemDetail_DeleteRow(idProduct) {
+        delete product_selected[idProduct];
+        $('#row_' + idProduct).remove();
+        WareHouse_UpdateInfo();
+    }
+
+    function ItemDetail_CheckStockQuantity(productID, unitID, number, IsNumberExport) {
+        try {
+            let isExist = 0;
+            let numberExport = 0;
+            let numberStock = data_packageNum[productID] != undefined ? data_packageNum[productID].QUANTITY : 0;
+            if (productID != 0 && unitID != 0 && number != 0 && numberStock != 0) {
+                let dtProduct = data_product.filter(word => word["ID"] == productID);
+                if (dtProduct && dtProduct.length != 0) {
+                    let unitStandard = dtProduct[0].UnitID;
+                    if (unitID != unitStandard) {
+                        let dtUnit = data_productunit.filter(word => word["UnitChange"] == unitID && word["ProductID"] == productID)
+                        let numberChange = 1;
+                        if (dtUnit && dtUnit.length > 0) {
+                            numberChange = dtUnit[0]["Number"];
+                        };
+                        numberExport = numberChange * number;
+                    }
+                    else {
+                        numberExport = number;
+                    }
+                }
+            }
+            if (numberStock == 0 || numberExport > numberStock) {
+                isExist = 1;
+            }
+            return IsNumberExport != undefined ? numberExport : isExist;
+        }
+        catch (ex) {
+            return 1;
+        }
+    }
+
+    function ItemDetail_Save() {
+        document.getElementById("textShowMessage").innerHTML = "";
+        let packageNumber = $('#PackageNumber').val() ? ($('#PackageNumber').val()).replace(/[^a-zA-Z0-9]/g, '').trim() : "";
+        let product = Number($('#productDetail').attr('data-productid')) ? Number($('#productDetail').attr('data-productid')) : 0;
+        let productDetailUnit = Number($('#productUnit').dropdown('get value')) ? Number($('#productUnit').dropdown('get value')) : 0;
+        let numberProduct = Number($('#numberProduct').val()) ? Number($('#numberProduct').val()) : 0;
+        let noteProduct = $('#noteProduct').val() ? $('#noteProduct').val() : '';
+        let standardUnit = 0;
+        //let standardNumber = 0;
+
+        //#region //Validate
+        let isError = 0;
+        let isErrorQuantity = 0;
+        if (!$.isNumeric(numberProduct) || Number(numberProduct) < vtth_range_min || Number(numberProduct) > vtth_range_max) {
+            $('#numberProduct').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#numberProduct').closest('.field').removeClass('error')
+        if (product == 0) {
+            $('#productDetail').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#productDetail').closest('.field').removeClass('error')
+        if (productDetailUnit == 0) {
+            $('#productUnit').closest('.field').addClass('error')
+            isError = 1;
+        }
+        else $('#productUnit').closest('.field').removeClass('error')
+        let isProductExist = 0;
+        let keyProductExist = 0;
+        for ([key, value] of Object.entries(product_selected)) {
+            if (value.idProduct == product ) {
+                isProductExist = 1;
+                keyProductExist = [key];
+                //delete product_selected[key];
+                break;
+            }
+        }
+        isErrorQuantity = ItemDetail_CheckStockQuantity(product, productDetailUnit, numberProduct);
+        //#endregion
+
+        if (isError == 0 && isErrorQuantity == 0 && isProductExist == 0) {
+            document.getElementById("textShowMessage").innerHTML = "";
+            document.getElementById("textShowMessageMaster").innerHTML = ""
+            var element = {};
+            element.id = product;
+            element.packageNumber = packageNumber;
+            element.idProduct = product;
+            element.UnitCountID = productDetailUnit;
+            element.NameProduct = $('#productDetail').val();
+            element.NameUnit = $('#productUnit').dropdown('get text');
+            element.Number = Number(numberProduct).toString();
+            element.Note = noteProduct;
+            element.state = "1";
+            element.Unit_Standard = standardUnit.toString();
+            element.idDetail = "0";
+            element.SupplierID = 0;
+            element.Amount = 0;
+            element.ExpiredDay = '';
+            element.IniAmount = 0;
+            element.DiscountAmount = 0;
+            element.DiscountPer = 0;
+            element.UnitPrice = 0;
+            product_selected[product] = element;
+
+            ItemDetail_Render(product, element, "StockProductBody");
+            WareHouse_UpdateInfo();
+            ItemDetail_Refresh();
+
+        }
+        else if (isErrorQuantity == 1) {
+            $('#numberProduct').closest('.field').addClass('error');
+            document.getElementById("textShowMessage").innerHTML = "Số lượng xuất kho không lớn hơn số lượng tồn kho";
+        }
+        else if (isProductExist == 1) {
+            document.getElementById("textShowMessage").innerHTML = "Hàng xuất kho đã được chọn";
+            $('#row_' + keyProductExist).addClass("border-active");
+        }
+        else {
+            document.getElementById("textShowMessage").innerHTML = "Kiểm tra dữ liệu";
+        }
+        return false;
+    }
+    
+    //#endregion
+
+
+    //#region // RENDER ITEMS
+
+    function ItemDetail_Render(key, item, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let tr = '<td class="d-none">' + key + '</td>'
+                + '<td class="vt-number-order text-center"></td>'
+                + '<td >'
+                + ((item.packageNumber != "") ? '<h6 class="fw-bold mb-0 text-sm  text-uppercase ellipsis_one_line">' + item.packageNumber + '</h6>' : "")
+                + '</td>'
+                + '<td>'
+                + '<h6 class="mb-0 text-sm ellipsis_one_line  text-primary">' + item.NameProduct + '</h6>'
+                + '</td>'
+                + '<td class="text-center">' + formatNumber(item.Number) + '</td>'
+                + '<td >' + item.NameUnit + '</td>'
+                + ((EditButton == 1)
+                    ? '<td><button title="Remove" class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-cancel-01 text-danger"></i></button></td>'
+                    : (ViewDetail == 1) ? '' : '<td></td>')
+            tr = '<tr id="row_' + key + '" class="productRow vt-number">' + tr + '</tr>'
+            document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+        }
+
+    }
+
+    function ItemDetail_RenderProductList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+
+                    let tr = '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td ><div class="ellipsis_one_line">' + item.Name + '</div></td>'
+                    // + '<td class="text-center">0</td>'
+                    stringContent = stringContent + '<tr class="itemProduct vt-number cursor-pointer" role="row" data-id="' + item.ID + '" data-name="' + item.Name + '">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function ItemDetail_RenderPackage(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let dtProduct = data_product.filter((word) => Number(word["ID"] == item.ProductID));
+                    let nameProduct = dtProduct.length != 0 ? dtProduct[0].Name : "";
+                    let tr = '<li id="rowPackageNumber_' + item.ProductID + '" class="rowPackageNumber list-group-item border-2 border-dashed d-flex p-3 mb-2 bg-gray-100 border-radius-lg" data-id="' + item.ProductID + '">'
+                        + '<div class="w-100">'
+                        + '<h6 class=" text-sm mb-1 fw-bold">' + nameProduct + '</h6>'
+                        + '<svg id="packageNumberProduct_' + item.ProductID + '" style="height:60px;" class="w-100 text-center" >'
+                        + '</svg>'
+                        + '</div>'
+                        + '</li>'
+                    document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+
+                    JsBarcode("#packageNumberProduct_" + item.ProductID, item.PackageNumber, {
+                        lineColor: "#000",
+                        fontsize: 12,
+                        width: 3,
+                        height: 30,
+                        displayValue: true,
+                        background: "#ffffff00"
+                    });
+                }
+            }
+        }
+    }
+
+    //#endregion
+
+</script>
+
+<script src="/js/main.js" async></script>
+<script src="/js/customjs/custom-validation.js"></script>
+
+<style>
+    .productRow.error {
+        background-color: #ff9898 !important;
+    }
+
+    .promotion {
+        font-size: 10px;
+        color: red;
+    }
+
+    #ProductItem.border-active {
+        animation: spin 1s linear infinite alternate;
+    }
+
+    .itemProduct {
+        transition: 0.2s all;
+    }
+
+        .itemProduct:hover {
+            background-color: var(--bs-blue);
+        }
+
+    @@media only screen and (max-width:767px) {
+        #StockProductList {
+            order: 2;
+        }
+    }
+
+    @@keyframes spin {
+        from {
+            background-color: white;
+        }
+
+        to {
+            background-color: #ffe9e9;
+        }
+    }
+</style>

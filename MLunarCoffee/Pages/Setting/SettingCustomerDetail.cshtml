@@ -1,0 +1,240 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.SettingCustomerDetailModel
+@{
+    Layout = null;
+}
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Thêm sửa khách hàng"]</h6>
+                    <p class="text-sm mb-0">@Local["Cấu hình thêm sửa khách hàng"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn btn-dark btn-sm mt-1 setting_projectclosure" id="SC_BtnEdit" onclick="SCustomer_ActEdit()">@Local["Chỉnh sửa"]</button>
+                    <button class="btn btn-dark btn-sm mt-1 d-none setting_projectclosure" id="SC_BtnCancel" onclick="SCustomer_Cancel();">@Local["Hủy"]</button>
+                    <button class="btn bg-gradient-primary btn-sm mt-1 d-none setting_projectclosure" id="SC_BtnSave" onclick="SCustomer_Executed();">@Local["Lưu"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="row m-0 px-2 border-dashed border-1 border-secondary border-radius-md" id="SC_BodydtControl" style="max-height: calc(100vh - 288px); overflow-y: scroll; ">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    //#region //Load & Init
+
+    var SC_DataValue;
+    let SC_CurrentID = 0;
+
+    $(document).ready(function () {
+        SCustomer_Load();
+    })
+    function SCustomer_Load() {
+        AjaxLoad(url = "/Setting/SettingCustomerDetail/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        SC_DataValue = SCustomer_DTSeparation(JSON.parse(data[0].Value));
+                        SC_CurrentID = Number(data[0].ID);
+                        SCustomer_Render(SC_DataValue, "SC_BodydtControl");
+                    }
+                } else {
+                    notiError();
+                }
+            }
+        );
+    }
+    function SCustomer_DTSeparation(data) {
+        try {
+            let arr = [];
+            if (data && Object.keys(data).length > 0) {
+                for (const [key, value] of Object.entries(data)) {
+                    let obj = {};
+                    let Time = (new Date()).getTime();
+                    let IDRandom = Time.toString() + RandomNumber().toString();
+                    obj["ID"] = IDRandom;
+                    obj["name"] = key;
+                    obj["isRequire"] = data[key].isRequire;
+                    obj["isShow"] = data[key].isShow;
+                    obj["isUpdate"] = data[key].isUpdate;
+                    obj["description"] = data[key].description;
+                    arr.push(obj);
+                }
+            }
+            if (arr.length > 0) {
+                return arr;
+            } else return '';
+        }
+        catch (err) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //RENDER
+    async function SCustomer_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = SCustomer_RenderItem(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        SCustomer_Event();
+                    }
+                }
+                resolve();
+            }, 30)
+        })
+    }
+
+    function SCustomer_RenderItem(item) {
+        try {
+            let tr = '';
+            tr = `
+                    <div class="col-12 col-md-12 p-1">
+                        <h6 class="fw-bold text-md m-2  text-primary">${item.description}</h6>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-check m-2">
+                                    <input class="form-check-input btn-EventInput" type="checkbox" id="SC_isShow_${item.ID}" disabled ${(item.isShow == true ? 'checked' : '')}/>
+                                    <label class="ps-1 text-sm font-weight-normal">@Local["Hiển thị"]</label>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check m-2">
+                                    <input class="form-check-input btn-EventInput" type="checkbox" id="SC_isRequire_${item.ID}" disabled ${(item.isRequire == true ? 'checked' : '')}/>
+                                    <label class="ps-1 text-sm font-weight-normal">@Local["Yêu cầu nhập"]</label>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check m-2">
+                                    <input class="form-check-input btn-EventInput" type="checkbox" id="SC_isUpdate_${item.ID}" disabled ${(item.isUpdate == true ? 'checked' : '')}/>
+                                    <label class="ps-1 text-sm font-weight-normal">@Local["Cập nhật"]</label>
+                                </div>
+                            </div>
+                            <hr class="horizontal dark my-0 opacity-2"/>
+                        </div>
+                    </div>
+                `
+            return tr;
+        }
+        catch (err) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //EVENT
+
+    function SCustomer_Event() {
+        $("#SC_BodydtControl .btn-EventInput").unbind("click").click(function () {
+            let IDDiv = $(this).attr("id");
+            SCustomer_UpdateDt(IDDiv, SC_DataValue);
+        })
+    }
+    //#endregion
+
+    //#regioin //HANDLE
+    function SCustomer_UpdateDt(ID, Data) {
+        let IDNumb = ID.split("_")[2];
+        let Type = ID.split("_")[1];
+        let CheckType = (Type == 'isUpdate' || Type == 'isRequire');
+        if (Type == 'isShow' || (CheckType == true && $("#SC_isShow_" + IDNumb).is(':checked') == true)) {
+
+            for (let i = 0; i < Data.length; i++) {
+                if (IDNumb == Data[i].ID) {
+                    if ($("#" + ID).is(':checked') == true) {
+                        SC_DataValue[i][Type] = true;
+                    }
+                    else {
+                        SC_DataValue[i][Type] = false;
+                        if (Type == 'isShow') {
+                            SC_DataValue[i]['isUpdate'] = false;
+                            SC_DataValue[i]['isRequire'] = false;
+                            $("#SC_isUpdate_" + IDNumb).prop("checked", false);
+                            $("#SC_isRequire_" + IDNumb).prop("checked", false);
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            let EventChek = $("#" + ID).is(':checked');
+            $("#" + ID).prop("checked", !EventChek)
+            notiWarning("@Local["Trường hiển thị phải được bật"]!");
+        }
+    }
+    //#endregion
+
+    //#region //BTNEDIT
+
+    function SCustomer_ActEdit() {
+        ($("#SC_BtnCancel").hasClass("d-none") ? $("#SC_BtnCancel").removeClass("d-none") : "");
+        ($("#SC_BtnSave").hasClass("d-none") ? $("#SC_BtnSave").removeClass("d-none") : "");
+        $("#SC_BtnEdit").addClass("d-none");
+        $("#SC_BodydtControl :input").attr("disabled", false);
+    }
+
+    //#endregion
+
+    //#region //BTNCANCER
+
+    function SCustomer_Cancel() {
+        (!$("#SC_BtnCancel").hasClass("d-none") ? $("#SC_BtnCancel").addClass("d-none") : "");
+        (!$("#SC_BtnSave").hasClass("d-none") ? $("#SC_BtnSave").addClass("d-none") : "");
+        $("#SC_BtnEdit").removeClass("d-none");
+        $("#SC_BodydtControl :input").attr("disabled", true);
+    }
+
+    //#endregion
+
+    //#region //EXECUTED
+    function SCustomer_Executed() {
+        var obj = {};
+        let data = SC_DataValue.map(({ name, description, isRequire, isShow, isUpdate }) => ({ name, description, isRequire, isShow, isUpdate }));
+        data.reduce(function (result, item) {
+            let objchild = {};
+            let objParent = {};
+            var key = item["name"];
+            objchild["description"] = item["description"];
+            objchild["isRequire"] = item["isRequire"];
+            objchild["isShow"] = item["isShow"];
+            objchild["isUpdate"] = item["isUpdate"];
+            objParent[key] = objchild;
+            Object.assign(obj, objParent)
+        }, {});
+
+        AjaxLoad(url = "/Setting/SettingCustomerDetail/?handler=Executed"
+            , data = {
+                "CurrentID": SC_CurrentID
+                , "Data": JSON.stringify(obj)
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    //SCustomer_Load();
+                } else {
+                    notiError();
+                }
+            }
+        );
+    }
+        //#endregion
+</script>

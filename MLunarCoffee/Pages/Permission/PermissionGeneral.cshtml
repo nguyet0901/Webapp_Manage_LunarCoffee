@@ -1,0 +1,64 @@
+﻿@page
+@model MLunarCoffee.Pages.Permission.PermissionGeneralModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row" id="PermissionGeneral_Container">
+    <div class="col-12 p-0">
+        <div class="card card-plain">
+            <div class="card-header px-3 pb-0">
+                <ul class="nav nav-pills nav-horizontal p-1 bg-transparent permissionlist" role="tablist" id="menuleft">
+                </ul>
+            </div>
+            <div class="card-body pt-0" id="divMainAuthorized">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var versionofWebApplication = "@Model._versionofWebApplication";
+    $(document).ready(function () {
+            AjaxLoad(url = "/Permission/PermissionGeneral/?handler=LoadFunction"
+                , data = {}, async = true, error = null
+                , success = function (result) {
+                    let _dataFunctionAuthorise = JSON.parse(result);
+                    RenderMenuLeft(_dataFunctionAuthorise, "menuleft");
+                    EventLinkClick_MenuLeft();
+                    $('#menuleft a:first').trigger('click');
+                    $('#menuleft a:first').tab('show');
+                });
+        });
+
+        function EventLinkClick_MenuLeft() {
+            $(".linkAuthoised").click(function (event) {
+                let link = $(this).attr("data-link");
+                $("#divMainAuthorized").empty();
+                $("#divMainAuthorized").load(link + "?ver=" + versionofWebApplication);
+            });
+        }
+
+        function RenderMenuLeft(data, id) {
+
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        stringContent = stringContent
+                            + '<li class="nav-item" role="presentation">'
+                            + '<a class="linkAuthoised nav-item-text nav-link cursor-pointer" data-bs-toggle="pill" data-link="' + item.Link + '"  role="tab">' + Outlang[item.TextLangKey]+'</a>'
+                            + '</li>'
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+        }
+</script>
+

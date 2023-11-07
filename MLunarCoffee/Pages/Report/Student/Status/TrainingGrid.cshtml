@@ -1,0 +1,615 @@
+﻿@page
+@model SourceMain.Pages.Report.Student.Status.TrainingGridModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="collapsesticky collapse show" id="SSBTrain_General">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <h6 class="text-md text-dark font-weight-bold mb-1">@Local["Quá trình đào tạo"]</h6>
+            </div>
+            <div class="ms-auto my-auto  d-flex align-items-center">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#SSBTrain_GeneralDiv" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return SSBTrain_LoadData()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return SSBTrain_Export()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-3 pt-0 collapsesticky collapse show" id=SSBTrain_GeneralDiv>
+        <div class="m-0 my-3 mobile-responsive">
+            <div id="SSBTrain_LoaderList" class="waitingdiv text-center w-100 mt-2 position-absolute start-50 translate-middle-x" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <table class="table vt-table mb-0" id="SSBTrain_Grid">
+                <thead>
+                    <tr>
+                        <th style="width: 60px">#</th>
+                        <th style="min-width: 140px">@Local["Khóa học"]</th>
+                        <th style="min-width: 180px">@Local["Môn học"]</th>
+                        <th>@Local["Trạng thái lớp học"]</th>
+                        <th>@Local["Thời gian bắt đầu"]</th>
+                        <th>@Local["Thời gian kết thúc"]</th>
+                        <th>@Local["Tổng học viên"]</th>
+                        <th>@Local["Tổng buổi học"]</th>
+                        <th>@Local["Số buổi đã học theo lý thuyết"]</th>
+                        <th>@Local["Số buổi đã học theo thức tế"]</th>
+                    </tr>
+                </thead>
+                <tbody id="SSBTrain_GridBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="SSBStuDetail_Container" class="mt-3" style="display:none;">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p id="SSBStuDetail_Title" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2">
+                    <span id="SSBStuDetail_CurrentData">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="SSBStuDetail_TotalData">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#SSBStuDetail_DivArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return SSBStuDetail_Loaddata()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return SSBStuDetail_Export()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); SSBStuDetail_PrintReport()"></i>
+                </div>
+            </div>
+            <div class="position-relative d-inline ms-2">
+                <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                    @Local["Xem thêm"]
+                </button>
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="timestart" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thời gian bắt đầu"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="timeend" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thời gian kết thúc"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="teacher" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Giáo viên"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="created" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày ghi danh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogleDetail form-check-input" data-name="createdby" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Người ghi danh"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="SSBStuDetail_DivArea">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <div id="SSBStuDetail_LoaderList" class="waitingdiv text-center w-100 mt-2 position-absolute start-50 translate-middle-x" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <table data-name="SSBStuDetail_Grid" class="table vt-table mb-0" id="SSBStuDetail_Grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">#</th>
+                            <th style="min-width: 140px">@Local["Mã học viên"]</th>
+                            <th style="min-width: 140px">@Local["Tên học viên"]</th>
+                            <th style="min-width: 170px">@Local["Khoá học"]</th>
+                            <th style="min-width: 170px">@Local["Môn học"]</th>
+                            <th style="min-width: 180px">@Local["Trạng thái lớp học"]</th>
+                            <th style="min-width: 140px">@Local["Buổi học thứ"]</th>
+                            <th style="min-width: 190px">@Local["Trạng thái buổi học"]</th>
+                            <th style="min-width: 170px" data-name="timestart">@Local["Thời gian bắt đầu"]</th>
+                            <th style="min-width: 170px" data-name="timeend">@Local["Thời gian kết thúc"]</th>
+                            <th style="min-width: 170px" data-name="teacher">@Local["Giáo viên"]</th>
+                            <th style="min-width: 140px">@Local["Điểm danh"]</th>
+                            <th style="min-width: 140px">@Local["Đánh giá"]</th>
+                            <th style="min-width: 150px" data-name="branch">@Local["Chi nhánh"]</th>
+                            <th style="min-width: 150px" data-name="created">@Local["Ngày tạo"]</th>
+                            <th style="min-width: 150px" data-name="createdby">@Local["Người tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="SSBStuDetail_GridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return SSBStuDetail_RenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    let _branchID = "@Model._branchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let xhrLoadList, xhrLoadDetail;
+    let DataReportMainDetail, DataReportMainDetailSlice;
+    let IndexReportDetail = 0;
+    let timeoutCountDetail;
+    let SSBTrain_CourseID = 0;
+    let SSBTrain_ClassID = 0;
+    let shtableDetail;
+    $(document).ready(function () {
+        ToolPopper();
+        SSBTrain_LoadData();
+        shtableDetail = $("#SSBStuDetail_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogleDetail')
+        });
+        Checking_TabControl_Permission();
+    });
+    function SSBTrain_LoadData() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        xhrLoadList = AjaxLoad(url = "/Report/Student/Status/TrainingGrid/?handler=Loadata"
+            , data = {
+                'branchID': _branchID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    $("#SSBTrain_GridBody").empty();
+                    SSBTrain_Render(data, "SSBTrain_GridBody");
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#SSBTrain_LoaderList").show();
+            }
+            , complete = function (e) {
+                $("#SSBTrain_LoaderList").hide();
+            }
+        );
+        return false;
+    }
+
+    async function SSBTrain_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            if (data && data.length != 0) {
+                let tr = '';
+                let TotalStudent = 0, TotalLesson = 0, LearntAssumed = 0, LearntLesson = 0;
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    //calc total
+                    TotalStudent += item.TotalStudent;
+                    TotalLesson += item.TotalLesson;
+                    LearntAssumed += item.LearntAssumed;
+                    LearntLesson += item.LearntLesson;
+                    tr = `<tr class="vt-number" role="row">
+                                                      <td class="vt-number-order"></td>
+                                                      <td>
+                                                          <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-courseid="${item.CourseID}" data-classid="0" data-name="${item.Course}">
+                                                             ${item.Course}
+                                                          </a>
+                                                      </td>
+                                                      <td>
+                                                          <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-courseid="0" data-classid="${item.ClassID}" data-name="${item.Course} - ${item.Subject}">
+                                                             ${item.Subject}
+                                                          </a>
+                                                      </td>
+                                                      <td>${ConvertYMDInt_ToDate(item.TimeBegin)}</td>
+                                                      <td class="${SSBTrain_RenderClassStatusStyle(item.ClassStatus)}">
+                                                      ${SSBTrain_RenderClassStatus(item.ClassStatus)}
+                                                      </td>
+                                                      <td>${ConvertYMDInt_ToDate(item.TimeEnd)}</td>
+                                                      <td>${formatNumber(item.TotalStudent)}</td>
+                                                      <td>${formatNumber(item.TotalLesson)}</td>
+                                                      <td>${formatNumber(item.LearntAssumed)}</td>
+                                                      <td>${formatNumber(item.LearntLesson)}</td>
+                                                  </tr>`;
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                tr = `<tr class="vt-number text-white bg-gradient bg-primary mt-2 SSBTrain_RowTotal" role="row">
+                                                  <td></td>
+                                                  <td class="text-start" colspan="5">
+                                                      <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white" data-courseid="0" data-classid="0">@Local["Tất cả"]</a>
+                                                  </td>
+                                                  <td>${formatNumber(TotalStudent)}</td>
+                                                  <td>${formatNumber(TotalLesson)}</td>
+                                                  <td>${formatNumber(LearntAssumed)}</td>
+                                                  <td>${formatNumber(LearntLesson)}</td>
+                                             </tr>`;
+                myNode.insertAdjacentHTML('beforeend', tr);
+                SSBTrain_GeneralEvent();
+            }
+        }
+    }
+    //#region // LOAD DETAIL AND RENDER
+    function SSBStuDetail_Loaddata() {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        IndexReportDetail = 0;
+        xhrLoadDetail = AjaxLoad(url = "/Report/Student/Status/TrainingGrid/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'courseID': SSBTrain_CourseID,
+                'classID': SSBTrain_ClassID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    DataReportMainDetail = JSON.parse(JSON.stringify(data));
+                    DataReportMainDetailSlice = sliceIntoChunks(data, 500);
+                    $("#SSBStuDetail_GridBody").empty();
+                    if (DataReportMainDetailSlice && DataReportMainDetailSlice.length != 0) {
+                        fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "SSBStuDetail_GridBody"
+                            , blocknum = 100
+                            , fnrender = SSBStuDetail_Render
+                            , fnsuccess = null
+                        );
+                    }
+                    Count_Up("SSBStuDetail_TotalData", DataReportMainDetail.length);
+                }
+                else if (result == "0") {
+                    notiWarning();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#SSBStuDetail_LoaderList").show();
+            }
+            , complete = function (e) {
+                $("#SSBStuDetail_LoaderList").hide();
+            }
+        );
+    }
+
+    function SSBStuDetail_RenderMore() {
+        IndexReportDetail += 1;
+        if (DataReportMainDetailSlice && DataReportMainDetailSlice[IndexReportDetail]) {
+            fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "SSBStuDetail_GridBody"
+                , blocknum = 100
+                , fnrender = SSBStuDetail_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function SSBStuDetail_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let createdName = RP_DataEmployee[item.CreatedBy] != undefined ? RP_DataEmployee[item.CreatedBy].Name : 'unknown';
+                            let begintime = ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(item.Dayint.toString() + item.TimeStart.toString()));
+                            let endtime = ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(item.Dayint.toString() + item.TimeEnd.toString()));
+                            let tr = `<tr class="vt-number" role="row">
+                                                              <td class="vt-number-order"></td>
+                                                              <td data-name="stucode">
+                                                                      <a target="_blank" href="/Student/student/studentmain?studentid=${item.StudentID}">
+                                                                      ${item.StuCode}
+                                                                  </a>
+                                                              </td>
+                                                              <td>${item.StuName}</td>
+                                                              <td>${item.Course}</td>
+                                                              <td>${item.Subject}</td>
+                                                              <td class="${SSBTrain_RenderClassStatusStyle(item.ClassStatus)}">
+                                                              ${SSBTrain_RenderClassStatus(item.ClassStatus)}
+                                                              </td>
+                                                              <td>${item.RNLesson}</td>
+                                                              <td class="${SSBTrain_RenderLessonStatusStyle(item.ClassTimeStatus)}">
+                                                              ${SSBTrain_RenderLessonStatus(item.ClassTimeStatus)}
+                                                              </td>
+                                                              <td data-name="timestart">${begintime}</td>
+                                                              <td data-name="timeend">${endtime}</td>
+                                                              <td data-name="teacher">${item.TeacherName}</td>
+                                                              <td>${item.AttendStatus}</td>
+                                                              <td>${item.RatingStatus}</td>
+                                                              <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '')}</td>
+                                                              <td data-name="created">${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                                              <td data-name="createdby">${createdName}</td>
+                                                              </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableDetail.Refresh();
+                clearTimeout(timeoutCountDetail);
+                timeoutCountDetail = setTimeout(() => {
+                    Count_Up("SSBStuDetail_CurrentData", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+        })
+    }
+
+    function SSBTrain_RenderClassStatus(status) {
+        switch (status) {
+            case 0:
+                return decodeHtml("@Local["Đang hoạt động"]")
+                break;
+            case 1:
+                return decodeHtml("@Local["Đã kết thúc"]")
+                break;
+            case 2:
+                return decodeHtml("@Local["Sắp mở"]")
+                break;
+        }
+    }
+    function SSBTrain_RenderClassStatusStyle(status) {
+        switch (status) {
+            case 0:
+                return "text-primary";
+                break;
+            case 1:
+                return "text-secondary";
+                break;
+            case 2:
+                "";
+                break;
+        }
+    }
+
+    function SSBTrain_RenderLessonStatus(status) {
+        switch (status) {
+            case 0:
+                return decodeHtml("@Local["Chưa dạy"]")
+                break;
+            case 1:
+                return decodeHtml("@Local["Đang dạy"]")
+                break;
+            case 2:
+                return decodeHtml("@Local["Đã kết thúc"]")
+                break;
+        }
+    }
+
+    function SSBTrain_RenderLessonStatusStyle(status) {
+        switch (status) {
+            case 0:
+                ""
+                break;
+            case 1:
+                return "text-primary";
+                break;
+            case 2:
+                return "text-secondary";
+                break;
+        }
+    }
+    //#endregion
+
+    //#region // Event
+    function SSBTrain_GeneralEvent() {
+        $("#SSBTrain_GridBody .buttonViewClass").unbind('click').on("click", function () {
+            SSBTrain_CourseID = $(this).attr('data-courseid');
+            SSBTrain_ClassID = $(this).attr('data-classid');
+            let name = $(this).attr('data-name');
+            $("#SSBStuDetail_Container").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#SSBStuDetail_Container").offset().top
+            }, 300);
+            if (SSBTrain_CourseID == "0" && SSBTrain_ClassID == "0") {
+                $("#SSBStuDetail_Title").html('@Local["Tất cả khóa học"]');
+            }
+            else {
+                $("#SSBStuDetail_Title").html(name);
+            }
+            SSBStuDetail_Loaddata();
+        })
+    }
+
+    function SSBTrain_Export() {
+        exportToExcel("SSBTrain_Grid", Outlang["Bao_cao_qua_trinh_dao_tao"]);
+    }
+
+    async function SSBStuDetail_Export() {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let eleContainer = $('#SSBStuDetail_Container');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "StuCode": ["@Local["Mã học viên"]"],
+                    "StuName": ["@Local["Tên học viên"]"],
+                    "Course": ["@Local["Khoá học"]"],
+                    "Subject": ["@Local["Môn học"]"],
+                    "ClassStatus": ["@Local["Trạng thái lớp học"]", (value, { }) => {
+                        return SSBTrain_RenderClassStatus(value);
+                    }],
+                    "RNLesson": ["@Local["Buổi học thứ"]"],
+                    "ClassTimeStatus": ["@Local["Trạng thái buổi học"]", (value, { }) => {
+                        return SSBTrain_RenderLessonStatus(value);
+                    }],
+                    "TimeStart": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='timestart']`)).is(":checked"),
+                        data: ["@Local["Thời gian bắt đầu"]", (value, { Dayint }) => {
+                            return ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(Dayint.toString() + value.toString()))
+                        }]
+                    },
+                    "TimeEnd": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='timeend']`)).is(":checked"),
+                        data: ["@Local["Thời gian kết thúc"]", (value, { Dayint }) => {
+                            return ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(Dayint.toString() + value.toString()))
+                        }]
+                    },
+                    "TeacherName": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='teacher']`)).is(":checked"),
+                        data: ["@Local["Giáo viên"]"]
+                    },
+                    "AttendStatus": ["@Local["Điểm danh"]"],
+                    "RatingStatus": ["@Local["Đánh giá"]"],
+                    "BranchID": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }]
+                    },
+                    "Created": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Ngày ghi danh"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "CreatedBy": {
+                        isShow: (eleContainer.find(`.shtoogleDetail[data-name='createdby']`)).is(":checked"),
+                        data: ["@Local["Người ghi danh"]", (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'SSBStuDetail_GridBody', PermissionTable_TabControl);
+                let fileName = Outlang["Bao_cao_qua_trinh_dao_tao"] + '-' + xoa_dau($("#SSBStuDetail_Title").text()).replaceAll(' ', '-');
+                exportJsonToExcel(fileName, DataReportMainDetail, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function SSBStuDetail_PrintReport() {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", true, (value, { }, index) => { return index + 1; }],
+                    "StuCode": ["@Local["Mã học viên"]", true],
+                    "StuName": ["@Local["Tên học viên"]", true],
+                    "Course": ["@Local["Khoá học"]", true],
+                    "Subject": ["@Local["Môn học"]", true],
+                    "ClassStatus": ["@Local["Trạng thái lớp học"]", true, (value, { }) => {
+                        return SSBTrain_RenderClassStatus(value);
+                    }],
+                    "RNLesson": ["@Local["Buổi học thứ"]", true],
+                    "ClassTimeStatus": ["@Local["Trạng thái buổi học"]", true, (value, { }) => {
+                        return SSBTrain_RenderLessonStatus(value);
+                    }],
+                    "TimeStart": ["@Local["Thời gian bắt đầu"]", {
+                        isShow: $(`.shtoogleDetail[data-name='timestart']`).is(":checked"),
+                        callbackRenderValue: (value, { Dayint }) => {
+                            return ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(Dayint.toString() + value.toString()))
+                        }
+                    }],
+                    "TimeEnd": ["@Local["Thời gian kết thúc"]", {
+                        isShow: $(`.shtoogleDetail[data-name='timeend']`).is(":checked"),
+                        callbackRenderValue: (value, { Dayint }) => {
+                            return ConvertDateTimeUTC_DMYHM(INTYMDHMToDate(Dayint.toString() + value.toString()))
+                        }
+                    }],
+                    "TeacherName": ["@Local["Giáo viên"]", {
+                        isShow: $(`.shtoogleDetail[data-name='teacher']`).is(":checked")
+                    }],
+                    "AttendStatus": ["@Local["Điểm danh"]", true],
+                    "RatingStatus": ["@Local["Đánh giá"]", true],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogleDetail[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }
+                    }],
+                    "Created": ["@Local["Ngày ghi danh"]", {
+                        isShow: $(`.shtoogleDetail[data-name='created']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "CreatedBy": ["@Local["Người ghi danh"]", {
+                        isShow: $(`.shtoogleDetail[data-name='createdby']`).is(":checked"),
+                        callbackRenderValue: (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let fileName = Outlang["Bao_cao_qua_trinh_dao_tao"] ?? "Vttech-PrintForm" + ' ' + $("#SSBStuDetail_Title").text();
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = fileName, sys_employeeName_Main, DataReportMainDetail, dataHeader);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để in"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                                                        //#endregion
+
+</script>
+
+

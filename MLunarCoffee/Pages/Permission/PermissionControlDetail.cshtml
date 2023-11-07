@@ -1,0 +1,212 @@
+﻿@page
+@model SourceMain.Pages.Permission.PermissionControlDetailModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <link href="/assests/dist/semantic.min.custom.css" rel="stylesheet" />
+    <link href="/assests/dist/plugins/ionicons/css/ionicons.min.css" rel="stylesheet" />
+    <link href="/assests/dist/css/main.css" rel="stylesheet" />
+    <script>css_require('/css/main.custom.css')</script>
+    <link href="/assests/dist/plugins/lobibox/css/lobibox.css" rel="stylesheet" />
+
+</head>
+
+<body>
+    <div class="header">
+        @Local["Điều khiển"]
+    </div>
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+                    <div class="two fields">
+                        <div class="field">
+                            <label>@Local["Tên"]</label>
+                            <input id="PermissionControl" name="name" type="text" />
+                        </div>
+                        <div class="field">
+                            <label>@Local["Giá trị"]</label>
+                            <input id="ValuePermissionControl" name="controlValue" type="text" />
+                        </div>
+                    </div>
+                    <div class="two fields">
+                        <div class="field">
+                            <label>@Local["Loại trang"]</label>
+                            <div class="ui fluid search selection dropdown" id="PageType_ID" onchange="event.preventDefault();return OnchangePageTypeChange();">
+                                <input type="hidden" name="groupName" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Loại trang"]</div>
+                                <div id="cbbPageType_ID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>@Local["Trang"]</label>
+                            <div class="ui fluid search selection dropdown" id="Page_ID">
+                                <input type="hidden" name="pageName" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Màn hình"]</div>
+                                <div id="cbbPage" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="two fields">
+                        <div class="field">
+                            <label>@Local["Loại"] Control</label>
+                            <div class="ui fluid search selection dropdown" id="TypeControlID" onchange="event.preventDefault();return OnchangeGroupTypeChange();">
+                                <input type="hidden" name="typecontrol" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Loại"] Control</div>
+                                <div id="cbbTypeControl" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>@Local["Tên cột"]</label>
+                            <input id="ColumnNamePermissionControl" name="columnName" type="text" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="NotePermissionControl" name="content" type="text" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div style="float: right">
+            <button class="ui teal button" form="form3" type="submit" onclick="return ExcuteData()">@Local["Lưu"]</button>
+        </div>
+        <div style="float: right">
+            <button class="ui grey button" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var DataComboPermissionPage;
+        var CurrentID = '@Model._CurrentID';
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#PermissionControl').val() ? $('#PermissionControl').val() : "";
+            data.Value = $('#ValuePermissionControl').val() ? $('#ValuePermissionControl').val() : "";
+            data.Note = $('#NotePermissionControl').val() ? $('#NotePermissionControl').val() : "";
+            data.ColumnName = $('#ColumnNamePermissionControl').val() ? $('#ColumnNamePermissionControl').val() : "";
+            data.Type = Number($('#TypeControlID').dropdown('get value')) ? Number($('#TypeControlID').dropdown('get value')) : 0;
+            data.Page_ID = Number($('#Page_ID').dropdown('get value')) ? Number($('#Page_ID').dropdown('get value')) : 0;
+
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Permission/PermissionControlDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: CurrentID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            LoadControlListAjax();
+                        } else {
+                            notiError("@Local["Control đã tồn tại vui lòng kiểm tra lại"]");
+                        }
+                    });
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+            }
+            return false;
+        }
+
+        $(document).ready(function () {
+
+            AjaxLoad(url = "/Permission/PermissionControlDetail/?handler=InitializeComboPermissionPage"
+                , data = {
+                }, async = true, error = null
+                , success = function (result) {
+                    let data = JSON.parse(result);
+
+                    $("#ColumnNamePermissionControl").prop('disabled', true);
+                    let DataControlType = data._dataType;
+
+                    Load_Combo(DataControlType, "cbbTypeControl", true);
+                    DataComboPermissionPage = data._DataComboPermissionPage;
+                    let dataPageType = data._dataPageType;
+
+                    Load_Combo(dataPageType, "cbbPageType_ID", true);
+                    $("#TypeControlID").dropdown("refresh");
+                    $("#PageType_ID").dropdown("refresh");
+                });
+            if (CurrentID != "0")
+                LoadDataUpdatePermissionPage();
+        });
+
+        function OnchangePageTypeChange() {
+            var groupid = Number($('#PageType_ID').dropdown('get value'))
+                ? Number($('#PageType_ID').dropdown('get value'))
+                : 0;
+            let data = DataComboPermissionPage.filter(word => word["GroupID"] === groupid);
+
+            Load_Combo(data, "cbbPage", true);
+            $("#Page_ID").dropdown("refresh");
+            return false;
+        }
+        function OnchangeGroupTypeChange() {
+            debugger
+            var typeid = Number($('#TypeControlID').dropdown('get value'))
+                ? Number($('#TypeControlID').dropdown('get value'))
+                : 0;
+            $('#ColumnNamePermissionControl').val('');
+            if (typeid === 3) {
+                $("#ColumnNamePermissionControl").prop('disabled', false);
+            } else {
+                $("#ColumnNamePermissionControl").prop('disabled', true);
+            }
+            return false;
+        }
+        function LoadDataUpdatePermissionPage() {
+            AjaxLoad(url = "/Permission/PermissionControlDetail/?handler=Loadata"
+                , data = {
+                    id: CurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataPage = JSON.parse(result);
+                    $("#PageType_ID ").dropdown("refresh");
+                    $("#PageType_ID ").dropdown("set selected", dataPage[0].GroupID);
+                    $('#PermissionControl').val((dataPage[0].ControlName));
+                    $('#NotePermissionControl').val((dataPage[0].Note));
+                    $('#ValuePermissionControl').val((dataPage[0].ControlValue));
+                    $('#ColumnNamePermissionControl').val((dataPage[0].ColumnName));
+                    $("#TypeControlID ").dropdown("refresh");
+                    $("#TypeControlID ").dropdown("set selected", dataPage[0].Type);
+                    $("#Page_ID ").dropdown("refresh");
+                    $("#Page_ID ").dropdown("set selected", dataPage[0].Page_ID);
+                });
+        }
+
+
+    </script>
+
+    <script>js_require('/assests/dist/semantic.min.js');</script>
+    <script>js_require('/assests/dist/plugins/cookie/js.cookie.js');</script>
+    <script>js_require('/assests/dist/plugins/nicescrool/jquery.nicescroll.min.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+    <script>js_require('/assests/dist/plugins/pacejs/pace.js');</script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/comon/noti_function.js');</script>
+    <script>js_require('/js/comon/load_datasource.js');</script>
+
+</body>
+
+</html>
+

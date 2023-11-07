@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>VTTECH API</title>
+    <link rel="shortcut icon" href="/assests/img/logo/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="icon" href="/assests/img/logo/favicon.ico" />
+    <link href="/css/root_element_color.css" rel="stylesheet" />
+    <link href="/css/root_element_grid.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assests/dist/FontAwesome/css/all.min.css" />
+    <script src="/assests/library/jquery-2.1.4.min.js" type="text/javascript"></script>
+    <script src="/assests/js/ajax.min.js" type="text/javascript"></script>
+    <link href="/assests/icon/dist/css/font.css" rel="stylesheet" />
+    <link href="/css/master1.css" rel="stylesheet" />
+    <script src="/js/comon/Datetime.js"></script>
+    <script src="/js/comon/Render.js"></script>
+    <link href="/css/main.custom.css" rel="stylesheet" />
+    <link href="/assests/dist/plugins/pacejs/pace.css" rel="stylesheet" />
+    <link href="/assets/css/soft-ui-dashboard.css" rel="stylesheet" />
+    <link href="/assests/dist/css/scrollbar.css" rel="stylesheet" />
+    <script src="/assests/js/detect-mobile.js"></script>
+    <script src="/js/table_responsive.js"></script>
+    <script src="/js/comon/initialize_setting.js"></script>
+    <script src="/assests/dist/Barcode/JsBarcode.code128.min.js"></script>
+    <script src="/assests/dist/QRCode/qrcode.min.js"></script>
+    <script src="/js/comon/Other.js"></script>
+</head>
+
+<body>
+    <div class="mt-5 overflow-y" id="apicontainer">
+        <div class="mb-3 d-flex justify-content-center">
+            <div>
+                <div class="waiting position-absolute top-0 start-50 translate-middle waitingdiv text-center w-100 mt-5 ">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+                <div class="d-flex">
+                    <div class="p-3  bg-white position-relative   d-flex justify-content-center">
+                        <div id="apigetarea" tabindex="-1" class="w-100 bg-white" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let PV_Form = {};
+        let PV_WaterMark = '';
+        let PV_Height = 0;
+        let PV_Width = 0;
+        let PV_FormData = [PV_FormData];
+        let PV_ExchangeRate = "[PV_ExchangeRate]";
+        let PV_CurrencyUnit = "[PV_CurrencyUnit]";
+        $(document).ready(function () {
+            if (PV_FormData && PV_FormData != 0) {
+                let { Table: PV_List, ...PV_Content } = PV_FormData;
+                PV_Form = JSON.parse(PV_List[0].Form);
+                PV_WaterMark = PV_List[0]?.Watermark ?? "";
+                PV_Height = PV_List[0]?.Heightmm ?? 0;
+                PV_Width = PV_List[0]?.Widthmm ?? 0;
+                PV_LoadValue(PV_RenameObject(PV_Content));
+                PV_ConvertCurrency();
+            }
+            else {
+                $('.waiting').addClass('d-none');
+                $("#apicontainer").html('<h1 class="text-center text-info">No Data</div>');
+            }
+        });
+        function PV_ConvertCurrency() {
+            if (PV_ExchangeRate != '' && Number(PV_ExchangeRate)) {
+                const dtManual = {
+                    exchangeRate: PV_ExchangeRate,
+                    valExchangeRate: PV_ExchangeRate,
+                    valCurrency: PV_CurrencyUnit
+                };
+                const Timeout = setTimeout(() => {
+                    fn_FillManual("apigetarea", dtManual);
+                    clearTimeout(Timeout);
+                }, 500);
+            }
+        }
+        function PV_RenameObject(arr) {
+            let i = 1;
+            const mapped = Object.keys(arr).reduce((acc, key) => {
+                if (i == 1) {
+                    acc[`Table`] = arr[key];
+                    i++;
+                    return acc;
+                }
+                acc[`Table${i - 1}`] = arr[key];
+                i++;
+                return acc;
+            }, {});
+            return mapped;
+        }
+        function PV_LoadValue(result) {
+            let datafield,
+                dtTables = {};
+            if (result != "") {
+                if ($.isEmptyObject(result)) PV_Render(PV_Form, datafield, dtTables, "apigetarea");
+                else {
+                    let data = result;debugger
+                    for (const [key, value] of Object.entries(data)) {
+                        if (key == "Table") datafield = value;
+                        else {
+                            dtTables[key] = value;
+                        }
+                    }
+                    if (datafield != undefined && datafield.length != 0) {
+                        PV_Render(PV_Form, datafield, dtTables, "apigetarea");
+                    }
+                }
+            }
+        }
+        async function PV_Render(data, datafield, dtTables, id) {
+            return new Promise((resolve, reject) => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = "";
+                    PV_SetStyleArea(id);
+                    fn_RenderForm(myNode, data);
+                    if (datafield != undefined && datafield.length == 1) {
+                        fn_FillForm((item = datafield[0]), (id = id));
+                    }
+                    if (dtTables != undefined && Object.keys(dtTables).length > 0) {
+                        fn_FillTables(dtTables, (item = datafield[0]), (id = id));
+                    }
+                    $('.exchange').html('VNĐ');
+                }
+                $('.waiting').addClass('d-none');
+                $("#apigetarea").slideDown('slow');
+                if (typeof TableReponsive !== 'undefined' && sys_isMobile != undefined && sys_isMobile == 1) {
+                    TableReponsive.Refresh();
+                }
+                PV_RenderFormInForm();
+                PV_SetEventSpecial();
+                PV_SetEventTextarea();
+                PV_setCheckboxChecked();
+            });
+        }
+
+        function PV_SetStyleArea(id) {
+            $("#" + id).removeClass("opacity-0");
+            if (PV_WaterMark != '') {
+                $('#' + id).css({
+                    "background-image": "url('" + PV_WaterMark + "')"
+                    , "background-repeat": "repeat"
+                    , "background-position": "center"
+                    , "background-size": `auto`
+                    // , "background-size": `${printfd_widthpx}px ${printfd_heightpx}px`
+                });
+
+                //$('#' + id).attr('style', `background:url('${watermark}') no-repeat center !important ;`);
+            }
+            if (PV_Height != 0 && PV_Width != 0) {
+                $('#' + id).css({
+                    "min-height": `${PV_Height}mm`
+                    , "max-width": `${PV_Width}mm`
+                    // , "background-size": `${printfd_widthpx}px ${printfd_heightpx}px`
+                });
+            }
+        }
+
+        async function PV_RenderFormInForm()
+        {
+            if ($('#apigetarea').children().hasClass('row-forminform')) {
+                let Data = JSON.parse($('.row-forminform').children().html());
+                if (Data && Data.length != 0) {
+                    $('.row-forminform').html('');
+                    let id = $('.row-forminform').attr('id', 'forminformdiv');
+                    let MyNode = document.getElementById('forminformdiv');
+                    fn_RenderForm(MyNode, Data);
+                }
+            }
+        }
+        function PV_SetEventSpecial()
+        {
+            let Check_Table = $('#apigetarea .hide_table_empty tbody tr');
+            let Check_ColLable = $('#apigetarea .hide_collable_empty');
+            if (Check_Table.length == 0) {
+                $('#apigetarea .hide_table_empty').addClass('d-none');
+            }
+            if (Check_ColLable.html() == '') {
+                Check_ColLable.parent().addClass('d-none');
+            }
+        }
+        function PV_SetEventTextarea()
+        {
+            $('.vt-area').each(function ()
+            {
+                let value = $(this).val();
+                let newvalue = '';
+                let message = document.getElementById(this.id);
+                let objs = value.split(`\\r\\n`)
+                let count = 0;
+                objs.forEach((obj) => {
+                    count += 1;
+                    if (obj.trim() != "") {
+                        if (count === objs.length) newvalue = newvalue + obj;
+                        else newvalue = newvalue + obj + '\r\n';
+                    }
+                });
+                message.value = newvalue;
+                this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+                printfd_changesize = 1;
+
+            }).on('input', function ()
+            {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+        function PV_setCheckboxChecked()
+        {
+            let CheckClass = document.getElementsByClassName('vt-checkbox-checked')[0]
+            if (CheckClass != null) {
+                CheckClass.checked = true;
+            }
+        }
+    </script>
+
+    <script src="/assets/js/core/popper.min.js"></script>
+    <script src="/assets/js/core/bootstrap.js"></script>
+    <link href="/css/master.css" rel="stylesheet" />
+</body>
+</html>

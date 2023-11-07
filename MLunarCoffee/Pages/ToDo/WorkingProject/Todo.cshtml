@@ -1,0 +1,331 @@
+﻿@page
+@model SourceMain.Pages.ToDo.WorkingProject.TodoModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+
+<script>js_require_notasync('/assets/js/plugins/countup.min.js', true);</script>
+<div class="row form3" id="divManTodoProject">
+    <div class="col-12 col-md-4 col-lg-4 col-xl-3 px-1 mt-1">
+        <div class="card">
+            <div class="card-header pb-0 bg-transparent">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 data-languagestatic="" class="mb-0">Project</h6>
+                            <p data-languagestatic="" class="text-sm mb-0">Some text of detail sub</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="event.preventDefault();Todo_AddNew_Project()">Add New</button>
+                    </div>
+                </div>
+                <div id="popupExecute_TodoList" class="ui dropdown item" tabindex="0">
+                    <div class="menu" style="display: block" tabindex="-1">
+                        <div class="menu transition visible" tabindex="-1" style="border-radius: 7px !important; display: block !important;">
+                            <div class="dropstart">
+                                <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 show" style="position: absolute; inset: 0px 0px auto auto !important; margin: 0px; transform: translate(116px, 40px) !important;">
+                                    <li><a class="dropdown-item border-radius-md" onclick="addNewTodoTask()">New Work</a></li>
+                                    <li><a class="dropdown-item border-radius-md" onclick="editTodoList()">Edit</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item border-radius-md text-danger" onclick="deleteTodoList()">Remove Work Group</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="popupExecute_Project" class="ui dropdown item" tabindex="0">
+                    <div class="menu" style="display: block" tabindex="-1">
+                        <div class="menu transition visible" tabindex="-1" style=" display: block !important;">
+                            <div class="dropstart">
+                                <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 show" style="position: absolute; inset: 0px 0px auto auto !important; margin: 0px; transform: translate(116px, 40px) !important;">
+                                    <li><a class="dropdown-item border-radius-md" onclick="Todo_Edit_Project()">Edit Team</a></li>
+                                    <li>
+                                        <div class="item item_todo">
+                                            <a class="dropdown-item border-radius-md">Update project status</a>
+                                            <div id="popupExecute_Project_Status" class="menu transition hidden"></div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item border-radius-md text-danger" onclick="Todo_Delete_Project()">Remove Project</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="d-lg-flex justify-content-between p-0">
+                    <div class="field">
+                        <input id="dateFilterTodoMenu" class="flatpickrTodoMenu form-control text-center" type="text" placeholder="" onchange="Todo_LoadData_ListProject()" />
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group mb-0">
+                            <span data-languagedyn="total" class="input-group-text fw-bold text-primary text-gradient">Total Project:</span>
+                            <span class="form-control fw-bolder text-dark" id="totalProject">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="Todo_Group_Master" class="mt-2 overflow-y">
+                    <ul id="todo_group" data-languagedyn="" class="nav flex-column bg-white border-radius-md px-0 ">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-8 col-lg-8 col-xl-9 px-1 mt-1 Report_Layout_Child mx-auto">
+            <div id="Project_detail">
+
+            </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let projectName = '';
+    let ser_dataTeam;
+    let ser_dataProject;
+    var ser_dataStatus_Project;
+    var currentProject;
+    var currentProject_Status;
+
+    $(document).ready(function () {
+        Todo_LoadData_ProjectStatus();
+        $(".flatpickrTodoMenu").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#dateFilterTodoMenu").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        Todo_LoadData_ListProject();
+        SettingHeightDiv();
+
+    });
+    $(document).mouseup(function (e) {
+        var container = $("#popupExecute_Project");
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+        }
+
+        container = $("#popupExecute_TodoList");
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+        }
+    });
+    function Todo_LoadData_ProjectStatus() {
+        AjaxLoad(url = "/ToDo/WorkingProject/Todo/?handler=LoadDataInitialize"
+            , data = {
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    ser_dataStatus_Project = JSON.parse(result);
+
+                }
+            });
+    }
+    function Todo_LoadData_ListProject() {
+        let date = $('#dateFilterTodoMenu').val() ? $('#dateFilterTodoMenu').val() : new Date();
+        AjaxLoad(url = "/ToDo/WorkingProject/Todo/?handler=LoadDataProject"
+            , data = {
+                date: date
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    ser_dataTeam = JSON.parse(result)["Table1"];
+                    ser_dataProject = JSON.parse(result)["Table"];
+                    RenderProject_List(ser_dataTeam, ser_dataProject, 'todo_group');
+                }
+            });
+    }
+    function RenderProject_List(dataTeam, dataProject, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let dr = '';
+            if (dataTeam && dataTeam.length > 0) {
+                for (var i = 0; i < dataTeam.length; i++) {
+                    let item = dataTeam[i];
+                    let teamtring = '';
+                    let totalP = 0
+                    let projectInTeam = '';
+                    $('#totalProject').html(dataProject.length)
+                    for (var j = 0; j < dataProject.length; j++) {
+                        let temp = dataProject[j];
+                        if (temp.TeamID === item.TeamID) {
+                            totalP += 1;
+                            dr = '<div data-id="' + temp.ID + '" class="m-1 me-0 p-2 border rounded-2 flex-column">'
+                                + '<i data-statusid="' + temp.Status + '" data-id="' + temp.ID + '" class="vtt-icon vttech-icon-dot float-end btn_event" style="margin-left: -15px; margin-top:-5px; transform: rotate(90deg);"></i>'
+                                + '<div data-name="' + temp.ProjectName + '" title="' + temp.StatusName + '" data-id="' + temp.ID + '" class="d-flex flex-column listitem_child">'
+                                + '<div class="">'
+                                + '<span class="w-50">' + temp.ProjectName + '</span>'
+                                + '</div>'
+                                + '<textarea readonly rows="2" class="text-sm text-body border-0 cursor-pointer" style="outline: none; ">' + temp.ProjectDesc + '</textarea>'
+                                + '<div class="">'
+                                + '<span class="text-xs pt-1 w-50">' + temp.DateFrom + ' - ' + temp.DateTo + '</span>'
+                                + '<span class="text-sm float-end" style="color: ' + temp.StatusColor + ' ">' + temp.StatusName + '</span>'
+                                + '</div>'
+                                + '</div>'
+                                + '</div>';
+                            projectInTeam = projectInTeam + dr;
+                        }
+                    }
+                    let idcolapse = 'reportcoll' + i;
+                    teamtring = teamtring + '<li class="nav-item m-0 mt-1"> <a class="nav-link text-body p-0">'
+                        + '<div class="colcontent p-2 border-radius-md text-sm collapsed border" aria-controls="' + idcolapse + '" data-bs-toggle="collapse" data-bs-target="#' + idcolapse + '">'
+                        + '<i class="collapse-close vtt-icon vttech-icon-add opacity-2 text-xs pt-1 position-absolute end-0 pe-0 me-3"></i>'
+                        + '<i class="collapse-open fa fa-minus opacity-2 text-xs pt-1 position-absolute end-0 pe-0 me-3" ></i>'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class=" text-dark mb-1">' + item.TeamName + '</h6>'
+                        + '<span class="text-muted mt-n1">Project: ' + totalP + '</span>'
+                        + '</div >'
+                        + '</div >'
+                        + '<div id="' + idcolapse + '" class="reportitem collapsesticky collapse">';
+
+
+                    if (projectInTeam == '') {
+                        teamtring = '';
+                    }
+                    stringContent += teamtring + projectInTeam + '</div></a></li>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Todo_Event_Click();
+    }
+    function Todo_Event_Click() {
+        $(".listitem_child").on('click', function (event) {
+            let idProject = $(this).attr("data-id");
+            projectName = $(this).attr("data-name");
+            $(".listitem_child").removeClass("active");
+            $(this).addClass("active");
+            Todo_Load_ProjectDetail(idProject);
+        });
+        $(".btn_event").on('click', function (event) {
+            event.preventDefault();
+            currentProject = $(this).attr("data-id");
+            currentProject_Status = $(this).attr("data-statusid");
+            $("#popupExecute_Project").css({ left: (event.pageX - 265) });
+            $("#popupExecute_Project").css({ top: (event.pageY - 187) });
+            $("#popupExecute_Project").show();
+            Todo_Load_Popup();
+        });
+        $(".project_status_item").on('click', function (event) {
+            event.preventDefault();
+            let statusChoosen = $(this).attr("data-id");
+            //update status
+            Todo_Update_ProjectStatus(statusChoosen);
+            $('#popupExecute_Project').hide();
+        });
+
+    }
+    function Todo_Update_ProjectStatus(statusChoosen) {
+        AjaxLoad(url = "/ToDo/WorkingProject/Todo/?handler=UpdateProjectStatus"
+            , data = {
+                statusid: statusChoosen,
+                CurrentID: currentProject
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    Todo_LoadData_ListProject();
+                }
+            });
+    }
+    function Todo_AddNew_Project() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoProjectDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    function Todo_Load_ProjectDetail(id) {
+        if (id != 0) {
+            $("#Project_detail").load("/ToDo/WorkingProject/ProjectOption?ver=" + versionofWebApplication + "&CurrentID=" + id);
+            return false;
+        }
+    }
+    function Todo_Load_Popup() {
+        let data = ser_dataStatus_Project.filter(word => {
+            return (word["ID"] != currentProject_Status);
+        });
+        if (data != undefined) {
+            Todo_Render_Project_CurrentStatus(data, "popupExecute_Project_Status");
+        }
+    }
+    function Todo_Render_Project_CurrentStatus(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let tr = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    tr = '<div class="item project_status_item item_todo" data-id="' + item.ID + '"><i style="float:left; color:' + item.ColorCodeString + '" class="vtt-icon vttech-icon-tag p-0 m-0 pe-2"></i>' + item.Name + '</div>';
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Todo_Event_Click();
+    }
+    function Todo_Edit_Project() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/ToDo/WorkingProject/TodoProjectDetail?CurrentID=" + currentProject + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function Todo_Delete_Project() {
+        const promise = notiConfirm();
+        promise.then(function () { Todo_Execute_Delete_Project(); }, function () { });
+    }
+    function Todo_Execute_Delete_Project() {
+        AjaxLoad(url = "/ToDo/WorkingProject/Todo/?handler=DeleteProject"
+            , data = {
+                id: currentProject
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    Todo_LoadData_ListProject();
+                    document.getElementById('Project_detail').innerHTML = '';
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function SettingHeightDiv() {
+        $('#divManTodoProject').css({ height: ($(window).height() - $('#Master_Menu_Top').height())-200 });
+        //$('#detail').css({ height: ($(window).height() - $('#Master_Menu_Top').height()) - 200 });
+        $('#list_Task').css({ height: ($(window).height() - $('#Master_Menu_Top').height()) - 200 });
+        $('.divTaskInGroup ').css({ height: ($(window).height() - $('#Master_Menu_Top').height()) - 270 });
+    }
+</script>
+<style>
+    #todo_group div[aria-expanded=true] .collapse-open {
+        display: block;
+    }
+
+    #todo_group div[aria-expanded=true] .collapse-close {
+        display: none;
+    }
+    #popupExecute_Project {
+        display: none;
+    }
+    #popupExecute_TodoList{
+        display:none;
+    }
+</style>
+<script src="/js/DraggableJS/draggable.bundle.js"></script>
+<script src="/js/DraggableJS/draggable.js"></script>
+<script src="/js/DraggableJS/sortable.js"></script>
+<script src="/js/DraggableJS/droppable.js"></script>
+<script src="/js/DraggableJS/swappable.js"></script>
+

@@ -1,0 +1,117 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Target.TargetDetail.TargetDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-plain">
+                <div class="card-header pb-0 pt-3">
+                    <div class="w-lg-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Tiêu chí đánh giá"]</h6>
+                            <p class="text-sm mb-0">
+                                @Local["Chi tiết"]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="p-3 pt-0">
+                        <div class="row form3" id="formTarget">
+                            <div class="field col-6 p-1">
+                                <label>@Local["Tên"]</label>
+                                <input id="TargetName" name="name" type="text" class="form-control" />
+                            </div>
+                            <div class="field col-6 p-1">
+                                <label>@Local["Mã"]</label>
+                                <input id="TargetCode" name="code" type="text" class="form-control" />
+                            </div>
+                            <div class="field col-6 p-1">
+                                <label>@Local["Ghi chú"]</label>
+                                <input id="TargetNote" type="text" class="form-control" />
+                            </div>
+                            <div class="field col-6 p-1">
+                                <label>@Local["Loại tiêu chí"]</label>
+                                <div class="ui fluid search selection dropdown form-control" id="TargetType">
+                                    <input type="hidden" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">@Local["Loại tiêu chí"]</div>
+                                    <div id="cbbtype" class="menu" tabindex="-1">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton d-flex align-items-center">
+            <div class="text-danger text-gadient text-sm font-weight-bold pe-2" id="textShowMessage">
+            </div>
+            <div class="action_Save-Content mt-2">
+                <button class="btn btn-secondary" onclick=" event.preventDefault(); return Target_CloseDetail()">@Local["Hủy"]</button>
+                <button id="TargetbtnDetail" type="button" class="btn bg-gradient-primary _tab_control_" onclick="event.preventDefault();Target_ExcuteDetail()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var ser_SourceDetailID;
+    $(document).ready(function() {
+        let dataComboTargetType;
+        ser_SourceDetailID = '@Model._DataDetailID';
+        if (ser_SourceDetailID != "0") Target_LoadDataUpdate();
+        AjaxLoad(url = "/Student/Settings/Target/TargetDetail?handler=LoadInitializeData"
+            , data = {}, async = false, error = null
+            , success = function(result) {
+                dataComboTargetType = JSON.parse(result);
+                Load_Combo(dataComboTargetType, "cbbtype", true);
+                $("#TargetType").dropdown("refresh");
+                $("#TargetType").dropdown("set selected", dataComboTargetType[0].ID);
+            });
+
+    });
+    function Target_LoadDataUpdate() {
+        AjaxLoad(url = "/Student/Settings/Target/TargetDetail?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, asyns = true, error = null
+            , success = function(result) {
+                Data = JSON.parse(result);
+                Target_FillDataDetail(Data[0]);
+            }
+        )
+    }
+    function Target_FillDataDetail(item) {
+        $('#TargetName').val((item.Name));
+        $('#TargetCode').val((item.Code));
+        $('#TargetNote').val((item.Note));
+        $("#TargetType").dropdown("refresh");
+        $("#TargetType").dropdown("set selected", item.TypeID);
+    }
+    function Target_ExcuteDetail() {
+        var data = new Object();
+        data.Name = $('#TargetName').val() ? $('#TargetName').val() : "";
+        data.Code = $('#TargetCode').val() ? $('#TargetCode').val() : "";
+        data.Note = $('#TargetNote').val() ? $('#TargetNote').val() : "";
+        data.TypeID = $('#TargetType').dropdown('get value') ? $('#TargetType').dropdown('get value') : "";
+        $('#formTarget').form('validate form');
+        if ($('#formTarget').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/Target/TargetDetail?handler=ExcuteData"
+                , data = { data: JSON.stringify(data), CurrentID: ser_SourceDetailID }, async = true, error = null
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        Target_LoadList();
+                        Target_CloseDetail();
+                    } else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Trùng dữ liệu"]';
+                    }
+                });
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

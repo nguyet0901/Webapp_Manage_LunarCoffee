@@ -1,0 +1,229 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerGroupListModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Nhóm khách hàng"] </h6>
+                        <p class="text-sm mb-0">@Local["Danh sách nhóm khách hàng"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="btnNewTypeAccount" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" onclick="return CustomerGroupAddNew()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="dtContentCustomerGroup" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width:40px">#</th>
+                                    <th>@Local["Hình ảnh"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Áp dụng khuyến mãi cho tất cả dịch vụ, sản phẩm"]</th>
+                                    <th>@Local["Thông tin giảm"]</th>
+                                    <th style="width:40px" class="setting_projectclosure">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentCustomerGroupBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let DataService, DataServiceType = {};
+    let DataUser;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Service]
+            , function (data) {
+                DataService = data[0];
+                CustomerGroupLoad();
+            });
+
+        $('#dtContentCustomerGroup tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerGroupEdit(ID);
+        });
+        $('#dtContentCustomerGroup tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerGroupDelete(ID)
+        });
+    });
+    function CustomerGroupLoad() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Setting/CustomerGroupList/?handler=LoadataCustomerGroup"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        let data = JSON.parse(result).Group;
+                        let SerType = JSON.parse(result).ServiceType;
+                        for (let i = 0; i < SerType.length; i++) {
+                            DataServiceType[SerType[i].ID] = SerType[i];
+                        }
+
+                        CustomerGroupRender(CustomerGroup_Dectect_Data(data), "dtContentCustomerGroupBody");
+                    });
+            });
+
+
+    }
+    function CustomerGroup_Dectect_Data(data) {
+        let dt = data;
+
+        if (dt != null && dt.length != 0) {
+            for (let i = 0; i < dt.length; i++) {
+                let dataRule = dt[i].DataRule;
+                let NumDiscount = 0;
+                let item = dt[i];
+                if (dataRule != "[]" && dataRule != "") {
+                    let dataMain = JSON.parse(dataRule);
+                    for (let j = 0; j < dataMain.length; j++) {
+                        let type = dataMain[j].type;
+                        let active = Number(dataMain[j].active);
+                        let value = dataMain[j].value;
+                        let percent = Number(dataMain[j].percent);
+                        let amount = Number(dataMain[j].amount);
+                        if (active === 1) {
+                            let result = "";
+                            let stringdetect = "";
+
+                            switch (type) {
+                                case "service":
+                                    stringdetect = CustomerGroup_DectectDetail(DataService, value);
+                                    result = '<div class="card"><div class="class="pb-2""><h6 title="@Local["Dịch vụ"]" class="badge badge-sm bg-gradient-info ms-2">@Local["Dịch vụ"]</h6>'
+                                        + stringdetect
+                                        + '</div></div>';
+                                    NumDiscount++;
+                                    break;
+                                case "servicetype":
+                                    stringdetect = CustomerGroup_DectectDetail(DataServiceType, value);
+                                    result = '<div class="mb-2 card" ><div class="pb-2"><h6 title="@Local["Nhóm dịch vụ"]" class="badge badge-sm bg-gradient-success ms-2">@Local["Nhóm dịch vụ"]</h6>'
+                                        + stringdetect
+                                        + '</div></div>';
+                                    NumDiscount++;
+                                    break;
+                                case "all":
+                                    result =
+                                        ((percent > 0) ? ('<span class="percent">' + percent + '%</span>') : ('<span class="amount">' + formatNumber(amount) + '</span>'))
+                            }
+                            if (type == "all") {
+                                item.DiscountInfoAll = result;
+                            }
+                            else {
+                                item.DiscountInfo = item.DiscountInfo + result;
+                            }
+                        }
+                    }
+                }
+                item.NumDiscount = NumDiscount;
+            }
+            return dt;
+        }
+    }
+    function CustomerGroup_DectectDetail(data, dataRule) {
+        let result = "";
+        let count = 0;
+        for (let i = 0; i < dataRule.length; i++) {
+            let idRule = Number(dataRule[i].id);
+            if (i >= 10) {
+                break;
+            }
+            if (data[idRule] != undefined) {
+                let tr = "";
+                count++;
+                if (Number(dataRule[i].percent) > 0) {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-1"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        +'<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold me-1">' + dataRule[i].percent + '% </span></p></div>'
+                }
+                else {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-1"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        +'<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold me-1">' + formatNumber(dataRule[i].amount) + '</span></p></div>';
+                }
+                result = result + tr;
+                if (count == 10) {
+                    result = result + "<span>....</span>"
+                }
+            }
+        }
+        return result;
+    }
+
+    function CustomerGroupDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { CustomerGroup_ExecuteDelete(id); }, function () { });
+    }
+    function CustomerGroup_ExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/CustomerGroupList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CustomerGroupLoad();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+
+    function CustomerGroupRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td class="text-center">'
+                        + '<div class="avatar  avatar-xl position-relative"><img class="border-radius-md" onerror="Master_OnLoad_Error_Image(this)" src="' + ((item.Image != '') ? item.Image : Master_Default_Pic) + '" alt="label-image" /></div>'
+
+                        + '</td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Name + '</a></td>'
+                        + '<td>' + item.DiscountInfoAll + '</td>'
+
+                        + '<td>' + item.DiscountInfo + '</td>'
+                        + '<td class="setting_projectclosure">'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function CustomerGroupEdit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerGroupDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+
+        return false;
+    }
+
+    function CustomerGroupAddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerGroupDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js');</script>

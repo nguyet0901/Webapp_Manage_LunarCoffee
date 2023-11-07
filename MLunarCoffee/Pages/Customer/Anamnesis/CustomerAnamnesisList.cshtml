@@ -1,0 +1,201 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Anamnesis.CustomerAnamnesisListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#anamnesis_infodes">
+                                    <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="ms-auto my-auto mt-1">
+                            <button class="btn bg-gradient-primary btn-sm mt-1" onclick="Anamnesis_AddNew()">@Local["Thêm mới"]</button>
+                        </div>
+                    </div>
+                    <div id="anamnesis_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-0 mb-2 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Tiền sử"]</h6>
+                        <p class="text-sm mb-0">@Local["Chi tiết tiền sử bệnh"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="d-lg-flex">
+                        <div class="col-w-200 mx-auto">
+                            <div class="card-body p-0">
+                                <ul class="list-group" id="divAnamnesisList">
+ 
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ">
+                            <div class="card mx-2">
+                                <div id="divAnamnesisContentMain"  >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var ser_CustomerID ='@Model._CustomerID';
+    var ser_PatientHistoryID = 0;
+    let DataAnamnesis = [];
+    let DataEmployee;
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                LoadAnamnesisAjax();
+                $('#dtContentAnamnesis').tablesort();
+            });
+    });
+
+
+
+    function LoadAnamnesisAjax() {
+
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisList/?handler=LoadataPatientHistory"
+            , data = { 'CustomerID': ser_CustomerID  }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "" && result != "null") {
+                    DataAnamnesis = JSON.parse(result);
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#dtContentAnamnesis").hide();
+                $("#div_customer_waiting").show();
+            }
+            , complete = function (e) {
+                $("#dtContentAnamnesis").show();
+                $("#div_customer_waiting").hide();
+                if (DataAnamnesis != undefined) {
+                    Anamnesis_Render_List(DataAnamnesis, "divAnamnesisList");
+                    Anamnesis_First_Click();
+                }
+            }
+        );
+
+    }
+
+    function Anamnesis_First_Click () {
+ 
+        if (DataAnamnesis != undefined && DataAnamnesis.length != 0) {
+            $("#divAnamnesisList .anamnesis_item:first-child").click();
+  
+            $('#divAnamnesisContentMain').show();
+        }
+        else {
+         
+            $('#divAnamnesisContentMain').hide();
+        }
+
+    }
+
+    //#region // Render Data
+    
+
+    function Anamnesis_Render_List(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let createdby = Fun_GetObject_ByID(DataEmployee, item.CreatedBy)
+                    let name = (createdby != null) ? createdby.Name : '';
+                    let img = (createdby != null && createdby.Avatar != "") ? createdby.Avatar : Master_Default_Pic;
+                    let tr =
+                        '<li id="anamnesis_item_' + item.ID + '" data-id="' + item.ID + '" class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg anamnesis_item">'
+                        + '<div class="d-flex ms-2">'
+                        + '<div class="icon icon-shape icon-sm me-3   text-center">'
+                        + '<img class="avatar avatar-sm m-0" src="' + img + '" alt="label-image" />'
+                        +'</div>'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + GetDateTime_String_DMY(item.Created)+'</h6>'
+                        + '<span class="text-xs">' + name + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="d-flex">'
+                        + '<button class="btn btn-link btn-icon-only btn-rounded btn-sm text-dark icon-move-right my-auto"><i class="ni ni-bold-right" aria-hidden="true"></i></button>'
+                        + '</div>'
+                        + '</li>';
+ 
+
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Anamnesis_EventGrid();
+    }
+    //#endregion
+
+
+
+    //#region // Event Click
+    function Anamnesis_EventGrid() {
+        $('#divAnamnesisList .anamnesis_item').on('click', function () {
+            let ID = Number($(this).attr("data-id"));
+            $(this).addClass("active").siblings().removeClass("active");
+            Anamnesis_Edit(ID, ser_CustomerID);
+        });
+        $(".anamnesis_img,.anamnesis_date").popup({
+            transition: "scale up",
+            position: "top right"
+        });
+    }
+    //#endregion
+
+
+
+    //#region // Handle Event
+    function Anamnesis_AddNew() {
+        $(".anamnesis_item").removeClass("active");
+        ser_PatientHistoryID = 0;
+        Anamnesis_LoadDetail();
+    }
+    function Anamnesis_Edit(id, customerID) {
+        $('.anamnesis_item').removeClass('active');
+        $('#anamnesis_item_' + id).addClass('active');
+        ser_PatientHistoryID = id;
+        Anamnesis_LoadDetail();
+
+    }
+
+    function Anamnesis_LoadDetail() {
+
+        $('#divAnamnesisContentMain').show();
+
+        if (($('#divAnamnesisContentMain').html()).trim() != '' && typeof Anamnesis_Detail_LoadOutside !== 'undefined' && $.isFunction(Anamnesis_Detail_LoadOutside)) {
+            Anamnesis_Detail_LoadOutside();
+        }
+        else {
+            $("#divAnamnesisContentMain").html('');
+            $("#divAnamnesisContentMain").load("/Customer/Anamnesis/CustomerAnamnesisDetail?ver=" + versionofWebApplication);
+        }
+
+    }
+
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+

@@ -1,0 +1,422 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.StatusCustomer.CustomerCareStatusListModel
+@{ Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row m-0">
+        <div class="d-lg-flex">
+            <div class="col-w-300">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 p-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Nhóm trạng thái"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách nhóm"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="btnNewGroupStatus" class="btn bg-gradient-primary btn-sm px-4 setting_projectclosure" data-tab="add_tab_Group_Status" data-value="fade up" onclick="return CustomerCare_Add_New_Group_Status()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 p-0">
+                    <table class="table vt-table my-3" id="dtCustomerCareGroupStatus">
+                        <thead>
+                            <tr>
+                                <th colspan="2">@Local["Loại"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtCustomerCareGroupStatusBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+            <div class="flex-grow-1 ms-md-2">
+                <div class="card card-plain">
+                    <div class="vtcardheader card-header pb-3 p-0">
+                        <div class="left">
+                            <h6 class="mb-0">@Local["Trạng thái"]</h6>
+                            <p class="text-sm mb-0">@Local["Danh sách trạng thái"]</p>
+                        </div>
+                        <div class="right">
+                            <button id="btnNewCustomerCareStatus" class="btn bg-gradient-primary btn-sm setting_projectclosure" data-tab="add_tab_Customer_Care_Status" data-value="fade up" onclick="return CustomerCare_Add_New_Status()">@Local["Thêm mới"]</button>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0  p-0">
+                        <table class="table vt-table mb-0" id="dtCustomerCareStatus">
+                            <thead>
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width:40px;">@Local["#"]</th>
+                                    <th>@Local["Tên trạng thái"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                    <th style="width:40px;" class="no-sort setting_projectclosure">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtCustomerCareStatusBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="card card-plain">
+                        <div class="vtcardheader card-header pb-0 p-0">
+                            <div class="left">
+                                <h6 class="mb-0">@Local["Ghi chú nhanh"]</h6>
+                                <p class="text-sm mb-0">@Local["Danh sách ghi chú nhanh"]</p>
+                            </div>
+                            <div class="right">
+                                <button id="btnNew_CustomerCare_Quick_Template" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" data-tab="add_tab_CustomerCare_Quick_Template" data-value="fade up" onclick="return CustomerCare_Add()">@Local["Thêm mới"]</button>
+                            </div>
+                        </div>
+                        <div class="card-body pt-0  p-0">
+                            <table class="table vt-table mb-0" id="dtCustomerCareQuick">
+                                <thead>
+                                    <tr role="row">
+                                        <th class="d-none">ID</th>
+                                        <th style="width:40px;">@Local["#"]</th>
+                                        <th>@Local["Đặc tính"]</th>
+                                        <th>@Local["Nội dung"]</th>
+                                        <th>@Local["Người sửa"]</th>
+                                        <th style="width:40px;" class="setting_projectclosure">@Local["Xóa"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dtCustomerCareQuickBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_TypeStatusID = @Model.sys_StatusTypeID;
+    var dataStatusParent;
+    var dataStatus;
+    var CurrentStatusParentID = 0;
+    let DataUser;
+    let cusGroupID = 0;
+    $(document).ready(function () {
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                SettingStatus_Load();
+            });
+        $('#dtCustomerCareStatus tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerCare_Edit_Status(ID);
+        });
+        $('#dtCustomerCareStatus tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerCareDelete(ID)
+        });
+        $('#dtCustomerCareGroupStatusBody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].getAttribute('data-id'));
+            CustomerCare_Edit_GroupStatus(ID);
+            CurrentStatusParentID = ID;
+        });
+        $('#dtCustomerCareGroupStatusBody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].getAttribute('data-id'));
+            CustomerCareDelete(ID)
+        });
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                CustomerCare_LoadTemplate();
+            });
+        $('#dtCustomerCareQuick tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerCare_Edit(ID);
+        });
+        $('#dtCustomerCareQuick tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustomerCareQuick_Delete(ID)
+        });
+    });
+    function SettingStatus_Load() {
+        AjaxLoad(url = "/Setting/StatusCustomer/CustomerCareStatusList/?handler=LoadataStatus"
+            , data = {
+                TypeStatusID: ser_TypeStatusID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "") {
+                    dataStatusParent = JSON.parse(result)["Table"];
+                    dataStatus = JSON.parse(result)["Table1"];
+                    CustomerCareRenderGroupStatus(dataStatusParent, 'dtCustomerCareGroupStatusBody');
+                    CustomerCare_TriggerClickStatus();
+                }
+            }
+        );
+    }
+    function CustomerCareRenderGroupStatus(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let total = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];                    
+                    total = total + Number(item.TotalChildren);
+                    stringContent +=
+                    `<tr class="rowStatusParent" data-id="${item.ID}">
+                        <td class="d-none">
+                            ${item.ID}
+                        </td>
+                        <td>
+                            <div class="d-flex ms-2">
+                                <div class="icon icon-shape icon-sm me-3 bg-gradient-dark shadow text-center rounded-2 text-center" title="Quantity">
+                                    <h6 class="text-white mt-2">
+                                        ${Number(item.TotalChildren)}
+                                    </h6>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <h6 class="text-dark text-sm mb-0 text-decoration-underline buttonEditClass">
+                                        ${item.Name}
+                                    </h6>
+                                </div>
+                            </div>
+                        </td>
+                            <td class="col-3">
+                            <div class="d-flex justify-content-center setting_projectclosure">
+                                ${item.DeleteButton == 1 ? `<button class="btn btn-link btn-icon-only text-dark my-auto buttonDeleteClass"><i title="Remove" class="remove icon" aria-hidden="true"></i></button>` : ""}
+                            </div>
+                        </td>
+                    </tr>
+                    `
+                }                
+                stringContent =
+                    `<tr class="rowStatusParent" data-id="0">
+                    <td class="d-none">
+                        0
+                    </td>
+                    <td colspan="2">
+                        <div class="d-flex ms-2">
+                            <div class="icon icon-shape icon-sm me-3 bg-gradient-dark rounded-2 text-center" title="Quantity">
+                                <h6 class="mt-2 text-white">
+                                    ${Number(total)}
+                                </h6>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <h6 class="text-dark text-sm mb-0">
+                                    @Local["Tổng"]
+                                </h6>
+                            </div>
+                        </div>
+                    </td>                    
+                </tr>
+                `
+                + stringContent;
+                document.getElementById(id).innerHTML = stringContent;
+            }
+        }
+        CustomerCareEventStatusParent();
+    }
+    function CustomerCare_TriggerClickStatus() {
+        if ($('.rowStatusParent[data-id="' + CurrentStatusParentID + '"]').get(0) != undefined)
+            $('.rowStatusParent[data-id="' + CurrentStatusParentID + '"]').get(0).click();
+    }
+    function CustomerCareEventStatusParent() {
+        $(".rowStatusParent").on('click', function (event) {
+            let id = Number($(this).attr("data-id"));
+            CurrentStatusParentID = id;
+            if (id == 0) CustomerCareViewDetail(id, 1);
+            else {
+                CustomerCareViewDetail(id, 0);
+            }
+            $('.rowStatusParent').removeClass('active');//add class mauf
+            $(this).addClass('active')
+        });
+    }
+    function CustomerCareViewDetail(idDetail, all) {
+        let data = dataStatus;
+        if (all == 0) {
+            data = dataStatus.filter(word => word["ParentID"] == idDetail);
+        }
+        CustomerCareRenderStatus(data, 'dtCustomerCareStatusBody');
+    }
+    function CustomerCareRenderStatus(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Name + '</a></td>'
+                        + '<td>'
+                        + '<div class="d-flex ms-2">'
+                        +'<div class="icon icon-shape icon-sm me-2 text-center" >'
+                        +'<img class="avatar avatar-xs mt-2" src="' + img + ' " alt="label-image">'
+                        +'</div>'
+                        +'<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + name +'</h6>'
+                        + '<span class="text-xs">' + GetDateTime_String_DMY(item.DayEditor) +'</span>'
+                        +'</div>'
+                        +'</div>'
+                        + '</td>'
+                        + '<td class="text-center setting_projectclosure">'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        + '</td>';
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        $("#dtCustomerCareStatusBody img,#dtCustomerCareStatusBody span").popup({
+            transition: "scale up",
+            position: "top right"
+        });
+        Checking_TabControl_Permission();
+    }
+    function CustomerCareDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { CustomerCareExecuteDelete(id); }, function () { });
+    }
+    function CustomerCareExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/StatusCustomer/CustomerCareStatusList/?handler=DeleteItem"
+            , data = {
+                StatusID: id
+            }, async = false, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    SettingStatus_Load();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CustomerCare_Edit_Status(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/StatusCustomer/CustomerCareStatusDetail?CurrentID=" + CurrentID + "&TypeStatusID=" + ser_TypeStatusID +"&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function CustomerCare_Add_New_Status() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/StatusCustomer/CustomerCareStatusDetail?TypeStatusID=" + ser_TypeStatusID + "&GroupStatusID=" + CurrentStatusParentID +"&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function CustomerCare_Add_New_Group_Status() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/StatusCustomer/CustomerCareGroupStatusDetail?CurrentID=0&TypeStatusID=" + ser_TypeStatusID +"&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function CustomerCare_Edit_GroupStatus(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/StatusCustomer/CustomerCareGroupStatusDetail?CurrentID=" + CurrentID + "&TypeStatusID=" + ser_TypeStatusID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function CustomerCare_LoadTemplate() {
+         AjaxLoad(url = "/Setting/StatusCustomer/CustomerCareStatusList/?handler=LoadataQuickNote"
+            , data = {
+                TypeStatusID: ser_TypeStatusID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    CustomerCare_Render(data, 'dtCustomerCareQuickBody');
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CustomerCare_Render(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Feature + '</a></td>'
+                        + '<td><span class="content_line_clamp">' + item.Content + '</span></td>'
+                        + '<td>'
+                        + '<div class="d-flex ms-2">'
+                        + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+                        + '<img class="avatar avatar-xs mt-2" src="' + img + ' " alt="label-image">'
+                        + '</div>'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+                        + '<span class="text-xs">' + GetDateTime_String_DMY(item.DayEditor) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        +  '<td class="text-center setting_projectclosure">'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        + '</td>';
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        $("#dtCustomerCareQuickBody img,#dtCustomerCareQuickBody span").popup({
+            transition: "scale up",
+            position: "top right"
+        });
+    }
+
+    function CustomerCareQuick_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { CustomerCareQuick_Delete_Execute(id); }, function () { });
+    }
+    function CustomerCareQuick_Delete_Execute(id) {
+        AjaxLoad(url = "/Setting/StatusCustomer/CustomerCareStatusList/?handler=DeleteItemTemplate"
+            , data = {
+                TemplateID: id
+            }, async = false, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CustomerCare_LoadTemplate();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CustomerCare_Edit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerCareQuickTemplateDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CustomerCare_Add() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerCareQuickTemplateDetail?TypeID=" + ser_TypeStatusID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js')</script>
+

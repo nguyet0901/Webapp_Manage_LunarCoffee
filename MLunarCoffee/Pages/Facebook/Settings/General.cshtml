@@ -1,0 +1,213 @@
+﻿@page
+@model MLunarCoffee.Pages.Facebook.Settings.General.GeneralModel
+@{
+    if (@Model.layout == "none") Layout = null;    
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+ 
+<div class="row m-0">
+    <div class="col-12 col-md-12 col-xl-3 ps-0">
+        <div style="max-height: calc( 100vh - 130px );overflow-y: auto;" class="mt-4">
+            <div class=" ms-2 mb-3">
+                <div id="fbpage_Login">
+                    <div class="fb-login-button "
+                         data-size="medium"
+                         data-button-type="continue_with"
+                         data-layout="rounded"
+                         data-onlogin="fbpage_SuccessLogin()"
+                         data-scope="pages_messaging,pages_show_list,pages_manage_engagement,pages_manage_metadata,public_profile,pages_read_engagement"
+                         data-auto-logout-link="false" data-use-continue-as="true" data-width="">
+                    </div>
+                </div>
+                <div id="fbpage_Logout" class="d-none">
+                    <div class="d-flex align-items-center">
+                        <img id="fbpage_url" class="avatar border border-1 avatar-sm" onerror="Master_OnLoad_Error_Image(this)" src="/default.png" alt="label-image" />
+                        <div class="ms-2">
+                            <h6 class="text-dark d-block mb-n1 text-sm" id="fbpage_name"></h6>
+                            <a id="fbpage_btlogout" href="#" onclick="return fbpage_logout()" class="cursor-pointer text-sm text-primary">@Local["Đăng xuất"]</a>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="position-relative">
+            <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column bg-white border-radius-lg" id="fbgen_MasterList">
+            </ul>
+        </div>
+    </div>
+    <div id="fbgen_Detail" class="mt-n3 col-12 col-md-12 col-xl-9 p-1">
+    </div>
+</div>
+<script>js_require('/Facebook/sdk.js');</script>
+<script type="text/javascript">
+    let fbgen_DataMasterList = [];
+    var fbpage_appid = '@Model.Face_appid';
+    var fbpage_version = '@Model.Face_version';
+    var fbuser_token = ""
+    var flr_page = "https://graph.facebook.com/{version}/{pageid}?fields=picture{url},id,access_token,name,link,about,description";
+    var flr_profile = "https://graph.facebook.com/{version}/{psid}?fields=name,picture{url}";
+    var flr_getapp = "https://graph.facebook.com/{version}/{pageid}/subscribed_apps?fields=photo_url,name,link,subscribed_fields";
+    var flr_unsub = "https://graph.facebook.com/{version}/{pageid}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,message_reads,message_echoes";
+    var flr_listpage = "https://graph.facebook.com/{version}/me/accounts?fields=picture{url},id,access_token,name,link";
+    var flr_conver = "https://graph.facebook.com/{version}/{pageid}/conversations?fields=senders,messages.limit(1){from},snippet,link,updated_time,unread_count&limit=100&platform=messenger";
+    var flr_avatar = "https://graph.facebook.com/{psid}/picture?redirect=0&type=small";
+    var flr_longlive = "https://graph.facebook.com/{version}/oauth/access_token?grant_type=fb_exchange_token&client_id={appid}&client_secret={appsecret}";
+    var fl_page = "", fl_profile = "", fl_getapp = "", fl_listpage = "", fl_unsub = ""
+        , fl_conver = "", fl_avatar = "", fl_longlive;
+    $(document).ready(function () {
+        //initNavs();
+        fbpage_FBInit();
+        fbgen_DataMasterList =
+            [{ "ListText": "@Local["Fanpage facebook"]", "ListLink": "/Pages/Facebook/Settings/FacebookPage/FacebookPageList" }
+            , {"ListText": "@Local["Fanpage của tôi"]", "ListLink": "/Pages/Facebook/Settings/FacebookPage/MyFanpage"}
+            , {"ListText": "@Local["Quản lí nhãn facebook"]", "ListLink": "/Pages/Facebook/Settings/FaceBookTag/FaceBookTagList"}
+            ,{ "ListText": "@Local["Quản lí tin nhắn mẫu"]", "ListLink": "/Pages/Facebook/Settings/Message/MessageTemplateList" }
+            ,{ "ListText": "@Local["Khu vực"]", "ListLink": "/Pages/Facebook/Settings/Area/AreaList" }
+            ];
+        fbgen_RenderMaster(fbgen_DataMasterList, "fbgen_MasterList");
+        fbgen_EventLinkClickDetail();
+        //if ($('#fbgen_MasterList a:first') != undefined) $('#fbgen_MasterList a:first').tab('show');
+        
+        //$('#fbgen_MasterList a:first').tab('show');// bug
+        $('#fbgen_MasterList a:first').click();
+        
+    });
+    //#region //RenderMaster
+    function fbgen_RenderMaster(data, id) {
+        let myNode = document.getElementById(id);
+        let stringContent = '';
+        if(myNode != ''){
+            if(data && data.length != 0){
+                for (let i= 0; i< data.length;i++){
+                    let item = data[i];
+                    stringContent += '<li class="nav-item" role="presentation">'
+                        + '<a data-tab="' + item.ListLink + '" class="text-sm item-menu detail nav-link cursor-pointer" data-hover data-bs-toggle="tab">'
+                        + item.ListText
+                        + '</a>'
+                        + '</li>'
+                        + '<hr class="horizontal dark my-0 opacity-2" data-link="' + item.ListLink + '">';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }                
+    }
+    //#endregion //RenderMaster
+
+    //#region //Event
+    function fbgen_EventLinkClickDetail(){
+        $("#fbgen_MasterList .detail").on('shown.bs.tab', function (e) {
+            $('#fbgen_MasterList .detail').removeClass('active');
+            $(this).addClass('active');
+            let link = $(this).attr("data-tab");
+            $("#fbgen_Detail").load(link + "?ver=" + versionofWebApplication);
+            $('#fbgen_Detail').show();
+        });
+    }
+    //#endregion //Event
+
+    //#region facebook Function
+    function fbpage_FBInit () {
+        FB.init({
+            appId: fbpage_appid,
+            cookie: true,
+            xfbml: true,
+            version: fbpage_version
+        });
+        FB.getLoginStatus(function (response) {
+            if (response.authResponse != undefined && response.status == "connected") {
+                fbuser_token = response.authResponse.accessToken;
+                $('#fbpage_Logout').removeClass('d-none');
+                $('#fbpage_Login').addClass('d-none');
+                fl_page = flr_page.replace('{version}', fbpage_version);
+                fl_longlive = flr_longlive.replace('{version}', fbpage_version);
+                fl_getapp = flr_getapp.replace('{version}', fbpage_version);
+                fl_listpage = flr_listpage.replace('{version}', fbpage_version) + "&access_token=" + fbuser_token;
+                fl_conver = flr_conver.replace('{version}', fbpage_version);
+                
+                fl_unsub = flr_unsub.replace('{version}', fbpage_version);
+                fl_profile = flr_profile.replace('{version}', fbpage_version).replace('{psid}', response.authResponse.userID)
+                    + "&access_token=" + fbuser_token;
+                var _obj = author_get("fbs_profile");
+                if (_obj != undefined && _obj != "")  fbpage_SetAuthor(JSON.parse(_obj));
+                else fbpage_GetAuthor();
+
+                var _objli = author_get("fbs_list");
+                if (_objli == undefined || _objli == "") fbpage_Listpageget();
+            }
+            else {
+                $('#fbpage_Logout').addClass('d-none');
+                $('#fbpage_Login').removeClass('d-none');
+            }
+        });  
+    }
+    async function fbpage_GetAuthor () {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                $.ajax({
+                    url: fl_profile,
+                    dataType: "json",
+                    type: "GET",
+                    data: JSON.stringify({}),
+                    contentType: 'application/json; charset=utf-8',
+                    async: true,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    },
+                    success: function (result) {
+                        if (result.id != undefined) {
+                            fbpage_SetAuthor(result);
+                            author_set("fbs_profile", JSON.stringify(result));
+
+                        }
+
+                    }
+                })
+            }, 10);
+        })
+    }
+    async function fbpage_Listpageget () {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                $.ajax({
+                    url: fl_listpage,
+                    dataType: "json",
+                    type: "GET",
+                    data: JSON.stringify({}),
+                    contentType: 'application/json; charset=utf-8',
+                    async: true,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        notiError();
+                    },
+                    success: function (result) {
+                        let data = result.data;
+                        if (data != undefined && data.length != 0) {
+                            author_set("fbs_list", JSON.stringify(data));
+                        }
+                        else author_set("fbs_list", '');
+                    }
+                })
+            }, 10);
+        })
+    }
+
+  
+
+    function fbpage_SetAuthor (_item) {
+        $('#fbpage_name').html(_item.name);
+        $('#fbpage_url').attr("src", _item.picture.data.url);
+    }
+    function fbpage_SuccessLogin () {
+        location.reload();
+    }
+    function fbpage_logout () {
+        FB.logout(function (response) {
+            author_set("fbs_profile", '');
+            author_set("fbs_list", '');
+            location.reload();
+        });
+    }
+ 
+
+    //#endregion facebook Function
+</script>

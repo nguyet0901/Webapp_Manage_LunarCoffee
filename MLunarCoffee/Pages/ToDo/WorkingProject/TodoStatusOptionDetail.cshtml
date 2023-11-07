@@ -1,0 +1,132 @@
+﻿@page
+@model SourceMain.Pages.ToDo.WorkingProject.TodoStatusOptionDetailModel
+@{ Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script>js_require('/js/comon/initialize_setting.js?ver=@DateTime.Now.Ticks');</script>
+</head>
+<body>
+    <div class="container-fluid px-0">
+        <div class="row">
+            <div class="col-12">
+                <!--Master-->
+                <div class="card mb-3">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <div class="h-100">
+                                    <h6 class="mb-0">Status Detail</h6>
+                                    <p class="text-sm mb-0">Some text of detail sub</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-3 pt-2">
+                        <div class="row px-2 form3" id="form3">
+                            <div class="field col-6 p-1">
+                                <label>Name</label>
+                                <input id="TodoStatus_StatusName" class="form-control" name="name" type="text" />
+                            </div>
+                            <div class="field col-6 p-1">
+                                <label>Color</label>
+                                <input id="TodoStatus_ColorCode" class="form-control" name="fillCode" type="text" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button data-languagestatic="button_cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+                            <button data-languagestatic="button_ok" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return TodoStatus_Excute()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var ser_TodoStatusID = (@Model._TodoStatusID);
+        $(document).ready(function () {
+            $("#TodoStatus_ColorCode").spectrum({
+                showPaletteOnly: true,
+                togglePaletteOnly: true,
+                showInput: true,
+                color: '#ffffff',
+                palette: [
+                    ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                    ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                    ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                    ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                    ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                    ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                    ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+                ]
+            });
+            if (ser_TodoStatusID != "0")
+                TodoStatus_LoadDataDetail();
+        });
+        
+        function TodoStatus_LoadDataDetail() {
+            AjaxLoad(url = "/ToDo/WorkingProject/TodoStatusOptionDetail/?handler=LoaDataUpdate"
+                , data = {
+                    id: ser_TodoStatusID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataColor = JSON.parse(result);
+                    if (dataColor && dataColor.length > 0) {
+                        $('#TodoStatus_StatusName').val((dataColor[0].Name));
+                        $("#TodoStatus_ColorCode").spectrum("set", dataColor[0].ColorCode);
+                    }
+                });
+            return false;
+        }
+        function TodoStatus_Excute() {
+            var data = new Object();
+            data.Name = $('#TodoStatus_StatusName').val() ? $('#TodoStatus_StatusName').val() : "";
+            data.ColorCode = $("#TodoStatus_ColorCode").spectrum('get').toHexString()
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/ToDo/WorkingProject/TodoStatusOptionDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_TodoStatusID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            TodoStatus_LoadData();
+                            CloseModal();
+                        } else $('#textShowMessage').html('Trùng dữ liệu')
+                    });
+            }
+            return false;
+        }
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+</html>
+<style>
+    .sp-replacer {
+        display: block !IMPORTANT;
+        width: 100% !IMPORTANT;
+        padding: 0.5rem 0.75rem !IMPORTANT;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.4rem;
+        color: #495057 !important;
+        background-color: #fff !IMPORTANT;
+        background-clip: padding-box !important;
+        border: 1px solid #d2d6da !IMPORTANT;
+        height: auto !important;
+        border-radius: 0.5rem;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+</style>

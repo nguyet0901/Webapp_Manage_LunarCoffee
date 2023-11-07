@@ -1,0 +1,152 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.LaboNoteHistoryModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Lịch ghi chú"]</h6>
+                            <p class="text-sm mb-0">@Local["Danh sách ghi chú nhanh"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3">
+                    <div class="col-12 p-1">
+                        <label>@Local["Nội dung"]</label>
+                        <div class="d-flex">
+                            <input id="LN_Note" class="form-control _tab_control_" type="text" placeholder="eg .@Local["Nội dung"]" />
+                            <button class="btn btn-small bg-gradient-primary py-1 text-md ms-2 px-3 mb-0" title="@Local["Thêm mới"]" onclick="LNote_Executed();"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-0 my-3 mobile-responsive">
+                    <div class="p-1 pb-0 ps-1" id="LN_DivBodyTable">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        @*<button type="button" class="btn bg-gradient-primary mt-2 me-2" >@Local["Thêm mới"]</button>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    let LN_LabID = Number('@Model.LabID');
+
+
+    $(document).ready(function () {
+        LNote_Load();
+    })
+
+    //#region //Load && Executed
+
+    function LNote_Load () {
+        AjaxLoad(url = "/Customer/LaboNoteHistory/?handler=LoadData"
+            , data = {"LabID": LN_LabID}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    LNote_Render(data, "LN_DivBodyTable");
+                }
+            }
+        );
+    }
+
+    function LNote_Executed () {
+        $("#textShowMessage").html("");
+        let Content = $("#LN_Note").val() ? $("#LN_Note").val() : "";
+
+        LNote_CheckExe();
+        if ($("#textShowMessage").html() == '') {
+            AjaxLoad(url = "/Customer/LaboNoteHistory/?handler=Executed"
+                , data = {
+                    "LabID": LN_LabID
+                    , "Content": Content
+            }
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    if (result != '0') {
+                        $("#LN_Note").val("");
+                        notiSuccess();
+                        LNote_Load();
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+    }
+
+    function LNote_CheckExe () {
+        let Content = $("#LN_Note").val() ? $("#LN_Note").val() : "";
+        if (Content == "") {
+            $("#textShowMessage").html("@Local["Chưa có nội dung"]");
+        }
+    }
+
+    //#endregion
+
+    //#region //Render
+
+    async function LNote_Render (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            myNode.innerHTML = '';
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = ``;
+                        if (i == 0) {
+                            tr = `
+                               <div class="row w-100 mx-0">
+                                    <div class="col-1 px-0 fw-bold text-dark text-sm ps-1">
+                                        #
+                                    </div>
+                                    <div class="col-10 px-0 fw-bold text-dark text-sm">@Local["Nội dung"]</div>
+                                    <div class="col-1 text-end px-0 fw-bold text-dark text-sm"><span class="pe-2">@Local["Ngày tạo"]</span></div>
+                                    <hr class="dark my-1">
+                                </div>
+                            `;
+                        }
+
+
+                        tr +=
+                            `
+                            <div class="row w-100 mx-0">
+                                <div class="col-1 px-0 text-dark text-sm ps-1">
+                                    ${i + 1}
+                                </div>
+                                <div class="col-10 px-0 text-dark text-sm"><span class="content_line_clamp">${item.Content}</span></div>
+                                <div class="col-1 text-end px-0"><span class="text-dark text-sm pe-2" >${GetDateTime_String_DMY(item.Created)}</span></div>
+                                <hr class="dark my-1">
+                            </div>
+                        `;
+                        tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    //#endregion
+</script>

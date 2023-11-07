@@ -1,0 +1,125 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Material.MaterialCloneDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Sao chép nguyên vật liệu"]</h6>
+                                <p class="text-sm mb-0">@Local["Sao chép tất cả cấu hình của 1 nguyên vật liệu và tạo ra 1 nguyên vật liệu mới"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="FromMaterialType">
+                        <div class="field col-12 mt-2 p-1 ">
+                            <label>@Local["Tên nguyên vật liệu"]</label>
+                            <input id="NameMaterial" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 mt-2 p-1 ">
+                            <label>@Local["Mã nguyên vật liệu"]</label>
+                            <input id="CodeMaterial" name="serviceCode" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="FromMaterialType" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button form="FromMaterialType" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_material_type" onclick="event.preventDefault();return ExcuteMaterialClone()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    let ser_MaterialCurrentID = ("@Model._MaterialID");
+    let dataMaterialClone;
+
+    $(document).ready(function () {
+        if (ser_MaterialCurrentID != "0")
+            Material_LoadInit();
+    });
+
+    function ExcuteMaterialClone() {
+        let name = $('#NameMaterial').val() ? ($('#NameMaterial').val()).trim() : "";
+        let code = $('#CodeMaterial').val() ? ($('#CodeMaterial').val()).trim() : "";
+        var data = new Object();
+        data.Name = name
+        data.Code = code
+        data.SyntaxCode = dataMaterialClone ? dataMaterialClone[0].SyntaxCode : '';
+
+        $('#FromMaterialType').form('validate form');
+        if ($('#FromMaterialType').form('is valid')) {
+            AjaxLoad(url = "/WareHouse/Material/MaterialCloneDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_MaterialCurrentID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let dataResult = JSON.parse(result);
+                        if (dataResult && dataResult[0].RESULT != '0') {
+                            notiSuccess();
+                            CurrentService = Number(dataResult[0].ProductID);
+                            CurrentServiceGroup = Number(dataResult[0].TypeID)
+                            if (typeof MaterialList_Load === 'function') MaterialList_Load(CurrentService);
+                            if (typeof MaterialList_LoadType === 'function') MaterialList_LoadType(CurrentServiceGroup);
+                            CloseModal();
+                            syslog_whr('i', dataResult[0].RESULT);
+                        }
+                        else {
+                            notiError_SW();
+                            document.getElementById("textShowMessage").innerHTML = "@Local["Trùng tên và mã nguyên vật liệu"]";
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                });
+        }
+        return false;
+    }
+
+    function Material_LoadInit() {
+        AjaxLoad(url = "/WareHouse/Material/MaterialCloneDetail/?handler=Loadata"
+            , data = {
+                id: ser_MaterialCurrentID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    dataMaterialClone = JSON.parse(result);
+                    $('#NameMaterial').val((dataMaterialClone[0].Name) + ' (Copy)');
+                    if (dataMaterialClone[0].SyntaxCode != "") {
+                        $("#CodeMaterial").prop("disabled", true);
+                        $("#CodeMaterial").removeAttr("name");
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

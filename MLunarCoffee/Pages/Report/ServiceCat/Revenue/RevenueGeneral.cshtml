@@ -1,0 +1,823 @@
+﻿@page
+@model Report.ServiceCat.Revenue.RevenueGeneral
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Chi tiết nhóm dịch vụ"]</h6>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#RG_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return RG_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return RG_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="RG_GridArea">
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="RG_Grid">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="3">#</th>
+                            <th colspan="5">@Local["Nhóm dịch vụ"]</th>
+                            <th rowspan="2" class="month">@Local["Chi tiết theo tháng"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th rowspan="2">@Local["Tên"]</th>
+                            <th rowspan="2">@Local["Số khách"]</th>
+                            <th rowspan="2">@Local["Khách mới"]</th>
+                            <th rowspan="2">@Local["Khách cũ"]</th>
+                            <th rowspan="2">@Local["Doanh thu"]</th>
+                        </tr>
+                        <tr rowspan="1" class="detail" role="row">
+                        </tr>
+                    </thead>
+                    <tbody id="RG_GridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="RGGeneralDetail" class="mt-1" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p id="RGDetail_SerCat" class="text-md text-dark font-weight-bold mb-0 mt-1"></p>
+            </div>
+            <div class="right">
+                <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                    <span id="RG_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="RG_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#CustGroupCheckInDetail" aria-expanded="true"></i>
+                </div>
+
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); RG_DetailPrintReport()"></i>
+                </div>
+                <div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RG_ExportDetail(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RG_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-dark btn-sm mt-0 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doccode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custcodeold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="quantity" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số lượng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="datepay" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày thanh toán"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="dateservice" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày tạo dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="datecustomer" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày tạo hồ sơ"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="CustGroupCheckInDetail">
+            <div class="card-body p-0">
+                <div class="m-0 my-3 mobile-responsive">
+                    <table data-name="RG_GridDetail" class="table vt-table mb-0" id="RG_GridDetail">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px">#</th>
+                                <th>@Local["Mã khách hàng"]</th>
+                                <th data-name="custcodeold">@Local["Mã khách hàng cũ"]</th>
+                                <th data-name="doccode">@Local["Mã hồ sơ"]</th>
+                                <th>@Local["Khách hàng"]</th>
+                                <th>@Local["Số tiền"]</th>
+                                <th>@Local["Loại"]</th>
+                                <th>@Local["Nhóm dịch vụ"]</th>
+                                <th>@Local["Dịch vụ"]</th>
+                                <th data-name="quantity">@Local["Số lượng"]</th>
+                                <th>@Local["Nguồn"]</th>
+                                <th>@Local["Nguồn chi tiết"]</th>
+                                <th>@Local["Chi nhánh"]</th>
+                                <th data-name="datepay">@Local["Ngày thanh toán"]</th>
+                                <th data-name="dateservice">@Local["Ngày tạo dịch vụ"]</th>
+                                <th data-name="datecustomer">@Local["Ngày tạo hồ sơ"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="RG_GridDetailBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return RG_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="RGGeneralDay" class="mt-1" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p id="RGDetail_SerCatDay" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary _tab_control_" data-tab="export_excel"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="@Local["Xuất excel"]" onclick="RG_ExportDay()"></i>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="RG_GridDay">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="3">#</th>
+                            <th colspan="3">@Local["Nhóm dịch vụ"]</th>
+                            <th rowspan="2" class="day">@Local["Chi tiết theo ngày"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th rowspan="2">@Local["Tên"]</th>
+                            <th rowspan="2">@Local["Số khách"]</th>
+                            <th rowspan="2">@Local["Doanh thu"]</th>
+                        </tr>
+                        <tr rowspan="1" class="detail" role="row">
+                        </tr>
+                    </thead>
+                    <tbody id="RG_GridDayBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    let xhrLoadList, xhrLoadDetail;
+    let DataReportMain, DataReportMainSlice;
+    let shtable;
+    let RGDataMonth = [];
+    let RGCDataRaw = [];
+    let IndexReport = 0;
+    let timeoutCount;
+
+    let RGDataDay = [];
+    let RGCDataRawDay = [];
+    $(document).ready(function () {
+        shtable = $("#RG_GridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        RG_Load();
+        Checking_TabControl_Permission();
+    });
+    function RG_Load() {
+        RGDataMonth = [];
+        RGCDataRaw = [];
+        $('#RG_Grid .detail').html('');
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadList = AjaxLoad(url = "/Report/ServiceCat/Revenue/RevenueGeneral/?handler=Loadata"
+            , data = {
+                'branchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+                    RGCDataRaw = datas["Table1"];
+                    RGDataMonth = datas["Table2"];
+                    RG_RenderMonth(RGDataMonth, "RG_Grid");
+                    RG_Render(data, "RG_GridBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    function RG_RenderMonth(data, id) {
+        var myNode = $('#' + id + ' .detail')[0];
+        var myNodeParent = $('#' + id + ' .month')[0];
+        if (myNode != null) {
+            let stringContent = '';
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    stringContent = stringContent
+                        + `<th class="month">
+                                                             <a href="#" class="cursor-pointer border-1  border-primary border-bottom buttonViewClass" data-month="${data[i].Month}" data-type="0" data-cat="0">
+                                                                    ${data[i].Month.substring(4, 6) + ' / ' + data[i].Month.substring(0, 4)}
+                                                            </a></th>`;
+                }
+                myNode.innerHTML = myNode.innerHTML + stringContent;
+                myNodeParent.setAttribute("colspan", data.length);
+            }
+            else myNodeParent.classList.add("d-none");
+
+        }
+
+    }
+    async function RG_Render(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let tmonth = [];
+                    let TotalCust = 0, TotalNew = 0, TotalOld = 0, TotalAmount = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        TotalCust = TotalCust + item.TotalCust;
+                        TotalNew = TotalNew + item.TotalNew;
+                        TotalOld = TotalOld + item.TotalOld;
+                        TotalAmount = TotalAmount + item.TotalAmount;
+                        let sername = RG_Render_GetName(item.Type, item.SercatName)
+                        let tr = `
+                                                        <td class="vt-number-order"></td>
+                                                        <td>
+                                                                <a href="#" class="cursor-pointer border-1 border-primary border-bottom buttonViewClass" data-month="0" data-type="${item.Type}" data-catname="${sername}" data-cat="${item.SercatID}">
+                                                                    ${sername}
+                                                                </a>
+                                                        </td>
+                                                        <td>${formatNumber(item.TotalCust)}</td>
+                                                        <td>${formatNumber(item.TotalNew)}</td>
+                                                        <td>${formatNumber(item.TotalOld)}</td>
+                                                        <td>${formatNumber(item.TotalAmount)}</td>`;
+                        for (let j = 0; j < RGDataMonth.length; j++) {
+                            let _item = RGCDataRaw.filter(v => v.SercatID === item.SercatID
+                                && v.Type === item.Type
+                                && v.MonthCreated == RGDataMonth[j].Month
+                            );
+                            let sum = _item.map(item => item.TotalAmount).reduce((prev, curr) => prev + curr, 0);
+                            tr = tr + '<td class="month">' + formatNumber(sum) + '</td>'
+                            tmonth[j] = (tmonth[j] != undefined ? tmonth[j] : 0) + sum;
+                        }
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td><a href="#" class="text-white cursor-pointer border-1 border-white border-primary border-bottom buttonViewClass" data-month="0" data-type="0" data-cat="0">@Local["Tất cả"]</a></td>'
+                                + '<td>' + formatNumber(TotalCust) + '</td>'
+                                + '<td>' + formatNumber(TotalNew) + '</td>'
+                                + '<td>' + formatNumber(TotalOld) + '</td>'
+                                + '<td>' + formatNumber(TotalAmount) + '</td>';
+                            for (let j = 0; j < tmonth.length; j++) {
+                                trtotal = trtotal + '<td class="source">' + formatNumber(tmonth[j]) + '</td>'
+                            }
+                            stringContent = stringContent + '<tr class="text-white bg-gradient  bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            RG_Event();
+
+        })
+    }
+    //#region // Detail day
+    function RG_DetailDayLoad(date) {
+        RGDataDay = [];
+        RGCDataRawDay = [];
+        $('#RG_GridDay .detail').html('');
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._branchID";
+        xhrLoadList = AjaxLoad(url = "/Report/ServiceCat/Revenue/RevenueGeneral/?handler=Loadataday"
+            , data = {
+                'branchID': _branchID
+                , 'datefromInt': date.toString() + '00'
+                , 'datetoInt': date.toString() + '31'
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+                    RGCDataRawDay = datas["Table1"];
+                    RGDataDay = datas["Table2"];
+                    RG_RenderHeaderDay(RGDataDay, "RG_GridDay");
+                    RG_RenderDay(data, "RG_GridDayBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    function RG_RenderHeaderDay(data, id) {
+        var myNode = $('#' + id + ' .detail')[0];
+        var myNodeParent = $('#' + id + ' .day')[0];
+        if (myNode != null) {
+            let stringContent = '';
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    stringContent = stringContent
+                        + `<th class="day">
+                                                        ${data[i].Day.slice(2, 4) + ' / ' + data[i].Day.slice(0, 2)}
+                                                        </th>`;
+                }
+                myNode.innerHTML = myNode.innerHTML + stringContent;
+                myNodeParent.setAttribute("colspan", data.length);
+            }
+            else myNodeParent.classList.add("d-none");
+
+        }
+
+    }
+    async function RG_RenderDay(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let tday = [];
+                    let TotalCust = 0, TotalAmount = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        TotalCust = TotalCust + item.TotalCust;
+                        TotalAmount = TotalAmount + item.TotalAmount;
+                        let sername = RG_Render_GetName(item.Type, item.SercatName)
+                        let tr = `
+                                                        <td class="vt-number-order"></td>
+                                                        <td>
+                                                              ${sername}
+                                                        </td>
+                                                        <td>${formatNumber(item.TotalCust)}</td>
+                                                        <td>${formatNumber(item.TotalAmount)}</td>`;
+                        for (let j = 0; j < RGDataDay.length; j++) {
+                            let _item = RGCDataRawDay.filter(v => v.SercatID === item.SercatID
+                                && v.Type === item.Type
+                                && v.DayCreated == RGDataDay[j].Day
+                            );
+                            let sum = _item.map(item => item.TotalAmount).reduce((prev, curr) => prev + curr, 0);
+                            tr = tr + '<td class="day">' + formatNumber(sum) + '</td>'
+                            tday[j] = (tday[j] != undefined ? tday[j] : 0) + sum;
+                        }
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td></td>'
+                                + '<td>' + formatNumber(TotalCust) + '</td>'
+                                + '<td>' + formatNumber(TotalAmount) + '</td>';
+                            for (let j = 0; j < tday.length; j++) {
+                                trtotal = trtotal + '<td>' + formatNumber(tday[j]) + '</td>'
+                            }
+                            stringContent = stringContent + '<tr class="text-white bg-gradient  bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            RG_Event();
+
+        })
+    }
+    //#endregion
+    //#region // LOAD DETAIL AND RENDER
+    function RG_DetailLoad(cat, type) {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        IndexReport = 0;
+        xhrLoadDetail = AjaxLoad(url = "/Report/ServiceCat/Revenue/RevenueGeneral/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'type': type,
+                'ServiceCat': cat,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+
+                    let data = JSON.parse(result);
+                    DataReportMain = JSON.parse(JSON.stringify(data));
+                    DataReportMainSlice = sliceIntoChunks(data, 500);
+                    $("#RG_GridDetailBody").empty();
+                    fnRenderBlock(DataReportMainSlice[IndexReport], "RG_GridDetailBody"
+                        , blocknum = 100
+                        , fnrender = RG_DetailRender
+                        , fnsuccess = null
+                    );
+
+                    Count_Up("RG_totaldata", DataReportMain.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function RG_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "RG_GridDetailBody"
+                , blocknum = 100
+                , fnrender = RG_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+    async function RG_DetailRender(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                    <tr class="vt-number">
+                                        <td class="vt-number-order"></td>
+                                        <td>
+                                            <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}">${item.CustCode}</a>
+                                        </td>
+                                            <td data-name="custcodeold">${item.CustOldCode}</td>
+                                        <td data-name="doccode">${item.DocCode}</td>
+                                        <td>${item.CustName}</td>
+                                        <td>${formatNumber(item.Amount)}</td>
+                                        <td>${RG_Render_GetType(item.Type)}</td>
+                                        <td>${item.ServiceCatName}</td>
+                                        <td>${RG_Render_GetSerName(item.Type, item.ServiceID, item.MedID, item.CardID)}</td>
+                                        <td data-name="quantity">${item.Qty == 0 ? '' : item.Qty}</td>
+                                        <td>${(RP_DataCustomerSourceCat[item.SourceCatID] != undefined) ? RP_DataCustomerSourceCat[item.SourceCatID].Name : ''}</td>
+                                        <td>${(RP_DataCustomerSource[item.SourceID] != undefined) ? RP_DataCustomerSource[item.SourceID].Name : ''}</td>
+                                        <td>${(RP_DataBranch[item.BranchID] != undefined) ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                                        <td data-name="datepay">${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                        <td data-name="dateservice">${!item.SerCreated.includes('1900') ? ConvertDateTimeUTC_DMY(item.SerCreated) : ''}</td>
+                                        <td data-name="datecustomer">${ConvertDateTimeUTC_DMY(item.CusCreated)}</td>
+                                    </tr>
+                                                                `
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtable.Refresh();
+                clearTimeout(timeoutCount);
+                timeoutCount = setTimeout(() => {
+                    Count_Up("RG_currentdata", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+
+        })
+    }
+    //#endregion
+    //#region // Event
+    function RG_Render_GetName(type, name) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1:
+                    result = name
+                    break;
+                case 2:
+                    result = decodeHtml('@Local["Tiền cọc"]')
+                    break;
+                case 3:
+                    result = decodeHtml('@Local["Đơn thuốc"]')
+                    break;
+                case 4:
+                    result = decodeHtml('@Local["Thẻ trả trước"]')
+                    break;
+
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RG_Render_GetType(type) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1:
+                    result = decodeHtml('@Local["Dịch vụ/sản phẩm"]')
+                    break;
+                case 2:
+                    result = decodeHtml('@Local["Tiền cọc"]')
+                    break;
+                case 3:
+                    result = decodeHtml('@Local["Đơn thuốc"]')
+                    break;
+                case 4:
+                    result = decodeHtml('@Local["Thẻ trả trước"]')
+                    break;
+
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RG_Render_GetSerName(type, serid, medid, cardid) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1:
+                    result = (RP_DataService[serid] != undefined) ? RP_DataService[serid].Name : ''
+                    break;
+                case 3:
+                    result = (RP_DataMedicine[medid] != undefined) ? RP_DataMedicine[medid].Name : ''
+                    break;
+                case 4:
+                    result = (RP_DataCard[cardid] != undefined) ? RP_DataCard[cardid].Name : ''
+                    break;
+
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RG_Event() {
+        $("#RG_Grid .buttonViewClass").unbind('click').on("click", function () {
+            let cat = $(this).attr('data-cat');
+            let type = Number($(this).attr('data-type'));
+            let catname = $(this).attr('data-catname');
+            let datamonth = $(this).attr('data-month');
+
+            if (datamonth == "0") {
+                switch (type) {
+                    case 0:
+                        $("#RGDetail_SerCat").html('@Local["Tất cả nhóm"]');
+                        break;
+                    case 1:
+                        $("#RGDetail_SerCat").html(catname);
+                        break;
+                    case 2:
+                        $("#RGDetail_SerCat").html('@Local["Tiền cọc"]');
+                        break;
+                    case 3:
+                        $("#RGDetail_SerCat").html('@Local["Đơn thuốc"]');
+                        break;
+                    case 4:
+                        $("#RGDetail_SerCat").html('@Local["Thẻ trả trước"]');
+                        break;
+                }
+                $("#RGGeneralDetail").fadeIn('slow');
+                $("#RGGeneralDay").hide();
+                RG_DetailLoad(cat, type);
+                $('html, body').animate({
+                    scrollTop: $("#RGGeneralDetail").offset().top
+                }, 300);
+            }
+            else {
+                $("#RGDetail_SerCatDay").html(datamonth.substring(4, 6) + ' / ' + datamonth.substring(0, 4));
+                $("#RGGeneralDay").fadeIn('slow');
+                $("#RGGeneralDetail").hide();
+                RG_DetailDayLoad(datamonth);
+                $('html, body').animate({
+                    scrollTop: $("#RGGeneralDay").offset().top
+                }, 300);
+
+            }
+
+
+        })
+    }
+    function RG_Export() {
+        syslog_ExpExcel('e', Outlang['Doanh-thu-theo-nhom-dich-vu']);
+        exportToExcel("RG_Grid", Outlang['Doanh-thu-theo-nhom-dich-vu']);
+    }
+    function RG_ExportDay() {
+        syslog_ExpExcel('e', Outlang['Doanh-thu-theo-nhom-dich-vu']);
+        exportToExcel("RG_GridDay", Outlang['Doanh-thu-theo-nhom-dich-vu']);
+    }
+
+    async function RG_ExportDetail(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#RGGeneralDetail');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustOldCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcodeold']`)).is(":checked"),
+                        data: ["@Local["Mã khách hàng cũ"]"]
+                    },
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                        data: ["@Local["Mã hồ sơ"]"]
+                    },
+                    "Amount": ["@Local["Số tiền"]"],
+                    "Type": ["@Local["Loại"]", (value, { Type }) => {
+                        return RG_Render_GetType(Type);
+                    }],
+                    "ServiceCatName": ["@Local["Nhóm dịch vụ"]"],
+
+                    "Service": ["@Local["Dịch vụ"]", (value, { Type, ServiceID, MedID, CardID }) => {
+                        return RG_Render_GetSerName(Type, ServiceID, MedID, CardID);
+                    }],
+                    "Qty": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='quantity']`)).is(":checked"),
+                        data: ["@Local["Số lượng"]"]
+                    },
+                    "Source": ["@Local["Nguồn"]", (value, { SourceCatID }) => {
+                        return (RP_DataCustomerSourceCat[SourceCatID] != undefined) ? RP_DataCustomerSourceCat[SourceCatID].Name : '';
+                    }],
+                    "SourceDetail": ["@Local["Nguồn chi tiết"]", (value, { SourceID }) => {
+                        return (RP_DataCustomerSource[SourceID] != undefined) ? RP_DataCustomerSource[SourceID].Name : '';
+                    }],
+
+                    "BranchID": ["@Local["Chi nhánh"]", (value, { BranchID }) => {
+                        return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                    }] , "Created": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='datepay']`)).is(":checked"),
+                        data: ["@Local["Ngày thanh toán"]", (v) => {return (ConvertDateTimeUTC_DMYHM(v))}]
+                    } , "SerCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='dateservice']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo dịch vụ"]", (v) => {return (ConvertDateTimeUTC_DMY(v))}]
+                    } , "CusCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='datecustomer']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo hồ sơ"]", (v) => {return (ConvertDateTimeUTC_DMY(v))}]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RG_GridDetailBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang['Nhom_dich_vu']);
+                exportJsonToExcel(Outlang['Nhom_dich_vu'], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+    async function RG_DetailPrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustOldCode": ["@Local["Mã khách hàng cũ"]", {
+                        isShow: $(`.shtoogle[data-name='custcodeold']`).is(":checked")
+                    }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='doccode']`).is(":checked")
+                    }],
+                    "Amount": ["@Local["Số tiền"]"],
+                    "Type": ["@Local["Loại"]", {
+                        callbackRenderValue: (value, { Type }) => {
+                            return RG_Render_GetType(Type);
+                        }
+                    }],
+                    "ServiceCatName": ["@Local["Nhóm dịch vụ"]"],
+
+                    "Service": ["@Local["Dịch vụ"]", {
+                        callbackRenderValue: (value, { Type, ServiceID, MedID, CardID }) => {
+                            return RG_Render_GetSerName(Type, ServiceID, MedID, CardID);
+                        }
+                    }],
+                    "Qty": ["@Local["Số lượng"]", {
+                        isShow: $(`.shtoogle[data-name='quantity']`).is(":checked")
+                    }],
+                    "Source": ["@Local["Nguồn"]", {
+                        callbackRenderValue: (value, { SourceCatID }) => {
+                            return (RP_DataCustomerSourceCat[SourceCatID] != undefined) ? RP_DataCustomerSourceCat[SourceCatID].Name : '';
+                        }
+                    }],
+                    "SourceDetail": ["@Local["Nguồn chi tiết"]", {
+                        callbackRenderValue: (value, { SourceID }) => {
+                            return (RP_DataCustomerSource[SourceID] != undefined) ? RP_DataCustomerSource[SourceID].Name : '';
+                        }
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        callbackRenderValue: (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }
+                    }]
+                    , "Created": ["@Local["Ngày thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='datepay']`).is(":checked"),
+                        callbackRenderValue: (v) => {return (ConvertDateTimeUTC_DMYHM(v)) }
+                    }]
+                    , "SerCreated": ["@Local["Ngày tạo dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='dateservice']`).is(":checked"),
+                        callbackRenderValue: (v) => {return (ConvertDateTimeUTC_DMY(v)) }
+                    }]
+                    , "CusCreated": ["@Local["Ngày tạo hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='datecustomer']`).is(":checked"),
+                        callbackRenderValue: (v) => {return (ConvertDateTimeUTC_DMY(v)) }
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = "@Local["Báo cáo nguồn chi tiết"]", DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+        //#endregion
+
+</script>

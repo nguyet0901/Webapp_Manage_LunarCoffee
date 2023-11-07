@@ -1,0 +1,148 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Setting.Task.SettingTaskListModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Công việc labo"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách công việc labo"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn bg-gradient-primary btn-sm mt-1" onclick="STask_New();">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 mobile-responsive">
+                    <table data-name="" class="table vt-table mb-0" id="">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th>@Local["Tên"]</th>
+                                <th style="width:40px;">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ST_BodyTask">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        STask_Load();
+    })
+    //#region //Load
+
+    function STask_Load () {
+        AjaxLoad(url = "/Labo/Setting/Task/SettingTaskList/?handler=LoadData"
+            , data = {}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    STask_Render(data, "ST_BodyTask");
+                }
+            }
+        )
+    }
+
+    //#endregion
+
+    //#region //Render
+
+    async function STask_Render (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                <td class="d-none">${item.ID}</td>
+                                <td class="vt-number-order"></td>
+                                <td><span class="border-bottom text-primary border-primary cursor-pointer btnEdit">${item.Name}</span></td>
+                                <td class="text-center">
+                                    <button class="buttonGrid">
+                                        <i class="btnDelete vtt-icon vttech-icon-delete"></i>
+                                    </button>
+                                </td>
+                            `
+                            tr = `<tr role="row" class="vt-number">${tr}</tr>`
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    STask_Event();
+                    resolve();
+                }
+            }, 100)
+        })
+    }
+
+    //#endregion
+
+    //#region //Event
+
+    function STask_Event () {
+        $('#ST_BodyTask .btnEdit').unbind('click').click(function () {
+            let ID = Number($(this).closest('tr').children()[0].innerHTML);
+            STask_Edit(ID);
+        })
+        $('#ST_BodyTask .btnDelete').unbind('click').click(function () {
+            let ID = Number($(this).closest('tr').children()[0].innerHTML);
+            STask_Delete(ID);
+        })
+    }
+
+    //#endregion
+
+    //#region //Delete
+
+    function STask_Delete (ID) {
+        const promise = notiConfirm();
+        promise.then(function () {STask_DeleteExecuted(ID)}, function () { });
+    }
+
+    function STask_DeleteExecuted (ID) {
+        AjaxLoad(url = "/Labo/Setting/Task/SettingTaskList/?handler=Delete"
+            , data = {
+                "CurrentID": ID
+            }, async = false, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    STask_Load();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //Detail
+
+    function STask_New () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Labo/Setting/Task/SettingTaskDetail?CurrentID=" + 0 + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function STask_Edit (ID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Labo/Setting/Task/SettingTaskDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //#endregion
+</script>

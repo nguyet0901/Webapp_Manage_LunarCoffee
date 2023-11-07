@@ -1,0 +1,781 @@
+﻿@page
+@model SourceMain.Pages.Facebook.MessengerModel
+@{
+}
+
+<script>js_require_notasync('/js/Facebook/v2_face_variable.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_initialize.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_event_api.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_comment.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_ticket_info.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_attachment.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_move_item.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_block.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_receipt_message.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_receipt_comment.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_receipt_execute.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_filter_and_search.js', true);</script>
+<script>js_require_notasync('/js/Facebook/v2_face_custom.js', true);</script>
+
+<div class="pusher" id="Face_Pusher">
+    <div id="NewMessageFacebook" class="notiBody">
+    </div>
+    <div id="popupFace_ChossingPage" class="ui dropdown item" tabindex="0">
+    </div>
+    <div id="popupExecute" class="ui dropdown item" tabindex="0">
+        <div class="menu" style="display: block" tabindex="-1">
+            <a class="item" id="face_mailunread" href="#" onclick="Face_Update_Read_To_Unread()">Mark as unread</a>
+            <a class="item" id="face_mailstar" href="#" onclick="Face_Update_Star()">Mark as star/non-star</a>
+        </div>
+    </div>
+
+    <div id="Messenger_TOTAL" class="navslide navwrap" style="height: 100%;">
+
+        <div class="right menu">
+            <div id="menuChoosingPage" class="right menu" style="position: absolute; right: 10px; z-index: 1000;">
+                <img id="Pagechoosing_Current_Register" style="display: none; width: 42px;" src="/assests/img/Face/attaching.gif">
+                <div id="Pagechoosing_Current" style="display: none; width: 250px; border-radius: 20px">
+                    <span id="PageCurrent"></span>
+                    <div class="ui dropdown item">
+                        <img id="AvatarCurrent" style="border: solid #2185d0 1px;" class="ui mini circular image pageAvatar" src="#" alt="label-image" />
+                        <span id="icon-noti-general" class="icon-noti_new"></span>
+                        <div class="menu" id="facebook_list_fanpage" style="overflow-y: auto;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="filterFace">
+                <div id="filterFace_Control">
+                    <div class="ui icon input" style="max-height: 40px; font-size: 13px; z-index: 100; width: 342px; padding: 5px;">
+                        <input id="searchingFacebook" type="text" placeholder="More than 3 chars to search...">
+                        <i class="circular remove link icon" style="border: none; box-shadow: none; top: 7px;" onclick="event.preventDefault();Face_RefreshLoad();"></i>
+                        <i class="circular search link icon" style="right: 26px; border: none; box-shadow: none; top: 9px; font-size: 11px;" onclick="event.preventDefault();Face_SearchConversation();"></i>
+                    </div>
+                </div>
+                <div id="Face_loginout" style="display: none;">
+                    <img id="myfacebookavatar"
+                         class="ui mini circular image pageAvatar" title="Taza Page" src="/assests/img/Face/loading_avatar.gif"
+                         alt="label-image">
+                    <span>Log out</span>
+                </div>
+                <div id="Face_loginin" class="row loginfacebook" style="display: none;">
+                    <div class="fb-login-button"
+                         data-size="small"
+                         data-button-type="continue_with"
+                         data-layout="rounded"
+                         data-scope="publish_pages,pages_messaging,manage_pages,pages_read_engagement,pages_manage_engagement"
+                         data-onlogin="Face_SuccessLogin(this)"
+                         data-auto-logout-link="false" data-use-continue-as="true" data-width="">
+                    </div>
+                </div>
+                <div id="Face_Loading_Div" style="display: none;">
+                    <img class="ui mini circular image pageBigAvatar"
+                         src="/assests/img/Face/waiting_exe.gif">
+                </div>
+                <div id="CurrentFace_Chossen" style="display: none;">
+                </div>
+            </div>
+        </div>
+        <div id="MessengerArea_loaderList" style="border: none; display: none;">
+            <div class="ui active inverted dimmer">
+                <div class="ui large text loader" style="transform: scale(0.5);">Loading</div>
+            </div>
+        </div>
+        <div id="MessengerArea" style="background: white; height: 100%; width: 100%; height: calc(100vh - 256px); display: none;">
+            <table style="width: 100%; height: 100%">
+                <tr style="width: 100%">
+                    <td class="area" style="padding: 0px; width: 30px;">
+                        <div id="MessengerArea_Fiter" style="height: calc(100vh - 155px); width: 30px; z-index: 999">
+                            <div class="iconChattingHead" data-title="Có hồ sơ">
+                                <img id="Filter_Profile" style="cursor: pointer;" src="/assests/img/Face/profile.png" onclick="FaceFilter_Profile()">
+                                <div data-languagestatic="rp_having_pro" class="titlecontent">Có Hồ Sơ</div>
+                            </div>
+                            <div class="iconChattingHead">
+                                <img id="Filter_Mess" style="cursor: pointer;" src="/assests/img/Face/mess.png" onclick="FaceFilter_Mess()">
+                                <div data-languagestatic="inbox" class="titlecontent">Tin Nhắn</div>
+                            </div>
+                            <div class="iconChattingHead">
+                                <img id="Filter_Comment" style="cursor: pointer;" src="/assests/img/Face/comment.png" onclick="FaceFilter_Comment()">
+                                <div data-languagestatic="comment" class="titlecontent">Bình luận</div>
+                            </div>
+                            <div class="iconChattingHead">
+                                <img id="Filter_Reply" style="cursor: pointer;" src="/assests/img/Face/reply.png" onclick="FaceFilter_Reply()">
+                                <div data-languagestatic="unreply" class="titlecontent">Chưa trả lời</div>
+                            </div>
+                            <div class="iconChattingHead">
+                                <img id="Filter_New" style="cursor: pointer;" src="/assests/img/Face/new.png" onclick="FaceFilter_New()">
+                                <div data-languagestatic="unread" class="titlecontent">Chưa đọc</div>
+                            </div>
+                            <div class="iconChattingHead">
+                                <img id="Filter_Star" style="cursor: pointer;" src="/assests/img/Face/star.png" onclick="FaceFilter_Star()">
+                                <div class="titlecontent">Star</div>
+                            </div>
+
+
+                            <div style="position: relative;">
+                                <div class="iconChattingHead">
+                                    <img id="Filter_date" class="iconChattingHead fiterdata" style="cursor: pointer;" src="/assests/img/Face/calendar.png">
+                                    <div data-languagestatic="fiter_date" class="titlecontent">Lọc theo thời gian</div>
+                                </div>
+                                <div class="popupFace" style="top: -810%; width: 500px;" id="popupFiter_Date">
+                                    <h3 data-languagestatic="mess_filer_bydate" class="popupFiter-title">Lọc theo khoảng thời gian tương tác</h3>
+                                    <div class="arrow"></div>
+                                    <div style="display: flex;">
+                                        <div class="listDateFter">
+                                            <a data-languagestatic="mess_today" class="itemdateFiter" data-date="0">Hôm nay</a>
+                                            <a data-languagestatic="mess_pastday" class="itemdateFiter" data-date="1">Hôm qua</a>
+                                            <a data-languagestatic="mess_7pastday" class="itemdateFiter" data-date="6">7 ngày trước</a>
+                                            <a data-languagestatic="mess_30pastday" class="itemdateFiter" data-date="29">30 ngày trước</a>
+                                            <a data-languagestatic="mess_90pastday" class="itemdateFiter" data-date="89">90 ngày trước</a>
+                                            <div class="ui checkbox">
+                                                <input id="filter_date_time_alarm" type="checkbox" value="1">
+                                                <label style="color: red;" class="tagface_text">Alarm</label>
+                                            </div>
+                                            <div style="display: flex; margin-top: 20px; margin-left: 5px;">
+                                                <button class="ui teal button button_filer" onclick="FaceFilter_Date_Reset()">Reset</button>
+                                                <button class="ui teal button button_filer" onclick="FaceFilter_Date_OK()">OK</button>
+                                            </div>
+                                        </div>
+                                        <div style="display: inline-block; padding: 10px;">
+                                            <input id="dataDateFiter" class="flatpickr" type="text" placeholder="Select Date" style="display: none;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="position: relative;">
+                                <div class="iconChattingHead">
+                                    <img id="Filter_Tag" class="iconChattingHead fiterdata" style="cursor: pointer;" src="/assests/img/Face/tag.png">
+                                    <div data-languagestatic="mess_filter_tag" class="titlecontent">Lọc theo Tag</div>
+                                </div>
+                                <div class="popupFace" style="top: -524%;" id="popupFiter_Tag">
+                                    <h3 data-languagestatic="mess_filter_tag" class="popupFiter-title">Lọc theo Tag</h3>
+                                    <div class="arrow"></div>
+                                    <div id="scrollFiterTag" style="display: flex; width: 451px; height: 200px; overflow-y: auto;">
+                                        <input type="hidden" id="TokenTagFace" />
+                                        <div id="listTagFiter" style="height: fit-content; padding: 10px;">
+                                        </div>
+                                    </div>
+                                    <div style="float: right;">
+                                        <button class="ui teal button button_filer" onclick="FaceFilter_Tag_Reset()">Reset</button>
+                                        <button class="ui teal button button_filer" onclick="FaceFilter_Tag_Close()">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="position: relative;">
+                                <div class="iconChattingHead">
+                                    <img id="Filter_Staff" class="iconChattingHead fiterdata" style="cursor: pointer;" src="/assests/img/Face/user.png">
+                                    <div data-languagestatic="mess_filter_emp" class="titlecontent">Lọc theo nhân viên</div>
+                                </div>
+                                <div class="popupFace" style="width: 400px; top: -339%;" id="popupFiter_Staff">
+                                    <h3 data-languagestatic="mess_filter_emp" class="popupFiter-title">Lọc theo Nhân viên</h3>
+                                    <div class="arrow"></div>
+
+                                    <div style="width: 380px; margin: 10px;" class="ui fluid multiple search selection dropdown" id="TokenTagStaff" onchange="FaceFilter_Staff_Event()">
+                                        <input type="hidden" name="Area" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">Choosing staff</div>
+                                        <div id="cbbTokenTagStaff" class="menu" tabindex="-1" style="max-height: 305px;">
+                                        </div>
+                                    </div>
+                                    <div style="float: right;">
+                                        <button class="ui teal button button_filer" onclick="FaceFilter_Staff_Reset()">Reset</button>
+                                        <button class="ui teal button button_filer" onclick="FaceFilter_Staff_Close()">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                            @*  <div class="iconChattingHead">
+                                    <img id="ChangeTagSendMess" class="iconChattingHead" style="cursor: pointer;" src="/assests/img/Face/tagInbox.png" onclick="ChangeTagSendMess()">
+                                    <div data-languagestatic="change_tag" class="titlecontent">Đổi Tag Giữ</div>
+                                </div>*@
+                            <div class="iconChattingHead">
+                                <img id="Clear_Fitler" style="cursor: pointer;" src="/assests/img/Face/clearfilter.png" onclick="FaceFilter_Clear()">
+                                <div class="titlecontent">Clear</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="area" style="padding: 7px; background: #f2f5f8; min-width: 310px; max-width: 310px;">
+                        <div id="MessengerArea_List" style="height: calc(100vh - 155px); overflow-x: hidden; min-width: 300px; max-width: 300px;">
+                        </div>
+                        <div style="height: 20px;">
+                            <button id="loadmoreCon" class="loadmore" onclick="Face_Load_Conversation_List_More()">Load More</button>
+                            <img id="MessengerArea_List_loaderList" class="ui mini circular image pageBigAvatar" src="/assests/img/Face/waiting_exe.gif" />
+                        </div>
+
+                    </td>
+                    <td id="Messen_Area" class="area" style="width: 90%; position: relative">
+                        <div class="MessenArrow">
+                            <div>i</div>
+                        </div>
+                        <div id="MessengerArea_Messenger_Area">
+                            <div id="PageCurrent_Executing">
+                                <img id="avatarPageCurrent_Executing" class="ui mini circular image pageBigAvatar" src="/assests/img/Face/waiting_exe.gif" />
+                                <div id="namePageCurrent_Executing">Loading</div>
+                            </div>
+                            <div style="height: 20px;">
+                                <button id="loadmoreDetail" class="loadmore" onclick="Face_API_Get_Conversation_More()">Load More</button>
+                                <img id="MessengerArea_Messenger_loaderList" style="margin: auto; width: 16px; height: 16px;" class="ui mini circular image pageBigAvatar" src="/assests/img/Face/waiting_exe.gif" />
+                            </div>
+
+                            <div id="MessengerArea_Messenger" style="overflow-y: auto;">
+                            </div>
+                        </div>
+                        <form id="upload-widget" method="post" action="/upload" class="dropzone"></form>
+                        <div id="ParentMessengerArea_Attachment">
+                            <div id="MessengerArea_Attachment"></div>
+                        </div>
+                        <div data-languagestatic="mess_not_send" id="MessengerArea_Chating_Hide" class="chatting" style="display: none">Cannot send message or comment to this facebooker (It is deleted, blocked or not exist anymore) </div>
+                        <div data-languagestatic="mess_reply_romment" id="MessengerArea_Reply_Comment" class="chatting" style="display: none">You are replying to messages on guest comments</div>
+                        <div id="MessengerArea_Chating" class="chatting" style="height: 70px;">
+                            <img style="margin-top: 25px;" id="gotoProfileMess" title="Go to inbox" class="iconChatting" src="/assests/img/Face/gotomess.png" onclick="Face_Goto_MESSAGE_From_Post()">
+                            <img class="iconChatting" style="margin-top: 25px; margin-left: 85px;" src="/assests/img/Face/send.png" onclick="Face_API_Send_MESSAGE()">
+                            <label class="btn" id="nameFile" for="fileuploadFacebook">
+                                <img style="margin-top: 25px;" id="attachFileImg" class="iconChatting" src="/assests/img/Face/attach.png">
+                            </label>
+                            <div class="headerPageMess">
+
+                                <img class="iconChatting" id="btnPostFace_Link" style="margin-left: 4px;" src="/assests/img/Face/facelink.png" onclick="Face_Goto_FacePost_Link()">
+                                <img class="iconChatting" id="btnMessengerTemplate" style="margin-left: 4px;" src="/assests/img/Face/template.png">
+                                <div id="popupMessengerTemplate" class="divMessengerTemplate popupFace">
+                                    <div class="MessengerTemplateHeader">
+                                        <h3 id="header_popup_teamplate" class="popup-title">Script template</h3>
+                                        <input id="searchingMessengerTemplate" type="text" placeholder="Seaching..." onkeyup="event.preventDefault();return onKeyupSearchingTeamplate();">
+                                        @* <i class="circular search link icon" style="right: 3em; margin: 5px 0; color: #fff;" onclick="event.preventDefault();LoadMessengerTemplate();"></i>*@
+                                    </div>
+                                    <div class="arrow bottom"></div>
+                                    <div class="TemplateBody" id="MessengerTemplateBody">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <input id="fileuploadFacebook" name="fileuploadFacebook" onchange="Face_AttachFile_ToSend(this)" type="file" style="display: none" multiple />
+                            <textarea class="chattingInbox textarea" id="txtContentMessage_Chatting" rows="1"></textarea>
+
+                        </div>
+                        <div id="MessengerArea_Chating_Edit" class="chatting" style="height: 70px; display: none;">
+                            <img id="commentok_Edit" style="height: 35px; width: 35px; margin-left: 21px;" title="Đồng ý chỉnh sữa" class="iconChatting" src="/assests/img/Face/ok.png" onclick="Face_Comment_Click_Edit_OK()">
+                            <img id="commentcancel_Edit" title="Bỏ chỉnh sữa" class="iconChatting" style="margin-left: 10px; height: 35px; width: 35px;" src="/assests/img/Face/cancel.png" onclick="Face_Comment_Click_Edit_Cancel()">
+
+                            <textarea class="chattingInbox textarea" id="txtContentMessage_Chatting_Edit" rows="1"></textarea>
+                        </div>
+                    </td>
+                    <td class="MessengerAreaInfo">
+                        <div id="MessengerArea_Info" class="area">
+                            <div style="display: flex; padding: 0px 16px 0px 24px;">
+                                <div class="ui fluid search selection dropdown" id="DectectStaffOnConver" onchange="Face_SaveStaff()">
+                                    <input type="hidden" name="DectectStaffOnConver" />
+                                    <i class="dropdown icon drstaff"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div data-languagestatic="mess_chose_emp" class="default text">Choose employee</div>
+                                    <div id="cbbDectectStaffOnConver" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                            <div>
+                                <table style="width: 100%; height: 100%">
+                                    <tr>
+                                        <th style="width: 100px; padding: 7px;">
+                                            <img id="profile_Avatar" class="ui mini circular image pageBigAvatar" src="/assests/img/Face/loading_avatar.gif" />
+                                        </th>
+                                        <th style="padding: 5px 0px; text-align: left;">
+                                            <i class="angle double right icon"></i><span class="face_text" id="face_name"></span>
+                                            <br>
+                                            <i class="angle double right icon"></i><span class="face_text" id="face_email"></span>
+                                            <br>
+                                            @*    <img id="starProfileMess" title="Đánh sao" class="iconChattingHead" style="displ#ay: none;" src="/assests/img/Face/star.png" onclick="Face_StarProfile()">*@
+                                            @*<img id="spamProfileMess" title="Block" class="iconChattingHead" style="display: none;" src="/assests/img/Face/spam.png" onclick="Face_SpamProfile()">*@
+
+                                            <a id="profile_link" href="" target="_blank" style="display: none;">
+                                                <img class="iconChattingHead" title="Link Facebook" src="/assests/img/Face/facelink.png">
+                                            </a>
+
+                                            <i class="angle right icon"></i><span class="face_text_num">PID : </span><span title="Click To Copy" class="face_text_num" id="profile_pageID"></span>
+                                            <div id="profile_pageID_copy" class="copyFace">Copied</div>
+                                            <br>
+                                            <i class="angle right icon"></i><span class="face_text_num">UID : </span><span title="Click To Copy" class="face_text_num" id="profile_PSID"></span>
+                                            <div id="profile_PSID_copy" class="copyFace">Copied</div>
+                                            <div id="ticketinfoLink" style="padding-top: 4px; margin: 0px 4px 5px 20px;">
+                                                <span id="face_tic_linkface" data_link="#" class="ticketinfoLink" style="background: #0099ff !important;">Inbox Mail</span>
+                                                <span id="face_tic_newticket" class="ticketinfoLink" style="background: #00b5ad !important;"><span data-languagestatic="create_new">Tạo</span> <span>Ticket</span></span>
+                                                <span id="face_tic_ticket" class="ticketinfoLink" style="background: #00b5ad !important;">Ticket</span>
+                                                <span id="face_tic_profile" class="ticketinfoLink" style="background: #a333c8 !important;">Profile</span>
+                                                <span id="face_tic_blocked" class="ticketinfoLink" style="background: #db2828 !important;" onclick="Face_Un_Block_User()">Blocked</span>
+                                                <span id="face_tic_un_block" class="ticketinfoLink" style="background: #6435c9 !important;" onclick="Face_Block_User()">Block</span>
+                                                <img id="executing_ticket_info" class="ui mini circular image pageBigAvatar" src="/assests/img/Face/waiting_exe.gif">
+                                            </div>
+                                        </th>
+                                        <th></th>
+                                    </tr>
+
+                                </table>
+                            </div>
+                            <div id="ticketinfoFace_loaderList" style="border: none; display: none; position: relative;">
+                                <div class="ui active inverted dimmer">
+                                    <div class="ui large text loader">Loading</div>
+                                </div>
+                            </div>
+                            <div id="ticketinfoFace" class="ui styled fluid accordion" style="padding-top: 5px; overflow-y: auto; overflow-x: hidden; box-shadow: none; height: calc(100vh - 300px); text-align: left;">
+                                <div class="ui tab active" data-tab="eight">
+                                    <div class="ui top attached tabular menu">
+                                        <a data-languagestatic="face_general_info" id="ticketinfoFace_firsttab" class="active item" data-tab="eight/face-a">Thông Tin</a>
+                                        <a data-languagestatic="note" id="ticketinfoFace_notetab" class="item" data-tab="eight/face-b">Ghi Chú</a>
+                                        <a data-languagestatic="face_sche_chatting" id="ticketinfoFace_timetab" class="item" data-tab="eight/face-c">Hẹn Chat</a>
+                                        <a data-languagestatic="face_history" id="ticketinfoFace_history" class="item" data-tab="eight/face-d">Lịch sử</a>
+                                    </div>
+                                    <div id="conten_ticketinfoFace_firsttab" class="ui bottom attached active tab segment" data-tab="eight/face-a">
+                                        <div style="max-height: 163px; padding: 0px 18px 5px 18px;">
+                                            <div id="ticketinfo">
+                                                <div id="ticketinfoshow">
+                                                    <i class="angle double right icon"></i><span class="profile_text" id="profile_name_facebook"></span>
+                                                    <br>
+                                                    <i class="angle double right icon"></i><span class="profile_text" id="profile_phone1"></span>
+                                                    <br>
+                                                    <i class="angle double right icon"></i><span class="profile_text" id="profile_phone2"></span>
+                                                    <br>
+                                                    <i class="angle double right icon"></i><span class="profile_text" id="profile_gender"></span>
+                                                    <br>
+                                                    <i class="angle double right icon"></i><span class="profile_text" id="profile_birthday"></span>
+                                                    <br>
+                                                </div>
+                                            </div>
+                                            @*   <button id="facetoticket" style="display: none; margin-top: 20px;" class="ui yellow button" data-value="fade up" onclick="event.preventDefault();return FromFaceToTicket();">Tạo Ticket</button>*@
+                                        </div>
+                                        <div class="title item active" style="border: none;">
+                                            <i class="dropdown icon"></i><span data-languagestatic="card_manage">Quản Lý Thẻ</span>
+
+                                        </div>
+                                        <div class="content active" style="padding: 0px 10px;">
+                                            <div id="facebooktag_ticket">
+                                            </div>
+                                            <div class="ui fluid search selection dropdown ticketother" id="AreaFace" onchange="Face_SaveArea()">
+                                                <input type="hidden" name="Area" />
+                                                <i class="dropdown icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">Choosing area</div>
+                                                <div id="cbbArea" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                            <div class="ui fluid multiple search selection dropdown ticketother" id="ServiceCareFace" onchange="Face_SaveServiceCare()">
+                                                <input type="hidden" name="Area" />
+                                                <i class="dropdown icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">Choosing Service Care</div>
+                                                <div id="cbbServiceCareFace" class="menu" tabindex="-1" style="max-height: 305px;">
+                                                </div>
+                                            </div>
+                                            <div class="ui fluid search selection dropdown ticketother" id="DiscountFace" onchange="Face_SaveDiscount()">
+                                                <input type="hidden" name="Area" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">Choosing promotion</div>
+                                                <div id="cbbDiscountFace" class="menu" tabindex="-1" style="max-height: 350px;">
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div style="padding: 0px 10px;">
+
+                                            <div id="face_noti_success" class="face_noti_success">Saved successfully</div>
+                                            <div id="face_noti_failure" class="face_noti_failure">Something wrongs</div>
+                                            <div class="chat" id="face_area_get_phone">
+                                                <div class="chat-history divScroll" style="">
+                                                    <ul>
+                                                        <li class="clearfix">
+                                                            <div class="message other-message float-right" style="background: transparent !important; margin: unset !important; padding: unset !important;">
+                                                                <div id="facebook_getphone" style="overflow-y: auto;">
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="content_ticketinfoFace_notetab" class="ui bottom attached tab segment" data-tab="eight/face-b">
+                                        <div id="ticketvalue" style="overflow-y: auto;">
+                                            <div class="chat">
+                                                <div class="chat-message clearfix">
+                                                    <textarea style="font-size: 12px" rows="2" name="message-to-send" id="txtFace_Note" placeholder="Type your message"></textarea>
+                                                    <button onclick="event.preventDefault();return Face_SaveNote();"><i class="send icon" style="color: #2185d0;"></i></button>
+                                                </div>
+                                                <div class="chat-history divScroll">
+                                                    <ul id="face_ticket_note">
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="content_ticketinfoFace_timetab" class="ui bottom attached tab segment" data-tab="eight/face-c">
+                                        <div id="callbackValue" style="overflow-y: auto;">
+                                            <div class="chat">
+                                                <div class="chat-message clearfix form">
+                                                    <input id="Date_from_call_back" name="date" class="flatpickr" type="text" placeholder="Select Date.." />
+                                                    <button onclick="event.preventDefault();return Face_SaveCallBackTime();"><i class="send icon" style="color: #2185d0;"></i></button>
+                                                </div>
+                                                <div class="chat-history divScroll">
+                                                    <ul id="face_ticket_time">
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="content_ticketinfoFace_history" class="ui bottom attached tab segment" data-tab="eight/face-d">
+                                        <div class="chat">
+                                            <div class="chat-history divScroll" style="padding: 17px !important;">
+                                                <ul>
+                                                    <li class="clearfix">
+                                                        <div class="message-data align-right">
+                                                            <span data-languagestatic="face_history_begin_chat" class="message-data-name">Ngày bắt đầu hội thoại</span> <i class="icon circle me"></i>
+                                                        </div>
+                                                        <div id="face_history_begin_chat" class="message other-message float-right"></div>
+                                                    </li>
+                                                    <li class="clearfix">
+                                                        <div class="message-data align-right">
+                                                            <span data-languagestatic="face_history_begin_closet" class="message-data-name">Ngày hội thoại gần nhất</span> <i class="icon circle me"></i>
+                                                        </div>
+                                                        <div id="face_history_closed_chat" class="message other-message float-right"></div>
+                                                    </li>
+                                                    <li class="clearfix">
+                                                        <div class="message-data align-right">
+                                                            <span data-languagestatic="face_history_history_comment" class="message-data-name">Lịch sử comment</span> <i class="icon circle me"></i>
+                                                        </div>
+                                                        <div class="message other-message float-right">
+                                                            <div id="history_comment_div" style="overflow-y: auto;">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="ui long modal scrolling" id="divPopupSendTag">
+            <div class="ui segments">
+                <div class="ui segment" style="background-color: #f5eeee; text-align: center;">
+                    <span data-languagestatic="face_chose_tag" class="headerReport">
+                        Chọn Tag Gửi Message
+                    </span>
+                    <a data-languagestatic="face_guide_tag" target="_blank" href="https://www.facebook.com/VTtechsolution.com.vn/posts/2729029520713388?tn=K-R">Chính sách, điều khoản gửi Tag của FaceBook</a>
+                    <div class="ui checkbox SaveTagSendClass">
+                        <input id="SaveTagSend" type="checkbox">
+                        <label data-languagestatic="face_save_thread" for="SaveTagSend" style="font-size: 12px; font-style: italic; color: #027abc;" class="coloring blue">Lưu Trong Phiên</label>
+                    </div>
+                </div>
+                <div style="min-height: 200px;">
+                    <div style="overflow-y: auto;">
+                        <div class="ui segments" style="padding-bottom: 10px; border: none; box-shadow: none;">
+                            <div class="ui segment" id="dtMessengerTag">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <div style="float: right">
+                    <button data-languagestatic="button_send" class="ui teal button button_send" id="btnMessTag" onclick="event.preventDefault();SavelocalStorageTag()" disabled>Send</button>
+                </div>
+                <div style="float: right">
+                    <button data-languagestatic="button_cancel" class="ui grey button cancelButton" onclick="event.preventDefault();CloseModalMessTag()">Cancel</button>
+                </div>
+            </div>
+            <div data-languagestatic="face_guide_content_mess" style="font-style: italic; float: left; padding-left: 10px;">Tin nhắn không chứa nội dung khuyến mãi hàng ngày, phiếu giảm giá và chiết khấu hoặc thông báo giảm giá</div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+        var Face_Obj_Datecallback_time;
+        var xhrRequestFacebook = null;
+        var xhrRequestFacebook_Post = null;
+        var face_long_key = "";
+        // var face_long_key = "EAANKQZBAuokMBAAosQcmsktMCtdQn4qdAG0Eof93hZBRH5hGYZB4SjkEteDTJ924hxVoKuioTVVtAxBUdZCGwCqJqJClmlEpHdsyqUh5ijmNVEueb7ln9ZBXtMPmWkgxI29muRVitG3zhHrxWY7CQNZC3kTETGSyD9uQhLhvZBmwQZDZD";
+        //var face_app_secret = "38c036f5249c6229b38baa39720b1542";
+        var face_app_appid = '@Model._Face_App_ID';
+        var face_Link_HTTP_File = '@Model._Face_Link_HTTP_File';
+
+        //#region BIen chua xai
+        //var _AssignPID ='<%=_AssignPID%>';
+        //var _AssignUID = '<%=_AssignUID%>';
+
+
+        //var ser_facebookTag = "";
+        //var currentchecktag = "";
+
+
+        //var ListPage_MessengerByUserAndPage;
+        //var ISSHOW_NODEVIDE;
+
+
+        //// var NONSTAFFID = 0;
+        //CurrentStaffID = '<%=_CurrentStaffID%>';
+        //var currentstaff_isloadcombo = 0;
+
+        //var isFromTicket = 0;
+        //var Area_Combo = [];
+        //var ServiceCareFace_Combo = [];
+        //var DiscountFace_Combo = [];
+        //#endregion
+
+        $(document).click(function () {
+            $("#popupExecute").hide();
+        });
+
+        $(document).ready(function () {
+            // Face_Get_appsecret_proof();
+            // Face_Load_Data_Initialize();
+            Face_Filter_Rasing_Event();
+            Face_Changing_Page_Start();
+            var now = new Date();
+            var datatime = formatDateClient(now.setDate(now.getDate())) + ' to ' + formatDateClient(new Date());
+            $("#dataDateFiter").flatpickr({
+                dateFormat: 'd-m-Y',
+                mode: "range",
+                enableTime: false,
+                inline: true,
+                defaultDate: datatime
+            });
+
+            Face_Obj_Datecallback_time = $("#Date_from_call_back").flatpickr({
+                dateFormat: 'd-m-Y H:i',
+                enableTime: true,
+                defaultDate: new Date(),
+                minDate: new Date(),
+            });
+            $("#txtContentMessage_Chatting").keyup(function (event) {
+                event.preventDefault();
+                if (event.keyCode === 13) {
+                    Face_API_Send_MESSAGE();
+                }
+            });
+            Face_Event_Ticket_Area();
+            Face_Event_NewTicket_Area();
+            Face_Init();
+
+
+
+            $('.MessenArrow').click(function () {
+                $(this).toggleClass('change');
+                $('.MessengerAreaInfo').toggleClass('active');
+            })
+
+            //height page messenger
+            var wH = $("#BodyMain").height() - $('#Master_Menu_Top').height() - 1;
+            $('#Face_Pusher').css({ height: wH, "overflow-y": "auto", "min-height": wH });
+        })
+
+        function ChangeStarProfile(sta) {
+            let id = CurrentConverationId + '__' + Currentprofileid;
+            let idstar = "star_" + id;
+            if ($("#" + idstar).length) {
+                if (sta == "on") $("#" + idstar).show();
+                else $("#" + idstar).hide();
+
+            }
+        }
+        function ChangeSpamProfile(sta) {
+            let id = CurrentConverationId + '__' + Currentprofileid;
+            let idstar = "block_" + id;
+            if ($("#" + idstar).length) {
+                if (sta == "on") $("#" + idstar).show();
+                else $("#" + idstar).hide();
+
+            }
+        }
+        function Face_SpamProfile() {
+            const promise = notiConfirmSendContent("Block / Unblock ?");
+            promise.then(function () { Face_SpamProfile_Action(); }, function () { });
+        }
+        function Face_SpamProfile_Action() {
+
+            let src = $('#spamProfileMess').attr('src');
+            if (src == '/assests/img/Face/spam.png') {
+                Face_BlockProfile();
+            }
+            else {
+                Face_UnBlockProfile();
+                ChangeSpamProfile('off');
+                $('#spamProfileMess').attr('src', '/assests/img/Face/spam.png');
+            }
+
+        }
+        function Face_Block_ToDB(state) {
+            AjaxLoad(url = "/Facebook/Messenger/?handler=Make_Spam_Conversation"
+                , data = { 'pageid': Currentpageid, 'fromid': Currentprofileid, 'block': state }, async = true, error = null
+                , success = function (result) {
+
+                }
+            );
+        }
+        function Get_AllPageOfUser() {
+            AjaxLoad(url = "/Facebook/Messenger/?handler=Get_AllPageOfUser"
+                , data = {}, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        ListPage_MessengerByUserAndPage = data.Table;
+                        ISSHOW_NODEVIDE = data.Table1[0].Value;
+                    } else {
+                        // Thất Bại
+                    }
+                }
+            );
+
+        }
+
+        function Face_ResetAfterSendMessage() {
+            //$("#MessengerArea_Attachment").empty();
+            //$("#ParentMessengerArea_Attachment").hide();
+            //CurrentFileAttechment = [];
+            //Face_ShowHideAttachment();
+        }
+        function Face_ResetAllFiledChat() {
+
+        }
+
+
+        /// loadmore=1
+        function Face_LoadChattingMessage1(id, number, loadmore) {
+            if (id != "") {
+                if (xhrRequestFacebook && xhrRequestFacebook.readyState != 4) {
+                    xhrRequestFacebook.abort();
+                }
+                xhrRequestFacebook = AjaxLoad(url = "/Facebook/Messenger/?handler=Conversation_GetDetailConveration"
+                    , data = { 'converationid': id, 'number': number }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let conver = JSON.parse(result);
+                            Face_ResetAllFiledChat();
+                            $("#MessengerArea_Chating").show();
+                            Render_MessengerDetails(conver, "MessengerArea_Messenger", loadmore);
+                            if ($('#spamProfileMess').attr('src') == '/assests/img/Face/spam_.png') {
+                                $("#MessengerArea_Chating").hide();
+                                $("#MessengerArea_Chating_Hide").show();
+                            }
+
+                            $("#MessengerArea_Messenger_Area").show();
+                            Face_LoadPhoneChattingMessage(CurrentConverationId, Currentpageid);
+
+                            // Thành Công
+                        } else {
+                            // Thất Bại
+                        }
+                    }, 
+                    sender = null, 
+                    before = function () {
+                        //$("#loadmoreDetail").hide();
+                        $("#MessengerArea_Messenger_loaderList").show();
+                    },
+                    complete = function (e) {
+                        //$("#loadmoreDetail").show();
+                        $("#MessengerArea_Messenger_loaderList").hide();
+                    }
+                );
+
+            }
+        }
+        function Face_LoadCommentMessage1(CurrentCommentId, CurrentPostId) {
+            if (CurrentCommentId != "") {
+                if (xhrRequestFacebook && xhrRequestFacebook.readyState != 4) {
+                    xhrRequestFacebook.abort();
+                }
+                xhrRequestFacebook = AjaxLoad(url = "/Facebook/Messenger/?handler=Conversation_GetDetailComment"
+                    , data = { 'CurrentCommentId': CurrentCommentId, 'CurrentPostId': CurrentPostId }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let conver = JSON.parse(result);
+                            Face_ResetAllFiledChat();
+                            $("#MessengerArea_Chating").show();
+                            Render_CommentDetail(conver, "MessengerArea_Messenger");
+                            $("#MessengerArea_Messenger_Area").show();
+                            // Thành Công
+                        } else {
+                            // Thất Bại
+                        }
+                    },
+                    sender = null,  
+                    before = function () {
+                        //$("#loadmoreDetail").hide();
+                        $("#MessengerArea_Messenger_loaderList").show();
+                    },
+                    complete = function (e) {
+                        // $("#loadmoreDetail").show();
+                        $("#MessengerArea_Messenger_loaderList").hide();
+                    }
+                );
+
+            }
+        }
+
+        //timespan :temporary id
+        function Face_LoadMessageDetail1(messageid, timespan) {
+            if (messageid != "") {
+                AjaxLoad(url = "/Facebook/Messenger/?handler=Conversation_GetDetailMessage"
+                    , data = { 'messageid': messageid }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let messeage = JSON.parse(result);
+                            // Remove temporay
+                            if (timespan != undefined && timespan) {
+                                Remove_MessenerDetail_Temp(timespan);
+                            }
+                            Putting_MessengerDetail_Send(messeage, "MessengerArea_Messenger");
+                        } else {
+                        }
+                    }
+                );
+
+            }
+        }
+        function Face_LoadProfile(profileid) {
+            if (profileid != "") {
+                AjaxLoad(url = "/Facebook/Messenger/?handler=Conversation_GetProfile"
+                    , data = { 'profileid': profileid }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let profile = JSON.parse(result);
+                            if (profile != undefined && profile) {
+                                try {
+                                    if ($("#profile_Avatar").length) $('#profile_Avatar').attr('src', profile.profile_pic);
+                                }
+                                catch {
+
+                                }
+                                if ($("#face_name").length) document.getElementById("face_name").innerHTML = profile.name;
+                                if ($("#face_first_name").length) document.getElementById("face_first_name").innerHTML = profile.first_name;
+                                if ($("#face_gender").length) document.getElementById("face_gender").innerHTML = profile.gender;
+                            }
+                        } else {
+                        }
+                    }
+                );
+
+            }
+        }
+        // #endregion
+        // #region // Upload File
+</script>
+<script>css_require('/assests/dist/css/chat-page.css');</script>
+<script>css_require('/css/facebookpage.css');</script>
+<script src="https://connect.facebook.net/us_EN/sdk.js" type="text/javascript"></script>
+<script src="/assests/dist/UploadJS/js/vendor/jquery.ui.widget.js" type="text/javascript"></script>
+<script src="/assests/dist/UploadJS/js/jquery.fileupload.js" type="text/javascript"></script>
+<script src="/assests/dist/UploadJS/js/main.js" type="text/javascript"></script>
+<link type="text/css" rel="stylesheet" href="/assests/dist/qtip/jquery.qtip.min.css" />
+<script type="text/javascript" src="/assests/dist/qtip/jquery.qtip.min.js"></script>
+<script type="text/javascript" src="/assests/js/arrive.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/hmac-sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/enc-base64.min.js"></script>

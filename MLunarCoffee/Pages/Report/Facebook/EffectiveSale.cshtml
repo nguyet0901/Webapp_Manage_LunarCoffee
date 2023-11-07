@@ -1,0 +1,868 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Facebook.EffectiveSaleModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card-header px-0">
+    <div class="row px-0 mt-3 mb-2">
+        <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+            <div class="fw-bold text-center text-dark text-sm">
+                @Local["Doanh thu"]
+            </div>
+            <div class="position-relative mt-3" style="min-height: 150px;">
+                <div class="chart position-absolute top-50 start-50 translate-middle">
+                    <canvas id="ES_PieRev" class="chart-canvas" height="150"></canvas>
+                </div>
+            </div>
+            <div class="mt-2 ms-0 ms-lg-n2 table-responsive">
+                <table class="table align-items-center mb-0">
+                    <tbody id="ES_PieRevList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+            <div class="fw-bold text-center text-dark text-sm">
+                @Local["Doanh số"]
+            </div>
+            <div class="position-relative mt-3" style="min-height: 150px;">
+                <div class="chart position-absolute top-50 start-50 translate-middle">
+                    <canvas id="ES_PieSal" class="chart-canvas" height="150"></canvas>
+                </div>
+            </div>
+            <div class="mt-2  table-responsive">
+                <table class="table align-items-center mb-0">
+                    <tbody id="ES_PieSalList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">        
+        <div class="right">
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary"
+                   data-bs-toggle="collapse" href="#ES_DivTotal" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary "
+                   onclick="event.preventDefault(); return ESale_LoadTotal()"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["In báo cáo"]">
+                <i class="vtt-icon vttech-icon-print text-lg text-primary"
+                   onclick="event.preventDefault(); return ESale_PrintTotal()"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="ESale_ExcelTotal()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="ES_DivTotal">
+        <div class="card-body p-0 mt-3">
+            <div class="m-0 my-0 mobile-responsive">
+                <table class="table vt-table mb-0" id="">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@Local["Trang"]</th>
+                            <th>@Local["Số lượng"] @Local["Telesale"]</th>
+                            <th>@Local["Số lượng"] @Local["Khách hàng"]</th>
+                            <th>@Local["Doanh số"]</th>
+                            <th>@Local["Doanh thu"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ES_GridBodyTotal">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="ES_DivTele" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0">
+            <div class="left">
+                <p id="ES_TeleHeader" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#ES_DivTele" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); ES_PrintTele()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return ES_ExcelTele()"></i>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="ES_DivTele">
+            <div class="card-body p-0 mt-3">
+                <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                    <table class="table vt-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>@Local["#"]</th>
+                                <th>@Local["Telesale"]</th>
+                                <th>@Local["Số lượng"] @Local["Khách hàng"]</th>
+                                <th>@Local["Doanh số"]</th>
+                                <th>@Local["Doanh thu"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ES_TeleGridBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+</div>
+</div>
+<div id="ES_DivDetail" class="mt-3" style="display:none;">
+    <div class="card-header p-3 px-0">
+        <div class="d-lg-flex">
+            <div class="w-50 col-auto my-auto">
+                <p id="ES_DetailHeader" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                    <span id="ES_Currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="ES_Totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#ES_DivDetail" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); ES_PrintDetail()"></i>
+                </div>
+                @*                <div class="icon-hover mx-1"
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                onclick="event.preventDefault(); return ES_ExcelDetail()"></i>
+                </div>*@
+                <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                    <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Xuất excel"]">
+                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer" s></i>
+                    </div>
+                    <div class="input-group-text icon-hover w-auto vttech-input-item">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return ES_ExcelDetail(0)">@Local["Tất cả"]</i>
+                    </div>
+                    <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return ES_ExcelDetail(1)">@Local["Tùy chọn"]</i>
+                    </div>
+                </div>
+
+                <div class="position-relative d-lg-inline mt-1 mx-1">
+                    <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="page" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Trang"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="doccode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="staff" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Tele phụ trách"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="ccstaff" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nhân viên chăm sóc"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="gender" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Giới tính"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="group" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nhóm khách hàng"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nguồn khách hàng"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="district" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Quận huyện"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="city" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Tỉnh/Thành phố"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="createby" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ngày tạo"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="ES_DivDetail">
+        <div class="card-body p-0 mt-3">
+            <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                <table class="table vt-table mb-0" id="ES_DteailTable">
+                    <thead>
+                        <tr>
+                            <th>@Local["#"]</th>
+                            <th>@Local["Mã khách hàng"]</th>
+                            <th>@Local["Khách hàng"]</th>
+                            <th data-name="page">@Local["Trang"]</th>
+                            <th>@Local["Doanh số"]</th>
+                            <th>@Local["Doanh thu"]</th>
+                            <th>@Local["Mã khách hàng cũ"]</th>
+                            <th data-name="doccode">@Local["Mã hồ sơ"]</th>
+                            <th data-name="staff">@Local["Tele phụ trách"]</th>
+                            <th data-name="ccstaff">@Local["Nhân viên chăm sóc"]</th>
+                            <th data-name="gender">@Local["Giới tính"]</th>
+                            <th data-name="group">@Local["Nhóm khách hàng"]</th>
+                            <th data-name="source">@Local["Nguồn khách hàng"]</th>
+                            <th data-name="district">@Local["Quận huyện"]</th>
+                            <th data-name="city">@Local["Tỉnh/Thành phố"]</th>
+                            <th>@Local["Người tạo"]</th>
+                            <th data-name="createby">@Local["Ngày tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ES_DetailGridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let _DateFrom = "@Model._dateFrom";
+    let _DateTo = "@Model._dateTo";
+    let xhrLoadList, xhrLoadTele, xhrLoadDetail;
+    let ES_DtTotal = [], ES_DtTele = [], ES_DtDetail = [];
+    let timeoutCount;
+    let shtable;
+    //#region //Load
+    $(document).ready(function () {
+        shtable = $("#ES_DteailTable").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ESale_LoadTotal();
+    })
+
+    function ESale_LoadTotal() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        xhrLoadList = AjaxLoad(url = "/Report/Facebook/EffectiveSale/?handler=Loadata"
+            , data = {
+                'dateFrom': _DateFrom
+                , 'dateTo': _DateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    ES_DtTotal = data;
+
+                    ReportPie_Description(data, 'PageName', 'Amount', 'ES_PieRevList');
+                    rp_pie("ES_PieRev", data, 'PageName', 'Amount');
+
+                    ReportPie_Description(data, 'PageName', 'Price', 'ES_PieSalList');
+                    rp_pie("ES_PieSal", data, 'PageName', 'Price');
+
+                    ESale_RenderTotal(data, "ES_GridBodyTotal");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    function ESale_LoadTele(ID) {
+        if (xhrLoadTele && xhrLoadTele.readyState != 4) xhrLoadTele.abort();
+        xhrLoadTele = AjaxLoad(url = "/Report/Facebook/EffectiveSale/?handler=LoadTele"
+            , data = {
+                'dateFrom': _DateFrom
+                , 'dateTo': _DateTo
+                , 'PID': ID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    ES_DtTele = data;
+                    ESale_RenderTele(data, "ES_TeleGridBody");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    function ESale_LoadDetail(ID) {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        xhrLoadDetail = AjaxLoad(url = "/Report/Facebook/EffectiveSale/?handler=LoadDetail"
+            , data = {
+                'dateFrom': _DateFrom
+                , 'dateTo': _DateTo
+                , 'CreatedBy': ID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    ES_DtDetail = data;
+                    ESale_RenderDetail(data, "ES_DetailGridBody");
+                    Count_Up("ES_Totaldata", data.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    //#endregion
+
+    //#region //Render
+
+    async function ESale_RenderTotal(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        let TotalTele = 0; TotalCus = 0; TotalPrice = 0; TotalAmount = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            TotalTele += item.CreatedBy;
+                            TotalCus += item.TotalCus;
+                            TotalPrice += item.Price;
+                            TotalAmount += item.Amount;
+
+                            let tr = `<td class="vt-number-order"></td>
+                                            <td><a href="#" class="border-1 border-primary border-bottom mb-0 text-sm fw-bold btnTotal" data-id="${item.PID}">${item.PageName}</a></td>
+                                                <td>${formatNumber(item.CreatedBy)}</td>
+                                            <td>${formatNumber(item.TotalCus)}</td>
+                                            <td>${formatNumber(item.Price)}</td>
+                                            <td>${formatNumber(item.Amount)}</td>
+                                        `
+                            tr = `<tr class="vt-number">${tr}</tr>`;
+
+                            if (i == data.length - 1) {
+                                tr += `<tr class="text-white bg-gradient bg-primary">
+                                        <td></td>
+                                        <td><a href="#" class="border-1 border-white border-bottom text-white btnTotal" data-id="0">@Local["Tất cả"]</a></td>
+                                        <td>${formatNumber(TotalTele)}</td>
+                                        <td>${formatNumber(TotalCus)}</td>
+                                        <td>${formatNumber(TotalPrice)}</td>
+                                            <td>${formatNumber(TotalAmount)}</td>
+                                        </tr>
+                                    `;
+                            }
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    ESale_EventTotal();
+                }
+            }, 100);
+        })
+    }
+
+    async function ESale_RenderTele(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        let CountCus = 0, TotalPrice = 0; TotalAmount = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            CountCus += item.TotalCus;
+                            TotalPrice += item.Price;
+                            TotalAmount += item.Amount;
+
+                            let tr = `<td class="vt-number-order"></td>
+                                            <td><a href="#" class="border-1 border-primary border-bottom mb-0 text-sm fw-bold btnSale" data-id="${item.CreatedBy}">${item.StaffName}</a></td>
+                                            <td>${formatNumber(item.TotalCus)}</td>
+                                            <td>${formatNumber(item.Price)}</td>
+                                            <td>${formatNumber(item.Amount)}</td>
+                                        `
+
+                            tr = `<tr class="vt-number">${tr}</tr>`;
+
+                            if (i == data.length - 1) {
+                                tr += `<tr class="text-white bg-gradient bg-primary">
+                                        <td></td>
+                                        <td><a href="#" class="border-1 border-white border-bottom text-white btnSale" data-id="0">@Local["Tất cả"]</a></td>
+                                        <td>${formatNumber(CountCus)}</td>
+                                        <td>${formatNumber(TotalPrice)}</td>
+                                        <td>${formatNumber(TotalAmount)}</td>
+                                        </tr>
+                                    `;
+                            }
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    ESale_EventSale();
+                }
+            }, 100);
+        })
+    }
+
+    async function ESale_RenderDetail(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `<td class="vt-number-order"></td>
+                                            <td><a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CusID}&ver=${versionofWebApplication}">${item.CusCode}</a></td>
+                                            <td>${item.CusName}</td>
+                                            <td data-name="page">${item.PageName}</td>
+                                            <td>${formatNumber(item.Price)}</td>
+                                            <td>${formatNumber(item.Amount)}</td>
+                                            <td>${item.Cust_Code_Old}</td>
+                                            <td data-name="doccode">${item.Document_Code}</td>
+                                            <td data-name="staff">${ESale_RenderNameDt(RP_DataEmployee, item.StaffID)}</td>
+                                            <td data-name="ccstaff">${ESale_RenderNameDt(RP_DataEmployee, item.CCStaffID)}</td>
+                                            <td data-name="gender">${item.Gender_ID == 60 ? "@Local["Nam"]" : "@Local["Nữ"]"}</td>
+                                            <td data-name="group">${ESale_RenderNameDt(RP_DataCustomerGroup, item.Group_ID)}</td>
+                                            <td data-name="source">${ESale_RenderNameDt(RP_DataCustomerSource, item.Type_Cat_ID)}</td>
+                                            <td data-name="district">${ESale_RenderNameDt(RP_DataDistrict, item.District_ID)}</td>
+                                            <td data-name="city">${ESale_RenderNameDt(RP_DataCity, item.City_ID)}</td>
+                                            <td>${ESale_RenderNameDt(RP_DataEmployee, item.CreatedBy)}</td>
+                                            <td data-name="createby">${ConvertDateTimeUTC_YMD(item.Created)}</td>
+                                        `
+                            tr = `<tr class="vt-number">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    shtable.Refresh();
+                    clearTimeout(timeoutCount);
+                    timeoutCount = setTimeout(() => {
+                        Count_Up("ES_Currentdata", $("#" + id).children().length);
+                    }, 300)
+                }
+            }, 100);
+        })
+    }
+
+    function ESale_RenderNameDt(data, id) {
+        try {
+            let result = ``;
+            if (data[id] != "undefined") {
+                result = data[id].Name;
+            }
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //Event
+
+    function ESale_EventTotal() {
+        $("#ES_GridBodyTotal .btnTotal").unbind("click").on("click", function () {
+            let ID = $(this).attr("data-id");
+            let Name = $(this).html();
+
+            $("#ES_DivTele").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#ES_DivTele").offset().top
+            }, 300);
+            if (ID == "0") {
+                $("#ES_TeleHeader").html('@Local["Tất cả"]');
+            }
+            else {
+                $("#ES_TeleHeader").html(Name);
+            }
+            ESale_LoadTele(ID);
+        })
+    }
+    function ESale_EventSale() {
+        $("#ES_TeleGridBody .btnSale").unbind("click").on("click", function () {
+            let ID = $(this).attr("data-id");
+            let Name = $(this).html();
+
+            $("#ES_DivDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#ES_DivDetail").offset().top
+            }, 300);
+            $("#ES_Currentdata").html(0);
+            if (ID == "0") {
+                $("#ES_DetailHeader").html('@Local["Tất cả"]');
+            }
+            else {
+                $("#ES_DetailHeader").html(Name);
+            }
+            ESale_LoadDetail(ID);
+        })
+    }
+    //#endregion
+
+    //#region //Other
+
+    async function ESale_ExcelTotal() {
+        let dataRoot = ES_DtTotal;
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }]
+            , "PageName": "@Local["Trang"]"
+            , "CreatedBy": "@Local["Số lượng"] @Local["Telesale"]"
+            , "TotalCus": ["@Local["Số lượng"] @Local["Khách hàng"]", (v) => { return formatNumber(v) }]
+            , "Price": ["@Local["Doanh số"]", (v) => { return formatNumber(v) }]
+            , "Amount": ["@Local["Doanh thu"]", (v) => { return formatNumber(v) }]
+        };
+        let nameFile = Outlang["Sys_hieu_qua_telesale_facebook"] != undefined ? Outlang["Sys_hieu_qua_telesale_facebook"] : "";
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+
+    async function ESale_PrintTotal() {
+        try {
+            if (ES_DtTotal && ES_DtTotal.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }]
+                    , "PageName": ["@Local["Trang"]"]
+                    , "CreatedBy": ["@Local["Số lượng"] @Local["Telesale"]"]
+                    , "TotalCus": ["@Local["Số lượng"] @Local["Khách hàng"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                    , "Price": ["@Local["Doanh số"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                    , "Amount": ["@Local["Doanh thu"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _DateFrom + '&dateTo=' + _DateTo + '&branch=' + 0 + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Sys_hieu_qua_telesale_facebook"], ES_DtTotal, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+    async function ES_PrintTele() {
+        try {
+            if (ES_DtTele && ES_DtTele.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }]
+                    , "StaffName": ["@Local["Telesale"]"]
+                    , "TotalCus": ["@Local["Số lượng"] @Local["Khách hàng"]"]
+                    , "Price": ["@Local["Doanh số"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                    , "Amount": ["@Local["Doanh thu"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _DateFrom + '&dateTo=' + _DateTo + '&branch=' + 0 + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Sys_hieu_qua_telesale_facebook"], ES_DtTele, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+    async function ES_ExcelTele() {
+        let dataRoot = ES_DtTele;
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }]
+            , "StaffName": "@Local["Telesale"]"
+            , "TotalCus": "@Local["Số lượng"] @Local["Khách hàng"]"
+            , "Price": ["@Local["Doanh số"]", (v) => { return formatNumber(v) }]
+            , "Amount": ["@Local["Doanh thu"]", (v) => { return formatNumber(v) }]
+        };
+        let nameFile = Outlang["Sys_hieu_qua_telesale_facebook"] != undefined ? Outlang["Sys_hieu_qua_telesale_facebook"] : "";
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+
+    async function ES_PrintDetail() {
+        try {
+            if (ES_DtDetail && ES_DtDetail.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }]
+                    , "CusCode": ["@Local["Mã khách hàng"]"]
+                    , "CusName": ["@Local["Khách hàng"]"]
+                    , "Price": ["@Local["Doanh số"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                    , "Amount": ["@Local["Doanh thu"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                    }]
+                    , "PageName": ["@Local["Trang"]", {
+                        isShow: $(`.shtoogle[data-name='page']`).is(":checked")
+                    }]
+                    , "Cust_Code_Old": ["@Local["Mã khách hàng cũ"]"]
+                    , "Document_Code": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='doccode']`).is(":checked")
+                    }]
+                    , "StaffID": ["@Local["Tele phụ trách"]", {
+                        isShow: $(`.shtoogle[data-name='staff']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataEmployee, value);
+                        }
+                    }]
+                    , "CCStaffID": ["@Local["Nhân viên chăm sóc"]", {
+                        isShow: $(`.shtoogle[data-name='ccstaff']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataEmployee, value);
+                        }
+                    }]
+                    , "Gender_ID": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='gender']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return (value == 60 ? decodeHtml("@Local["Nam"]") : decodeHtml("@Local["Nữ"]"));
+                        }
+                    }]
+                    , "Group_ID": ["@Local["Nhóm khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='group']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataCustomerGroup, value);
+                        }
+                    }]
+                    , "Type_Cat_ID": ["@Local["Nguồn khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='source']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataCustomerSource, value);
+                        }
+                    }]
+                    , "District_ID": ["@Local["Quận huyện"]", {
+                        isShow: $(`.shtoogle[data-name='district']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataDistrict, value);
+                        }
+                    }]
+                    , "City_ID": ["@Local["Tỉnh/Thành phố"]", {
+                        isShow: $(`.shtoogle[data-name='city']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataCity, value);
+                        }
+                    }]
+                    , "City_ID": ["@Local["Tỉnh/Thành phố"]", {
+                        isShow: $(`.shtoogle[data-name='city']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return ESale_RenderNameDt(RP_DataCity, value);
+                        }
+                    }]
+                    , "CreatedBy": ["@Local["Người tạo"]", {
+                        callbackRenderValue: (v) => { return ESale_RenderNameDt(RP_DataEmployee, v) }
+                    }]
+                    , "Created": ["@Local["Ngày tạo"]", {
+                        isShow: $(`.shtoogle[data-name='createby']`).is(":checked"),
+                        callbackRenderValue: (value, { }) => {
+                            return (ConvertDateTimeUTC_YMD(value));
+                        }
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _DateFrom + '&dateTo=' + _DateTo + '&branch=' + 0 + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Sys_hieu_qua_telesale_facebook"], ES_DtDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    async function ES_ExcelDetail(isOption = 0) {
+        let dataRoot = ES_DtDetail;
+        let isAll = (isOption == 0);
+        let eleContainer = $('#ES_DivDetail');
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }]
+            , "CusCode": "@Local["Mã khách hàng"]"
+            , "CusName": "@Local["Khách hàng"]"
+            , "Price": ["@Local["Doanh số"]", (v) => { return formatNumber(v) }]
+            , "Amount": ["@Local["Doanh thu"]", (v) => { return formatNumber(v) }]
+            , "PageName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='page']`)).is(":checked"),
+                data: ["@Local["Trang"]"]
+            }
+            , "Cust_Code_Old": ["@Local["Mã khách hàng cũ"]"]
+            , "Document_Code": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                data: ["@Local["Mã hồ sơ"]"]
+            }
+            , "StaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='staff']`)).is(":checked"),
+                data: ["@Local["Tele phụ trách"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataEmployee, v);
+                }]
+            }
+            , "CCStaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='ccstaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên chăm sóc"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataEmployee, v);
+                }]
+            }
+            , "Gender_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gender']`)).is(":checked"),
+                data: ["@Local["Giới tính"]", (v, { }) => {
+                    return (v == 60 ? decodeHtml("@Local["Nam"]") : decodeHtml("@Local["Nữ"]"));
+                }]
+            }
+            , "Group_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='group']`)).is(":checked"),
+                data: ["@Local["Nhóm khách hàng"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataCustomerGroup, v);
+                }]
+            }
+            , "Type_Cat_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                data: ["@Local["Nguồn khách hàng"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataCustomerSource, v);
+                }]
+            }
+            , "District_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='district']`)).is(":checked"),
+                data: ["@Local["Quận huyện"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataDistrict, v);
+                }]
+            }
+            , "City_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='city']`)).is(":checked"),
+                data: ["@Local["Tỉnh/Thành phố"]", (v, { }) => {
+                    return ESale_RenderNameDt(RP_DataCity, v);
+                }]
+            }
+            , "CreatedBy": ["@Local["Người tạo"]", (v) => { return ESale_RenderNameDt(RP_DataEmployee, v) }]
+            , "Created": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='createby']`)).is(":checked"),
+                data: ["@Local["Ngày tạo"]", (v, { }) => {
+                    return (ConvertDateTimeUTC_YMD(v));
+                }]
+            }
+        };
+        dataExport = Checking_TabControl_System_RebuildHeader(dataExport, tableBodyId = 'ES_DetailGridBody', PermissionTable_TabControl);
+        let nameFile = Outlang["Sys_hieu_qua_telesale_facebook"] != undefined ? Outlang["Sys_hieu_qua_telesale_facebook"] : "";
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+
+
+        //#endregion
+
+</script>

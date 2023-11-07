@@ -1,0 +1,334 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Employee.Timekeeping.TimekeepingGridModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div id="etg_Container">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0">
+            <div class="left">
+                @*<h6 class="mb-0">@Local["Lịch sử chấm công"]</h6>
+                <p class="mb-0 text-sm">@Local["Danh sách lịch sử chấm công"]</p>*@
+            </div>
+        </div>
+    </div>
+    <div class="card-body mt-3 pt-0 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-0">
+                <div class="left">
+                </div>
+                <div class="right">
+                    <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                        <span id="etg_currentdata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="etg_totaldata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#etg_GridArea" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Tải lại"]">
+                        <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); return etg_Load()"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); etg_PrintReport()"></i>
+                    </div>
+                    <div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return etg_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return etg_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Chi nhánh"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="shift" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ca"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="collapsesticky collapse show" id="etg_GridArea">
+                <div class="card-body p-0 mt-3">
+                    <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                        <table data-name="etg_Grid" class="table vt-table mb-0" id="etg_Grid">
+                            <thead>
+                                <tr role="row">
+                                    <th>#</th>
+                                    <th style="min-width:150px;">@Local["Mã nhân viên"]</th>
+                                    <th>@Local["Nhân viên"]</th>
+                                    <th>@Local["Nhóm nhân viên"]</th>
+                                    <th data-name="branch" style="min-width:120px;">@Local["Chi nhánh"]</th>
+                                    <th>@Local["Ngày checkin"]</th>
+                                    <th>@Local["Thứ"]</th>
+                                    <th data-name="shift" style="min-width:120px;">@Local["Ca"]</th>
+                                    <th>@Local["Giờ vào"]</th>
+                                    <th>@Local["Giờ ra"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="etg_GridBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return etg_RenderMore();">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT LOAD LIST
+    var etg_datadow = ["@Local["Chủ nhật"]", "@Local["Thứ hai"]", "@Local["Thứ ba"]", "@Local["Thứ tư"]", "@Local["Thứ năm"]", "@Local["Thứ sáu"]", "@Local["Thứ bảy"]"];
+    let etg_xhrLoadList;
+    let etg_dataReportMain, etg_dataReportMainSlice;
+    let etg_indexReport = 0;
+    let etg_shtable;
+    let etg_timeoutCount;
+    $(document).ready(function () {
+        etg_shtable = $("#etg_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        etg_Load();
+        Checking_TabControl_Permission();
+    });
+    async function etg_Load() {
+        new Promise(() => {
+            etg_ResetValue();
+            if (etg_xhrLoadList && etg_xhrLoadList.readyState != 4) etg_xhrLoadList.abort();
+            let _branchID = "@Model._BranchID";
+            let _dateFrom = "@Model._dateFrom";
+            let _dateTo = "@Model._dateTo";
+            etg_indexReport = 0;
+            $("#etg_GridBody").empty();
+            etg_xhrLoadList = AjaxLoad(url = "/Report/Employee/Timekeeping/TimekeepingGrid/?handler=Loadata"
+                , data = {
+                    'BranchID': _branchID
+                    , 'dateFrom': _dateFrom
+                    , 'dateTo': _dateTo
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            etg_dataReportMain = JSON.parse(result);
+                            Count_Up("etg_totaldata", data.length);
+                            etg_dataReportMainSlice = sliceIntoChunks(JSON.parse(result), 500);
+                            fnRenderBlock(etg_dataReportMainSlice[etg_indexReport], "etg_GridBody"
+                                , blocknum = 100
+                                , fnrender = etg_Render
+                                , fnsuccess = null
+                            );
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        })
+    }
+    function etg_ResetValue() {
+        etg_dataReportMain = []
+        etg_dataReportMainSlice = {};
+        $('#etg_totaldata').html(0);
+        $('#etg_currentdata').html(0);
+    }
+    function etg_RenderMore() {
+        etg_indexReport += 1;
+        if (etg_dataReportMainSlice && etg_dataReportMainSlice[etg_indexReport]) {
+            fnRenderBlock(etg_dataReportMainSlice[etg_indexReport], "etg_GridBody"
+                , blocknum = 100
+                , fnrender = etg_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function etg_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+
+                            let objEmp = Fun_GetObject_ByID(RP_DataEmployee, item.EmpID);
+                            let tr = `
+                                          <td class="vt-number-order"></td>
+                                          <td>${objEmp?.Code ?? ''}</td>
+                                          <td>${objEmp?.Name ?? ''}</td>
+                                          <td>${item?.EmpGroup ?? ''}</td>
+                                          <td data-name="branch">${Fun_GetName_ByID(RP_DataBranch, item?.BranchID ?? 0)}</td>
+                                          <td>${ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(item.NumDate))}</td>
+                                          <td>${etg_datadow[ConvertYMDInt_ToDOW(item.NumDate)]}</td>
+                                          <td data-name="shift">${item?.ShiftName ?? ''}</td>
+                                          <td>${ConvertTimeInt_ToTime(item.TimeCheckin)}</td>
+                                          <td>${ConvertTimeInt_ToTime(item.TimeCheckout)}</td>
+                                          `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        etg_shtable.Refresh();
+                        Checking_TabControl_Permission();
+                        clearTimeout(etg_timeoutCount);
+                        etg_timeoutCount = setTimeout(() => {
+                            Count_Up("etg_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+                resolve();
+            }, 100);
+        })
+    }
+
+    //#endregion
+
+    //#region // EXPORT - PRINT
+
+    function etg_Export(isOption = 0) {
+        try {
+            if (etg_dataReportMain && etg_dataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#etg_Container');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "EmpCode": ["@Local["Mã nhân viên"]", (value, { EmpID }) => { return Fun_GetObject_ByID(RP_DataEmployee, EmpID).Code; }],
+                    "Emp": ["@Local["Nhân viên"]", (value, { EmpID }) => { return Fun_GetObject_ByID(RP_DataEmployee, EmpID).Name; }],
+                    "EmpGroup": ["@Local["Nhóm nhân viên"]"],
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return Fun_GetName_ByID(RP_DataBranch, value) }]
+                    },
+                    "NumDate": ["@Local["Ngày checkin"]", (value) => { return ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(value)); }],
+                    "DowData": ["@Local["Thứ"]", (value, { NumDate }) => { return etg_datadow[ConvertYMDInt_ToDOW(NumDate)]; }],
+                    "ShiftName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='shift']`)).is(":checked"),
+                        data: ["@Local["Ca"]"]
+                    },
+                    "TimeCheckin": ["@Local["Giờ vào"]", (value) => { return ConvertTimeInt_ToTime(value); }],
+                    "TimeCheckout": ["@Local["Giờ ra"]", (value) => { return ConvertTimeInt_ToTime(value); }],
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'etg_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Lich_su_cham_cong"]);
+                exportJsonToExcel(Outlang["Lich_su_cham_cong"], etg_dataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function etg_PrintReport() {
+        try {
+            if (etg_dataReportMain && etg_dataReportMain.length != 0) {
+                let _branchID = "@Model._BranchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                   "EmpCode": ["@Local["Mã nhân viên"]", {
+                       callbackRenderValue: (value, { EmpID }) => { return Fun_GetObject_ByID(RP_DataEmployee, EmpID).Code; }
+                    }],
+                    "Emp": ["@Local["Nhân viên"]", {
+                       callbackRenderValue: (value, { EmpID }) => { return Fun_GetObject_ByID(RP_DataEmployee, EmpID).Name; }
+                    }],
+                    "EmpGroup": ["@Local["Nhóm nhân viên"]"],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value) => { return Fun_GetName_ByID(RP_DataBranch, value) }
+                    }],
+                    "NumDate": ["@Local["Ngày checkin"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(value)); }
+                    }],
+                    "DowData": ["@Local["Thứ"]", {
+                        callbackRenderValue: (value, { NumDate }) => { return etg_datadow[ConvertYMDInt_ToDOW(NumDate)]; }
+                    }],
+                    "ShiftName": ["@Local["Thứ"]", {
+                        isShow: $(`.shtoogle[data-name='shift']`).is(":checked")
+                    }],
+                    "TimeCheckin": ["@Local["Giờ vào"]", {
+                        callbackRenderValue: (value) => { return ConvertTimeInt_ToTime(value); }
+                    }],
+                    "TimeCheckout": ["@Local["Giờ ra"]", {
+                        callbackRenderValue: (value) => { return ConvertTimeInt_ToTime(value); }
+                    }],
+                };
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'etg_GridBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Lich_su_cham_cong"], etg_dataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                    //#endregion
+
+</script>
+

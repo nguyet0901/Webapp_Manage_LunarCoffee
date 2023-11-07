@@ -1,0 +1,227 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Employee.Punish.PunishEmployeeModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Nhân viên bị xử phạt"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách nhân viên bị xử phạt"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn bg-gradient-dark btn-sm mt-1 _tab_control_" data-tab="export_excel" title="@Local["Xuất excel"]" data-value="fade up" onclick="event.preventDefault();return exportData_PunishEmployee();">@Local["Xuất"]</button>
+                    <button class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return Punish_AddNew()">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="vtcondition">
+                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row px-2">
+                            <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                <div class="ui fluid search selection dropdown form-control" id="Branch_ID">
+                                    <input type="hidden" />
+                                    <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                    <div id="cbbBranch" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                <div class="input-group" id="pu_filter">
+                                    <span class="input-group-text input-group-text px-2">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                        <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                    </span>
+                                    <input id="filter_input" type="text" class="form-control" placeholder="@Local["Tìm kiếm"]..." onkeyup="event.preventDefault();return onkeyupTicketFitler();">
+                                    <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-4 p-1">
+                                <div class="field">
+                                    <input class="flatpickr form-control input-group-text" id="dateFilter" type="text" placeholder="@Local["Chọn ngày"].." onchange="Punish_LoadDataEmp()" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-0 py-3 pb-0 mobile-responsive vt-header-sticky">
+                    <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table id="dtContentPunishEmployee" class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th style="width: 25px;">#</th>
+                                <th>@Local["Nhân viên"]</th>
+                                <th>@Local["Mức xử phạt"]</th>
+                                <th>@Local["Loại xử phạt"]</th>
+                                <th>@Local["Số tiền xử phạt"]</th>
+                                <th>@Local["Ngày xử phạt"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentPunishEmployeeBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var sys_AllBranchID = @Model.sys_AllBranchID;
+    var sys_AreaBranch = "@Model.sys_AreaBranch";
+    var DataPunishEmployee;
+    var IdComboMax;
+    $(document).ready(function () {
+        $('#dtContentPunishEmployee').tablesort();
+        $("#dateFilter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#dateFilter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        $('#dtContentPunishEmployee tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            Punish_Edit(ID);
+        });
+        $("#pu_filter").on('click', '.btn_clear', function (e) {
+            $('#filter_input').val('');
+            $(".btn_clear").addClass('opacity-1');
+            Punish_Render(DataPunishEmployee, "dtContentPunishEmployeeBody");
+        });
+        Punish_LoadCombo();
+
+        Checking_TabControl_Permission();
+    });
+
+    function Punish_LoadCombo() {
+        AjaxLoad(url = "/HR/Employee/Punish/PunishEmployee/?handler=LoadComboMain"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                Load_Combo(data, "cbbBranch", true);
+                $("#Branch_ID").dropdown("refresh");
+                $("#Branch_ID").dropdown("set selected", data[0].ID);
+                Punish_LoadDataEmp();
+            });
+    }
+
+    function Punish_LoadDataEmp() {
+        AjaxLoad(url = "/HR/Employee/Punish/PunishEmployee/?handler=LoadataPunishEmployee"
+            , data = {
+                date: $("#dateFilter").val()
+            }, async = false, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data != undefined) {
+                    DataPunishEmployee = data;
+                    Punish_Render(data, "dtContentPunishEmployeeBody");
+                }
+            });
+
+    }
+
+    function Punish_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td ><a class="buttonEditClass">' + item.NameEmployee + '</a></td>'
+                        + '<td >' + item.IsPunishMoney + '</td>'
+                        + '<td >' + item.PunishType + '</td>'
+                        + '<td data-sortValue="' + Number(item.PunishAmount) + '">' + formatNumber(item.PunishAmount) + '</td>'
+                        + '<td >' + item.PunishDate + '</td>'
+                    stringContent = stringContent + '<tr class="seachRow vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function Punish_StateView() {
+        let selectedid = (Number($('#Branch_ID').dropdown('get value')) ? Number($('#Branch_ID').dropdown('get value')) : 0)
+        let IDBranchstring = ',' + selectedid + ',';
+        let data = DataPunishEmployee;
+        if (IdComboMax != selectedid) {
+            data = DataPunishEmployee.filter(word => {
+                if ((',' + word["BranchID"] + ',').includes(IDBranchstring)
+                    || word["isAllBranch"] == "1") return word;
+            }
+            );
+        }
+        Punish_Render(data, "dtContentPunishEmployeeBody");
+    }
+
+    async function onkeyupTicketFitler() {
+        $(".btn_clear").removeClass('opacity-1');
+        $("#pu_filter .fa-search").hide();
+        $("#pu_filter .spinner-border").show();
+        await onkeyupTicketFitlerAsync();
+        $("#pu_filter .fa-search").show();
+        $("#pu_filter .spinner-border").hide();
+        return false;
+    }
+
+    function onkeyupTicketFitlerAsync(extension) {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let search = xoa_dau($('#filter_input').val().toLowerCase()).trim();
+                    let data = DataPunishEmployee.filter(function (item) {
+                        if (xoa_dau(item["NameEmployee"]).toLowerCase().includes(search))
+                            return true;
+                        return false;
+                    });
+                    if (data != undefined && data != null) {
+                        document.getElementById("dtContentPunishEmployeeBody").innerHTML = "";
+                        Punish_Render(data, "dtContentPunishEmployeeBody");
+                        ColorSearchFilterText(search, "seachRow");
+                    }
+                    resolve()
+                },
+                Math.floor(Math.random() * 300) + 1
+            )
+        })
+    }
+
+    function Punish_AddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/HR/Employee/Punish/PunishEmployeeDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function Punish_Edit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/HR/Employee/Punish/PunishEmployeeDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function exportData_PunishEmployee() {
+        exportToExcel("dtContentPunishEmployee", Outlang['Danh-sach-nhan-vien-bi-xu-phat']);
+    }
+</script>

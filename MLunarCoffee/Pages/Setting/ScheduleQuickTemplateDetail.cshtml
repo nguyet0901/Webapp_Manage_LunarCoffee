@@ -1,0 +1,99 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ScheduleQuickTemplateDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Ghi chú nhanh lịch hẹn"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết ghi chú nhanh lịch hẹn"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formScheduleQuick">
+                        <div class="field col-12 p-1">
+                            <label >@Local["Đặc tính"] (@Local["Tối đa 20 ký tự"])</label>
+                            <input id="SQT_Fuature" class="form-control" name="ferature" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea id="SQT_Content" class="form-control" rows="3" name="content"></textarea>
+                        </div>
+                    </div>
+                    <!-- #endregion -->
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formScheduleQuick" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button form="formScheduleQuick" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();Scheduler_Quick_Excute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_QuickTemplateDetailID = @Model._QuickTemplateDetailID;
+
+    $(document).ready(function () {
+        Scheduler_Quick_LoadUpdate();
+        Checking_TabControl_Permission();
+    });
+
+    function Scheduler_Quick_LoadUpdate() {
+        AjaxLoad(url = "/Setting/ScheduleQuickTemplateDetail/?handler=Loadata"
+            , data = { CurrentID: ser_QuickTemplateDetailID}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        $('#SQT_Fuature').val((data[0].Feature));
+                        $('#SQT_Content').val((data[0].Content));
+                    }
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function Scheduler_Quick_Excute() {
+        var data = new Object();
+        data.Feature = $('#SQT_Fuature').val() ? $('#SQT_Fuature').val() : "";
+        data.Content = $('#SQT_Content').val() ? $('#SQT_Content').val() : "";
+        data.Feature = xoa_dau(data.Feature).trim();
+        $('#formScheduleQuick').form('validate form');
+        if ($('#formScheduleQuick').form('is valid')) {
+            AjaxLoad(url = "/Setting/ScheduleQuickTemplateDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_QuickTemplateDetailID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        Scheduler_Quick_Load();
+                        CloseModal();
+                    } else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    } else {
+                        notiError_SW();
+                    }
+                });
+        }
+        return false;
+    }
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>

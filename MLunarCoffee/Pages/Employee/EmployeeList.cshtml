@@ -1,0 +1,566 @@
+﻿@page
+@model MLunarCoffee.Pages.Employee.EmployeeListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+    //Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+<div id="employeeList" class="postion-relative">
+    <div class="row px-1">
+        <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+            <div class="vtcardheader card-header px-1 pt-3 pb-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Bộ phận"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách bộ phận"]</p>
+                </div>
+                <div class="right">
+                    <button id="employeeList_btnAddGroup" class="btn bg-gradient-primary btn-sm mb-0 mt-1 px-2" onclick="return EmpGroup_AddNew();">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+
+            <div id="waitingEmpGroup" class="waitingdiv text-center position-absolute top-50 z-index-2 start-50 translate-middle" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="nav-wrapper mt-2" style="--max-height:calc( 100vh - 160px  ); --overflow-y: auto">
+                <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column  bg-white border-radius-lg"
+                    id="dtContentEmpGroupListBody">
+                </ul>
+            </div>
+
+        </div>
+        <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+            <div class="card card-plain">
+                <div class="card-header px-1 py-2">
+                    <div class="vtcardheader mt-2">
+                        <div class="left">
+                            <h6 class="mb-0"> @Local["Nhân viên"]</h6>
+                            <p class="text-sm mb-0">@Local["Danh sách nhân viên"]</p>
+                        </div>
+                        <div class="right">
+                            <button id="employeeList_btnAdd" class="btn bg-gradient-primary btn-sm mt-1 mb-0 _tab_control_" data-tab="add_tab_employee" onclick="return Emp_AddNew();">@Local["Thêm mới"]</button>
+                            <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                        <div class="toggle">
+                            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                <ul class="card card-body text-dark text-capitalize opacity-10">
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="contact" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thông tin"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="iniDate" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày nhận việc"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="createdby" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người tạo"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="modifiedby" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người sửa"]</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row p-0 m-0 mt-2">
+                                <div class="field col-12 col-md-12 col-xl-4 p-1">
+                                    <div class="input-group" id="EmpList_Filter">
+                                        <span class="input-group-text input-group-text px-2">
+                                            <i class="fas fa-search" aria-hidden="true"></i>
+                                            <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                        </span>
+                                        <input id="filterEmployee" type="text" class="form-control" placeholder="@Local["Tìm kiếm"]...">
+                                        <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="StateID" onchange="Emp_StateView()">
+                                        <input type="hidden" name="branch" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div class="menu" tabindex="-1">
+                                            <div class="item" data-value="2">@Local["Tất cả nhân viên"]</div>
+                                            <div class="item" data-value="1">@Local["Đang làm việc"]</div>
+                                            <div class="item" data-value="0">@Local["Đã nghỉ việc"]</div>
+                                            @*<div class="item" data-value="3">@Local["Đã khóa"]</div>*@
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                    <div class="form-group">
+                                        <div class="input-group mb-0">
+                                            <span class="input-group-text fw-bold text-primary ">@Local["Tổng"]:</span>
+                                            <span class="ps-2 form-control fw-bolder text-dark" id="totalEmployee"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-2 pt-0">
+                    <div class="mobile-responsive" style="max-height: calc(100vh - 230px)">
+                        <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]...</span>
+                            </div>
+                        </div>
+                        <table id="dtContentEmpList" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th>#</th>
+                                    <th>@Local["Hình ảnh"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th data-name="contact">@Local["Thông tin"]</th>
+                                    <th>@Local["Bộ phận"]</th>
+                                    <th data-name="iniDate" style="min-width: 119px;">@Local["Ngày nhận việc"]</th>
+                                    <th>@Local["Phạm vi chi nhánh"]</th>
+                                    <th style="min-width:125px;">@Local["Trạng thái"]</th>
+                                    <th data-name="createdby" style="min-width: 200px;">@Local["Người tạo"]</th>
+                                    <th data-name="modifiedby" style="min-width: 200px;">@Local["Người sửa"]</th>
+                                    <th>@Local["Xử lí"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentEmpListBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let dataEmployee, ELDataEmpFill;
+    let DataBranch;
+    let CurrentGrEmployee = 0;
+    let CurrentEmployee = 0;
+    let data_TimerOnchange;
+    let shtable;
+    let Emp_FlagTotalEmp = 1; //Emp_FlagTotalEmp == 2 all // Emp_FlagTotalEmp == 1 Working // Emp_FlagTotalEmp == 0 Retired
+    $(document).ready(function () {
+        $("#StateID").dropdown("set selected", 1);
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_Branch]
+            , function (data) {
+                DataBranch = data[0];
+                Emp_Load();
+            });
+
+        $('#dtContentEmpList tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).attr('data-emp'));
+            Emp_Edit(ID);
+            CurrentEmployee = ID;
+        });
+
+        $('#dtContentEmpGroupListBody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            EmpGroup_Edit(ID);
+        });
+
+        $('#filterEmployee').keyup(function () {
+            if ($('#filterEmployee').val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#EmpList_Filter .fa-search").hide();
+            $("#EmpList_Filter .spinner-border").show();
+            clearTimeout(data_TimerOnchange);
+            data_TimerOnchange = setTimeout(function (e) {
+                Employee_Filter(xoa_dau($('#filterEmployee').val().toLowerCase()).trim());
+            }, 500);
+        });
+        $("#EmpList_Filter").on('click', '.btn_clear', function (e) {
+            $('#filterEmployee').val('');
+            $(".btn_clear").addClass('opacity-1');
+            Emp_Load();
+        });
+        shtable = $("#dtContentEmpList").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        Checking_TabControl_Permission();
+    });
+
+   
+    //#region Employee Group
+    function EmpGroup_Load () {
+        AjaxLoad(url = "/Employee/EmployeeList/?handler=LoadataEmployeeGroup"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                EmpGroup_Render(data, 'dtContentEmpGroupListBody');
+
+            }
+            , sender = null
+            , before = function (e) {
+                $("#waitingEmpGroup").show();
+            }
+            , complete = function (e) {
+                $("#waitingEmpGroup").hide();
+            }
+        )
+    }
+    function EmpGroup_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let totalOn = 0;
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = `
+                        <li class="nav-item" role="presentation">
+                            <a data-id="${item.ID}" class="text-sm px-1 item-menu  rowGroupEmployee nav-link cursor-pointer " data-hover data-bs-toggle="tab">
+                                <div class="px-1">
+                                    <div data-id="${item.ID}"  class="d-inline buttonEditClass ">
+                                        <span class="mt-0 cursor-pointer col-auto my-auto mb-0 text-dark ms-0 text-sm fw-bold">
+                                            ${item.Name}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center mt-0">
+                                        <div class="ps-0">
+                                            <span class="fw-dark text-primary">${formatNumber(item.TotalEmpOn)}</span>
+                                            <span class="text-secondary text-lowercase ps-1">@Local["Nhân viên"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        <hr class="horizontal dark my-1">
+                        </li>
+                        `
+                    totalOn = totalOn + Number(item.TotalEmpOn);
+                    stringContent = stringContent + tr;
+                }
+            }
+            stringContent = `
+                        <li class="nav-item" role="presentation">
+                            <a data-id="0" class="text-sm ps-2 item-menu rowGroupEmployee nav-link cursor-pointer" data-hover data-bs-toggle="tab">
+                                <div class="text-bolder text-lowercase">
+                                    <span class="SL_total fw-bolder text-primary">${formatNumber(totalOn)}</span>
+                                    <span class="ps-2">@Local["Nhân viên"]</span>
+                                </div>
+                            </a>
+                            <hr class="horizontal dark my-0 opacity-2">
+                        </li>
+                        `+ stringContent;
+            document.getElementById(id).innerHTML = stringContent;
+        }
+
+        EmpGroup_EventRow();
+        EmpGroup_Trigger();
+        Checking_TabControl_Permission();
+    }
+    function EmpGroup_Trigger () {
+        if ($('.rowGroupEmployee[data-id="' + CurrentGrEmployee + '"]').get(0) != undefined)
+            $('.rowGroupEmployee[data-id="' + CurrentGrEmployee + '"]').get(0).click();
+    }
+    function EmpGroup_EventRow () {
+        $('#dtContentEmpGroupListBody .rowGroupEmployee').on('shown.bs.tab', function (e) {
+            let id = Number($(this).attr("data-id"));
+            CurrentGrEmployee = id;
+            if (id == 0) Emp_ViewDetail(id, 1);
+            else Emp_ViewDetail(id, 0);
+            $('#dtContentEmpGroupListBody .rowGroupEmployee').removeClass('active');
+            $(this).addClass('active');
+        });
+ 
+    }
+    //#endregion Employee Group
+
+    //#region Employee
+    function Emp_Load() {
+        AjaxLoad(url = "/Employee/EmployeeList/?handler=LoadataEmployee"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    dataEmployee = JSON.parse(result);
+                    EmpGroup_Load();
+
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#loaderList").hide();
+            }
+        );
+    }
+    function Emp_ViewDetail(idDetail, all) {
+        var data = dataEmployee;
+        let idState = Number($('#StateID').dropdown('get value'));
+        if (dataEmployee != undefined) {
+            if (all == 0) {
+                data = dataEmployee.filter(word => word["Group_ID"] == idDetail);
+            }
+            Emp_RenderBlock
+            switch (idState) {
+                case 1: data = data.filter(word => word["State"] == 1);
+                    break;
+                case 0: data = data.filter(word => word["State"] == 0)
+                    break;
+            }
+
+            ELDataEmpFill = data;
+            $("#dtContentEmpListBody").empty();
+
+            Emp_RenderBlock(data, "dtContentEmpListBody");
+
+        }
+    }
+    function Emp_StateView() {
+        if (CurrentGrEmployee == 0) Emp_ViewDetail(CurrentGrEmployee, 1);
+        else Emp_ViewDetail(CurrentGrEmployee, 0);
+
+    }
+    function Emp_RenderBlock(data,id){
+        $(id).html('');
+        fnRenderBlock(data, id
+            , blocknum = Math.ceil(data.length/3)
+            , fnrender = Emp_Render
+            , fnsuccess = function (e) { }
+            , fnbegin = function (e) { }
+        )
+            
+        Count_Up("totalEmployee", data.length);        
+    }
+    async function Emp_Render (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = Emp_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                        
+                    }                    
+                }
+                ToolPopper();
+                Emp_EventRow();
+                shtable.Refresh();
+            }
+            resolve();
+        })
+    }
+    function Emp_RenderEach(item){
+        return result = '<tr id="rowEmployee_' + item.ID + '"  class="' + (item.State == 0 ? "bg-gray-300" : "") + ' rowEmployee  vt-number" data-id="' + item.ID + '"  data-img="' + (item.Avatar != '' ? item.Avatar : Master_Default_Pic) + '" data-group="' + item.GroupName + '" data-name="' + item.Name + '">'
+            + '<td class="d-none">' + item.ID + '</td>'
+            + '<td class="vt-number-order"></td>'
+            + '<td class="text-center">'
+            + '<div class="avatar avatar-md position-relative overflow-hidden">'
+            + '<img class="hoverpopup w-100 border-radius-lg h-100 border border-1 border-gray" src="'
+            + (item.Avatar != '' ? item.Avatar : Master_Default_Pic)
+            + '" alt="label-image" onerror="Master_OnLoad_Error_Image(this)"/>'
+            + '</div>'
+            + '</td>'
+            + '<td> <a id="grColumnEditEmployee" class="buttonEditClass" data-emp="' + item.ID + '"> ' + item.Emp_Num + '</a >'
+            + '<br>' + item.Name
+            + '<br>' + (item.Nick_Name != "" ? "["+ item.Nick_Name + "]" : '')
+            + '</td>'
+            + '<td data-name="contact">'
+            + '<div class="">'
+            + '<span class="mt-1 text-sm" >@Local["Số điện thoại"]: </span>'
+            + '<span class="text-dark ms-2 mt-1">' + item.Phone + '</span>'
+            + '</div>'
+            + '<div class=" ">'
+            + '<span class="mt-1 text-sm" >@Local["Giới tính"]: </span>'
+            + '<span class="text-dark ms-2 mt-1">' + item.Gender + '</span>'
+            + '</div>'
+            + '<div class="">'
+            + '<span class="mt-1 text-sm" >@Local["Ngày sinh"]: </span>'
+            + '<span class="text-dark ms-2 mt-1">' + item.Birthday + '</span>'
+            + '</div>'
+            + '<div class="">'
+            + '<span class="mt-1 text-sm" >@Local["Email"]: </span>'
+            + '<span class="text-dark ms-2 mt-1">' + item.Email + '</span>'
+            + '</div>'
+            + '</div>'
+            + '</td>'
+            + '<td>' + item.GroupName + '</td>'
+            + '<td data-name="iniDate" class="text-center">' + (!(item.Ini_Date).includes('1900') ? item.Ini_Date : '') + '</td>'
+            + '<td>' + ((Number(item.isAllBranch) == 0)
+                ? Fun_GetString_ByToken(DataBranch, item.Branch_ID)
+                : ('<span class="text-success fw-bold text-sm">@Local["Tất cả chi nhánh"]</span>')) + '</td>'
+            + ((item.State === 1)
+                ? ('<td><span class="text-success fw-bold text-sm">@Local["Đang làm việc"]</span></td>')
+                : ('<td><span class="text-dark"> @Local["Đã nghỉ việc"] </span></td>'))
+            + '<td data-name="createdby">' + Emp_RenderPerson(item.CreatedBy, item.Created) + '</td>'
+            + '<td data-name="modifiedby">' + Emp_RenderPerson(item.ModifiedBy, item.Modified) + '</td>'
+            + '<td>'
+            + Emp_Render_Button(item.ID, item.State) + '</td>'
+            + '</tr>'
+    }
+    function Emp_Render_Button(id, State){
+        let buttons = [];        
+        if (State == 1) { buttons.push('<button class="buttonGrid" data-tab="edit_tab_emp"><i data-EmpID="' + id + '"  class="buttonChangeState fas fa-power-off text-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Nghỉ việc"]"></i></button>') }
+        else { buttons.push('<button class="buttonGrid" data-tab="edit_tab_emp"><i data-EmpID="' + id + '"  class="buttonChangeState fas fa-power-off text-dark" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Kích hoạt"]"></i></button>') }
+        return Render_Button_Grid(buttons)
+    }
+    function Emp_EventRow () {
+        $('#employeeList').delegate('.rowEmployee', 'click', function (event) {
+            let id = Number($(this).attr("data-id"));
+            CurrentEmployee = id;
+            $(this).closest("tr").addClass("active").siblings().removeClass("active");
+        });
+        $('#employeeList .buttonChangeState').unbind('click').click(function (){
+            let ele = $(this).closest('tr')[0];
+            let id = $(ele).attr('data-id') ? Number($(ele).attr('data-id')) : 0;
+            let name = $(ele).attr('data-name') ? $(ele).attr('data-name') : '';
+            let src = $(ele).attr('data-img') ? $(ele).attr('data-img') : '';
+            let group = $(ele).attr('data-group') ? $(ele).attr('data-group') : '';
+            Emp_EditStateConfirm(id, name, group, src);
+        });
+    }
+    function Emp_EditStateConfirm(id,name,group,src){
+        let content = `
+        <div class="w-100">
+            <div class="row px-3 d-flex justify-content-center m-0">
+                <div class="col-12 col-lg-8 col-sm-9">
+                    <div class="row m-0 d-flex justify-content-center">
+                        <div class="col-auto ps-0">
+                            <img src="${src}" class="avatar"/>
+                        </div>
+                        <div class="col-auto flex-column text-start px-0">
+                            <p class="text-dark fw-bold text-sm mb-0">${name}</p>
+                            <p class="text-secondary text-sm mb-0">${group}</p>
+                        </div>
+                    </div>
+                    <p class="text-dark fw-bold text-sm mb-0 mt-4">@Local["Bạn có muốn tiếp tục"] ?</p>
+                </div>
+            </div>
+        </div>
+        `
+        const promise = notiConfirm(content);
+        promise.then(function () { Emp_EditStateConfirmExcute(id)}, function () { });
+    }
+    function Emp_EditStateConfirmExcute(id,type){
+        AjaxLoad(url = "/Employee/EmployeeList/?handler=EmpChangeState"
+            , data = { id: id }
+            , async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                if (r == "1") {
+                    notiSuccess();
+                    Emp_Load();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function Employee_Filter (text) {
+        let data = [];
+        return new Promise(resolve => {
+            let search = text;
+            if (ELDataEmpFill && ELDataEmpFill.length > 0) {
+                data = ELDataEmpFill.filter(function (item) {
+                    if (item["Emp_Num"].includes(search)
+                        || xoa_dau(item["Name"]).toLowerCase().includes(search)
+                        || xoa_dau(item["Phone"]).toLowerCase().includes(search)
+                        || xoa_dau(item["Emp_Num"]).toLowerCase().includes(search))
+                        return true;
+                    return false;
+                });
+            }
+            else {
+                data = dataEmployee.filter(function (item) {
+                    if (item["Emp_Num"].includes(search)
+                        || xoa_dau(item["Name"]).toLowerCase().includes(search)
+                        || xoa_dau(item["Phone"]).toLowerCase().includes(search)
+                        || xoa_dau(item["Emp_Num"]).toLowerCase().includes(search))
+                        return true;
+                    return false;
+                });
+            }
+
+
+            if (data != undefined && data != null) {
+                $("#dtContentEmpListBody").html("");
+                Emp_RenderBlock(data, "dtContentEmpListBody");
+                ColorSearchFilterText(search, "rowEmployee");
+                shtable.Refresh();
+            }
+            $("#EmpList_Filter .fa-search").show();
+            $("#EmpList_Filter .spinner-border").hide();
+            resolve(true);
+        });
+
+
+    }
+    //#endregion Employee
+
+    //#region EmpFunction
+    function Emp_AddNew () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/EmployeeDetail?GroupID=" + CurrentGrEmployee + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function Emp_Edit (CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/EmployeeDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+
+
+    function EmpGroup_AddNew () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/EmployeeGroupDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EmpGroup_Edit (CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/EmployeeGroupDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function Emp_RenderPerson(EmpID,Date){
+        let obj = dataEmployee.filter(word => {return word['ID'] == EmpID});
+        obj = obj[0] ? obj[0] : {};
+        let result = ` <div class="d-flex ms-2">
+            <div class="icon icon-shape icon-sm me-2 text-center ${(obj.Avatar && obj.Avatar != '') ? '' : 'd-none'}">
+                <img class="avatar avatar-xs mt-2" src="${obj.Avatar}" onerror="Master_OnLoad_Error_Image(this)" alt="label-image">
+            </div>
+            <div class="d-flex flex-column">
+                <h6 class="text-dark text-sm mb-0">${obj.Name ? obj.Name : ''}</h6>
+                <span class="text-xs">${(!(Date).includes('1900') ? ConvertDateTimeUTC_DMY(Date) : '')}</span>
+            </div>
+        </div>
+        `
+        return result;
+    }
+    //#endregion EmpFunction
+</script>
+<style>
+
+    .rowGroupEmployee .buttonEditClass:hover {
+        border-bottom: 1px solid var(--color--primary)
+    }
+</style>

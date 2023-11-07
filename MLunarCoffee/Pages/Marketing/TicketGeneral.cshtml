@@ -1,0 +1,161 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketGeneralModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="row pt-2">
+    <div class="col-12 col-lg-3 px-1">
+        <div class="position-sticky top-0 mt-3 z-index-3">
+            <div class="pb-0 px-3">
+                <input class="form-control" placeholder="Search..." id="filterSetting" type="text" />
+            </div>
+            <div class=" px-0 py-0 pt-1">
+                <div class="nav-wrapper">
+                    <ul class="nav nav-menus nav-pills nav-menus-vertical flex-column bg-white border-radius-lg p-3" id="listsetting_Marketing">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9 mt-lg-0 mt-0 mt-sm-4 px-1">
+        <div id="divMainPageTicket">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let ser_dtCurrentList;
+
+    $(document).ready(function () {
+        TicketGeneral_Initialize();
+        initNavs();
+        var filter = document.getElementById("filterSetting");
+        filter.addEventListener("keyup", function (event) {
+            $("#listsetting_Marketing").NavMobile('show')
+            FilterListSetting('listsetting_Marketing');
+        });
+    });
+
+    document.body.addEventListener('mousedown', function () {
+        if ($('#listsetting_Marketing').hasClass('active')) {
+            $('#listsetting_Marketing').removeClass('pop');
+        }
+    });
+
+    function EventLinkClick_DetailSetting() {
+        //$('#listsetting_Marketing').on('click', '.listitem_child', function () {
+        //    let link = $(this).attr("data-link");
+        //    $(this).addClass("active").siblings().removeClass("active");
+        //    $("#divMainPageTicket").load(link + "?ver=" + versionofWebApplication);
+        //});
+        $('#listsetting_Marketing .listitem_child').on('shown.bs.tab', function (e) {
+            let link = $(this).attr("data-tab");
+            $(this).addClass("active").siblings().removeClass("active");
+            $("#divMainPageTicket").load(link + "?ver=" + versionofWebApplication);
+        });
+    }
+    function TriggerFirstLink() {
+        //if ($('.listitem_child[data-link="' + ser_firstlink + '"]').get(0) != undefined)
+        //    $('.listitem_child[data-link="' + ser_firstlink + '"]').get(0).click();
+
+        $('#listsetting_Marketing a:first').tab('show');
+    }
+    function RenderSetting_List(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let dr = "";
+            let idGroup = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    //let item = data[i];
+
+                    let item = data[i];
+                    stringContent = stringContent + '<li class="nav-item setting_render" role="presentation"  id="' + item.ControlName + '">'
+                        + '<a data-tab="' + item.ListLink + '" class="text-sm item-menu listitem_child nav-link cursor-pointer" data-hover data-bs-toggle="tab">'
+                        + (Outlang[item.ListTextLangKey] != undefined ? Outlang[item.ListTextLangKey] : item.ListText)
+                        + '</a>'
+                        + '</li>'
+                        + '<hr class="horizontal dark my-0 opacity-2" data-link="' + item.ListLink + '">';
+
+
+
+                    //if (i == 0) ser_firstlink = item.ListLink;
+                    //if (Number(item.GroupID) != Number(idGroup)) {
+                    //    stringContent = stringContent
+                    //        + '<li class="nav-item pt-2">'
+                    //        + '<div class="show">'
+                    //        + '     <ul class="list-group flex-column">'
+                    //}
+                    //idGroup = item.GroupID;
+                    //dr = '<li class="list-group-item border-0 border-radius-md listitem_child setting_render text-dark cursor-pointer" data-link="' + item.ListLink + '" id="' + item.ControlName + '">'
+                    //    + '<span class="text-sm"> ' + Outlang[item.ListTextLangKey] + ' </span>'
+                    //    + '</li>'
+
+                    //stringContent = stringContent + dr;
+                    //if (i === data.length - 1 || idGroup !== data[i + 1].GroupID) {
+                    //    stringContent = stringContent
+                    //        + '</ul>'
+                    //        + '</div>'
+                    //        + '</li>';
+                    //}
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+        EventLinkClick_DetailSetting();
+    }
+
+    function TicketGeneral_Initialize() {
+        AjaxLoad(url = "/Marketing/TicketGeneral/?handler=Initialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data.length != 0) {
+                    ser_dtCurrentList = data;
+                    RenderSetting_List(ser_dtCurrentList, "listsetting_Marketing");
+                    TriggerFirstLink();
+                }
+            }
+        );
+
+    }
+
+    function FilterListSetting(id) {
+        let textsearch = $('#filterSetting').val().trim();
+        event.preventDefault();
+        if (textsearch == "") {
+            RenderSetting_List(ser_dtCurrentList, id);
+        }
+        else {
+            let search = xoa_dau(textsearch.toLowerCase());
+            if (search == "") {
+                RenderSetting_List(ser_dtCurrentList, id);
+            }
+            else {
+                let data = ser_dtCurrentList.filter(word => {
+                    return (xoa_dau(word["ListText"].toLowerCase()).includes(search));
+                });
+                RenderSetting_List(data, id);
+                ColorSearchFilterText(search, "setting_render");
+            }
+
+        }
+    }
+
+    function Hover_Edit(id) {
+        $("#" + id + " img,#" + id + " span").popup({
+            transition: "scale up",
+            position: "top right"
+        });
+    }
+</script>
+
+<script>js_require('/assests/dist/ColorPicker/spectrum.js');</script>
+<link href="/assests/dist/ColorPicker/spectrum.css" rel="stylesheet" />
+

@@ -1,0 +1,399 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.TreatmentStageDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 text-capitalize">@Local["Bước điều trị"]</h6>
+                                <span class="text-sm mb-0">@Local["Chi tiết bước điều trị"]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card-body p-3 pt-2">
+                        <div class="row px-1 form3" id="formTreatmentStage">
+                            <div class="field col-12">
+                                <label>@Local["Tên bước điều trị"]</label>
+                                <input id="TreatmentStageName" name="name" type="text" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="px-1" id="TSD_ConsumableStageDiv">
+                            <div class="m-0 mt-3 mobile-responsive overflow-auto" style="max-height: calc(100vh - 350px)">
+                                <div id="TSD_consWaiting" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <label>@Local["Vật tư tiêu hao"]</label>
+                                <table class="table vt-table mb-0" id="TSD_dtContentCons">
+                                    <thead>
+                                        <tr>
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">@Local["#"]</th>
+                                            <th>@Local["Vật tư"]</th>
+                                            <th style="width: 240px;">@Local["Đơn vị"]</th>
+                                            <th style="width: 120px; min-width: 120px;">@Local["Số lượng tối thiểu"]</th>
+                                            <th style="width: 120px; min-width: 120px;">@Local["Số lượng tối đa"]</th>
+                                            <th style="width: 140px;">@Local["Ghi chú"]</th>
+                                            <th style="width: 20px;">@Local["Xóa"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="TSD_dtContentConsBody">
+                                    </tbody>
+                                </table>
+
+                            </div>
+                            <button class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return TSD_AddRowCons();"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="text-danger text-gadient text-sm font-weight-bold" id="textShowMessage"></div>
+                <div class="action_Save-Content mt-2">
+                    <button class="btn btn-secondary" form="formTreatmentStage" onclick=" event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                    <button id="TreatmentStagebtnDetail" form="formTreatmentStage" type="button" class="btn bg-gradient-primary _tab_control_ setting_projectclosure" onclick="event.preventDefault();TreatmentStageExcuteDetail()">@Local["Lưu"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_SourceDetailID;
+    var sys_ExportConsumableAllowStage = "@Model.sys_ExportConsumableAllowStage";
+    var TSD_dataSelectedProduct = {};
+    $(document).ready(function() {
+        ser_SourceDetailID = @Model._DataDetailID;
+        if (sys_ExportConsumableAllowStage == 1) $('#TSD_ConsumableStageDiv').show()
+        else $('#TSD_ConsumableStageDiv').hide()
+        if (ser_SourceDetailID != "0") TreatmentStage_LoadDataUpdate();
+    });
+    //#region // LOAD DETAIL
+    function TreatmentStage_LoadDataUpdate() {
+        AjaxLoad(url = "/Setting/TreatmentStageDetail/?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, asyns = true, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let datas = JSON.parse(result);
+                    DataTreatmentStageDetail = datas.Table;
+                    $('#TreatmentStageName').val((DataTreatmentStageDetail[0].Name));
+                    if (sys_ExportConsumableAllowStage == 1) {
+                        let dataConsumable = datas.Table1;
+                        TSD_LoadConsumable(dataConsumable);
+                    }
+                }
+            }
+            ,before = function () {
+                $("#TSD_consWaiting").show();
+            },
+            complete = function (e) {
+                $("#TSD_consWaiting").hide();
+            }
+        )
+
+    }
+
+    //#endregion
+    //#region // EXECUTE
+    function TreatmentStageExcuteDetail() {
+        $('#textShowMessage').html('');
+        var data = new Object();
+        data.Name = $('#TreatmentStageName').val() ? $('#TreatmentStageName').val() : "";
+        TSD_checkValidCons();
+        if ($('#textShowMessage').html().trim() == "") {
+            $('#formTreatmentStage').form('validate form');
+            if ($('#formTreatmentStage').form('is valid')) {
+                let consumables = [];
+                if (sys_ExportConsumableAllowStage == 1) {
+                    for ([key, value] of Object.entries(TSD_dataSelectedProduct)) {
+                        consumables.push(value);
+                    }
+                }
+                AjaxLoad(url = "/Setting/TreatmentStageDetail/?handler=ExcuteData"
+                    , data = { data: JSON.stringify(data), dataCons: JSON.stringify(consumables), CurrentID: ser_SourceDetailID }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            TreatStageLoadList();
+                            CloseModal();
+                        } else if (result == "-1") {
+                            $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+            }
+        }
+    }
+    //#endregion
+
+    //#region // Consumables
+    async function TSD_LoadConsumable(dataCons) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (dataCons && dataCons.length != 0) {
+                    for (let i = 0; i < dataCons.length; i++) {
+                        let element = {};
+                        element.productID = dataCons[i].productID;
+                        element.unitID = dataCons[i].unitID;
+                        element.minNumber = dataCons[i].minNumber?.toString();
+                        element.maxNumber = dataCons[i].maxNumber?.toString();
+                        element.note = dataCons[i].note;
+                        TSD_dataSelectedProduct[dataCons[i].id] = element;
+                        TSD_productRenderEach(dataCons[i].id, element, 'TSD_dtContentConsBody');
+                    }
+                }
+            }, 300)
+            resolve();
+        })
+    }
+
+    function TSD_AddRowCons() {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.productID = 0;
+        element.unitID = 0;
+        element.minNumber = 0;
+        element.maxNumber = 0;
+        element.note = '';
+        TSD_dataSelectedProduct[id] = element;
+        TSD_productRenderEach(id, element, 'TSD_dtContentConsBody');
+        return id;
+    }
+
+    function TSD_EventEleCons(key) {
+        $('#TSD_dtContentCons #TSD_product_'+key+'.ui.dropdown,#TSD_dtContentCons #TSD_unit_' + key + '.ui.dropdown').dropdown({
+            onShow: function () {
+                let ui_drop = $(this);
+                Dropdown_Set_Position(ui_drop);
+            },
+            onHide: function () {
+                let ui_drop = $(this);
+                Dropdown_Remove_Position(ui_drop);
+            },
+            allowCategorySelection: true,
+            forceSelection: false
+        });
+
+        $("#TSD_minNum_" + key).change(function() {
+            let id = this.id.replace("TSD_minNum_", "")
+            TSD_dataSelectedProduct[id].minNumber = this.value;
+        });
+        $("#TSD_maxNum_" + key).change(function() {
+            if (!$("#" + this.id).is(":disabled")) {
+                let id = this.id.replace("TSD_maxNum_", "")
+                TSD_dataSelectedProduct[id].maxNumber = this.value;
+            }
+        });
+        $("#TSD_consNote_" + key).change(function () {
+            let id = this.id.replace("TSD_consNote_", "")
+            TSD_dataSelectedProduct[id].note = this.value;
+        });
+        $(".TSD_clsProductItem").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("TSD_product_", "")
+            let productid = Number($('#' + idcom).dropdown('get value')) ? Number($('#' + idcom).dropdown('get value')) : 0;
+            TSD_dataSelectedProduct[id].productID = productid;
+            TSD_renderUnitChange(productid, id);
+        });
+
+        $('.TSD_clsProductItem').unbind('keyup').keyup(function(event) {
+            let idcom = this.id
+            let id = idcom.replace("TSD_product_", "")
+            TSD_onKeyupProduct(id);
+        });
+        $(".TSD_clsUnitItem").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("TSD_unit_", "")
+            TSD_dataSelectedProduct[id].unitID = Number($('#' + idcom).dropdown('get value')) ? Number($('#' + idcom).dropdown('get value')) : 0;
+        });
+
+        $('#TSD_dtContentConsBody').on('click', '.buttonDeleteClass', function (event) {
+            let timespan = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            delete TSD_dataSelectedProduct[timespan];
+            $('#row_' + timespan).remove();
+            event.stopPropagation();
+        });
+    }
+
+    function TSD_renderUnitChange(id, random) {
+        $('#TSD_unit_' + random).dropdown('clear');
+        $('#TSD_unit_' + random).dropdown("refresh");
+        let _data = [];
+        let pro = TSL_dataProduct.filter(word => word["ID"] == id);
+        if (pro && pro.length > 0) {
+            _data.push({ "ID": pro[0].UnitID, "Name": pro[0].UnitName });
+            let unit = TSL_dataProductUnit.filter(word => word["ProductID"] == id);
+            if (unit != undefined && unit.length > 0) {
+                for (let i = 0; i < unit.length; i++) {
+                    _data.push({ "ID": unit[i].UnitChange, "Name": unit[i].UnitChangeName });
+                }
+            }
+            Load_Combo(_data, "cbbTSD_unit_" + random, true);
+            $('#TSD_unit_' + random).dropdown("clear");
+            $('#TSD_unit_' + random).dropdown("refresh");
+            $('#TSD_unit_' + random).dropdown("set selected", Number(_data[0].ID));
+        }
+
+    }
+    function TSD_fillDataCons(data, key) {
+        if (data[key] != undefined) {
+            let value = data[key];
+            $("#TSD_product_" + key).dropdown("refresh");
+            $("#TSD_product_" + key).dropdown("set selected", value.productID);
+            if (Number(value.productID) != 0) {
+                TSD_renderUnitChange(value.productID, key);
+                $("#TSD_unit_" + key).dropdown("refresh");
+                $("#TSD_unit_" + key).dropdown("set selected", value.unitID);
+            }
+
+            $('#TSD_consNote_' + key).val(value.note);
+            $('#TSD_minNum_' + key).val(value.minNumber);
+            $('#TSD_maxNum_' + key).val(value.maxNumber);
+        }
+    }
+
+
+    async function TSD_productRenderEach(key, value, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let tr =
+                        '<td style="display:none !important;">' + key + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td>' + TSD_addCellProduct(key) + '</td>'
+                        + '<td>' + TSD_addCellUnit(key) + '</td>'
+                        + '<td>' + TSD_addCellMinNum(key, value.minNumber) + '</td>'
+                        + '<td>' + TSD_addCellMaxNum(key, value.maxNumber) + '</td>'
+                        + '<td>' + TSD_addCellNote(key, value.note) + '</td>'
+                        + '<td style="width: 50px;">'
+                        + '<button class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'
+                        + '</td>'
+                    tr = '<tr class="rowVTTH vt-number"  id=row_' + key + '>' + tr + '</tr>';
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                TSD_fillDataCons(TSD_dataSelectedProduct, key);
+                TSD_EventEleCons(key);
+            }, 100)
+        })
+    }
+
+    function TSD_addCellUnit(randomNumber) {
+        let resulf = '<div class="ui fluid search selection dropdown TSD_clsUnitItem  form-control" id="TSD_unit_' + randomNumber
+            + '"><input type="hidden"/><i class="dropdown icon"></i>' +
+            '<input name="TSD_clsUnitItemSearch" class="search" autocomplete="off" tabindex="0" /><div class="default text">@Local["Đơn vị"]</div><div id="cbbTSD_unit_' + randomNumber + '" class="menu" tabindex="-1">';
+        resulf = resulf + '</div>';
+        return resulf;
+    }
+    function TSD_addCellProduct(randomNumber) {
+        let resulf = '<div class="ui fluid search selection dropdown TSD_clsProductItem form-control"  id="TSD_product_' + randomNumber
+            + '"><input type="hidden"/><i class="dropdown icon"></i>' +
+            '<input id="TSD_clsProductItemSearch_' + randomNumber + '" class="search" autocomplete="off" tabindex="0" /><div class="default text">@Local["Sản phẩm"]</div><div id="cbbTSD_product_' + randomNumber + '" class="menu" tabindex="-1">';
+        for (i = 0; i < TSL_dataProduct.length; i++) {
+            resulf = resulf + '<div class="item" data-value=' + TSL_dataProduct[i].ID + '>' + TSL_dataProduct[i].Name + '</div>'
+        }
+        resulf = resulf + '</div>';
+        return resulf;
+    }
+    function TSD_addCellMinNum(randomNumber, value) {
+        let resulf = '<input name="numberFloat" class="minNumberVTTH form-control" id="TSD_minNum_' + randomNumber + '" value="' + value + '" />';
+        resulf = resulf;
+        return resulf;
+    }
+    function TSD_addCellMaxNum(randomNumber, value) {
+        let resulf = '<input name="numberFloat" class="maxNumberVTTH form-control" id="TSD_maxNum_' + randomNumber + '" value="' + value + '" />';
+        resulf = resulf;
+        return resulf;
+    }
+    function TSD_addCellNote(randomNumber, value) {
+        let resulf = '<input class="noteVTTH form-control" id="TSD_consNote_' + randomNumber + '" value="' + value + '" type="text"/>';
+        resulf = resulf;
+        return resulf;
+    }
+    function TSD_checkValidCons() {
+
+        let iscons_ = 0;
+        let ismatch = 0;
+        let productcheck = '';
+        for ([key, value] of Object.entries(TSD_dataSelectedProduct)) {
+
+            if (Number(value.productID) == 0) {
+                $('#TSD_product_' + key).css('background-color', 'rgb(255 216 216)'); iscons_ = 1;
+            }
+            else $('#TSD_product_' + key).css('background-color', 'white');
+
+            if (Number(value.unitID) == 0) {
+                $('#TSD_unit_' + key).css('background-color', 'rgb(255 216 216)'); iscons_ = 1;
+            }
+            else $('#TSD_unit_' + key).css('background-color', 'white');
+            if (!$.isNumeric(value.minNumber) || Number(value.minNumber) <= 0
+                || Number(value.minNumber) > vtth_range_max
+                || Number(value.minNumber) < vtth_range_min) {
+                $('#TSD_minNum_' + key).css('background-color', 'rgb(255 216 216)'); iscons_ = 1;
+            }
+            else $('#TSD_minNum_' + key).css('background-color', 'white');
+
+            if (!$.isNumeric(value.maxNumber) || Number(value.maxNumber) <= 0
+                || Number(value.maxNumber) > vtth_range_max
+                || Number(value.maxNumber) < vtth_range_min) {
+                $('#TSD_maxNum_' + key).css('background-color', 'rgb(255 216 216)'); iscons_ = 1;
+            }
+            else $('#TSD_maxNum_' + key).css('background-color', 'white');
+
+            if (Number(value.minNumber) > 0 && Number(value.maxNumber) > 0
+                && $.isNumeric(value.minNumber) && $.isNumeric(value.maxNumber)
+                && Number(value.minNumber) <= vtth_range_max
+                && Number(value.minNumber) >= vtth_range_min
+                && Number(value.maxNumber) <= vtth_range_max
+                && Number(value.maxNumber) >= vtth_range_min
+            ) {
+                if (Number(value.minNumber) > Number(value.maxNumber)) {
+                    $('#TSD_minNum_' + key).css('background-color', 'rgb(255 216 216)');
+                    $('#TSD_maxNum_' + key).css('background-color', 'rgb(255 216 216)');
+                    iscons_ = 1;
+                } else {
+                    $('#TSD_maxNum_' + key).css('background-color', 'white');
+                    $('#TSD_minNum_' + key).css('background-color', 'white');
+                }
+            }
+
+
+
+            if (productcheck.includes('[' + value.productID + ']')) {
+                ismatch = 1;
+                $('#row_' + key).css('background-color', 'rgb(255 216 216)');
+            }
+            else {
+                $('#row_' + key).css('background-color', 'white');
+            }
+            productcheck = productcheck + '[' + value.productID + ']'
+        }
+        if (iscons_ == 1 || ismatch == 1) $('#textShowMessage').html('@Local["Kiểm tra dữ liệu vật tư tiêu hao"]');
+    }
+
+    function TSD_onKeyupProduct(id) {
+        let search = xoa_dau($('#TSD_clsProductItemSearch_' + id).val().toLowerCase());
+        let data = TSL_dataProduct.filter(word => {
+            return ((xoa_dau(word["Name"]).toLowerCase()).includes(search));
+        });
+        if (data != undefined && data != null && data.length != 0)
+            Load_Combo(data, "cbbTSD_product_" + id, true);
+    }
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+
+

@@ -1,0 +1,429 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Anamnesis.CustomerAnamnesisDetailModel
+@{
+    Layout=null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid px-3">
+    <form class="ui form segment form1 " id="form1">        
+        <div class="my-2">
+            <div class="ui fluid search selection dropdown form-control col-w-200" id="Annam_FillForm" onchange="event.preventDefault(); return Annam_ChangeForm();">
+                <input type="hidden" />
+                <input class="search" autocomplete="off" tabindex="0" />
+                <div class="default text">eg. @Local["Form"]</div>
+                <div id="Annam_FillFormCbb" class="menu" tabindex="-1">
+                </div>
+            </div>
+        </div>        
+        <div id="divRegimenListContent">
+
+        </div>
+        <div class="field my-4  action_Save">
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" form="formcustomer" onclick="ClosePatientHistoryDetail()">@Local["Đóng"]</button>
+                <button id="DeleteButton" class="btn btn-danger" form="formcustomer" onclick="DeleteAnamnesis(ser_PatientHistoryID)">@Local["Xóa"]</button>
+                <button id="PrintButton" class="btn bg-gradient-info" form="formcustomer" onclick="PatientHis_Print_Confirm(ser_PatientHistoryID)">@Local["In"]</button>
+                <button id="CAD_SaveButton" form="formcustomer" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteDataPatienHistory()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script type="text/javascript">
+    let RegimenQuestionField = [];
+    let PatientHis_StogeSign = 0;
+    let PatientHis_StogeSignName = '';
+    var RegimenList = {};
+    var _dataTemplate = [];
+    var Ser_TemplateID = 0;
+    $(document).ready(function () {
+        Load_Initiliaze_Regimen();
+    });
+    function Anamnesis_Detail_LoadOutside () {
+        RegimenList = {};
+        Load_Initiliaze_Regimen();
+    }
+    //Load combo
+    function Load_Initiliaze_Regimen () {
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisDetail/?handler=LoadInitialize"
+            , data = { 'CurrentID': ser_PatientHistoryID, 'CustomerID': ser_MainCustomerID }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    RegimenQuestionField = data.QuestionField;
+                    let _AnamnesisDetail = data.AnamnesisDetail;
+                    _dataTemplate = data.Template;
+                    PatientHis_StogeSign = _dataTemplate[0].SignCode;
+                    PatientHis_StogeSignName = _dataTemplate[0].SignName;
+                    Load_Combo(_dataTemplate, "Annam_FillFormCbb", true);
+                    $("#Annam_FillForm").dropdown("clear");                    
+                    $("#Annam_FillForm").removeClass('d-none');
+                    if (ser_PatientHistoryID == "0") {
+                        $("#SaveButton").show();
+                        $("#DeleteButton").hide();
+                        //if (_dataTemplate != undefined && _dataTemplate.length > 0) {
+                        //    RegimenList = JSON.parse(_dataTemplate[0].Form);                            
+                        //}                        
+                        $("#Annam_FillForm").dropdown("refresh");
+                        $("#Annam_FillForm").dropdown("set selected", _dataTemplate[0].ID);                        
+                    }
+                    else {
+                        LoadDataUpdatePatientHistory(_AnamnesisDetail);
+                        $("#Annam_FillForm").addClass('d-none');                        
+                    }                    
+                } else {
+                    notiError_SW();
+                }
+            }
+
+        );
+    }    
+    function Annam_ChangeForm(){
+        Ser_TemplateID = $("#Annam_FillForm").dropdown('get value') ? $("#Annam_FillForm").dropdown('get value') : 0;
+        let data = _dataTemplate.filter(word =>{
+            return word["ID"] == Ser_TemplateID
+        })
+        if(data && data.length != 0){
+            RegimenList = JSON.parse(data[0].Form);
+            RegimentLoadCommandPrint(data[0].CommandID);        
+        }
+        
+    }
+    // load update
+    function LoadDataUpdatePatientHistory (DataUpdate) {
+        if (ser_PatientHistoryID != "0" && DataUpdate && DataUpdate.length > 0) {
+            RegimenList = JSON.parse(DataUpdate[0].Data);
+            Ser_TemplateID = DataUpdate[0].TemplateID;
+            if (Array.isArray(RegimenList) == true) RenderRegimenList_Old(RegimenList, "divRegimenListContent");
+            else {                
+                RegimentLoadCommandPrint(DataUpdate[0].CommandID);
+            }
+            if (Number(DataUpdate[0].EditButton) == 1) $("#SaveButton").show();
+            else $("#SaveButton").hide();
+            if (Number(DataUpdate[0].DeleteButton)) $("#DeleteButton").show();
+            else $("#DeleteButton").hide();
+            
+
+        }       
+    }
+
+
+    async function RenderRegimenList(data, datafield, dtTables, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);                
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id);
+                }
+                if (dtTables != undefined && Object.keys(dtTables).length > 0) {
+                    fn_FillTables(dtTables, item = datafield[0], id = id);
+                }                
+                Event_Checked_Anamnesis();
+            }
+        })
+    }
+
+    function Event_Checked_Anamnesis () {
+        $("#divRegimenListContent input[type='radio']").change(function (event) {
+            let id = $(this).attr("id");
+            let name = $(this).attr("name");
+            let _obj = $('#divRegimenListContent input[type="radio"][name="' + name + '"]');
+            if (_obj != undefined) {
+                _obj.each(function () {
+                    if ($(this).attr("id") == id) {
+                        fn_FormUpdate($(this).attr("id"), 'on', RegimenList);
+                    } else fn_FormUpdate($(this).attr("id"), '', RegimenList);
+                });
+            }
+        });
+        $("#divRegimenListContent input[type='checkbox']").change(function (event) {
+            let answer = this.checked;
+            let id = $(this).attr("id");
+            fn_FormUpdate(id, answer, RegimenList);
+        });
+        $("#divRegimenListContent input[type!='checkbox'][type!='radio'],#divRegimenListContent textarea").change(function () {
+            let id = $(this).attr("id");
+            let answer = $(this).val();
+            fn_FormUpdate(id, answer, RegimenList);
+        })
+
+        $('#divRegimenListContent textarea').each(function () {
+            this.setAttribute('style', 'height:' + this.scrollHeight + 'px;overflow-y:hidden;resize:none;' + this.getAttribute('style'));
+        }).on('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+
+    function ExcuteDataPatienHistory () {        
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisDetail/?handler=ExcuteDataPatienHis"
+            , data = {
+                'data': JSON.stringify(RegimenList)
+                , 'CustomerID': ser_MainCustomerID
+                , 'CurrentID': ser_PatientHistoryID
+                , 'TemplateID': Ser_TemplateID
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+
+                    if (typeof CloseAnamnesisDetail !== 'undefined' && $.isFunction(CloseAnamnesisDetail)) {
+                        CloseAnamnesisDetail();
+                    }
+                    if (typeof LoadPatientHistoryAjax !== 'undefined' && $.isFunction(LoadPatientHistoryAjax)) {
+                        LoadPatientHistoryAjax();
+                    }
+                    if (typeof GeneralInfo_AnamLoad !== 'undefined' && $.isFunction(GeneralInfo_AnamLoad)) {
+                        GeneralInfo_AnamLoad();
+                    }
+                    if (typeof GeneralInfo_LoadAnamnesis !== 'undefined' && $.isFunction(GeneralInfo_LoadAnamnesis)) {
+                        GeneralInfo_LoadAnamnesis();
+                    }
+                    if (typeof MainCust_AcceptAnam !== 'undefined' && $.isFunction(MainCust_AcceptAnam)) {
+                        MainCust_AcceptAnam(ser_MainCustomerID);
+                    }
+                    if (typeof LoadAnamnesisAjax !== 'undefined' && $.isFunction(LoadAnamnesisAjax)) {
+                        LoadAnamnesisAjax();
+                    }
+                    syslog_cutpre(ser_PatientHistoryID == 0 ? 'i' : 'u', ser_MainCustomerID, '');
+                    notiSuccess();
+                }
+            }
+            ,sender = $("#CAD_SaveButton")
+        );
+
+
+        return false
+    }
+
+    function DeleteAnamnesis (id) {
+        if (id != "0") {
+            const promise = notiConfirm();
+            promise.then(function () {ExecuteDeleteStatus(id);}, function () { });
+        }
+    }
+    function ExecuteDeleteStatus (id) {
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisList/?handler=DeleteItem"
+            , data = {'id': id}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    ClosePatientHistoryDetail();
+
+                    if (typeof LoadAnamnesisAjax !== 'undefined' && $.isFunction(LoadAnamnesisAjax)) {
+                        LoadAnamnesisAjax();
+                    }
+                    if (typeof GeneralInfo_AnamLoad !== 'undefined' && $.isFunction(GeneralInfo_AnamLoad)) {
+                        GeneralInfo_AnamLoad();
+                    }
+                    if (typeof GeneralInfo_LoadAnamnesis !== 'undefined' && $.isFunction(GeneralInfo_LoadAnamnesis)) {
+                        GeneralInfo_LoadAnamnesis();
+                    }
+                    syslog_cutpre('d', ser_MainCustomerID, '');
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function ClosePatientHistoryDetail () {
+        if ($("#divAnamnesisContentMain").length > 0) {
+            $("#divAnamnesisContentMain").html('');
+        }
+        if (typeof CloseAnamnesisDetail !== 'undefined' && $.isFunction(CloseAnamnesisDetail)) {
+            CloseAnamnesisDetail();
+        }
+        if (typeof Anamnesis_First_Click !== 'undefined' && $.isFunction(Anamnesis_First_Click)) {
+            Anamnesis_First_Click();
+        }
+        if (typeof GeneralInfo_LoadAnamnesis !== 'undefined' && $.isFunction(GeneralInfo_LoadAnamnesis)) {
+            GeneralInfo_LoadAnamnesis();
+        }
+
+    }
+
+    function RenderRegimenList_Old (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let tr = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<div class="d-flex">'
+                        + '<div class="col-auto my-auto w-80">'
+                        + '<div>'
+                        + '<label class="w-100 pb-0 text-sm text-dark text-normal">' + item.text + '</label>'
+                        + '</div>'
+                        + '<div class="field answeritem' + item.id + ' mb-3">'
+                        + '<input type="text" name="answerRegimen" class="answerRegimen form-control ms-2" id="answer' + item.id + '">'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="ms-auto align-items-center d-flex justify-content-center">'
+                        + '<div class="row d-flex mx-3">'
+                        + '<div class="w-auto form-check">'
+                        + '<input type="radio" class="radiobtnchoose_yes form-check-input pb-0" id="YES_' + item.id + '" data-id="' + item.id + '" name="' + item.id + '" ' + ((item.status == 1) ? "checked" : "") + ' value="small">'
+                        + '<label for="YES_' + item.id + '"></label>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="row d-flex mx-3">'
+                        + '<div class="w-auto form-check">'
+                        + '<input type="radio" class="radiobtnchoose_no form-check-input pb-0" id="NO_' + item.id + '" data-id="' + item.id + '" name="' + item.id + '" ' + ((item.status == 0) ? "checked" : "") + ' value="small">'
+                        + '<label for="NO_' + item.id + '"></label>'
+                        + '</div>'
+                        + '</div></div>'
+                        + '</div>'
+                        + '</div>'
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            Event_Checked_Anamnesis_Old();
+            reloadListOnchangeEventRegimemt_Old()
+        }
+    }    
+    function Event_Checked_Anamnesis_Old () {
+        $(".radiobtnchoose_no").change(function (event) {
+            var id = $(this).attr("data-id");
+            var ischeck = this.checked;
+            var countcheck = 0;
+            for (var i = 0; i < RegimenList.length; i++) {
+                if (RegimenList[i].id == id) {
+                    if (ischeck == true) {
+                        RegimenList[i].status = 0;
+                    }
+                }
+                if (RegimenList[i].status == 0) {
+                    countcheck++;
+                }
+            }
+        });
+
+        $(".radiobtnchoose_yes").change(function (event) {
+            var id = $(this).attr("data-id");
+            var ischeck = this.checked;
+            var countcheck = 0;
+            for (var i = 0; i < RegimenList.length; i++) {
+                if (RegimenList[i].id == id) {
+                    if (ischeck == true) {
+                        RegimenList[i].status = 1;
+                    }
+                }
+                if (RegimenList[i].status == 1) {
+                    countcheck++;
+                }
+            }
+        });
+
+        $(".answerRegimen").change(function () {
+            let id = $(this).attr("id");
+            let AnswerID = Number(id.replace(/answer/g, ""));
+            let answer = $(this).val();
+            for (var i = 0; i < RegimenList.length; i++) {
+                if (RegimenList[i].id == AnswerID) {
+                    RegimenList[i].answer = answer;
+                    break;
+                }
+            }
+        })
+    }
+    function reloadListOnchangeEventRegimemt_Old () {
+        if (RegimenList && RegimenList.length > 0) {
+            for (i = 0; i < RegimenList.length; i++) {
+                $('#answer' + RegimenList[i].id).val(RegimenList[i].answer);
+            }
+        }
+    }
+    //#region print
+    function RegimentLoadCommandPrint(cmdID) {
+        cmdID = cmdID != 0 ? cmdID : 12;
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisDetail/?handler=LoadCommand"
+            , data = { 'commandid': cmdID, 'id': ser_MainCustomerID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let datafield, dtTables = {};
+                if (result != "") {
+                    if (result == "{}") RenderRegimenList(RegimenList, datafield, dtTables, "divRegimenListContent");
+                    else {
+
+                        let data = JSON.parse(result);
+                        for (const [key, value] of Object.entries(data)) {
+                            if (key == 'Table') datafield = value;
+                            else {
+                                dtTables[key] = value;
+                            }
+                        }
+                        if (datafield != undefined && datafield.length != 0) {
+                            RenderRegimenList(RegimenList, datafield, dtTables, "divRegimenListContent");
+                        }
+                    }                    
+                }
+            }
+        );
+    }
+    function PatientHis_Print_SaveSign(StogeSign) {
+        AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisDetail/?handler=SaveStogeSign"
+            , data = { "CustomerID": ser_MainCustomerID, "StogeSign": StogeSign }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) { }
+        );
+    }
+    function PatientHis_Print_Confirm() {
+        if (typeof ser_MainCustomerID != 'undefined' && ser_MainCustomerID != 0 && PatientHis_StogeSign != 0) {
+            AjaxLoad(url = "/Customer/Anamnesis/CustomerAnamnesisDetail/?handler=CheckStogeSign"
+                , data = {
+                    "CustomerID": ser_MainCustomerID
+                    , "StogeRule": PatientHis_StogeSign
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != '0') {
+                        const promise = notiConfirm("@Local["Xác nhận"] @Local["In"]: " + PatientHis_StogeSignName);
+                        promise.then(function () {
+                            PatientHis_Print();
+                            PatientHis_Print_SaveSign(PatientHis_StogeSign);
+                        }, function () { });
+
+                    } else {
+                        PatientHis_Print();
+                    }
+                }
+            );
+        } else {
+            PatientHis_Print();
+        }
+    }    
+    function PatientHis_Print(){
+        fn_Print(printedid = "divRegimenListContent"
+            , beforefun = function () {
+                $("#divRegimenListContent div").parent().find('.vtprint-hiderow-other-printarea').removeClass("active");
+            }
+            , afterfun = function () {
+                $("#divRegimenListContent div").parent().find('.vtprint-hiderow-other-printarea').addClass("active");
+            }
+        );
+    }
+    //#endregion print
+
+
+    </script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+
+

@@ -1,0 +1,406 @@
+﻿@page
+@model SourceMain.Pages.Report.Employee.ReportDoctorTreatmentModel
+@{
+    Layout = null;
+}
+<div class="row px-1 form3" id="dataDetail">
+    <div class="col-12 col-md-5 col-xl-4 px-1 mt-2" id="MasterDiv">
+        <div>
+            <div class="card-header p-3 pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-70 col-auto my-auto">
+                        <p data-languagedyn="doctor_treatment_list" class="text-md text-dark font-weight-bold mb-1">
+                            Bác Sĩ Điều Trị
+                        </p>
+                        <p class="text-sm mb-0">Some text of detail sub</p>
+                        <p id="error_max_dates_show" style="display:none;" class="text-sm mb-0">
+                            <span data-languagestatic="user_date_max_lock">Số ngày được xem tối đa</span>
+                            <span class="ps-2" id="report_max_dates_show"></span>
+                        </p>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                           data-bs-toggle="tooltip" data-bs-placement="top"
+                           data-bs-original-title="Refresh" onclick="LoadData_Report()"></i>
+
+                        <i data-tab="export_excel" class="_tab_control_ vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                           data-bs-toggle="tooltip" data-bs-placement="top"
+                           data-bs-original-title="Excel" onclick="exportData_RevenueMaster()"></i>
+                    </div>
+                </div>
+
+            </div>
+            <div class="card-body p-3 pt-0">
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+
+                    </div>
+
+                    <table class="table vt-table mb-0" id="dtContentReportMaster">
+                        <thead>
+                            <tr>
+                                <th data-languagestatic="no">#</th>
+                                <th data-languagestatic="name">Tên</th>
+                            </tr>
+                        </thead>
+                        <tbody data-languagedyn="grid" id="dtContentReportMasterBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+    <div class="field col-12 col-md-7 col-xl-8 px-1 mt-2" id="Detail_Div">
+        <div class="card">
+            <div class="card-header p-3 pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-70 col-auto my-auto">
+                        <p data-languagedyn="treatment_detail" class="text-md text-dark font-weight-bold mb-1">
+                            Chi Tiết Điều Trị
+                        </p>
+                        <p class="text-sm mb-0">Some text of detail sub</p>
+
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+
+                        <i data-tab="export_excel" class="_tab_control_ vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                           data-bs-toggle="tooltip" data-bs-placement="top"
+                           data-bs-original-title="Excel" onclick="exportData_RevenueDetail()"></i>
+ 
+                    </div>
+                </div>
+                <div class="row p-2 pb-0 ps-0">
+                    <div class="col-lg-6">
+                        <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                            <h6 data-languagestatic="time" class="text-sm text-primary text-gradient mb-0">Thời Gian</h6>
+                            <h6 class="font-weight-bolder"> <span id="lbTotalAmount_Detail">0</span></h6>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                            <h6 class="text-sm text-primary text-gradient mb-0">Times</h6>
+                            <h6 class="font-weight-bolder"> <span id="lbTotalTimes_Detail">0</span></h6>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="card-body p-3 pt-0">
+                <div class="m-0 my-3 mobile-responsive">
+
+                    <table class="table vt-table mb-0" id="dtContentReport">
+                        <thead>
+                            <tr>
+                                <th data-languagestatic="no">#</th>
+                                <th data-languagestatic="treatment_date">Ngày Điều Trị</th>
+                                <th data-languagestatic="customer_info">Khách Hàng</th>
+                                <th data-languagestatic="source">Nguồn</th>
+                                <th data-languagestatic="customertype">Nhóm</th>
+                                <th data-languagestatic="service_type">Nhóm Dịch Vụ</th>
+                                <th data-languagestatic="service">Dịch Vụ</th>
+                                <th data-languagestatic="time_using_service">Thời Gian</th>
+                            </tr>
+                        </thead>
+                        <tbody data-languagedyn="grid" id="dtContentReportBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+
+    var ser_maxDates = 31;
+    var data_treat_time = [];
+    var current_master_id = 0;
+    $(document).ready(function () {
+ 
+        LoadData_Report();
+        //SettingHeightDiv();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+    function LoadData_Report() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branchID = "@Model._branchID";
+        AjaxLoad(url = "/Report/Employee/ReportDoctorTreatment/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'branchID': _branchID, 'maxdate': ser_maxDates }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "" && result != "null" && result != "0") {
+                    Executing_Treatment_Doctor(JSON.parse(result));
+                }
+                if (result == "0") {
+                    $("#error_max_dates_show").show();
+                    document.getElementById("report_max_dates_show").innerHTML = ":" + ser_maxDates;
+                }
+                else {
+                    $("#error_max_dates_show").hide();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#dtContentReportMaster").hide();
+                $("#loaderList_master").show();
+            }
+            , complete = function (e) {
+                $("#dtContentReportMaster").show();
+                $("#loaderList_master").hide();
+            }
+        );
+        return false;
+
+    }
+    function Executing_Treatment_Doctor(data) {
+        let data_treat = data.Table;
+        let data_schedule = data.Table1;
+        let data_time = data.Table2;
+        let data_doctor = data.Table3;
+
+        let data_schedule_time = [];
+        data_treat_time = [];
+        Executing_Schedule_Time(data_schedule, data_time, data_schedule_time);
+        Executing_Treatment_Schedule(data_treat, data_schedule_time, data_treat_time);
+
+        RenderReportMaster(data_doctor, 'dtContentReportMasterBody');
+    }
+
+    function Executing_Schedule_Time(dataschedule, dataTime, dataResult) {
+        if (dataschedule && dataschedule.length > 0) {
+            for (let i = 0; i < dataschedule.length; i++) {
+                let schedule = dataschedule[i];
+                let dttimes = dataTime.filter(a => a.ScheduleID == schedule.ScheduleID);
+                let minutes = 0;
+
+                let istreat = 0;
+                let date_before;
+                for (let j = 0; j < dttimes.length; j++) {
+                    if (istreat == 1) {
+                        let _d = new Date(date_before);
+                        let __d = new Date(dttimes[j].Time);
+                        minutes += ((__d.getTime() - _d.getTime()) / 60 / 1000);
+                    }
+                    if (dttimes[j].IsTreatment == 1) {
+                        date_before = dttimes[j].Time;
+                    }
+                    istreat = dttimes[j].IsTreatment;
+                }
+                let e = {
+                    "ScheduleID": schedule.ScheduleID
+                    , "CustomerID": schedule.CustomerID
+                    , "DateFrom": schedule.DateFrom
+                    , "Minutes": minutes
+                }
+                dataResult.push(e);
+            }
+        }
+    }
+
+    function Executing_Treatment_Schedule(datatreat, datastime, dataResult) {
+        for (let i = 0; i < datatreat.length; i++) {
+            let item_treat = datatreat[i];
+            let minutes = 0;
+            for (let j = 0; j < datastime.length; j++) {
+                if (datastime[j].CustomerID == item_treat.CustID && datastime[j].DateFrom == item_treat.DateString) {
+                    minutes += datastime[j].Minutes;
+                }
+            }
+            datatreat[i].Minutes = Math.ceil(minutes);
+            dataResult.push(datatreat[i]);
+        }
+    }
+    function RenderReportMaster_TimeJoin(emp_id) {
+        let treats = 0;
+        for (let i = 0; i < data_treat_time.length; i++) {
+            if (emp_id == data_treat_time[i].BS1) treats++;
+            if (emp_id == data_treat_time[i].BS2) treats++;
+            if (emp_id == data_treat_time[i].BS3) treats++;
+            if (emp_id == data_treat_time[i].BS4) treats++;
+        }
+        return treats;
+    }
+    function RenderReportMaster_TimeTreats(emp_id) {
+        let minutes = 0;
+        for (let i = 0; i < data_treat_time.length; i++) {
+            if (emp_id == data_treat_time[i].BS1) minutes += data_treat_time[i].Minutes;
+            if (emp_id == data_treat_time[i].BS2) minutes += data_treat_time[i].Minutes;
+            if (emp_id == data_treat_time[i].BS3) minutes += data_treat_time[i].Minutes;
+            if (emp_id == data_treat_time[i].BS4) minutes += data_treat_time[i].Minutes;
+        }
+        return minutes;
+    }
+    //#endregion
+
+
+    function RenderReportMaster(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let timejoin = RenderReportMaster_TimeJoin(item.ID);
+                    let minutes = RenderReportMaster_TimeTreats(item.ID);
+
+                    let obj = Fun_GetObject_ByID(DataEmployee, item.ID);
+                    let tr =
+                            '<td class="vt-number-order"></td>'
+
+                        + '<td>'
+                        + '<div class="d-flex">'
+                        + '<div class="icon icon-shape icon-sm me-2 text-center">'
+                        + '<img class="avatar avatar-xs mt-2" src="data:image/png;base64, ' + obj.Avatar + '" alt="label-image">'
+                        + '</div>'
+                        + '<div class="d-flex flex-column justify-content-center">'
+                        + '<h6 class="text-dark text-sm mb-0">' + item.Name + '</h6>'
+                        + '<span class="text-xs">' + ChangeMinute_To_Hour_Minute(minutes) + '</span> '
+                        + '</div>'
+                        + '</div>'
+
+                        + '</td>'
+
+                    stringContent = stringContent + '<tr class="vt-number masterRow" data-items="' + timejoin + '" data-minutes="' + minutes + '" data-name="' + item.Name + '" data-id="' + item.ID + '">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            EventrowClick();
+
+        }
+    }
+
+    function ViewDetail(idDetail, items, minutes) {
+        let data = data_treat_time.filter(word => word["BS1"] == idDetail || word["BS2"] == idDetail || word["BS3"] == idDetail || word["BS4"] == idDetail);
+        if (data != undefined) {
+            $('#lbTotalAmount_Detail').html(  minutes);
+            $('#lbTotalTimes_Detail').html(  items);
+            data.sort(dynamicSortMultiple("DateString", "CustID"));
+            RenderReportDetail(data, "dtContentReportBody");
+        }
+    }
+    function dynamicSort(property) {
+        var sortOrder = 1;
+        if (property[0] === "-") {
+            sortOrder = -1;
+            property = property.substr(1);
+        }
+        return function (a, b) {
+            /* next line works with strings and numbers,
+             * and you may want to customize it to your needs
+             */
+            var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+            return result * sortOrder;
+        }
+    }
+    function dynamicSortMultiple() {
+        /*
+         * save the arguments object as it will be overwritten
+         * note that arguments object is an array-like object
+         * consisting of the names of the properties to sort by
+         */
+        var props = arguments;
+        return function (obj1, obj2) {
+            var i = 0, result = 0, numberOfProperties = props.length;
+            /* try getting a different result from 0 (equal)
+             * as long as we have extra properties to compare
+             */
+            while (result === 0 && i < numberOfProperties) {
+                result = dynamicSort(props[i])(obj1, obj2);
+                i++;
+            }
+            return result;
+        }
+    }
+    function RenderReportDetail(data,id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let DateString = '';
+            let CustomerID = '';
+            let unevent_event = 0;
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let setLevel = 0;
+                    let CountRow = 0;
+                    if (DateString != item.DateString || CustomerID != item.CustID) {
+                        unevent_event = unevent_event + 1;
+                        DateString = item.DateString;
+                        CustomerID = item.CustID;
+                        setLevel = 1;
+                        data.filter(a => {
+                            if (a.DateString == DateString && CustomerID == a.CustID) {
+                                CountRow = CountRow + 1;
+                            }
+                        });
+
+                    }
+
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + ((setLevel == 0) ? '' : ('<td rowspan="' + CountRow + '">' + item.DateString + '</td >'))
+                        + ((setLevel == 0) ? '' : ('<td rowspan="' + CountRow + '">'
+                            + '<span class="d-block">' + item.CustCode + '</span>'
+                            + '<span class="d-block">' + item.CustName + '</span>'
+                                                    + '</td>'))
+                        + ((setLevel == 0) ? '' : ('<td rowspan="' + CountRow + '">' + item.SourceName + '</td >'))
+                        + ((setLevel == 0) ? '' : ('<td rowspan="' + CountRow + '">' + item.GroupName + '</td >'))
+                        + '<td>' + item.ServiceTypeName + '</td >'
+                        + '<td>' + item.ServiceName + '</td >'
+                        + '<td>'
+                        + '<span>' + ChangeMinute_To_Hour_Minute(item.Minutes) + '</span>'
+                        + '</td>'
+
+                    stringContent = stringContent + '<tr class="vt-number" data-id="' + item.CustID + '" data-date="' + item.DateString + '">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    //#region //Event Click, Setting Height
+    function SettingHeightDiv() {
+        $('#Detail_Div').css({ height: ($(window).height() - $('#Master_Menu_Top').height()) - 130 });
+        $('#MasterDiv').css({ height: ($(window).height() - $('#Master_Menu_Top').height()) - 130 });
+    }
+
+    function EventrowClick() {
+        $(".masterRow").on('click', function (event) {
+            let id = Number($(this).attr("data-id"));
+            _doctor_name = $(this).attr("data-name");
+            current_master_id = id;
+            $('.masterRow').removeClass('active');
+            $(this).addClass('active');
+            ViewDetail(id, $(this).attr("data-items"), $(this).attr("data-minutes"));
+        });
+        $(".masterRow").hover(function () {
+            $(this).addClass("hover");
+        }, function () {
+            $(this).removeClass("hover");
+        });
+
+    }
+    function exportData_RevenueDetail() {
+        exportToExcel("dtContentReport", 'Doanh-Thu-Chi-Tiet(' + _doctor_name + ')');
+    }
+    function exportData_RevenueMaster() {
+        exportToExcel("dtContentReportMaster", 'Doanh-Thu-Tong');
+    }
+    //#endregion
+
+</script>

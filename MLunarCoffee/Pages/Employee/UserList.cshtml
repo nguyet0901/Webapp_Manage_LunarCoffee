@@ -1,0 +1,592 @@
+﻿@page
+@model MLunarCoffee.Pages.Employee.UserListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<div class="row px-1 postion-relative" >
+    <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header p-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Nhóm"] user</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách nhóm user"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn bg-gradient-primary btn-sm mb-0 mt-1 px-2" onclick="return UserGroup_AddNew();">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div id="waitingEmpGroup" class="waitingdiv text-center position-absolute top-50 z-index-2 start-50 translate-middle" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="nav-wrapper mt-2" style="--max-height:calc( 100vh - 160px  ); --overflow-y: auto">
+                <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column  bg-white border-radius-lg"
+                    id="dtContentUserTypeBody">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header p-2 pb-0">
+                <div class="left">
+                    <h6 class="mb-0"> @Local["User"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách user"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn bg-gradient-primary btn-sm mb-0 mt-1 _tab_control_" data-tab="add_tab_employee" onclick="return AddNewUser();">@Local["Thêm mới"]</button>
+                    <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">@Local["Xem thêm"]</button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="createdby" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Người tạo"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="modifiedby" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Người sửa"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="vtcondition">
+                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row p-0 m-0 mt-2">
+                            <div class="field col-12 col-md-12 col-xl-4 p-1">
+                                <div class="input-group" id="field_user">
+                                    <span class="input-group-text input-group-text px-2">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                        <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                    </span>
+                                    <input id="filterUser" type="text" class="form-control" placeholder="@Local["Tìm kiếm"]..." onkeyup="event.preventDefault();return User_onkeyup();">
+                                    <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                <div class="ui fluid search selection dropdown form-control" id="StateID" onchange="User_StateView()">
+                                    <input type="hidden" name="branch" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div class="menu" tabindex="-1">
+                                        <div class="item" data-value="2">@Local["Tất cả"]</div>
+                                        <div class="item" data-value="0">@Local["Đang hoạt động"]</div>
+                                        <div class="item" data-value="1">@Local["Đã khóa"]</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                <div class="form-group">
+                                    <div class="input-group mb-0">
+                                        <span class="input-group-text fw-bold text-primary ">@Local["Tổng"]:</span>
+                                        <span class="ps-2 form-control fw-bolder text-dark" id="totalUser">104</span>
+                                        <span id="limitUser" class="input-group-text fw-bold text-danger text-gradient" style="display: none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+ 
+                    </div>
+                </div>
+                <div class="m-0 py-3 pt-0 mobile-responsive" style="max-height: calc(100vh - 230px)">
+                    <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">@Local["Đang tải"]...</span>
+                        </div>
+                    </div>
+                    <table id="dtContentUser" class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th>#</th>
+                                <th>@Local["Hình ảnh"]</th>
+                                <th>@Local["User"]</th>
+                                <th>@Local["Mã nhân viên"]</th>
+                                <th>@Local["Nhân viên"]</th>
+                                <th>@Local["Xác thực"] IP</th>
+                                <th>@Local["Chi nhánh"]</th>
+                                <th>@Local["Tên nhóm"]</th>
+                                <th>@Local["Phạm vi chi nhánh"]</th>
+                                <th>@Local["Trạng thái"]</th>
+                                <th data-name="createdby" style="min-width:200px;">@Local["Người tạo"]</th>
+                                <th data-name="modifiedby" style="min-width:200px;">@Local["Người sửa"]</th>
+                                <th id="grColumnLockUser">@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentUserBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<script type="text/javascript">
+    let currrentUserDetail = 0;
+    let dataUser;
+    let dataEmployee;
+    let CurrentUserGroup = 0;
+    let CurrentUser = 0;
+    let Sys_LimitUser = @Model._limitUser;
+    let DataBranch;
+    var User_FlagUserState = 0;
+    var datagroupTopic;
+    let shtable;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Branch, _Session_Employee]
+            , function (data) {
+                DataBranch = data[0];
+                dataEmployee = data[1];
+                UserGroup_Load();
+                $("#StateID").dropdown("set selected", "0");
+            })
+        shtable = $("#dtContentUser").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $('#dtContentUser tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).attr('data-UserID'));
+            User_Edit(ID);
+            CurrentUser = ID;
+        });
+        $('#dtContentUser tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).attr('data-UserID'));
+            User_Delete(ID);
+        });
+        $('#dtContentUser tbody').on('click', '.buttonResetClass', function () {
+            let ID = Number($(this).attr('data-UserID'));
+            User_Reset(ID);
+        });
+
+        $('#dtContentUser tbody').on('click', '.buttonUnLockClass', function () {
+            let ID = Number($(this).attr('data-UserID'));
+            User_UnLock(ID);
+        });
+        $('#dtContentUser tbody').on('click', '.buttonLockClass', function () {
+            let ID = Number($(this).attr('data-UserID'));
+            User_Lock(ID);
+        });
+        $('#dtContentUserTypeBody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            UserGroup_Edit(ID);
+            CurrentUserGroup = ID;
+        });
+        //$('#dtContentUserType tbody').on('click', '.buttonEditClass', function () {
+        //    let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+        //    UserGroup_Edit(ID);
+        //    CurrentUserGroup = ID;
+        //});
+        //$('#dtContentUserType tbody').on('click', '.buttonDeleteClass', function () {
+        //    let ID = Number($(this).attr('data-id'));
+        //    UserGroup_Delete(ID);
+        //});
+
+        $("#limitUser").html("@Local["Tối đa"]: " + Sys_LimitUser);
+        if (Number(Sys_LimitUser) > 0) {
+            $("#limitUser").show();
+        } else $("#limitUser").remove();
+        $("#field_user").on('click', '.btn_clear', function (e) {
+            $('#filterUser').val('');
+            $(".btn_clear").addClass('opacity-1');
+            User_Load(CurrentUserGroup);
+        });
+    });
+    function User_StateView(){
+        User_FlagUserState = Number($('#StateID').dropdown('get value'));
+        UserGroup_Load();
+        User_Load(CurrentUserGroup);
+    }
+    function UserGroup_Load () {
+        AjaxLoad(url = "/Employee/UserList/?handler=LoadataUserType"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let datagrouplist = data.GroupList;
+                datagroupTopic = data.Topic;
+                UserGroup_Render(datagrouplist, 'dtContentUserTypeBody');
+
+            });
+
+    }
+    function UserGroup_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let totalUnLock = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let timeot = ``, topic = ``;
+                    topic = UserGroup_RenderTopic(item.ID, item.TokenTopic);
+                    if (item.TimeOut != 0) {
+                        timeot = `<div class="ps-0">
+                                      <span data-bs-toggle="tooltip" title="@Local["Thời gian nghỉ"]" class="text-secondary text-lowercase ps-1">${item.TimeOut} @Local["Phút"]</span>
+                                  </div>`;
+                    }
+                    let tr = `
+                        <li id="usergroup_${item.ID}" class="nav-item usergroup" role="presentation">
+                            <a data-id="${item.ID}" class="text-sm px-1 item-menu  rowGroupUser nav-link cursor-pointer " data-hover data-bs-toggle="tab">
+                                <div class="px-1">
+                                    <div data-id="${item.ID}"  class="d-inline buttonEditClass ">
+                                        <span class="mt-0 cursor-pointer col-auto my-auto mb-0 text-dark ms-0 text-sm fw-bold">
+                                            ${item.Name}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center mt-0">
+                                        <div class="ps-0">
+                                            <span class="fw-dark text-primary">${formatNumber(item.totalUserUnLock)}</span>
+                                            <span class="text-secondary text-lowercase ps-1">@Local["Tài khoản"]</span>
+                                        </div>
+                                        ${timeot}
+                                        ${topic}
+                                    </div>
+                                </div>
+                            </a>
+                        <hr class="horizontal dark my-1">
+                        </li>
+                        `
+                    totalUnLock = totalUnLock + Number(item.totalUserUnLock);
+                    stringContent = stringContent + tr;
+                }
+            }
+            stringContent = `
+                        <li class="nav-item" role="presentation">
+                            <a data-id="0" class="text-sm ps-2 item-menu rowGroupUser nav-link cursor-pointer" data-hover data-bs-toggle="tab">
+                                <div class="text-bolder text-lowercase">
+                                    <span class="SL_total fw-bolder text-primary">${formatNumber(totalUnLock)}</span>
+                                    <span class="ps-2">@Local["Tài khoản"]</span>
+                                </div>
+                            </a>
+                            <hr class="horizontal dark my-1">
+                        </li>
+                        `+ stringContent;
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        UserGroup_EventRow();
+        ToolPopper();
+        UseGroup_Trigger();
+        Checking_TabControl_Permission();
+    }
+    function UserGroup_RenderTopic(id,token)
+    {
+        try {
+            let result = '';
+            if (token != '') {
+                let tokarray = token.split(",");
+                if (tokarray != undefined && tokarray.length > 0) {
+                    result = `<span class="m-0 text-sm text-secondary ps-2">
+                                    ${tokarray.length} @Local["Topic"]
+                                </span>  `;
+
+                }
+            }
+            return result;
+        }
+        catch (e) {
+            return '';
+        }
+
+    }
+    function User_Render_Button (id, LockButton, DeleteButton) {
+        let buttons = [];
+
+        if (LockButton == 1) {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="lock_tab_user"><i data-UserID="' + id + '" class="buttonUnLockClass vtt-icon vttech-icon-unlock-01" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Mở khóa"]"></i></button>')
+        }
+        else {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="lock_tab_user"><i data-UserID="' + id + '" class="buttonLockClass vtt-icon vttech-icon-lock-01" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Khóa"]"></i></button>')
+        }
+
+        if (DeleteButton == 1) {
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="delete_tab_user"><i data-UserID="' + id + '" class="buttonDeleteClass imgtem vtt-icon vttech-icon-delete" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Xóa"]"></i></button>')
+        }
+        buttons.push('<button class="buttonGrid reset_tab_user"><i data-UserID="' + id + '" class="buttonResetClass vtt-icon vttech-icon-refesh" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Đặt lại"]"></i></button>')
+        return Render_Button_Grid(buttons)
+    }
+    function UseGroup_Trigger () {
+        if ($('.rowGroupUser[data-id="' + CurrentUserGroup + '"]').get(0) != undefined) {
+            $('.rowGroupUser[data-id="' + CurrentUserGroup + '"]').get(0).click();
+            User_Load(CurrentUserGroup);
+        }
+    }
+    function UserGroup_EventRow () {
+        $('#dtContentUserTypeBody .rowGroupUser').on('shown.bs.tab', function (e) {
+            let id = Number($(this).attr("data-id"));
+            CurrentUserGroup = id;
+            $("#dtContentUserTypeBody .rowGroupUser").removeClass('active');
+            $(this).addClass('active');
+            User_Load(CurrentUserGroup);
+        });
+
+ 
+
+    }
+    function User_Load (groupID) {
+        AjaxLoad(url = "/Employee/UserList/?handler=LoaddataUser"
+            , data = {groupID: groupID}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    dataUser = JSON.parse(result);
+                    if (dataUser != undefined && dataUser != null) {
+                        User_Render(dataUser, "dtContentUserBody");
+                    }
+                }
+                ;
+            },
+            sender = null,
+            beforeSend = function (e) {
+                $("#dtContentUser").hide();
+                $("#loaderList").show();
+            },
+            complete = function (e) {
+                $("#dtContentUser").show();
+                $("#loaderList").hide();
+
+            }
+        );
+    }
+
+    function User_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                data = User_FillterData(data);
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = "";
+                    tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                    + '<td class="vt-number-order"></td>'
+                    + '<td class="text-center">'
+                    + '<div class="avatar avatar-md position-relative overflow-hidden">'
+                        + '<img class="hoverpopup w-100 border-radius-lg shadow-sm h-100" src="'
+                    + (item.Avatar != '' ? item.Avatar : Master_Default_Pic)
+                        + '" alt="label-image" onerror="Master_OnLoad_Error_Image(this)"/>'
+                    + '</div>'
+                    + '</td>'
+                        + '<td><a class="buttonEditClass" data-UserID="' + item.ID + '">' + item.Username + '</a></td>'
+                        + '<td>' + item.Code + '</td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td class="text-center">' + ((Number(item.isPassIP) == 0) ? ('<span class="text-info fw-bold text-sm">@Local["Xác thực"]</span>') : ('<span class="text-danger fw-bold text-sm">@Local["Bỏ qua"]</span>')) + '</td>'
+                        + '<td>' + item.BranchName + '</td>'
+                        + '<td>' + item.GroupName + '</td>'
+                        + '<td>' + ((Number(item.isAllBranch) == 0) ? Fun_GetString_ByToken(DataBranch, item.AreaBranch) : ('<span class="text-success fw-bold text-sm">@Local["Tất cả chi nhánh"]</span>')) + '</td>'
+                        + '<td class="text-center">' + ((Number(item.Lock) == 1) ? ('<span class="text-danger fw-bold text-sm">@Local["Đã khóa"]</span>') : ('<span></span>')) + '</td>'
+                        + '<td data-name="createdby">' + User_RenderPerson(item.CreatedBy, item.Created) + '</td>'
+                        + '<td data-name="modifiedby">' + User_RenderPerson(item.ModifiedBy, item.Modified) + '</td>'
+                        + '<td class="text-nowrap">'
+                        + User_Render_Button(item.ID, item.Lock, item.DeleteButton)
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="rowUser vt-number" data-id="' + item.ID + '">' + tr + '</tr>';
+                }
+            }
+            Count_Up("totalUser", data.length);
+            document.getElementById(id).innerHTML = stringContent;
+            ToolPopper();
+            shtable.Refresh();
+        }
+        Checking_TabControl_Permission();
+        User_EventRow();
+    }
+    function User_FillterData(data){
+        let result = data;
+        if(User_FlagUserState != 2){
+            result = data.filter(word => { return word["Lock"] == User_FlagUserState })
+        }
+        return result;
+    }
+    function User_EventRow () {
+        $(".rowUser").on('click', function (event) {
+            let id = Number($(this).attr("data-id"));
+            CurrentUser = id;
+            $(this).closest("tr").addClass("active").siblings().removeClass("active");
+        });
+    }
+    function User_Delete (id) {
+        const promise = notiConfirm();
+        promise.then(function () {User_Execute_Delete(id);}, function () { });
+    }
+
+    function User_Execute_Delete (id) {
+        AjaxLoad(url = "/Employee/UserList/?handler=DeleteItem"
+            , data = {id: id}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                let Code = data[0]?.Code;
+                if (r == "1") {
+                    notiSuccess();
+                    User_Load(CurrentUserGroup);
+                    UserGroup_Load();
+                    syslog_usr('d', Code);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function User_Reset (id) {
+        const promise = notiConfirm("@Local["Bạn muốn đặt lại mật khẩu"]?");
+        promise.then(function () {User_Execute_Reset(id);}, function () { });
+    }
+    function User_Execute_Reset (id) {
+        AjaxLoad(url = "/Employee/UserList/?handler=ResetPassword"
+            , data = {id: id}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                let Pass = data[0]?.Pass;
+                let Code = data[0]?.Code;
+                if (r == "1") {
+                    notiSuccessMess("@Local["Đặt lại mật khẩu thành công"] :" + Pass);
+                    syslog_usr('u', `${Code} (${decodeHtml('@Local["Đặt lại"]')})`);
+                } else {
+                    notiError_SW(Pass ?? "");
+                }
+                UserGroup_EventRow();
+            });
+    }
+
+    function User_Lock (id) {
+        const promise = notiConfirm("@Local["Bạn muốn khoá user"]?");
+        promise.then(function () {User_Execute_Lock(id);}, function () { });
+    }
+    function User_Execute_Lock (id) {
+        AjaxLoad(url = "/Employee/UserList/?handler=LockItem"
+            , data = {id: id}, async = false, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                let Code = data[0]?.Code;
+                if (r == "1") {
+                    notiSuccess();
+                    User_Load(CurrentUserGroup);
+                    syslog_usr('u', `${Code} (${decodeHtml('@Local["Khóa"]')})`);
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function User_UnLock (id) {
+        const promise = notiConfirm("@Local["Bạn muốn mở khoá user"]?");
+        promise.then(function () {User_Execute_UnLock(id);}, function () { });
+    }
+    function User_Execute_UnLock (id) {
+        AjaxLoad(url = "/Employee/UserList/?handler=UnLockItem"
+            , data = {id: id}, async = false, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let r = data[0]?.Result;
+                let Code = data[0]?.Code;
+                if (r == "1") {
+                    notiSuccess();
+                    User_Load(CurrentUserGroup);
+                    syslog_usr('u', `${Code} (${decodeHtml('@Local["Mở khóa"]')})`);
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+
+    function onkeyupUserAsync () {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let search = xoa_dau($('#filterUser').val().toLowerCase()).trim();
+                    let data = dataUser.filter(function (item) {
+                        if (item != undefined && item["BranchName"] != undefined && item["Username"] != undefined && item["GroupName"] != undefined && item["Name"] != undefined && item["Code"] != undefined) {
+                            if (item["BranchName"].includes(search) || xoa_dau(item["Username"]).toLowerCase().includes(search) || xoa_dau(item["GroupName"]).toLowerCase().includes(search) || xoa_dau(item["Name"]).toLowerCase().includes(search) || xoa_dau(item["Code"]).toLowerCase().includes(search))
+                                return true;
+                        }
+                        return false;
+                    });
+                    console.log(data);
+                    if (data != undefined && data != null) {
+                        User_Render(data, "dtContentUserBody");
+                        ColorSearchFilterText(search, "rowUser");
+
+                    }
+
+                    resolve()
+
+                },
+                Math.floor(Math.random() * 300) + 1
+            )
+        })
+    }
+    async function User_onkeyup () {
+        if ($('#filterUser').val().length > 0) $(".btn_clear").removeClass('opacity-1');
+        else $(".btn_clear").addClass('opacity-1');
+        $("#field_user .fa-search").hide();
+        $("#field_user .spinner-border").show();
+        await onkeyupUserAsync();
+        $("#field_user .spinner-border").hide();
+        $("#field_user .fa-search").show();
+        return false;
+    }
+    function AddNewUser () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/UserDetail?GroupID=" + CurrentUserGroup + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function User_Edit (CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/UserDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function User_RenderPerson(EmpID,Date){
+        let obj = dataEmployee[EmpID];
+        obj = obj ? obj : {};
+        let result = ` <div class="d-flex ms-2">
+            <div class="icon icon-shape icon-sm me-2 text-center ${(obj.Avatar && obj.Avatar != '') ? '' : 'd-none'}">
+                <img class="avatar avatar-xs mt-2" src="${obj.Avatar}" onerror="Master_OnLoad_Error_Image(this)" alt="label-image">
+            </div>
+            <div class="d-flex flex-column">
+                <h6 class="text-dark text-sm mb-0">${obj.Name ? obj.Name : ''}</h6>
+                <span class="text-xs">${(!(Date).includes('1900') ? ConvertDateTimeUTC_DMY(Date) : '')}</span>
+            </div>
+        </div>
+        `
+        return result;
+    }
+    
+    function UserGroup_AddNew () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/UserGroupDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function UserGroup_Edit (CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Employee/UserGroupDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+
+<script>js_require('/assests/dist/UploadJS/js/vendor/jquery.ui.widget.js');</script>
+<script>js_require('/assests/dist/UploadJS/js/jquery.iframe-transport.js');</script>
+<script>js_require('/assests/dist/UploadJS/js/jquery.fileupload.js');</script>
+<style>
+ 
+    #dtContentUserTypeBody .buttonEditClass:hover {
+        border-bottom: 1px solid var(--color--primary)
+    }
+</style>

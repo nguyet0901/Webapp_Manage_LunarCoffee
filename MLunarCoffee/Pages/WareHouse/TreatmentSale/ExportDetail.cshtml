@@ -1,0 +1,591 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.TreatmentSale.ExportDetail
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/Treatsale/treatexe.js', true);</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row" id="ExportDetail_Container">
+    <div class="col-12 position-relative">
+        <div id="Met_waitload" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="Met_Detailarea" class="mb-3 border-dashed border-1 border-secondary border-radius-md p-4" style="display: none;">
+            <div class="p-3">
+                <div class="d-flex">
+                    <div class="w-auto d-flex">
+                        <div class="ms-n2">
+                            <div class="text-md text-dark">
+                                <svg id="met_barcode" style="height:60px;" class="w-100 text-center">
+                                </svg>
+                            </div>
+                            <div class="text-sm text-dark d-block text-center">
+                                <span id="met_exportdate" class="text-sm text-dark"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ms-auto">
+                        <div>
+                            <span class="text-sm text-secondary">@Local["Khách hàng"]:</span>
+                            <span class="text-sm text-dark font-weight-bold">
+                                <a class="cursor-pointer fw-bold mb-0 ms-1 mt-0 my-auto text-primary text-sm" id="met_customercode"></a>
+                                <span class="fw-bold mb-0 ms-1 mt-0 my-auto text-dark text-sm" id="met_customername"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-secondary">@Local["Số điện thoại"]:</span>
+                            <span class="text-sm text-dark font-weight-bold ms-1 _tab_control_" id="met_CustPhone" data-name="phone" data-tab="phone_customer"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-0 ">
+                    <div class="text-center">
+                        <h6 id="met_servicename" class="fs-5 fw-bold text-primary mb-0 text-uppercase"></h6>
+                        <span class="text-sm text-dark fst-italic mt-n1 ms-2" id="met_Created"></span>
+                    </div>
+                </div>
+            </div>
+       
+
+            <div class="card-body p-3 pt-2">
+                <div class="row px-2">
+                    <div class="col-12 col-sm-4 col-lg-4 p-1 mt-2">
+                        <label>@Local["Kho xuất"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="Met_WareID" onchange="event.preventDefault();return Met_OnchangeWare()">
+                            <input type="hidden" name="ware" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Kho xuất"]</div>
+                            <div id="cbbMet_WareID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-4 col-lg-4 mt-2 p-1">
+                        <label>@Local["Ngày xuất kho"]</label>
+                        <input id="Met_waredate" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày xuất kho"]" />
+                    </div>
+                </div>
+                <ul class="list-group mt-5" id="Met_warebody">
+                </ul>
+                <button id="btnWareHouse_New" style="display:none" type="button" class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return TS_Newrow();"></button>
+                <div class="text-danger text-gradient text-sm font-weight-bold" style="min-height:50px;" id="TS_Message"></div>
+                <div class="action_Save mt-3">
+                    <div class="action_Save-Content">
+                        <button id="btnWareHouse_Delete" style="display:none" form="form3" type="button" class="Met_clsHandleCont btn btn-sm bg-gradient-danger mt-2 me-2" onclick="return met_deleteform()">@Local["Xóa"]</button>
+                        <button id="btnWareHouse_UnExport" style="display:none" form="form3" type="button" class="Met_clsHandleCont btn btn-sm bg-gradient-success mt-2 me-2" onclick="return met_unexport()">@Local["Hủy xuất kho"]</button>
+                        <button id="btnWareHouse_Cancel" class="btn btn-sm btn-secondary" form="form3" onclick="event.preventDefault();WareHourse_Cancel()">@Local["Đóng"]</button>
+                        <button id="btnWareHouse_Check" style="display:none" form="form3" type="button" class="Met_clsHandleCont btn btn-sm bg-gradient-warning mt-2 me-2" onclick="return met_check()">@Local["Kiểm tra"]</button>
+                        <button id="btnWareHouse_Save" style="display:none" form="form3" type="button" class="Met_clsHandleCont btn btn-sm bg-gradient-primary mt-2 me-2" onclick="return met_save()">@Local["Xuất kho"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="Met_Emptyarea" class="card-body border-radius-lg bg-gradient-dark text-white text-sm p-3" style="display: none;">
+            <div>
+                <span class="badge bg-gradient-light text-danger">
+                    @Local["Không tồn tại phiếu xuất kho"]
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var met_ware = [];
+    var met_detail = [];
+  
+    var data_product = {};
+    var IsPackageNumber = 0;
+    var can_editexport = 0;
+    var exportTimer;
+    var met_extype = 0;
+    var Met_DataPackage = {};
+
+    //#region // Load
+    $(document).ready(function () {
+        Met_GetInfo(DetailID);
+    });
+
+    async function Met_GetInfo(id) {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=GetWareHouse"
+                , data = { 'DetailID': id }, async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (data != undefined) {
+                            if (data.Table[0].RESULT == 1) {
+                                met_ware = data.Table1;
+                                met_detail = data.Table2;
+                                if (met_ware.length == 0) {
+                                    met_ware = dataWareFo_User;
+                                }
+                                Load_Combo(met_ware, "cbbMet_WareID", true);
+                                $("#Met_WareID").dropdown("clear");
+                                $("#Met_WareID").dropdown("refresh");
+                                $("#met_servicename").html(met_detail[0].ServiceName + met_detail[0].MedicineName);
+                                $("#met_customercode").html(met_detail[0].CustCode);
+                                $("#met_customercode").attr("href", "/Customer/MainCustomer?CustomerID=" + met_detail[0]?.CustID);
+                                $("#met_customername").html(met_detail[0]?.CustName);
+                                $("#met_CustPhone").html(met_detail[0]?.CustPhone);
+                                $("#met_Created").html(ConvertDateTimeUTC_Time_DOWFULLDAY(met_detail[0].Created));
+                                if (met_detail[0].Export == 1) {
+                                    JsBarcode("#met_barcode", met_detail[0]?.Code, {
+                                        lineColor: "#000",
+                                        fontsize: 12,
+                                        width: 1,
+                                        height: 30,
+                                        displayValue: true,
+                                        background: "#ffffff00"
+                                    });
+                                    $("#met_exportdate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(met_detail[0].ExportDate));
+                                    $("#Met_waredate").flatpickr({
+                                        dateFormat: 'd-m-Y H:i:s',
+                                        enableTime: true,
+                                        time_24hr: true,
+                                        maxDate: new Date(),
+                                        defaultDate: new Date(met_detail[0].ExportDate),
+                                    });
+                                    $("#Met_WareID").dropdown("set selected", met_detail[0].WareID);
+                                }
+                                else {
+                                    $("#Met_waredate").flatpickr({
+                                        dateFormat: 'd-m-Y H:i:s',
+                                        enableTime: true,
+                                        time_24hr: true,
+                                        maxDate: new Date(),
+                                        defaultDate: new Date(),
+                                    });
+                                    $("#Met_WareID").dropdown("set selected", met_ware[0].ID);
+                                }
+                                can_editexport = met_detail[0].IsEdit;
+                                met_extype =  met_detail[0].Type;
+                                if (can_editexport == 1) {
+                                    $("#btnWareHouse_New").show();
+                                    $("#btnWareHouse_Save").show();
+                                    $("#btnWareHouse_Check").show();
+                                    $("#btnWareHouse_Delete").show();
+                                    if (met_detail[0].Export == 1) {
+                                        $("#btnWareHouse_UnExport").show();
+                                    }
+                                }
+                                $("#Met_Detailarea").show();
+                            }
+                            else {
+                                $("#Met_Emptyarea").show();
+                                $("#Met_Detailarea").hide();
+                            }
+                        }
+                    }
+                }, sender = null
+                , before = function (e) {
+                    $("#Met_waitload").show();
+                    $("#Met_Detailarea").hide();
+                }
+                , complete = function (e) {
+                    $("#Met_waitload").hide();
+                }
+            );
+            resolve();
+        })
+    }
+    async function Met_OnchangeWare() {
+        return new Promise((resolve, reject) => {
+            let WareBranch = Number($('#Met_WareID').dropdown('get value')) ? Number($('#Met_WareID').dropdown('get value')) : 0;
+            let ware = met_ware.filter(word => word["ID"] == WareBranch);
+            if (ware != undefined && ware.length == 1) {
+                IsPackageNumber = ware[0].IsPackageNumber;
+                if (met_detail[0].Export == 1) {
+                    $("#Met_waredate").flatpickr({
+                        dateFormat: 'd-m-Y H:i:s',
+                        enableTime: true,
+                        time_24hr: true,
+                        maxDate: new Date(),
+                        defaultDate: new Date(met_detail[0].ExportDate),
+                    });
+                }
+                else {
+                    $("#Met_waredate").flatpickr({
+                        dateFormat: 'd-m-Y H:i:s',
+                        enableTime: true,
+                        time_24hr: true,
+                        minDate: new Date(ware[0].LockDate),
+                        maxDate: new Date(),
+                        defaultDate: new Date(),
+                    });
+                }
+                Met_GetInitialize();
+            };
+            resolve();
+        })
+    }
+    function Met_GetInitialize() {
+        let promises = [];
+        promises.push(Met_DetailLoad(DetailID));
+        Promise.all(promises).then((values) => {
+            for ([key, value] of Object.entries(data_product)) {
+                Met_Renderrow(key, value, 'Met_warebody');
+            }
+        });
+        return false;
+    }
+
+    async function Met_DetailLoad(id) {
+        return new Promise((resolve, reject) => {
+            $('#Met_warebody').html('');
+            data_product = {};
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=LoadData"
+                , data = {
+                    'DetailID': id
+                }, async = true, error = null
+                , success = function (result1) {
+                    if (result1 != "") {
+                        let data = JSON.parse(result1);
+                        for (let i = 0; i < data.length; i++) {
+                            let element = {};
+                            element.productID = data[i].ProductID;
+                            element.unitID = data[i].UnitID;
+                            element.number = (data[i].Number).toFixed(2);
+                            element.package = data[i].PackageNumber;
+                            element.current = data[i].ExportID;
+                            element.numberStandard = (data[i].NumberStandard).toFixed(2);
+                            element.unitnameStandard = data[i].UnitNameStandard;
+                            element.usingPackage = (data[i].PackageNumber && data[i].PackageNumber != "") ? 1 : 0;
+                            element.timepsan = Date.now() + Math.floor(Math.random() * 100) + data[i].ExportID;
+                            data_product[data[i].ExportID] = element;
+                        }
+                        resolve();
+                    }
+                }
+            );
+
+        })
+    }
+
+    //#endregion
+
+    //#region // Render
+
+    function TS_Newrow() {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.productID = 0;
+        element.unitID = 0;
+        element.number = 0;
+        element.package = '';
+        element.current = 0;
+        element.numberStandard = 0;
+        element.unitnameStandard = '';
+        element.usingPackage = 1;
+        element.timepsan = Date.now() + Math.floor(Math.random() * 100);
+        data_product[id] = element;
+        Met_Renderrow(id, element, 'Met_warebody');
+        return id;
+    }
+
+    async function Met_Renderrow(key, value, id) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let ex = formatNumber(Math.round(Number(value.numberStandard) * 100) / 100) + " " + value.unitnameStandard;
+                     let tr = `<li id=row_${key} data-id="${key}" class="row row-add border-dashed border-1 position-relative border-secondary border-radius-lg pb-3  border-0 d-flex justify-content-between ps-0 mb-4 border-radius-lg">
+                            ${can_editexport == 1 ? `<i data-id="${key}" class="opacity-2 position-absolute buttonDeleteClass text-danger fas fa-times"></i>` :''}
+                            <div class="row col-12 w-100 mx-0">
+                                <div class="col-12 col-md-8 px-1 mt-2">
+                                    ${Met_Renproduct(key)}
+                                </div>
+                                <div class="col-12 col-md-4 px-1 mt-2">
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            ${Met_Renunit(key)}
+                                            ${Met_Rennumber(key, value.number)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${(IsPackageNumber == 0
+                            ? ''
+                        : `     <div class="form-group row col-12 w-100 mx-0">
+                                       <div class="input-group px-1 ">
+                                            <span class="input-group-text">@Local["Số lô"]</span>
+                                            <div id="Met_packwait_${key}" class="position-absolute ms-n4 top-50  border-0 start-0 translate-middle-y waitingdiv text-center" style="display: none;">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                            </div>
+
+                                           <i style="display:none;" id="Met_packerror_${value.timepsan}" class="input-group-text fw-bold text-danger fas fa-exclamation-triangle"></i>
+                                           <i style="display:none;" id="Met_packsuccess_${value.timepsan}" class="input-group-text fw-bold text-success fas fa-check"></i>
+                                           ${Met_Renpackage(key, value.package)}
+
+                                      </div>
+                                 </div>`)
+                            }
+                            <div class="text-dark text-sm ps-3 mt-n2 fst-italic">
+                               <span class="text-secondary">@Local["Xuất"]</span>
+                               <span id="Met_totalex_${key}" class="fw-bold pe-2">${ex}</span>
+                               <span class="text-secondary">@Local["Còn lại"]</span>
+                               <span id="Met_normproduct_${value.timepsan}" class="fw-bold pe-2"></span>
+                               <i style="display:none;" id="Met_normerror_${value.timepsan}" class="fw-bold text-danger fas fa-exclamation-triangle"></i>
+                               <i style="display:none;" id="Met_normsuccess_${value.timepsan}" class="fw-bold text-success fas fa-check"></i>
+                            </div>
+                        </li>`
+                    myNode.insertAdjacentHTML("beforeend", tr);
+                }
+ 
+                Met_FillData(key, value);
+                Met_EventRow(key);
+                resolve();
+            },10)
+        });
+    }
+
+    function Met_CountTotal (id) {
+        let product = Number($('#productExport_' + id).dropdown('get value')) ? Number($('#productExport_' + id).dropdown('get value')) : 0;
+        let unit = Number($('#unitProduct_' + id).dropdown('get value')) ? Number($('#unitProduct_' + id).dropdown('get value')) : 0;
+        let pro = DataUnitProduct.filter(word => word["ProductID"] == product && word["UnitChange"] == unit);
+        let number = Number($('#numberExport_' + id).val());
+        let numberstandard = 0;
+        if (pro != undefined && pro.length > 0) {
+            let unitname = pro[0].UnitName;
+            numberstandard = Number(pro[0].Number * number);
+            $("#Met_totalex_" + id).html(formatNumber((numberstandard * 100 / 100).toFixed(2)) + " " + unitname);
+        }
+        else {
+            numberstandard = Number(number);
+            $("#Met_totalex_" + id).html(formatNumber((numberstandard * 100 / 100).toFixed(2)));
+        }
+        data_product[id].numberStandard = numberstandard.toFixed(2);
+    }
+    //#endregion
+
+    //#region // Main Event
+
+    function met_check (callback) {
+        $('#TS_Message').html('')
+        let nonvalid = 0;
+        for ([key, value] of Object.entries(data_product)) {
+            if (Number(value.productID) == 0) {
+                $('#productExport_' + key).addClass('error'); nonvalid = 1;
+            }
+            else $('#productExport_' + key).removeClass('error');
+            if (Number(value.unitID) == 0) {
+                $('#unitProduct_' + key).addClass('error'); nonvalid = 1;
+            }
+            else $('#unitProduct_' + key).removeClass('error');
+
+            if (!$.isNumeric(value.number) || Number(value.number) <= 0
+                || Number(value.number) > vtth_range_max
+                || Number(value.number) < vtth_range_min) {
+                $('#numberExport_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#numberExport_' + key).removeClass('error');
+ 
+            if (IsPackageNumber == 1 && value.package == '') {
+                $('#met_packageNumber_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#met_packageNumber_' + key).removeClass('error');
+            }
+
+        }
+        if (nonvalid == 1) $('#TS_Message').html('@Local["Kiểm tra dữ liệu"]');
+        met_checknorm(callback);
+    }
+
+    function met_checknorm (callback) {
+        if ($('#TS_Message').html() == '') {
+            let DateExecute = $('#Met_waredate').val() ? $('#Met_waredate').val() : "";
+            let ware = Number($('#Met_WareID').dropdown('get value')) ? Number($('#Met_WareID').dropdown('get value')) : 0;
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=CheckQuantityRealTime"
+                , data = {
+                    'data': JSON.stringify(Object.values(data_product))
+                    , 'ware': ware
+                    , 'DateExecute': DateExecute
+                    , 'CurrentID': DetailID
+                    , 'IsPackageNumber': IsPackageNumber
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+
+                        let data = JSON.parse(result);
+                        if (data.Table[0][0] == 0) {
+                            $('#TS_Message').html("@Local["Lần chốt kho trước chưa hoàn thành hoặc thời gian xuất kho không phù hợp"]");
+                        }
+                        else {
+                            let dataNorm = data.Table1;
+                            for (i = 0; i < dataNorm.length; i++) {
+                                for ([key, value] of Object.entries(data_product)) {
+                                    if (value.productID == dataNorm[i].ProductID) {
+
+                                        $("#Met_normproduct_" + value.timepsan).html(formatNumber(Math.round(Number(dataNorm[i].FinalNum) * 100) / 100));
+
+                                        if (Number(dataNorm[i].FinalNum) >= 0) {
+                                            $('#Met_normerror_' + value.timepsan).hide();
+                                            $('#Met_normsuccess_' + value.timepsan).show();
+                                        }
+                                        else {
+                                            $('#TS_Message').html("@Local["Thiếu hàng xuất"]");
+                                            $('#Met_normerror_' + value.timepsan).show();
+                                            $('#Met_normsuccess_' + value.timepsan).hide();
+                                        }
+
+                                        if (IsPackageNumber == 1
+                                            && dataNorm[i].ProductInPackage == 0) {
+                                            $('#TS_Message').html("@Local["Số lô không đúng"]");
+                                            $('#Met_packerror_' + value.timepsan).show();
+                                            $('#Met_packsuccess_' + value.timepsan).hide();
+
+                                        }
+                                        else {
+                                            $('#Met_packerror_' + value.timepsan).hide();
+                                            $('#Met_packsuccess_' + value.timepsan).show();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (callback != undefined) callback();
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                , sender = $('#btnWareHouse_Check')
+                , before = function (e) {
+                    $("#Met_waitload").show();
+                }
+                , complete = function (e) {
+                    $("#Met_waitload").hide();
+                }
+            );
+        }
+    }
+
+    function met_save() {
+        met_check(callback = function () {
+            met_saveexe();
+        });
+    }
+    function met_saveexe () {
+         if ($('#TS_Message').html() == '') {
+            let DateExecute = $('#Met_waredate').val() ? $('#Met_waredate').val() : "";
+            let ware = Number($('#Met_WareID').dropdown('get value')) ? Number($('#Met_WareID').dropdown('get value')) : 0;
+            if (ware == 0 || DateExecute == undefined || Object.keys(data_product).length == 0)
+                $('#TS_Message').html("@Local["Kiểm tra dữ liệu"]")
+            else
+                AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(Object.values(data_product))
+                        , 'ware': ware
+                        , 'DateExecute': DateExecute
+                        , 'IsPackageNumber': IsPackageNumber
+                        , 'CurrentID': DetailID
+                    }
+                    , async = true
+                    , error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccess();
+                            WareHouse_Load(0, DetailID )
+                            Met_GetInfo(DetailID);
+                            if ($("#exmet_" + DetailID + " i").length)
+                                $("#exmet_" + DetailID + " i").removeClass("opacity-1");
+                            syslog_whr('u', result)
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                );
+        }
+    }
+    function met_unexport() {
+        const promise = notiConfirm();
+        promise.then(function () {
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=UnExport"
+                , data = {
+                    'DetailID': DetailID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        WareHouse_Load(0, DetailID )
+                        Met_GetInfo(DetailID);
+                        if ($("#exmet_" + DetailID + " i").length)
+                            $("#exmet_" + DetailID + " i").addClass("opacity-1");
+                        syslog_whr('u', result)
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }, function () { });
+
+    }
+
+    function met_deleteform() {
+        const promise = notiConfirm();
+        promise.then(function () {
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportDetail/?handler=Delete"
+                , data = {
+                    'DetailID': DetailID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        if ($("#exmet_" + DetailID).length) $("#exmet_" + DetailID).remove();
+                        WareHourse_Cancel();
+                        syslog_whr('d', result)
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }, function () { });
+
+    }
+
+    function WareHourse_Cancel() {
+        $('#divMaterialDetail').empty()
+    }
+
+    //#endregion
+
+</script>
+
+<style>
+
+    #Met_warebody li input[type=text] {
+        display: block;
+    }
+
+    #Met_warebody .error {
+        background: #fff6f6 !important;
+        border-color: #e0b4b4 !important;
+    }
+
+    #Met_warebody .buttonDeleteClass:hover {
+        opacity: 1 !important;
+        cursor: pointer;
+    }
+
+    #Met_warebody .buttonDeleteClass {
+        top: 21px;
+        left: -21px;
+    }
+</style>
+

@@ -1,0 +1,383 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Employee.WorkSchedule.WorkScheduleModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/Calendar_Custom/datetime.js', true)</script>
+<script>js_require_notasync('/js/WorkScheduler/workscheduler.js', true)</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0"> 
+        <div class="vtcondition w-100">
+            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+            <div class="fulllap collapse collapsesticky show">
+                <div class="row m-0 d-lg-flex">
+                    <div class="col-12 col-sm-3 px-0 py-1 pe-sm-2">
+                        <div class="ui fluid search selection dropdown form-control" id="PWS_BranchID">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chọn chi nhánh"]</div>
+                            <div id="PWS_cbbBranchID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-3 px-0 py-1 pe-sm-2">
+                        <div class="ui fluid search selection dropdown form-control" id="PWS_EmpGroupID" onchange="event.preventDefault(); event.stopPropagation(); PWS_getEmployeeData()">
+                            <input type="hidden" name="Emp" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Nhóm nhân viên"]</div>
+                            <div id="PWS_cbbEmpGroupID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 px-0 py-1 pe-sm-2">
+                        <div class="input-group flex-nowrap rounded-end position-relative">
+                            <div class="input-group-text py-0 px-3 position-relative ">
+                                <div id="PWS_BlockTime" class="px-2 rounded-2 bg-gradient-primary text-white" style="border-radius: 10px !important;" title="" data-bs-toggle="tooltip" data-bs-original-title="@Local["Giới hạn ngày"]">
+                                    <div class="text-sm">31</div>
+                                </div>
+                            </div>
+                            <input class="flatpickr form-control input-group-text text-start" id="PWS_Date" type="text" placeholder="@Local["Chọn ngày"].." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-1">
+            <button class="btn bg-gradient-primary btn-sm mt-0 mb-0" onclick="event.preventDefault();PWS_LoadData();">@Local["OK"]</button>
+            <button class="btn bg-gradient-primary btn-sm mt-0 mb-0 _tab_control_" data-tab="export_excel" title="@Local["Xuất"]" data-value="fade up" onclick="event.preventDefault();return PWS_Export();">@Local["Xuất"]</button>
+            <button class="btn btn-dark mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#PWS_DivCheckbox">
+                @Local["Xem thêm"]
+            </button>
+        </div>        
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-3" id="PWS_DivCheckbox" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi tiết"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-2 px-0">
+        <div class="m-0 my-3 pb-0 mobile-responsive mb-0 vt-header-sticky" style="max-height: calc(100vh - 250px)">
+            <div id="PWS_Loader" class="waitingdiv text-center w-100 mt-2 position-absolute translate-middle-x start-50" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <table id="PWS_dtContent" class="table vt-table mb-0 ">
+                <thead id="PWS_dtContentHeader">
+                </thead>
+                <tbody id="PWS_dtContentBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    //#region //Init & Event
+    let PWS_dateFrom = '', PWS_dateTo = '';
+    let PWS_BranchID = 0, PWS_groupID = 0;
+    let xhrLoadList;
+    let shtablework;
+    var PWS_datadow = ["@Local["Chủ nhật"]", "@Local["Thứ hai"]", "@Local["Thứ ba"]", "@Local["Thứ tư"]", "@Local["Thứ năm"]", "@Local["Thứ sáu"]", "@Local["Thứ bảy"]"];
+    var PWS_dataEmp = [];
+    let PWS_xhrLoadEmpEmp;
+    $(document).ready(function () {
+        $("#PWS_BlockTime").tooltip()
+        PWS_Init();
+
+    });
+
+    function PWS_Init() {
+        $("#PWS_Date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#PWS_Date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        shtablework = $("#PWS_dtContent").TableExpandColumn({
+            shtoogle: $('#PWS_DivCheckbox .shtoogle')
+        });
+        Load_Combo(PR_serDataBranch, "PWS_cbbBranchID", true, "@Local["Tất cả chi nhánh"]");
+        Load_Combo(PR_serDataEmpGroup, "PWS_cbbEmpGroupID", true, "@Local["Tất cả bộ phận"]");
+        $("#PWS_BranchID").dropdown("refresh");
+        $("#PWS_BranchID").dropdown("set selected", "0");
+        $("#PWS_EmpGroupID").dropdown("refresh");
+        $("#PWS_EmpGroupID").dropdown("set selected", "0");
+        PWS_Event();
+        PWS_LoadData();
+    }
+
+    //#endregion
+
+    //#region //LOAD DATA
+    async function PWS_LoadData() {
+        return new Promise(async (resolve) => {
+
+            let date = $('#PWS_Date').val() ? $('#PWS_Date').val() : ConvertDateTimeUTC_DMY(new Date())
+            PWS_BranchID = Number($('#PWS_BranchID').dropdown('get value')) ? Number($('#PWS_BranchID').dropdown('get value')) : 0;
+            PWS_groupID = Number($('#PWS_EmpGroupID').dropdown('get value')) ? Number($('#PWS_EmpGroupID').dropdown('get value')) : 0;
+
+            if (date.search(" to ") > 0) {
+                date = date.replace(" to ", "x");
+                PWS_dateFrom = date.split('x')[0];
+                PWS_dateTo = date.split('x')[1];
+            }
+            else {
+                PWS_dateFrom = date;
+                PWS_dateTo = date;
+            }
+            //let empID = Number($('#PWS_EmpID').dropdown('get value')) ? Number($('#PWS_EmpID').dropdown('get value')) : 0;
+            let empID = 0;
+            PWS_dataEmp = await PWS_getEmployeeData();
+            let tokenEmpID = (empID == 0) ? PWS_dataEmp.reduce((pre, arr) => {return pre + ', ' + arr.ID}, "") : empID;
+            $('#PWS_dtContentHeader').empty();
+            $('#PWS_dtContentBody').empty();
+            PWS_RenderHeader('PWS_dtContentHeader', PWS_dateFrom, PWS_dateTo);
+            if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+            xhrLoadList = AjaxLoad(url = "/HR/Employee/WorkSchedule/WorkSchedule/?handler=LoadData"
+                , data = {
+                    dateFrom: PWS_dateFrom,
+                    dateTo: PWS_dateTo,
+                    tokenEmpID: tokenEmpID + ','
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    $("#PWS_Loader").hide();
+                    if (result != "0") {
+                        let datas = JSON.parse(result);
+                        let dataWorkSche = Work_Scheduler_Get_From_TokenDoc(PWS_BranchID, ConvertOnly_DMY_To_DateTime(PWS_dateFrom), ConvertOnly_DMY_To_DateTime(PWS_dateTo), datas.Table, datas.Table1, datas.Table2, datas.Table3); 
+                        PWS_Render(dataWorkSche, 'PWS_dtContentBody'); 
+                    }
+                    else {
+
+                    }
+                    resolve();
+                },
+                sender = null,
+                before = function (e) {
+                    $("#PWS_Loader").show();
+                },
+                complete = function (e) {
+                    $("#PWS_Loader").hide();
+                }
+            );
+        })
+    }
+    async function PWS_Render(data, id) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let dtEmp = [...PWS_dataEmp];
+
+                    let DateFrom = ConvertOnly_DMY_To_DateTime(PWS_dateFrom);
+                    let DateTo = ConvertOnly_DMY_To_DateTime(PWS_dateTo);
+                    let totalCol = 7 + 2*Math.ceil((DateTo - DateFrom) / (1000 * 60 * 60 * 24));
+
+                    if (dtEmp && dtEmp.length > 0) {
+                        let groupID = 0;
+                        for (let j = 0; j < dtEmp.length; j++) {
+                            let itemEmp = dtEmp[j];
+                            let EmpID = itemEmp.ID;
+                            let tr = '', trDate = '';
+                            let totalDateWork = 0;
+                            for (let dateindex = DateFrom; dateindex <= DateTo; dateindex = dateindex.addDays(1)) {
+                                let date = formatdDateTime_To_Date(new Date(dateindex.getTime()));
+                                let numDate = Convert_DateTime_To_YMD_Int(date);
+                                let trRowDate = '';
+                                let totalShift = 0;
+                                let isWork = false;
+                                
+                                for(let schei = 0; schei < data.length; schei++) {
+                                    let itemWork = data[schei];
+                                    if(itemWork?.EmpID == EmpID && itemWork.Date == Number(numDate)) {
+                                        
+                                        isWork = isWork || itemWork.IsWork == 1;
+                                        trRowDate += isWork ? `<div class="badge badge-dafault mt-1 ${PWS_checkWhiteColor(itemWork?.Color ?? "#ffffff") ? 'text-dark' : 'text-white'} shadow" style="background: ${itemWork?.Color ?? "#ffffff"}">
+                                                                    <span> ${itemWork.ShiftCode} ${Fun_GetName_ByID(PR_serDataBranch, Number(itemWork.BranchID))} </span>
+                                                                    <span style="color: ${itemWork?.Color ?? "#ffffff"}!important"> | </span>
+                                                                </div>`
+                                                            : `<div class="badge badge-default text-white mt-1 shadow" style="background:red">
+                                                                <span>OFF<span>
+                                                               </div>`;
+
+                                        totalShift = itemWork.IsWork == 1 && totalShift != -1 ? totalShift + 1 : -1;
+                                        data.splice(schei, 1);
+                                        schei--;
+                                    }
+                                    else { 
+                                        break;
+                                    }
+                                }
+                                totalDateWork = totalDateWork + (isWork ? 1 : 0);
+                                trDate += `<td class="text-center">${totalShift == -1 ? '0' : (totalShift > 0 ? totalShift : '')}</td>
+                                                <td data-name="detail">${trRowDate}</td>`;
+                            }
+                            if (groupID != itemEmp.GroupID) {
+                                groupID = itemEmp.GroupID;
+                                tr = `<tr id="PWS_row${itemEmp.EmpID}" data-isGroup="1" class="bg-gray-100 ">
+                                                 <td colspan="${totalCol}" class="text-dark fw-bold text-sm"><span class="vttech-fixedcol">${itemEmp.GroupName}</span></td>
+                                            </tr>`
+                            }
+                            
+                            tr += `<tr id="PWS_row${itemEmp.EmpID}"  data-isGroup="0" class="vt-number bg-white">
+                                                <td class="vttech-fixedcol vt-number-order"></td>
+                                                <td class="vttech-fixedcol ">${itemEmp.Code}</td>
+                                                <td class="vttech-fixedcol ">${itemEmp.Name}</td>
+                                                <td class="vttech-fixedcol ">${itemEmp.LevelName || '@Local["Nhân viên"]'}</td>
+                                                ${trDate}
+                                                <td class="text-center">${totalDateWork}</td>
+                                          </tr>`
+                            myNode.insertAdjacentHTML("beforeend", tr);
+
+
+                        }
+                    }
+                    shtablework.Refresh();
+                    if (typeof TableReponsive !== 'undefined' && sys_isMobile == 0) {
+                        TableReponsive.StickyColumn($(myNode));
+                    }
+                }
+                resolve();
+            }, 30)
+        })
+    }
+
+
+    function PWS_checkWhiteColor(str) {
+        return str.match(/^(?:white|#fff(?:fff)?|rgba?\(\s*255\s*,\s*255\s*,\s*255\s*(?:,\s*1\s*)?\))$/i);
+    }
+
+    async function PWS_RenderHeader(id, datefrom, dateto) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '', stringDate = '', stringDetail = '';
+                let _NumCol = $("#PWS_DivCheckbox input:checked").length;
+                let _colspan = 1 + _NumCol;
+                let _dFrom = ConvertOnly_DMY_To_DateTime(datefrom);
+                let _dTo = ConvertOnly_DMY_To_DateTime(dateto);
+                let _distanceDay = Math.ceil((_dTo - _dFrom) / (1000 * 60 * 60 * 24));
+                let isdiffYear = Distance_Year_2Date(_dFrom, _dTo) > 0;
+                let totalDay = 0;
+                for (let i = 0; i <= _distanceDay; i++) {
+                    let strDate = isdiffYear ? ConvertDateTimeToString_D_M_Y(_dFrom) : ConvertDateTimeToString_D_M(_dFrom);
+                    let dow = ConvertYMDInt_ToDOW(ConvertDateTime_To_YMDInt(_dFrom));
+                    let lastDow = dow == 0 ? `<span class="text-danger">*</span>` : '';
+                    stringDate += `
+                                  <th colspan="${_colspan}" class="DayHeader" style="min-width: 200px;">${PWS_datadow[dow]}, ${strDate} ${lastDow}</th>
+                                `
+                    stringDetail += `
+                                  <th class="${i == 0 ? 'ColDistance' : ''}" style="min-width: 100px;">@Local["Số ca"]</th>
+                                      <th class="${i == 0 ? 'ColDistance' : ''}" style="min-width: 100px;" data-name="detail">@Local["Chi tiết"]</th>
+                                `
+                    totalDay = dow > 0 ? totalDay + 1 : totalDay;
+                    _dFrom.setDate(_dFrom.getDate() + 1);
+                }
+                stringContent = `
+                                <tr class="bg-gray-100" role="row" rowspan="2">
+                                    <th class="d-none">ID</th>
+                                    <th style="width: 25px;" rowspan="2" class="vttech-fixedcol" >#</th>
+                                    <th style="min-width: 150px;" rowspan="2" class="vttech-fixedcol" >@Local["Mã"]</th>
+                                    <th style="min-width: 150px;" rowspan="2" class="vttech-fixedcol" >@Local["Tên"]</th>
+                                    <th style="min-width: 150px;" rowspan="2"  class="vttech-fixedcol" data-name="level">@Local["Chức vụ"]</th>
+                                    <th data-name="total" class="text-center">@Local["Tổng"]</th>
+                                    ${stringDate}
+                                </tr>
+                                <tr class="bg-gray-100">
+                                    <th data-name="total" class="text-center">${totalDay}</th>
+                                        ${stringDetail}
+                                </tr>
+                            `
+                myNode.innerHTML = stringContent;
+                shtablework.Refresh();
+                if (typeof TableReponsive !== 'undefined' && sys_isMobile == 0) {
+                    TableReponsive.StickyHeader();
+                    TableReponsive.StickyColumn($(myNode));
+                }
+            }
+            resolve();
+        })
+    }
+
+    function PWS_Event () {
+        $("#PWS_DivCheckbox input").change(function () {
+            let ColSpan = $('.ColDistance').filter(function () {
+                return !($(this).css('display') == 'none')
+            }).length
+
+            $(".DayHeader").attr("colspan", ColSpan);
+        });
+    }
+
+    async function PWS_getEmployeeData() {
+        return new Promise(resolve => {
+            let branchID = Number($('#PWS_BranchID').dropdown('get value')) ? Number($('#PWS_BranchID').dropdown('get value')) : 0;
+            let groupID = Number($('#PWS_EmpGroupID').dropdown('get value')) ? Number($('#PWS_EmpGroupID').dropdown('get value')) : 0;
+            if (PWS_xhrLoadEmpEmp && PWS_xhrLoadEmpEmp.readyState != 4) PWS_xhrLoadEmpEmp.abort();
+            PWS_xhrLoadEmpEmp = AjaxLoad(url = "/HR/Employee/WorkSchedule/WorkSchedule/?handler=LoadEmp"
+                , data = {
+                    'BranchID': branchID,
+                    'GroupID': groupID
+                }
+                , async = true
+                , error = function () {
+                    resolve([]);
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    let data = [];
+                    if (result != "[]" && result != "0") {
+                        data = JSON.parse(result);
+                        //Load_Combo(data, "PWS_cbbEmpID", true, "@Local["Tất cả nhân viên"]");
+                        //$("#PWS_EmpID").dropdown("refresh");
+                        //$("#PWS_EmpID").dropdown("set selected", "0");
+                        
+                    }
+                    else if (result == "0") {
+                        notiError_SW();
+                    }
+                    else {
+                    
+                    }
+                    resolve(data)
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#FTMM_Tele_WattingDiv").show();
+                }
+                , complete = function (e) {
+                    $("#FTMM_Tele_WattingDiv").hide();
+                }
+            );
+        })
+    }
+    function PWS_Export() {
+        exportToExcel("PWS_dtContent", Outlang["Sys_lich_lam_viec"] != undefined ? Outlang["Sys_lich_lam_viec"] : 'excel');
+    }
+</script>

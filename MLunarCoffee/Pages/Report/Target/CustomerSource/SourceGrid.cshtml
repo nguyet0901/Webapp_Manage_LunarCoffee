@@ -1,0 +1,261 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Target.CustomerSource.SourceGridModel
+@{
+    Layout = null;
+}
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-lg-50 col-auto my-auto">
+                <p class="text-md text-dark font-weight-bold mb-1">@Local["Doanh số theo nguồn"]</p>
+                <p class="text-sm mb-0">@Local["Báo cáo doanh số theo nguồn"]</p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#SourceGridGrid" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return Target_By_Source_LoadDataReport()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return ExportData_Target_By_Source()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="SourceGridGrid">
+        <div class="card-body p-3 pt-0 overflow-y" style="max-height:80vh;">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReportMaster">
+                    <thead class="hiddenCollapse" id="headerTableReportMaster">
+                    </thead>
+                    <tbody id="dtContentReportMasterBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    $(document).ready(function ()
+    {
+        ToolPopper();
+        Target_By_Source_LoadDataReport();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function Target_By_Source_LoadDataReport()
+    {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _TokenBranch = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/Target/CustomerSource/SourceGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _TokenBranch }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0" && result != "") {
+                    let data = JSON.parse(result)["Table"];
+                    let listSource = JSON.parse(result)["Table1"];
+                    let listDate = JSON.parse(result)["Table2"];
+                    let listSourceCat = JSON.parse(result)["Table3"];
+                    let listBoroker = JSON.parse(result)["Table4"];
+                    let totalByCat = JSON.parse(result)["Table5"];
+                    RenderReport_Header(listSourceCat, listSource, listBoroker, "headerTableReportMaster");
+                    RenderReportMater(listDate, listSource, listBoroker, totalByCat, listSourceCat, data, "dtContentReportMasterBody");
+                    $('#dtContentReportMaster').tablesort();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+
+        );
+        return false;
+    }
+
+
+    function RenderReport_Header(Category, Types, Broker, id)
+    {
+        if (Category && Category && Types && Types.length > 0) {
+            let CatBySPID = Types.filter(word => word.SPID == 2)[0].TypeCat_ID;
+            let stringContent = '';
+            let master = '<th class="fixed-side" style="width:20px" rowspan="3">#</th>'
+                + '<th class="fixed-side no-sort" rowspan="3">@Local["Ngày"]</th>'
+                + '<th class="fixed-side" rowspan="3">@Local["Tổng"]</th>';
+
+            // NHÓM NGUỒN
+            let colspan = 0;
+            let group = '';
+            for (var i = 0; i < Category.length; i++) {
+                let item = Category[i];
+                colspan = (item.TypeCat_ID == CatBySPID) ? (item.TotalChildren - 1 + Broker.length) : (item.TotalChildren);
+                group = group + '<th class="type_name no-sort" colspan="' + (colspan + 1) + '">'
+                    + item.TypeCat_Name
+                    + '</th>';
+            }
+            stringContent += '<tr role="row">' + master + group + '</tr>'
+
+            // NGUỒN
+            let tr = '';
+            for (var i = 0; i < Types.length; i++) {
+                let item = Types[i];
+                if (item.SPID == 2) {
+                    tr += '<th class="type_name no-sort" colspan="' + Broker.length + '">' + item.TypeName + '</th>';
+                }
+                else {
+                    tr += '<th class="type_name no-sort" rowspan="2">' + item.TypeName + '</th>';
+                }
+
+                // thêm cột tổng
+                if (Types[i + 1] == undefined || Types[i + 1].TypeCat_ID != Types[i].TypeCat_ID) {
+                    tr += '<th class="no-sort" rowspan="2">@Local["Tổng"]</th>';
+                }
+
+            }
+            stringContent += '<tr role="row">' + tr + '</tr>'
+
+            // DS BROKER
+            let broker = '';
+            for (var i = 0; i < Broker.length; i++) {
+                let item = Broker[i];
+                broker += '<th class="type_name no-sort">' + item.BrokerName + '</th>';
+
+            }
+            stringContent += '<tr role="row">' + broker + '</tr>'
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function RenderReportMater(listDate, listSource, listBroker, totalByCat, listSourceCat, data, id)
+    {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+
+            if (data && data.length > 0) {
+                for (var i = 0; i < listDate.length - 1; i++) {
+                    let sv = listDate[i];
+                    let items = data.filter(data => data.DatePayment == listDate[i].DatePayment);
+                    let tr = /*'<td style="display:none">' + sv.BranchID + '</td>'*/
+                        '<td class="vt-number-order"></td>'
+                        + '<td class="fixed-side>' + sv.DatePaymentShow + '</td>'
+                        + '<td class="fixed-side" data-sortvalue="' + sv.TotalAmount + '">' + formatNumber(sv.TotalAmount) + '</td>';
+                    for (var j = 0; j < listSource.length; j++) {
+                        let item = items.filter(data => data.TypeID == listSource[j].TypeID);
+                        if (listSource[j].SPID == 2) {
+                            if (item && item.length > 0) {
+                                for (var k = 0; k < listBroker.length; k++) {
+                                    let itemBroker = item.filter(data1 => data1.BrokerID == listBroker[k].BrokerID);
+                                    if (itemBroker && itemBroker.length > 0) {
+                                        tr += '<td class="selectedtd" data-sortvalue="' + itemBroker[0].AmountBroker + '">' + formatNumber(itemBroker[0].AmountBroker) + '</td>';
+                                    }
+                                    else {
+                                        tr += '<td class="selectedtd" data-sortvalue="0">0</td>';
+                                    }
+                                }
+                            }
+                            else {
+                                for (var p = 0; p < listBroker.length; p++) {
+                                    tr += '<td class="selectedtd" data-sortvalue="0">0</td>';
+                                }
+                            }
+
+                        }
+                        else {
+                            if (item && item.length > 0) {
+                                tr += '<td class="selectedtd" data-sortvalue="' + item[0].Amount + '">' + formatNumber(item[0].Amount) + '</td>';
+                            }
+                            else {
+                                tr += '<td class="selectedtd" data-sortvalue="0">0</td>';
+                            }
+                        }
+
+                        // tổng từng ngày theo loại nguồn
+                        if (listSource[j + 1] == undefined || listSource[j + 1].TypeCat_ID != listSource[j].TypeCat_ID) {
+                            let itemTotalByCat = totalByCat.filter(char => char.TypeCat_ID == listSource[j].TypeCat_ID && listDate[i].DatePayment == char.DatePayment)
+                            if (itemTotalByCat && itemTotalByCat.length > 0) {
+                                tr += '<td class="column_total" data-sortvalue="' + itemTotalByCat[0].Amount + '">' + formatNumber(itemTotalByCat[0].Amount) + '</td>';
+                            }
+                            else {
+                                tr += '<td class="column_total" data-sortvalue="0">0</td>';
+                            }
+
+                        }
+                    }
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+                let row_total =
+                    '<td class="vt-number-order"></td>'
+                    + '<td class="fixed-side">' + formatNumber(listDate[listDate.length - 1].DatePaymentShow) + '</td>'
+                    + '<td class="fixed-side">' + formatNumber(listDate[listDate.length - 1].TotalAmount) + '</td>';
+                for (var j = 0; j < listSource.length; j++) {
+                    let item = listSource[j];
+                    if (item.SPID == 2) {
+                        for (var b = 0; b < listBroker.length; b++) {
+                            row_total += '<td>' + formatNumber(listBroker[b].TotalAmount) + '</td>';
+                        }
+                    }
+                    else {
+                        row_total += '<td>' + formatNumber(item.TotalAmount) + '</td>';
+                    }
+                    if (listSource[j + 1] == undefined || listSource[j + 1].TypeCat_ID != listSource[j].TypeCat_ID) {
+                        let itemTotal = listSourceCat.filter(char => char.TypeCat_ID == listSource[j].TypeCat_ID)
+                        if (itemTotal && itemTotal.length > 0) {
+                            row_total += '<td class="" data-sortvalue="' + itemTotal[0].TotalAmount + '">' + formatNumber(itemTotal[0].TotalAmount) + '</td>';
+                        }
+                        else {
+                            row_total += '<td class="" data-sortvalue="0">0</td>';
+                        }
+
+                    }
+                }
+                stringContent = '<tr role="row"  class="vt-number active">' + row_total + '</tr>' + stringContent;
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        // $("#dtContentReportMaster").tableHeadFixer({ "head": false, "headleft": true, "left": 3, "class": "fixed-side" });
+    }
+    function ExportData_Target_By_Source()
+    {
+        syslog_ExpExcel('e', Outlang["Bao_cao_doanh_so_theo_nguon"]);
+        exportToExcel("dtContentReportMaster", Outlang["Bao_cao_doanh_so_theo_nguon"]);
+    }
+
+</script>
+<style type="text/css">
+    /* .date_show {
+            white-space: nowrap;
+            background: #e2ae1926 !important;
+        }*/
+    .column_total {
+        background-color: rgb(245,228,222) !important;
+    }
+
+    .AppendTable {
+        height: 46em !important;
+    }
+
+    .total_all_branch {
+        background-color: rgb(97, 159, 205);
+        color: #fff;
+    }
+</style>

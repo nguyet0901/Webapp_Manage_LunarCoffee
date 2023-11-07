@@ -1,0 +1,217 @@
+﻿@page
+@model MLunarCoffee.Pages.Facebook.Settings.FacebookPage.FacebookPageDetail.FacebookPageDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12" id="fbpage_Detail_InfoArea">
+            <div class="card  mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Facebook Fanpage"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2 position-relative">
+                    <div id="fbd_wait" class="waitingdiv text-center z-index-3 position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="px-1 form3" id="fbd_form">
+                        <div class="input-group flex-nowrap rounded-end position-relative">
+                            <input id="fbd_keyinput" placeholder="@Local["Key"]" class="form-control" type="text" />
+                            <div class="input-group-text border-end position-relative cursor-pointer bg-gradient-info"
+                                 onclick="return fbd_getpage()">
+                                <div class="fw-bold text-white">@Local["Thông tin"]</div>
+                            </div>
+                        </div>
+                        <div id="fbd_error" class="text-wrap text-sm my-3"></div>
+                        <div id="fbd_content" class="card card-plain mt-3 d-none">
+                            <div class="card-body text-dark p-3">
+                                <div class="d-flex">
+                                    <div class="avatar avatar-xxl border-radius-md p-2">
+                                        <img id="fbd_pic" src="/default.png" alt="fanpage">
+                                    </div>
+                                    <div class="ms-3 my-auto">
+                                        <h6 class="fw-bolder text-dark" id="fbd_name"></h6>
+                                        <h6 class="fst-italic text-dark" id="fbd_key"></h6>
+
+                                    </div>
+
+                                </div>
+                                <p id="fbd_about" class="text-sm mt-3"></p>
+                                <div id="fbd_description" class="text-wrap text-sm my-3"></div>
+                                <a class="fst-italic fw-bold text-primary " href="#" target="_blank" id="fbd_link"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save px-3 mx-1">
+                    
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="fbd_form" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button form="fbd_form" id="fbd_btnsave" type="button" class="btn bg-gradient-primary mt-2 me-2 d-none" onclick="event.preventDefault();fbd_execute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var fbd_currentid;
+    $(document).ready(function () {
+        fbd_currentid = '@Model._fbpage_Detail_ID';
+        if (Number(fbd_currentid) != 0) {
+            fbd_LoadDetail();
+        }
+    });
+    function fbd_LoadDetail () {
+        AjaxLoad(url = "/Facebook/Settings/FacebookPage/FacebookPageDetail/?handler=Loadata"
+            , data = {
+                "id": fbd_currentid
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let _data = JSON.parse(result);
+                    if (_data != undefined && _data.length == 1) {
+                        let e = {
+                            "id": _data[0].Key,
+                            "name": _data[0].Name,
+                            "link": _data[0].URL,
+                            "about": _data[0].About,
+                            "description": _data[0].Description,
+                            "picture": {
+                                "data": {
+                                    "url": _data[0].Picurl
+                                }
+                            }
+
+                        };
+                        fbd_filldata(e);
+                    }
+                    else {
+                        $('#fbd_content').addClass('d-none');
+                    }
+                }
+
+            });
+    }
+
+    //#region Fanpage Event
+    function fbd_getpage () {
+
+        let token = fbd_GetPageToken();
+        if (token != undefined && token != "") {
+            $('#fbd_error').html('');
+            let key = $("#fbd_keyinput").val() ? $('#fbd_keyinput').val() : "";
+            if (key != undefined && key.trim() != "") {
+                $.ajax({
+                    url: fl_page.replace('{pageid}', key) + "&access_token=" + token,
+                    dataType: "json",
+                    type: "GET",
+                    data: JSON.stringify({}),
+                    contentType: 'application/json; charset=utf-8',
+                    async: true,
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $('#fbd_error').html(XMLHttpRequest.responseJSON.error.message);
+                    },
+                    success: function (result) {
+                        if (result.id != undefined) {
+                            fbd_filldata(result);
+                            $("#fbd_btnsave").removeClass('d-none');
+                        }
+                    },
+                    beforeSend: function () {
+                        $("#fbd_wait").show();
+                    },
+                    complete: function () {
+                        $("#fbd_wait").hide();
+                    }
+                })
+            }
+            else {
+                notiWarning('@Local["Thực hiện nhập dữ liệu"]');
+                $('#fbd_content').addClass('d-none');
+            }
+        }
+        else {
+            notiWarning('@Local["Bạn không có quyền"]');
+                $('#fbd_content').addClass('d-none');
+        }
+    }
+    function fbd_filldata (data) {
+        $('#fbd_content').removeClass('d-none');
+        $("#fbd_key").html(data.id);
+        $("#fbd_name").html(data.name);
+        $("#fbd_link").html(data.link);
+        $("#fbd_link").attr("href", data.link)
+        $("#fbd_about").html(data.about);
+        $("#fbd_description").html(data.description);
+        $('#fbd_pic').attr("src", data.picture.data.url);
+        $('#fbd_error').html('');
+    }
+    function fbd_execute () {
+        var data = new Object();
+        data.Key = $("#fbd_key").html() ? $('#fbd_key').html() : "";
+        data.Name = $("#fbd_name").html() ? $('#fbd_name').html() : "";
+        data.URL = $("#fbd_link").html() ? $('#fbd_link').html() : "";
+        data.About = $("#fbd_about").html() ? $('#fbd_about').html() : "";
+        data.Description = $("#fbd_description").html() ? $('#fbd_description').html() : "";
+        data.Picurl = $('#fbd_pic').attr('src');
+
+        $('#fbd_form').form('validate form');
+        if ($('#fbd_form').form('is valid')) {
+            AjaxLoad(url = "/Facebook/Settings/FacebookPage/FacebookPageDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: fbd_currentid
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        CloseModal();
+                        fbpage_Load();
+                    }
+                    else if (result == "-1") notiError('@Local["Trùng dữ liệu"]');
+                    else notiError_SW();
+                });
+        }
+        return false;
+    }
+
+    function fbd_GetPageToken () {
+        try {
+            let keypage = $('#fbd_keyinput').val().trim();
+            var _objli = author_get("fbs_list");
+            if (_objli != undefined && _objli != "") {
+                let ptoken = JSON.parse(_objli);
+                for (let i = 0; i < ptoken.length; i++) {
+                    if (ptoken[i].id.toString() == keypage.toString()) {
+                        return ptoken[i].access_token;
+                    }
+                }
+            }
+        }
+        catch (ex) {
+            return "";
+        }
+
+    }
+    //#endregion Fanpage Event
+
+</script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>

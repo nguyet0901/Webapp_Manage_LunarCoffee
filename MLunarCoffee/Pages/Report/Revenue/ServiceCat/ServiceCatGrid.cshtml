@@ -1,0 +1,840 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.ServiceCat.ServiceCatGridModel
+@{
+    Layout = null;
+}
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0 pt-3">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#DeSC_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return DeSC_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return DeSC_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="DeSC_GridArea">
+        <div class="card-body p-0">
+            <div class="m-0 mt-3 mobile-responsive" style="max-height: calc(90vh - 350px);">
+                <table class="table vt-table mb-0" id="DeSC_Grid">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="3">#</th>
+                            <th rowspan="3">@Local["Tên"]</th>
+                            <th rowspan="1" colspan="5">@Local["Tổng"]</th>
+                            <th rowspan="1" colspan="5">@Local["Khách mới"]</th>
+                            <th rowspan="1" colspan="5">@Local["Khách cũ"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th rowspan="2" colspan="1">@Local["Số lượng DV/SP"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                            <th rowspan="2" colspan="1">@Local["Số lượng DV/SP"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                            <th rowspan="2" colspan="1">@Local["Số lượng DV/SP"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Phát sinh"]</th>
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Thanh toán"]</th>
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Phát sinh"]</th>
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Thanh toán"]</th>
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Phát sinh"]</th>
+                            <th>@Local["Số lượng khách"]</th>
+                            <th>@Local["Thanh toán"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="DeSC_GridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="DeSC_GridAreaDetail" class="mt-3" style="display:none;">
+    <div class="d-lg-flex">
+        <div class="w-lg-50 col-auto my-auto">
+            <div class="d-flex align-items-center mb-sm-0 mb-4">
+                <div class="form-check">
+                    <input id="DeSC_target" name="BtnRevenue" value="0" class="form-check-input pr-2 cursor-pointer BtnRevenue" type="radio" checked="checked">
+                    <label class="custom-control-label cursor-pointer" for="DeSC_target">@Local["Doanh số"]</label>
+                </div>
+                <div class="form-check ms-3">
+                    <input id="DeSC_revenue" name="BtnRevenue" value="1" class="form-check-input pr-2 cursor-pointer BtnRevenue" type="radio">
+                    <label class="custom-control-label cursor-pointer" for="DeSC_revenue">@Local["Doanh thu"]</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0 pt-0">
+            <div class="left">
+                <p class="text-md text-dark font-weight-bold mb-0 mt-1"><span id="DeSC_TitleDetail"></span></p>
+            </div>
+            <div class="right">
+                <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                    <span id="DeSC_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="DeSC_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#DeSC_DivGridDetail" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); DeSC_DetailPrintReport()"></i>
+                </div>
+                <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                    <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Xuất excel"]">
+                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"></i>
+                    </div>
+                    <div class="input-group-text icon-hover w-auto vttech-input-item">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return DeSC_ExecelDetail(0)">@Local["Tất cả"]</i>
+                    </div>
+                    <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return DeSC_ExecelDetail(1)">@Local["Tùy chọn"]</i>
+                    </div>
+                </div>
+                <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusNew" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Khách hàng mới"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custcodeold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                        </li>
+                        <li class="d-flex" id="DeSC_liPayDeposit">
+                            <div class="form-check form-switch">
+                                <input id="DeSC_ckbPayDeposit" class="shtoogle form-check-input" data-name="paymentdeposit" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tiền cọc cấn trừ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="timetotreatment" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số Lần điều trị"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi tiết"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusSource" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusBranch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="PayCreated" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày thanh toán"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="SerCreated" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày lên dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusCreated" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày tạo hồ sơ"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="DeSC_DivGridDetail">
+            <div class="card-body px-0 pt-2">
+                <div class="m-0 my-0 mobile-responsive position-relative vt-header-sticky">
+                    <table data-name="DeSC_GridDetail" class="table vt-table mb-0" id="DeSC_GridDetail">
+                        <thead>
+                            <tr role="row">
+                                <th>#</th>
+                                <th>@Local["Mã khách hàng"]</th>
+                                <th data-name="custcodeold">@Local["Mã khách hàng cũ"]</th>
+                                <th>@Local["Mã hồ sơ"]</th>
+                                <th>@Local["Khách hàng"]</th>
+                                <th data-name="CusNew">@Local["Khách hàng mới"]</th>
+                                <th>@Local["Phát sinh"]</th>
+                                <th data-name="paymentdeposit">@Local["Tiền cọc cấn trừ"]</th>
+                                <th>@Local["Loại"]</th>
+                                <th>@Local["Nhóm dịch vụ"]</th>
+                                <th>@Local["Dịch vụ"]</th>
+                                <th data-name="quantity" style="min-width: 80px;">@Local["Số lượng"]</th>
+                                <th data-name="timetotreatment" style="min-width: 80px;">@Local["Số Lần điều trị"]</th>
+                                <th data-name="detail" style="min-width:150px;">@Local["Chi tiết"]</th>
+                                <th data-name="CusSource">@Local["Nguồn"]</th>
+                                <th data-name="CusBranch">@Local["Chi nhánh"]</th>
+                                <th data-name="PayCreated">@Local["Ngày thanh toán"]</th>
+                                <th data-name="SerCreated">@Local["Ngày lên dịch vụ"]</th>
+                                <th data-name="CusCreated">@Local["Ngày tạo hồ sơ"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="DeSC_GridDetailBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return DeSC_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    //#region //Init & Load
+    let DeSC_DataJson = {
+        "Service": {
+            "ID": 0,
+            "Name": "Dịch vụ/sản phẩm"
+        },
+        "Deposit": {
+            "ID": 1,
+            "Name": "Tiền cọc"
+        },
+        "Card": {
+            "ID": 2,
+            "Name": "Thẻ trả trước"
+        },
+        "Medicine": {
+            "ID": 3,
+            "Name": "Đơn thuốc"
+        }
+    };
+
+    let DeSC_TypeID = 0, DeSC_ServiceTypeID = 0, DeSC_Revenue = 0;
+    let DeSC_dateFrom = "@Model._dateFrom";
+    let DeSC_dateTo = "@Model._dateTo";
+    let DeSC_branch = "@Model._branch";
+    let DataReportMain, DataReportMainSlice;
+    let IndexReport = 0;
+    let timeoutCount;
+    let DeSC_Shtable;
+
+    $(document).ready(function ()
+    {
+        ToolPopper();
+        DeSC_Shtable = $("#DeSC_GridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        DeSC_CheckTypeRev();
+        DeSC_Load();
+        Checking_TabControl_Permission();
+        DeSC_Event();
+    });
+
+    function DeSC_Load()
+    {
+
+        AjaxLoad(url = "/Report/Revenue/ServiceCat/ServiceCatGrid/?handler=Loadata"
+            , data = {
+                'branchID': DeSC_branch,
+                'dateFrom': DeSC_dateFrom,
+                'dateTo': DeSC_dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+
+                    DeSC_Render(data, "DeSC_GridBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    //#endregion
+
+    //#region //Render
+    async function DeSC_Render(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let trtotal = '';
+                    let t_targetsl = 0, t_targetam = 0, t_revenuesl = 0, t_revenueam = 0, t_quantity = 0;
+                    let n_targetsl = 0, n_targetam = 0, n_revenuesl = 0, n_revenueam = 0, n_quantity = 0;
+                    let o_targetsl = 0, o_targetam = 0, o_revenuesl = 0, o_revenueam = 0, o_quantity = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let name = '';
+                        if (item.Deposit == 1) name = '@Local["Tiền cọc"]';
+                        else if (item.Medicine == 1) name = '@Local["Thuốc"]';
+                        else if (item.Card == 1) name = '@Local["Thẻ"]';
+                        else {
+                            let _item = RP_DataServiceCat[item.ServiceCat];
+                            name = _item != undefined ? _item.Name : '';
+                        }
+
+                        t_targetsl = t_targetsl + item.TotalTarget;
+                        t_targetam = t_targetam + item.TotalTargetAmount;
+                        t_revenuesl = t_revenuesl + item.TotalRevenue;
+                        t_revenueam = t_revenueam + item.TotalRevenueAmount;
+                        t_quantity = t_quantity + item.TotalQuantity;
+
+                        n_targetsl = n_targetsl + item.NewTarget;
+                        n_targetam = n_targetam + item.NewTargetAmount;
+                        n_revenuesl = n_revenuesl + item.NewRevenue;
+                        n_revenueam = n_revenueam + item.NewRevenueAmount;
+                        n_quantity = n_quantity + item.NewQuantity
+
+                        o_targetsl = o_targetsl + item.OldTarget;
+                        o_targetam = o_targetam + item.OldTargetAmount;
+                        o_revenuesl = o_revenuesl + item.OldRevenue;
+                        o_revenueam = o_revenueam + item.OldRevenueAmount;
+                        o_quantity = o_quantity + item.OldQuantity
+
+
+                        let tr =
+                            '<td class="vt-number-order"></td>'
+                            + '<td>'
+                            + '<a href="#" class="border-1 border-primary border-bottom btnClickTitle" data-serviceType="' + item.ServiceCat + '" data-id="' + DeSC_GetIdDetail(item.Deposit, item.Medicine, item.Card) + '">' + name + '</a>'
+                            + '</td>'
+                            + '<td>' + formatNumber(item.TotalQuantity) + '</td>'
+                            + '<td>' + formatNumber(item.TotalTarget) + '</td>'
+                            + '<td>' + formatNumber(item.TotalTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.TotalRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.TotalRevenueAmount) + '</td>'
+
+                            + '<td>' + formatNumber(item.NewQuantity) + '</td>'
+                            + '<td>' + formatNumber(item.NewTarget) + '</td>'
+                            + '<td>' + formatNumber(item.NewTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.NewRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.NewRevenueAmount) + '</td>'
+
+                            + '<td>' + formatNumber(item.OldQuantity) + '</td>'
+                            + '<td>' + formatNumber(item.OldTarget) + '</td>'
+                            + '<td>' + formatNumber(item.OldTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.OldRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.OldRevenueAmount) + '</td>'
+                            ;
+
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td>'
+                                + '<a href="#" class="border-1 border-primary border-bottom btnClickTitle text-white" data-serviceType="0" data-id="0">@Local["Tổng"]</a>'
+                                + '</td>'
+                                + '<td>' + formatNumber(t_quantity)+ '</td>'
+                                + '<td>' + formatNumber(t_targetsl) + '</td>'
+                                + '<td>' + formatNumber(t_targetam) + '</td>'
+                                + '<td>' + formatNumber(t_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(t_revenueam) + '</td>'
+                                + '<td>' + formatNumber(n_quantity) + '</td>'
+                                + '<td>' + formatNumber(n_targetsl) + '</td>'
+                                + '<td>' + formatNumber(n_targetam) + '</td>'
+                                + '<td>' + formatNumber(n_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(n_revenueam) + '</td>'
+                                + '<td>' + formatNumber(o_quantity) + '</td>'
+                                + '<td>' + formatNumber(o_targetsl) + '</td>'
+                                + '<td>' + formatNumber(o_targetam) + '</td>'
+                                + '<td>' + formatNumber(o_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(o_revenueam) + '</td>'
+                                ;
+                            stringContent = stringContent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+
+
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            DeSC_EventMaster();
+        })
+    }
+    function DeSC_GetIdDetail(IsDeposit, IsMedicine, IsCard)
+    {
+        try {
+            let Result = 0;
+            if (IsDeposit == 1) {
+                Result = Number(DeSC_DataJson["Deposit"]["ID"]);
+            } else if (IsMedicine == 1) {
+                Result = Number(DeSC_DataJson["Medicine"]["ID"]);
+            } else if (IsCard == 1) {
+                Result = Number(DeSC_DataJson["Card"]["ID"]);
+            } else {
+                Result = 0
+            }
+            return Result;
+        }
+        catch {
+            return 0;
+        }
+    }
+
+    //#endregion
+
+    //#region //EventMaster
+
+    function DeSC_EventMaster()
+    {
+        $('#DeSC_GridBody .btnClickTitle').unbind('click').click(function ()
+        {
+            let Name = $(this).html();
+            DeSC_TypeID = Number($(this).attr('data-id'));
+            DeSC_ServiceTypeID = Number($(this).attr('data-serviceType'));
+
+            $("#DeSC_GridAreaDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#DeSC_GridAreaDetail").offset().top
+            }, 300);
+            $('#DeSC_TitleDetail').html(((DeSC_TypeID == "0" && DeSC_ServiceTypeID == "0") ? "@Local["Tất cả loại"]" : Name));
+
+            DeSC_LoadDetail(DeSC_TypeID, DeSC_ServiceTypeID, DeSC_Revenue);
+        })
+    }
+
+    //#endregion
+
+    //#region //Detail
+
+    function DeSC_LoadDetail(TypeID, DeSC_ServiceTypeID, IsRevenue)
+    {
+        IndexReport = 0;
+        $('#DeSC_GridDetailBody').empty();
+        AjaxLoad(url = "/Report/Revenue/ServiceCat/ServiceCatGrid/?handler=LoadataDetail"
+            , data = {
+                'branchID': DeSC_branch
+                , 'dateFrom': DeSC_dateFrom
+                , 'dateTo': DeSC_dateTo
+                , 'TypeID': TypeID
+                , 'ServiceTypeID': DeSC_ServiceTypeID
+                , 'IsRevenue': IsRevenue
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let datas = JSON.parse(result)['Table1'];
+                    DataReportMain = datas;
+                    DataReportMainSlice = sliceIntoChunks(JSON.parse(result)['Table1'], 500);
+                    fnRenderBlock(DataReportMainSlice[IndexReport], 'DeSC_GridDetailBody'
+                        , blocknum = 100
+                        , fnrender = DeSC_RenderDetail
+                        , fnsuccess = function (e) { }
+                        , fnbegin = function (e) { }
+                    )
+                    Count_Up("DeSC_totaldata", datas.length);
+                    $('#DeSC_currentdata').html('0');
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function DeSC_RenderMore()
+    {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "DeSC_GridDetailBody"
+                , blocknum = 100
+                , fnrender = DeSC_RenderDetail
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function DeSC_RenderDetail(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let isNew = item?.IsNew == 1 ? '<i class="fas fa-check text-primary"></i>' : '';
+                            let detail = DeSC_Render_SerDetail(item.TeethType, item.TeethChoosing, item.TreatIndex, item.TimeToTreatment);
+                            let tr = `
+                                <td class="vt-number-order"></td>
+                                <td>
+                                    <a href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}" target="_blank">${item.CusCode}</a>
+                                </td>
+                                <td data-name="custcodeold" class="text-center">${item.CustOldCode}</td>
+                                <td>${item.CusDoc}</td>
+                                <td>${item.CusName}</td>
+                                <td data-name="CusNew" class="text-center">${isNew}</td>
+                                <td>${formatNumber(item.Amount)}</td>
+                                <td data-name="paymentdeposit">${formatNumber(item.PaymentDeposit)}</td>
+                                <td>${DeSC_Render_GetType(item.Deposit, item.Medicine, item.Card)}</td>
+                                <td>${DeSC_render_GetSerCat(item.Deposit, item.Medicine, item.Card, item.CardID, item.MedicineID, item.ServiceCat)}</td>
+                                <td>${DeSC_render_GetName(item.Deposit, item.Medicine, item.Card, item.CardID, item.MedicineID, item.Service)}</td>
+                                <td data-name="quantity"> ${item.Quantity} </td>
+                                <td data-name="timetotreatment"> ${(sys_dencos_Main == 0) && (item.TimeToTreatment != 0) ? item.TimeToTreatment : ''} </td>
+                                <td data-name="detail"> ${detail} </td>
+                                <td data-name="CusSource">${(RP_DataCustomerSource[item.Source] != undefined) ? RP_DataCustomerSource[item.Source].Name : ''}</td>
+                                <td data-name="CusBranch">${(RP_DataBranch[item.BranchID] != undefined) ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                                <td data-name="PayCreated">${!item.PayCreated.includes('1900') ? ConvertDateTimeUTC_DMY(item.PayCreated) : ''}</td>
+                                <td data-name="SerCreated">${!item.SerCreated.includes('1900') ? ConvertDateTimeUTC_DMY(item.SerCreated) : ''}</td>
+                                <td data-name="CusCreated">${!item.CusCreated.includes('1900') ? ConvertDateTimeUTC_DMY(item.CusCreated) : ''}</td>
+                            `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        clearTimeout(timeoutCount);
+                        timeoutCount = setTimeout(() =>
+                        {
+                            Count_Up("DeSC_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+                DeSC_Shtable.Refresh();
+            }, 100);
+        })
+    }
+
+    function DeSC_Render_GetType(IsDeposit, IsMedicine, IsCard)
+    {
+        try {
+            let result = '';
+            if (IsDeposit == 1) {
+                result = DeSC_DataJson["Deposit"]["Name"];
+            } else if (IsMedicine == 1) {
+                result = DeSC_DataJson["Medicine"]["Name"];
+            } else if (IsCard == 1) {
+                result = DeSC_DataJson["Card"]["Name"];
+            } else {
+                result = DeSC_DataJson["Service"]["Name"];
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function DeSC_render_GetSerCat(IsDeposit, IsMedicine, IsCard, CardID, MedicineID, ServiceCatID) {
+        try {
+            let result = '';
+            if (IsDeposit == 1) {
+                result = decodeHtml('@Local["Cọc"]');
+            } else if (IsMedicine == 1) {
+                result =  decodeHtml('@Local["Thuốc"]');
+            } else if (IsCard == 1) {
+                result =  decodeHtml('@Local["Thẻ"]');
+            } else {
+                result = (RP_DataServiceCat[ServiceCatID] != undefined) ? RP_DataServiceCat[ServiceCatID].Name : ''
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function DeSC_render_GetName(IsDeposit, IsMedicine, IsCard, CardID, MedicineID, ServiceID)
+    {
+        try {
+            let result = '';
+            if (IsDeposit == 1) {
+                result = '';
+            } else if (IsMedicine == 1) {
+                result = (RP_DataMedicine[MedicineID] != undefined) ? RP_DataMedicine[MedicineID].Name : ''
+            } else if (IsCard == 1) {
+                result = (RP_DataCard[CardID] != undefined) ? RP_DataCard[CardID].Name : ''
+            } else {
+                result = (RP_DataService[ServiceID] != undefined) ? RP_DataService[ServiceID].Name : ''
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function DeSC_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment)
+    {
+        try {
+            let result = '';
+            if (sys_dencos_Main == 0) {
+                result = `${decodeHtml("@Local["Đã điều trị"]")} ": ${TreatIndex} | ${TimeToTreatment}`
+            }
+            else {
+                result = `${(TeethChoosing != '') ? Fun_GetTeeth_ByToken(DataTeeth, TeethChoosing, TeethType) : ''}`
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //Event
+    function DeSC_Event()
+    {
+        $('#DeSC_GridAreaDetail .BtnRevenue').on('change', function ()
+        {
+            DeSC_Revenue = !isNaN(Number($("input[name='BtnRevenue']:checked").val())) ? Number($("input[name='BtnRevenue']:checked").val()) : 0;
+            DeSC_CheckTypeRev();
+            DeSC_LoadDetail(DeSC_TypeID, DeSC_ServiceTypeID, DeSC_Revenue);
+        })
+    }
+
+    function DeSC_CheckTypeRev() {
+        if(DeSC_Revenue) {
+            $('#DeSC_liPayDeposit').removeClass('d-none');
+        }
+        else {
+            $("#DeSC_ckbPayDeposit").prop("checked", false);
+            $('#DeSC_liPayDeposit').addClass('d-none');
+        }
+    }
+    //#endregion
+
+    function DeSC_Export()
+    {
+        syslog_ExpExcel('e', Outlang['Nhom_dich_vu']);
+        exportToExcel("DeSC_Grid", Outlang['Nhom_dich_vu']);
+    }
+
+    function DeSC_ExecelDetail(isOption = 0)
+    {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#DeSC_GridAreaDetail');
+                let dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }]
+                    , "CusCode": ["@Local["Mã khách hàng"]"]
+                    , "CustOldCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcodeold']`)).is(":checked"),
+                        data: ["@Local["Mã khách hàng cũ"]", (value) => { return value }]
+                    }
+                    , "CusDoc": ["@Local["Mã hồ sơ"]"]
+                    , "CusName": ["@Local["Khách hàng"]"]
+                    , "IsNew": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusNew']`)).is(":checked"),
+                        data: ["@Local["Khách hàng mới"]", (value) => { return value == 1 ? 'x' : '' }]
+                    }
+                    , "Amount": ["@Local["Phát sinh"]"]
+                    , "PaymentDeposit": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='paymentdeposit']`)).is(":checked"),
+                        data: ["@Local["Tiền cọc cấn trừ"]"]
+                    }
+                    , "Deposit1": ["@Local["Loại"]", (value, { Deposit, Medicine, Card }) => { return DeSC_Render_GetType(Deposit, Medicine, Card) }]
+                    , "ServiceCat": ["@Local["Nhóm dịch vụ"]", (value, { Deposit, Medicine, Card, CardID, MedicineID, ServiceCat }) => { return DeSC_render_GetSerCat(Deposit, Medicine, Card, CardID, MedicineID, ServiceCat) }]
+                    , "Service": ["@Local["Dịch vụ"]", (value, { Deposit, Medicine, Card, CardID, MedicineID, Service }) => { return DeSC_render_GetName(Deposit, Medicine, Card, CardID, MedicineID, Service) }]
+                    , "Quantity": ["@Local["Số lượng"]"]
+                    , "TimeToTreatment": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='timetotreatment']`)).is(":checked"),
+                        data: ["@Local["Số lần điều trị"]", (value, { }) => {
+                            return (sys_dencos_Main == 0) && (value != 0) ? value : ''
+                        }]
+                    }
+                    , "Detail": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detail']`)).is(":checked"),
+                        data: ["@Local["Chi tiết"]", (v, { TeethType, TeethChoosing, TreatIndex, TimeToTreatment }) => {
+                            return DeSC_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }]
+                    }
+                    , "Source": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusSource']`)).is(":checked"),
+                        data: ["@Local["Nguồn"]", (value) => { return RP_DataCustomerSource[value] != undefined ? RP_DataCustomerSource[value].Name : '' }]
+                    }
+                    , "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusBranch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return (RP_DataBranch[value] != undefined) ? RP_DataBranch[value].Name : '' }]
+                    }
+                    , "PayCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='PayCreated']`)).is(":checked"),
+                        data: ["@Local["Ngày thanh toán"]", (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}]
+                    }
+                    , "SerCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='SerCreated']`)).is(":checked"),
+                        data: ["@Local["Ngày lên dịch vụ"]", (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}]
+                    }
+                    , "CusCreated": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusCreated']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo hồ sơ"]", (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}]
+                    }
+                };
+                syslog_ExpExcel('e', Outlang["Chi_tiet_nhom_dich_vu"]);
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'DeSC_GridDetailBody', PermissionTable_TabControl);
+                exportJsonToExcel(Outlang["Chi_tiet_nhom_dich_vu"], DataReportMain, dataHeader);
+            }
+            else notiWarning('@Local["Không có dữ liệu để xuất"]!');
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function DeSC_DetailPrintReport()
+    {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = "@Model._branch";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                        , isTotalFooter: true
+                    }]
+                    , "CusCode": ["@Local["Mã khách hàng"]"]
+                    , "CustOldCode": ["@Local["Mã khách hàng cũ"]", {
+                        isShow: $(`.shtoogle[data-name='custcodeold']`).is(":checked"),
+                        callbackRenderValue: (value) => { return value }
+                    }]
+                    , "CusDoc": ["@Local["Mã hồ sơ"]"]
+                    , "CusName": ["@Local["Khách hàng"]"]
+                    , "IsNew": ["@Local["Khách hàng mới"]", {
+                        isShow: $(`.shtoogle[data-name='CusNew']`).is(":checked"),
+                        callbackRenderValue: (value) => { return value == 1 ? 'x' : '' }
+                    }]
+                    , "Amount": ["@Local["Phát sinh"]", {
+                        callbackRenderValue: (value) => { return formatNumber(value) }
+                        , isTotalFooter: true
+                    }]
+                    , "PaymentDeposit": ["@Local["Tiền cọc cấn trừ"]", {
+                        isShow: $(`.shtoogle[data-name='paymentdeposit']`).is(":checked")
+                        , isTotalFooter: true
+                    }]
+                    , "Deposit1": ["@Local["Loại"]", {
+                        callbackRenderValue: (value, { Deposit, Medicine, Card }) => { return DeSC_Render_GetType(Deposit, Medicine, Card) }
+                    }]
+                    , "ServiceCat": ["@Local["Nhóm dịch vụ"]", {
+                        callbackRenderValue: (value, { Deposit, Medicine, Card, CardID, MedicineID, ServiceCat }) =>
+                        {
+                            return DeSC_render_GetSerCat(Deposit, Medicine, Card, CardID, MedicineID, ServiceCat)
+                        }
+                    }]
+                    , "Service": ["@Local["Dịch vụ"]", {
+                        callbackRenderValue: (value, { Deposit, Medicine, Card, CardID, MedicineID, Service }) =>
+                        {
+                            return DeSC_render_GetName(Deposit, Medicine, Card, CardID, MedicineID, Service)
+                        }
+                    }]
+                    , "Quantity": ["@Local["Số lượng"]", {
+                        isTotalFooter: true
+                    }]
+                    , "TimeToTreatment": ["@Local["Số lần điều trị"]", {
+                        isShow: $(`.shtoogle[data-name='timetotreatment']`).is(":checked"),
+                        callbackRenderValue: (value, { }) =>
+                        {
+                            return (sys_dencos_Main == 0) && (value != 0) ? value : ''
+                        },
+                        isTotalFooter: true
+                    }]
+                    , "Detail": ["@Local["Chi tiết"]", {
+                        isShow: $(`.shtoogle[data-name='detail']`).is(":checked"),
+                        callbackRenderValue: (v, { TeethType, TeethChoosing, TreatIndex, TimeToTreatment }) =>
+                        {
+                            return DeSC_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }
+                    }]
+                    , "Source": ["@Local["Nguồn"]", {
+                        isShow: $(`.shtoogle[data-name='CusSource']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_DataCustomerSource[value] != undefined ? RP_DataCustomerSource[value].Name : '' }
+                    }]
+                    , "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='CusBranch']`).is(":checked"),
+                        callbackRenderValue: (value) => { return (RP_DataBranch[value] != undefined) ? RP_DataBranch[value].Name : '' }
+                    }]
+                    , "PayCreated": ["@Local["Ngày thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='PayCreated']`).is(":checked"),
+                        callbackRenderValue: (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}
+                    }]
+                    , "SerCreated": ["@Local["Ngày lên dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='SerCreated']`).is(":checked"),
+                        callbackRenderValue: (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}
+                    }]
+                    , "CusCreated": ["@Local["Ngày tạo hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='CusCreated']`).is(":checked"),
+                        callbackRenderValue: (value) => {return !value.includes('1900') ? ConvertDateTimeUTC_DMY(value) : ''}
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr)
+                    {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = '@Local["Chi tiết nhóm dịch vụ"]', DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+</script>

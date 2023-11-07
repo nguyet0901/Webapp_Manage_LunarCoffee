@@ -1,0 +1,139 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Target.Branch.AllBranchPieModel
+@{
+    Layout = null;
+}
+<div class="card-header p-3 px-0">
+    <div class="d-lg-flex">
+        <div class="w-lg-50 col-auto my-auto">
+            <p class="text-md text-dark font-weight-bold mb-1"></p>
+        </div>
+        <div class="ms-auto my-auto d-flex align-items-center">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#AllBranchPie" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadData_ReportBranchPie()"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="collapsesticky collapse show" id="AllBranchPie">
+    <div class="card-body p-3 px-0 pt-0">
+        <div class="row">
+            <div class="col-12 col-md-12 col-lg-6 px-1">
+                <div class="d-lg-flex">
+                    <div class="col-w-300 text-center mx-auto position-relative" style="min-height: 250px;">
+                        <div class="fw-bold text-center text-dark mb-1 text-sm">
+                            @Local["Theo chi nhánh"]:
+                            <span id="BranchPieTotal" class="fw-bolder"></span>
+                        </div>
+                        <div class="chart position-absolute mt-5 top-50 start-50 translate-middle">
+                            <canvas id="BranchPie" class="chart-canvas" height="250"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 overflow-y">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="BranchPieList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3 px-1">
+                <div>
+                    <div class="fw-bold mb-1 text-center text-dark text-sm">@Local["Theo khu vực"]</div>
+                    <div class="chart " style="height:250px; width:300px">
+                        <canvas id="BranchAreaBar" class="chart-canvas" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-12 col-lg-3 px-1">
+                <div>
+                    <div class="fw-bold mb-1 text-center text-dark text-sm">@Local["Công nợ của khách hàng"] (@Local["Trong kỳ"])</div>
+                    <div class="card-body py-3 px-0 pt-0">
+                        <div class="d-flex align-items-center px-4 ps-3 py-2">
+                            <div class="text-dark my-auto text-sm">
+                                <span class="text-secondary text-xs mb-0 d-block">@Local["Tổng phát sinh"]</span>
+                                <a id="BranchPie_TotalPriceDiscounted" class="cursor-pointer fw-bold text-lg">0</a>
+                            </div>
+                        </div>
+                        <hr class="horizontal dark my-1">
+                        <div class="d-flex align-items-center px-4 ps-3 py-2">
+                            <div class="text-dark my-auto text-sm">
+                                <span class="text-secondary text-xs mb-0 d-block">@Local["Tổng tiền thanh toán"]</span>
+                                <a id="BranchPie_TotalPaid" class="cursor-pointer fw-bold text-lg">0</a>
+                            </div>
+                        </div>
+                        <hr class="horizontal dark my-1">
+                        <div class="d-flex align-items-center px-4 ps-3 py-2">
+                            <div class="text-dark my-auto text-sm">
+                                <span class="text-secondary text-xs mb-0 d-block">@Local["Tổng tiền công nợ"]</span>
+                                <a id="BranchPie_TotalDebt" class="cursor-pointer fw-bold text-lg text-danger">0</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script>
+
+    $(document).ready(function () {
+        ToolPopper();
+        LoadData_ReportBranchPie();
+    });
+
+    function LoadData_ReportBranchPie() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branchID = "@Model._branchID";
+        AjaxLoad(url = "/Report/Target/Branch/AllBranchPie/?handler=Loadata"
+            , data = {
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+                'branchID': _branchID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dataBranch = data.Table;
+                    let dataArea = (data.Table1);
+                    let dataDebt = data.Table2;
+
+                    let TotalPaid = dataBranch.reduce((pre, arr) => {
+                        return pre + Number(arr.Amount)
+                    }, 0);
+
+                    $('#BranchPieTotal').html(formatNumberToMilion(Number(TotalPaid)));
+                    ReportPie_Description(dataBranch, 'BranchName', 'Amount', 'BranchPieList');
+                    rp_pie("BranchPie", dataBranch, 'BranchName', 'Amount')
+
+                    rp_bar("BranchAreaBar", dataArea, 'Name', 'Amount');
+
+                    if (dataDebt && dataDebt.length != 0) {
+                        let item = dataDebt[0];
+                        $("#BranchPie_TotalPriceDiscounted").html(formatNumber(item.PriceDiscounted))
+                        $("#BranchPie_TotalPaid").html(formatNumber(item.Paid))
+                        $("#BranchPie_TotalDebt").html(formatNumber(item.Debt))
+                    }
+                }
+            }
+        );
+    }
+</script>
+

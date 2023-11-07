@@ -1,0 +1,198 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Status.StatusRatingListModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row" id="StatusRating_Main">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0 text-capitalize">@Local["Tình trạng đánh giá"]</h6>
+                    <p class="text-sm mb-0">
+                        @Local["Danh sách"]
+                    </p>
+                </div>
+                <div class="right">
+                    <button id="btn_addStatusRating" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return StatusRating_AddNew()">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class=" m-0 my-3 mobile-responsive">
+                    <table id="dtContentStatusRating" class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th style="width: 40px;">#</th>
+                                <th class="col-3">@Local["Tên"]</th>
+                                <th>@Local["Mã"]</th>
+                                <th>@Local["Biệt hiệu"]</th>
+                                <th>@Local["Màu"]</th>
+                                <th>@Local["Ghi chú"]</th>
+                                <th class="col-2">@Local["Người sửa"]</th>
+                                <th style="width: 40px;">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentStatusRatingbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="StatusRating_Detail"></div>
+
+<script>
+
+    //#region // DECLARE & INIT
+
+    let DataEmployee;
+
+    $(document).ready(function() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function(data) {
+                DataEmployee = data[0];
+                StatusRating_LoadList();
+            });
+        StatusRating_Event();
+    });
+
+    //#endregion
+
+
+    //#region // LOAD LIST
+
+    function StatusRating_LoadList() {
+        AjaxLoad(url = "/Student/Settings/Status/StatusRatingList?handler=Loadata"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function(result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    StatusRating_RenderList(data, "dtContentStatusRatingbody");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+
+    //#region // DELETE
+
+    function StatusRating_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function() { StatusRating_DeleteExecute(id); }, function() { });
+    }
+
+    function StatusRating_DeleteExecute(id) {
+        if (id != null && !isNaN(id)) {
+            AjaxLoad(url = "/Student/Settings/Status/StatusRatingList?handler=DeleteItem"
+                , data = { 'id': id }
+                , async = true
+                , error = function() { notiError_SW(); }
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        StatusRating_LoadList();
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function StatusRating_RenderList(data, id) {
+        new Promise((resolve) => {
+            let myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if ((data && data.length) > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let objCreated = DataEmployee[item.CreatedBy] != undefined ? DataEmployee[item.CreatedBy] : '';
+                        let tr = `<td class="d-none">${item.ID}</td>
+                                    <td class="vt-number-order"></td>
+                                    <td><a href="#" class="text-decoration-underline fw-bold buttonEditClass">${item.Name}</a></td>
+                                    <td>${item.Alias}</td>
+                                    <td>
+                                        <div style="background-color:${item.Color};color:#ffffff;text-align:center;padding:4px 0">${item.Color}</div>
+                                    </td>
+                                    <td>${item.Code}</td>
+                                    <td><span class="content_line_clamp">${item.Note}</span></td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <div class="icon icon-shape icon-sm me-2 text-center align-items-center">
+                                                <img class="avatar avatar-xs mt-2" src="${objCreated.Avatar != '' ? objCreated.Avatar : Master_Default_Pic}" alt="label-image">
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <h6 class="text-dark text-sm mb-0">${objCreated.Name}</h6>
+                                                <span class="text-xs">${ConvertDateTimeUTC_YMD(item.Created)}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></td>
+                            `
+                        stringContent += '<tr class="vt-number" role="row">' + tr + '</tr>';
+                    }
+                    myNode.innerHTML = stringContent;
+                }
+                StatusRating_Event();
+            }
+        });
+    }
+
+    //#endregion
+
+
+    //#region // EVENT
+
+    function StatusRating_Event() {
+        $('#dtContentStatusRatingbody .buttonEditClass').on('click', function() {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            StatusRating_Edit(ID);
+        });
+        $('#dtContentStatusRatingbody .buttonDeleteClass').on('click', function() {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            StatusRating_Delete(ID);
+        });
+    }
+    function StatusRating_AddNew(){
+
+        StatusRating_OpenDetail();
+        $("#StatusRating_Detail").empty();
+        $("#StatusRating_Detail").load("/Student/Settings/Status/StatusRatingDetail" + "?ver=" + versionofWebApplication);
+        return false;
+    }
+    function StatusRating_Edit(ID) {
+        StatusRating_OpenDetail();
+        $("#StatusRating_Detail").empty();
+        $("#StatusRating_Detail").load("/Student/Settings/Status/StatusRatingDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        return false;
+    }
+
+    function StatusRating_OpenDetail() {
+        $("#StatusRating_Main").hide();
+        $("#StatusRating_Detail").show();
+    }
+    function StatusRating_CloseDetail() {
+        $("#StatusRating_Main").show();
+        $("#StatusRating_Detail").hide();
+    }
+    //#endregion
+
+
+</script>

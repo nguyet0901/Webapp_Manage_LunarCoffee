@@ -1,0 +1,238 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketFile.TicketFile_File_ConvertCustomerModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card mb-3 card-plain">
+    @* <div class="card-header p-3 pb-0">
+    <h6 class="mb-0">@Local["Tạo khách hàng"]</h6>
+    <p class="text-sm mb-0">@Local["Kiểm tra dữ liệu trước khi thao tác. Sau khi chuyển, dữ liệu sẽ không thể hoàn tác"]!</p>
+    </div>
+    *@
+    <div class="vtcardheader card-header pb-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Tạo khách hàng"]</h6>
+            <p class="text-sm mb-0">@Local["Kiểm tra dữ liệu trước khi thao tác. Sau khi chuyển, dữ liệu sẽ không thể hoàn tác"]!</p>
+        </div>
+        <div class="right">
+            <div class="row mx-0 mt-2 mt-lg-0 gap-2">
+                <div class="col ps-0 mb-lg-0 mb-1">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-xs shadow border-radius-sm bg-gradient-primary text-center w-auto p-2 me-2 d-flex align-items-center justify-content-center">
+                            <h5 id="TFCC_TotalTicket" class="text-white mb-0 mt-0  font-weight-bolder" data-type="1">0</h5>
+                        </div>
+                        <p class="text-sm text-dark mb-0 fst-italic text-nowrap">Ticket</p>
+                    </div>
+                </div>
+                <div class="col ps-0 mb-lg-0 mb-1">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-xs shadow border-radius-sm bg-gradient-success text-center w-auto p-2 me-2 d-flex align-items-center justify-content-center">
+                            <h5 id="TFCC_TotalCust" class="text-white mb-0 mt-0 font-weight-bolder" data-type="2">0</h5>
+                        </div>
+                        <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Khách hàng"]</p>
+                    </div>
+                </div>
+                <div class="col ps-0 mb-lg-0 mb-1">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-xs shadow border-radius-sm bg-gradient-danger text-center w-auto p-2 me-2 d-flex align-items-center justify-content-center">
+                            <h5 id="TFCC_TotalTicketDelete" class="text-white mb-0 mt-0 font-weight-bolder" data-type="5">0</h5>
+                        </div>
+                        <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Ticket đã xoá"]</p>
+                    </div>
+                </div>
+                <div class="col ps-0 mb-lg-0 mb-1">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-xs shadow border-radius-sm bg-gradient-primary text-center w-auto p-2 me-2 d-flex align-items-center justify-content-center">
+                            <h5 id="TFCC_TotalTicketLeft" class="text-white mb-0 mt-0  font-weight-bolder" data-type="1">0</h5>
+                        </div>
+                        <p class="text-sm text-dark mb-0 fst-italic text-nowrap">@Local["Còn lại"]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-3 pt-2 form3">
+        <div id="TFCC_DetailContent" class="px-2">
+        </div>
+    </div>
+</div>
+<div class="fixed-botombutton">
+    <div class="action_Save">
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="TFM_CloseDetail()">@Local["Đóng"]</button>
+            <button id="btnExcuteToCust" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return TFCC_ExecuteData()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var TFCC_ImportID = '@Model._ImportID';
+    var TFCC_DataImport = []//, TFCC_DataObjImport = {};
+    var TFCC_DataEmployee, TFCC_DataServiceCare;
+    let TFCC_IsAllowChoose = false;
+    var TIPDataExcelImport = [];
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_ServiceCare, _Session_Employee]
+            , function (data) {
+                TFCC_DataServiceCare = data[0];
+                TFCC_DataEmployee = data[1];
+                TFCC_InitializeCombo();
+            }
+        );
+
+    })
+
+    function TFCC_InitializeCombo() {
+        AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_ConvertCustomer/?handler=LoadComboMain"
+            , data = {
+                'ImportID': TFCC_ImportID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dataBranch = data.Branch;
+
+                    Load_Combo(dataBranch, "TFCC_cbbBranch", true);
+                    $("#TFCC_BranchID").dropdown("refresh");
+                    $("#TFCC_BranchID").dropdown("set selected", Number(Master_branchID));
+                    TFCC_LoadDetail();
+                }
+            }
+        );
+    }
+
+
+    function TFCC_LoadDetail() {
+        AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_ConvertCustomer/?handler=LoadDetail"
+            , data = {
+                'ImportID': TFCC_ImportID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dataMaster = data.Table;
+                    TFCC_FillDetail(dataMaster)
+                    let dataTicket = (data.Table1).filter((word) => {
+                        return word.IsCust != 1
+                    });
+                    TFCC_DataImport = dataTicket;
+                    TIPDataExcelImport = dataTicket;
+                    $("#TFCC_DetailContent").load('/Marketing/TicketFile/TicketFile_ImportTable?ver=' + versionofWebApplication,
+                        () => {
+                            let item = dataMaster[0];
+                            TIT_Reload(item.Name);
+                        }
+                    )
+                }
+            }
+        );
+    }
+
+    async function TFCC_FillDetail(data) {
+        if (data && data.length != 0) {
+            let item = data[0];
+            $("#TFCC_TotalTicket").html(formatNumber(item.TotalTicket));
+            $("#TFCC_TotalCust").html(formatNumber(item.TotalCust));
+            $("#TFCC_TotalTicketDelete").html(formatNumber(item.TotalTicketDelete));
+            $("#TFCC_TotalTicketLeft").html(formatNumber(item.TotalTicket - item.TotalCust - item.TotalTicketDelete));
+        }
+    }
+
+
+    //#region //  HANDLE CHOOSE
+
+    function FC_checkDataChoose() {
+        try {
+            return TFCC_DataImport;
+        }
+        catch (ex) {
+            return [];
+        }
+    }
+    //#endregion
+
+    async function TFCC_ExecuteData() {
+        let ticketChoose = FC_checkDataChoose();
+
+        if (ticketChoose.length == 0) {
+            notiWarning("@Local["Không có dữ liệu"]");
+            return;
+        }
+
+        const promise = notiConfirm("@Local["Chuyển"] " + formatNumber(ticketChoose.length) + ' Ticket @Local["Thành khách hàng"]? </br> @Local["Sau khi chuyển, dữ liệu sẽ không thể hoàn tác"]');
+        promise.then(function () {
+            TFCC_ExecuteMaster();
+        }, function () { });
+
+
+    }
+
+    function TFCC_ExecuteMaster() {
+        try {
+            $("#btnExcuteToCust").addClass("disabled")
+            let ticketChoose = FC_checkDataChoose();
+            let totalAll = ticketChoose.length;
+            let dataMain = sliceIntoChunks(ticketChoose, 500);
+            let promises = [];
+            for (let i = 0; i < dataMain.length; i++) {
+                promises.push(TFCC_ExcuteDataEach(dataMain[i], i));
+            }
+
+            Promise.all(promises).then((values) => {
+                let total = values.reduce((pre, arr) => { return pre + arr }, 0);
+                notiSuccessMess("@Local["Thành công"] " + formatNumber(total) + '/' + formatNumber(totalAll));
+                if (typeof TFM_CloseDetail === 'function') TFM_CloseDetail();
+                if (typeof TF_IM_Load === 'function') TF_IM_Load();
+            })
+            .catch((ex) => {
+                if (typeof TFM_CloseDetail === 'function') TFM_CloseDetail();
+            }).finally(() => {
+                $("#btnExcuteToCust").removeClass("disabled")
+            });
+        }
+        catch (ex) {
+            $("#btnExcuteToCust").removeClass("disabled")
+        }
+    }
+
+
+    async function TFCC_ExcuteDataEach(data, index) {
+        return new Promise((resolve) => {
+            let branchid = Master_branchID;
+            let allowduplicate = Number($('#TIT_AllowDuplicate').dropdown('get value')) ? Number($('#TIT_AllowDuplicate').dropdown('get value')) : 0;
+            AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_ConvertCustomer/?handler=Execute&index=" + index
+                , data = {
+                    'data': JSON.stringify(data),
+                    'branchid': branchid,
+                    'allowduplicate': allowduplicate
+                }
+                , async = true
+                , error = function () {
+                    resolve(0);
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let dataresult = JSON.parse(result);
+                        if (dataresult && dataresult.length != 0) {
+                            let totalsuccess = dataresult[0].TotalSuccess;
+                            resolve(totalsuccess ?? 0);
+                        }
+                    }
+                    resolve(0)
+                }
+            );
+        })
+    }
+
+</script>

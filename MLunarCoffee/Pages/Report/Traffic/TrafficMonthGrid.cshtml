@@ -1,0 +1,144 @@
+﻿@page
+@model SourceMain.Pages.Report.Traffic.TrafficMonthGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="traffic_date_header"
+                   class="text-md text-dark font-weight-bold mb-1">
+                    Lưu Lượng Ngày (30 Ngày Gần Nhất )
+                </p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#TrafficMonthGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_TrafficMonthGrid()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_TrafficMonth()"></i>
+ 
+            </div>
+        </div>
+        <div class="row p-2 pb-0 ps-0">
+            <div class="col-lg-6">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">Tổng Lịch</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalAppTrafficMonth">0</span></h6>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">Tổng Lịch CheckedIn</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalAppTrafficMonthCheck">0</span></h6>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="collapsesticky collapse show" id="TrafficMonthGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReport_TrafficMonth">
+                    <thead>
+                        <tr role="row">
+                            <th class="no-sort"></th>
+                            <th class="no-sort" colspan="3" data-languagestatic="total">Tổng Tất Cả Lịch</th>
+                            <th class="no-sort" colspan="3" data-languagestatic="total_scheduler_checkedin">Lịch Checked-In</th>
+                        </tr>
+                        <tr role="row">
+                            <th class="no-sort" data-languagestatic="date">Ngày</th>
+                            <th data-languagestatic="total">Tổng</th>
+                            <th data-languagestatic="consultant">Tư Vấn</th>
+                            <th data-languagestatic="treatment">Điều Trị</th>
+                            <th data-languagestatic="total">Tổng</th>
+                            <th data-languagestatic="consultant">Tư Vấn</th>
+                            <th data-languagestatic="treatment">Điều Trị</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReport_TrafficMonthBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+ 
+        LoadDataReport_TrafficMonthGrid();
+        $('#dtContentReport_TrafficMonth').tablesort();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+    function LoadDataReport_TrafficMonthGrid() {
+        let _branch = "@Model._branch";
+        AjaxLoad(url = "/Report/Traffic/TrafficMonthGrid/?handler=Loadata"
+            , data = { 'branchID': _branch }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+
+                    let dataDetailGrid = JSON.parse(result)["Table2"];
+                    let dataMaster = JSON.parse(result)["Table3"];
+                    //document.getElementById("lbTotalApp").innerHTML = "Lịch Hẹn :" + dataMaster[0].TotalScheduler;
+                    Count_Up('lbTotalAppTrafficMonth', dataMaster[0].TotalScheduler)
+                    Count_Up('lbTotalAppTrafficMonthCheck', dataMaster[0].TotalSchedulerCheckedIn)
+                     
+                    RenderReport_TrafficMonthGrid(dataDetailGrid, "dtContentReport_TrafficMonthBody");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+
+        return false;
+    }
+
+    function RenderReport_TrafficMonthGrid(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td>' + item.Name + '</td>'
+                        + '<td data-sortvalue="' + Number(item.Total) + '">' + item.Total + '</td>'
+                        + '<td data-sortvalue="' + Number(item.Total_Advice) + '">' + item.Total_Advice + '</td>'
+                        + '<td data-sortvalue="' + Number(item.Total_Treatment) + '">' + item.Total_Treatment + '</td>'
+                        + '<td data-sortvalue="' + Number(item.CheckedIn) + '">' + item.CheckedIn + '</td>'
+                        + '<td data-sortvalue="' + Number(item.CheckedIn_Advice) + '">' + item.CheckedIn_Advice + '</td>'
+                        + '<td data-sortvalue="' + Number(item.CheckedIn_Treatment) + '">' + item.CheckedIn_Treatment + '</td>'
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function exportData_TrafficMonth() {
+        exportToExcel("dtContentReport_TrafficMonth", 'traffic-theo-ngay');
+    }
+</script>
+
+

@@ -1,0 +1,102 @@
+﻿@page
+@model SourceMain.Pages.Setting.TypeHistoryDetailModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+
+</head>
+
+<body>
+    
+    <div class="header">
+        Loại Lịch Sử
+    </div>
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+                    <div class="field">
+                        <label>Loại Lịch Sử</label>
+                        <input id="TypeHistory" name="name" type="text" />
+                    </div>
+
+                    <div class="field">
+                        <div class="field">
+                            <label>Ghi Chú</label>
+                            <textarea id="NoteHistory" name="content"></textarea>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="actions">
+        <div style="float: right">
+            <button class="ui teal button" form="form3" type="submit" onclick="return ExcuteData()">Save</button>
+        </div>
+        <div style="float: right">
+            <button class="ui grey button" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var ser_TypeHistoryCurrentID = ("@Model._TypeHistoryCurrentID");
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#TypeHistory').val() ? $('#TypeHistory').val() : "";
+            data.Note = $('#NoteHistory').val() ? $('#NoteHistory').val() : "";
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Setting/TypeHistoryDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_TypeHistoryCurrentID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            LoadTypeHistoryAjax();
+                        } else {
+                            notiError(result);
+                        }
+                });
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+            }
+            return false;
+        }
+
+        $(document).ready(function () {
+            if (ser_TypeHistoryCurrentID != "0") LoadDataUpdateProductType();
+        });
+
+        function LoadDataUpdateProductType() {
+            AjaxLoad(url = "/Setting/TypeHistoryDetail/?handler=Loadata"
+                , data = {
+                    id: ser_TypeHistoryCurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataType = JSON.parse(result);
+                    $('#TypeHistory').val((dataType[0].Name));
+                    $('#NoteHistory').val((dataType[0].Note));
+                });
+        
+        }
+    </script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+    <script>js_require('/js/main.js');</script>
+
+</body>
+
+</html>
+

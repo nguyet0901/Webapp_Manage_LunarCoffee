@@ -1,0 +1,364 @@
+﻿@page
+@model MLunarCoffee.Pages.Guide.DocumentationModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VT-Tech Solution</title>
+    <meta charset="utf-8" />
+
+
+
+    <script src="/assests/library/jquery-2.1.4.min.js" type="text/javascript"></script>
+    <link href="/assests/dist/semantic.min.css" rel="stylesheet" />
+    <script src="/assests/dist/semantic.min.js"></script>
+    <link href="/assests/dist/semantic.min.custom.css" rel="stylesheet" />
+    <link href="/assests/dist/plugins/ionicons/css/ionicons.min.css" rel="stylesheet" />
+    <link href="/assests/dist/css/main.css" rel="stylesheet" />
+    <script>css_require('/css/main.custom.css')</script>
+    <script>js_require('/js/comon/noti_function.js');</script>
+
+    <link href="/assests/dist/plugins/trumbowyg/ui/trumbowyg.css" rel="stylesheet" />
+    <link href="/plugins/tinymce/skins/lightgray/skin.min.css" rel="stylesheet" />
+    <style>
+        .linkHelp {
+            padding-left: 20px;
+            font-size: 13px;
+            color: #3c4043;
+        }
+
+        .ui.styled.fluid.accordion .content {
+            background-color: #e8f0fe;
+            margin: 0;
+            padding: 0;
+        }
+
+        .transition.visible:hover {
+            background-color: #d2e3fc;
+            padding: 10px;
+        }
+
+        .transition {
+            padding: 10px;
+            margin: 0;
+        }
+
+        .title.item {
+            color: #78777d !important;
+        }
+
+        #bodyTextShow img, #textEdit img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body style="background-color: white; max-width: 100%; height: auto">
+    <form id="form1" runat="server">
+        <div class="row" style="background-image: url(/assests/img/FAQ.jpg); height: 258px; background-repeat: no-repeat; background-position: center; text-align: center;">
+            <div class="login100-pic js-tilt">
+                <img style="height: 90px; padding: 12px;" src="/assests/img/logo/logo_greeting.png" alt="IMG" />
+            </div>
+            <div class="ui icon input" style="height: 40px; width: 400px; margin: auto; font-size: 15px;">
+                <input id="seachDocument" style="border-radius: 40px" type="text" placeholder="Nhập nhiều hơn 4 ký tự để tìm kiếm" />
+                <i class="search icon"></i>
+
+            </div>
+            <div style="padding: 15px">
+                <label id="textMessage" style="font-size: 15px; color: #f2711c;"></label>
+
+            </div>
+
+        </div>
+        <div class="row" style="padding: 15px;">
+            <div class="sixteen wide tablet sixteen wide computer column">
+                <div class="ui grid">
+                    <div class="sixteen wide tablet five wide computer column" style="padding: 26px;">
+                        <div class="ui styled fluid accordion" style="border-radius: 10px; box-shadow: unset; border: 1px solid rgba(34,36,38,.15);" id="menuleft">
+                        </div>
+
+                    </div>
+                    <div class="sixteen wide tablet eleven wide computer column">
+
+                        <div id="loadersearch" style="border: none; height: -webkit-fill-available; display: none">
+                            <div class="ui active inverted dimmer">
+                                <div class="ui large text loader">Loading</div>
+                            </div>
+                        </div>
+                        <div id="currentSearchResulf" style="border: none; height: -webkit-fill-available; display: none; border-radius: 10px;" class="ui feed">
+                        </div>
+                        <div id="currentShow" class="ui segment" style="border-radius: 10px; box-shadow: unset;">
+                            <div id="btnEdit" class="field" style="height: 27px">
+                                <button id="btnEditDocument" style="display: none; float: left;" class="ui teal button" data-value="fade up" onclick="event.preventDefault();return editCurrentDocument()">Chỉnh Sửa</button>
+                                <button id="btnSaveDocument" style="display: none; float: left;" class="ui yellow button" data-value="fade up" onclick="event.preventDefault();return SaveDocument()">Lưu</button>
+                                <button id="btnCancelDocument" style="display: none; float: left;" class="ui gray button" data-value="fade up" onclick="event.preventDefault();return cancelDocument()">Hủy</button>
+                            </div>
+                            <div id="textShow" style="border-radius: 10px; padding: 20px; font-size: 15px;">
+                                <div id="headerTextShow" style="text-align: center; font-size: 25px; padding-bottom: 25px">
+                                </div>
+                                <div id="bodyTextShow">
+                                </div>
+                            </div>
+                            <div id="textEdit" style="display: none; padding-top: 10px;">
+                                <textarea id="textEditDetail" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</body>
+<script type="text/javascript">
+    var currentDocument = 0;
+    $(document).ready(function () {
+        AjaxLoad(url = "/Guide/Documentation/?handler=LoadDataDocument"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let dataDocument = JSON.parse(result);
+                    RenderMenuLeft(dataDocument, "menuleft");
+                }
+            });
+        $(".linkHelp").click(function (event) {
+
+            event.preventDefault();
+            document.getElementById("btnEditDocument").style.display = "block";
+            document.getElementById("btnSaveDocument").style.display = "none";
+            document.getElementById("btnCancelDocument").style.display = "none";
+            document.getElementById("textEdit").style.display = "none";
+            document.getElementById("textShow").style.display = "block";
+
+            $("#loadersearch").hide();
+            $("#currentSearchResulf").empty();
+            $("#currentSearchResulf").hide();
+            $("#currentShow").show();
+            document.getElementById("textMessage").innerHTML = "";
+            $("#seachDocument").val('');
+
+            currentDocument = event.target.title;
+            LoadDocumentByHref(event.target.title);
+
+        });
+        tinyMCE.init({
+            selector: 'textarea',
+            content_css: '',
+            content_css_cors: true
+        });
+
+        var input = document.getElementById("seachDocument");
+        input.addEventListener("keyup", function (event) {
+            event.preventDefault();
+            currentDocument = 0;
+
+            if (event.keyCode === 13) {
+                $("#currentShow").hide();
+                $("#currentSearchResulf").empty();
+                document.getElementById("textMessage").innerHTML = "";
+                AjaxLoad(url = "/Guide/Documentation/?handler=Searching"
+                    , data = {
+                        searching: $("#seachDocument").val()
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "") {
+                            if (result == "0") {
+                                document.getElementById("textMessage").innerHTML = "Nhập Nhiều Ký Tự Hơn Để Tìm Kiếm";
+                            }
+                            else {
+                                let data = JSON.parse(result);
+                                $("#currentSearchResulf").show();
+                                if (data.length == 0) {
+                                    document.getElementById("textMessage").innerHTML = "Không Tìm Thấy Kết Quả";
+                                }
+                                else {
+                                    RenderResulfSearch(data, "currentSearchResulf");
+                                    $(".linkSearch").click(function (event) {
+                                        event.preventDefault();
+                                        document.getElementById("btnEditDocument").style.display = "block";
+                                        document.getElementById("btnSaveDocument").style.display = "none";
+                                        document.getElementById("btnCancelDocument").style.display = "none";
+                                        document.getElementById("textEdit").style.display = "none";
+                                        document.getElementById("textShow").style.display = "block";
+                                        $("#loadersearch").hide();
+                                        $("#currentSearchResulf").empty();
+                                        $("#currentSearchResulf").hide();
+                                        $("#currentShow").show();
+                                        $("#seachDocument").val();
+                                        currentDocument = event.target.title;
+                                        LoadDocumentByHref(event.target.title);
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    before= function () {
+                        $("#currentSearchResulf").hide();
+                        $("#loadersearch").show();
+                    },
+                    complete= function (e) {
+                        $("#currentSearchResulf").show();
+                        $("#loadersearch").hide();
+                    });
+                return false;
+            }
+
+        });
+    });
+    function editCurrentDocument() {
+        if (currentDocument != 0 && currentDocument != "0") {
+            document.getElementById("textMessage").innerHTML = "";
+            $("#seachDocument").val('');
+            document.getElementById("textEdit").style.display = "block";
+            document.getElementById("textShow").style.display = "none";
+            $("#textEditDetail").val(document.getElementById("bodyTextShow").innerHTML);
+            document.getElementById("btnEditDocument").style.display = "none";
+            document.getElementById("btnSaveDocument").style.display = "block";
+            document.getElementById("btnCancelDocument").style.display = "block";
+        }
+        return false;
+    }
+    function ResetAll() {
+        document.getElementById("textMessage").innerHTML = "";
+        $("#seachDocument").val('');
+        document.getElementById("textEdit").style.display = "none";
+        document.getElementById("textShow").style.display = "block";
+        $("#textEditDetail").val("");
+        document.getElementById("btnEditDocument").style.display = "block";
+        document.getElementById("btnSaveDocument").style.display = "none";
+        document.getElementById("btnCancelDocument").style.display = "none";
+    }
+    function SaveDocument() {
+
+        let Content = $("#textEditDetail").val() ? $("#textEditDetail").val() : "";
+        let PlaitText = $("#textEditDetail").val() ? $("#textEditDetail").val() : "";
+        AjaxLoad(url = "/Guide/Documentation/?handler=SaveDocument"
+            , data = {
+                DocumentID: currentDocument,
+                content: Content,
+                PlaitText: PlaitText
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    LoadDocumentByHref(currentDocument)
+                    ResetAll();
+                }
+            });
+
+    }
+    function cancelDocument() {
+        ResetAll();
+    }
+    function LoadDocumentByHref(id) {
+        AjaxLoad(url = "/Guide/Documentation/?handler=GetDocument"
+            , data = { DocumentID: id}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    document.getElementById("headerTextShow").innerHTML = data[0];
+                    document.getElementById("bodyTextShow").innerHTML = data[1];
+                }
+            });
+    }
+    function RenderMenuLeft(data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                let textGroup = "";
+                let idGroup = 0;
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    if (item.GroupID != idGroup) {
+                        textGroup = item.GoupName;
+                        idGroup = item.GroupID;
+                        stringContent = stringContent +
+                            '<div class="title item">'
+                            + '<i class="dropdown icon"></i>' + textGroup + '</div><div class="content">'
+
+                    }
+                    stringContent = stringContent + '<p class="transition hidden"><a class="linkHelp" '
+                        + ' title="' + item.DocID
+                        + '">' + item.DocName + '</a></p>'
+                    if ((i === data.length - 1) || idGroup !== data[i + 1].GroupID) {
+                        stringContent = stringContent + "</div></div>";
+                    }
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function RenderResulfSearch(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<div class="event" style="padding-left:20px">'
+                        + '<div class="label"></div>'
+                        + '<div class="content">'
+                        + '<div class="summary">'
+                        + '<a class="linkSearch" style="font-size:13px;padding-left: 0px;"  title="' + item.ID + '">' + item.Name + '</a>'
+                        + '</div>'
+                        + '<div class="extra text" style="max-width: 100%;font-size: 14px;">' + item.Text + '</div>'
+                        + '</div>'
+                        + '</div>'
+                    stringContent = stringContent + tr;
+
+                }
+
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+
+    }
+</script>
+
+<script src="/assests/dist/semantic.min.js"></script>
+
+<script src="/js/main.js" async></script>
+<script src="/assests/dist/plugins/cookie/js.cookie.js"></script>
+<script type="text/javascript">
+    tinymce.init({
+        selector: '#textEditDetail',
+        plugins: "image code",
+        image_title: true,
+        automatic_uploads: true,
+        file_picker_types: 'image',
+        file_picker_callback: function (cb, value, meta) {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.onchange = function () {
+                var file = this.files[0];
+                var reader = new FileReader();
+
+                reader.onload = function () {
+                    var id = 'blobid' + (new Date()).getTime();
+                    var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    var base64 = reader.result.split(',')[1];
+                    var blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    cb(blobInfo.blobUri(), { title: file.name });
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+    });
+</script>
+
+<script>js_require('/assests/dist/plugins/trumbowyg/trumbowyg.js');</script>
+<script>js_require('/assests/dist/plugins/tinymce/themes/modern/theme.min.js');</script>
+<script>js_require('/js/customjs/custom-editor.js');</script>
+
+</html>
+

@@ -1,0 +1,102 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Examination.ExaminationDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row ">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="card-header pt-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-lg-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Kỳ thi"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết kỳ thi"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row form3 px-2" id="form3">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên"]</label>
+                            <input id="SExamDetail_Name" class="form-control" name="source" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="SExamDetail_Note" class="form-control" name="note"></textarea>
+                        </div>
+                    </div>
+                    <div class="fixed-botombutton pt-3">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); SExamList_Close()">@Local["Đóng"]</button>
+                                <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return SExamDetail_ExcuteDataDetail()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let ser_CurentID;
+    $(document).ready(function () {
+        ser_CurentID = "@Model._CurrentID";
+        if (ser_CurentID != 0) {
+            SExamDetail_LoadDataUpdate(ser_CurentID);
+        }
+    });
+
+    function SExamDetail_LoadDataUpdate(currentid) {
+        AjaxLoad(url = "/Student/Settings/Examination/ExaminationDetail/?handler=LoadData"
+            , data = {
+                currentid: currentid
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length === 1) {
+                        let item = data[0];
+                        $('#SExamDetail_Name').val((item.Name));
+                        $('#SExamDetail_Note').val((item.Note));
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            });
+    }
+
+    function SExamDetail_ExcuteDataDetail() {
+        let data = new Object();
+        data.Name = $('#SExamDetail_Name').val() ? $('#SExamDetail_Name').val() : "";
+        data.Note = $('#SExamDetail_Note').val() ? $('#SExamDetail_Note').val() : "";
+
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/Examination/ExaminationDetail/?handler=ExcuteDataDetail"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_CurentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        SExamList_LoadData();
+                        SExamList_Close();
+                    } else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Trùng dữ liệu"]';
+                    }
+                });
+        }
+        return false;
+    }
+
+</script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>

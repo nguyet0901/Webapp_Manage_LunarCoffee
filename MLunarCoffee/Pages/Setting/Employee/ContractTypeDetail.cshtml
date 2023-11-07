@@ -1,0 +1,96 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Employee.ContractTypeDetailModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Loại hợp đồng"]</h6>
+                            <p class="text-sm mb-0">@Local["Thêm mới"]/@Local["Sửa"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3" id="form3">
+                    <div class="field col-12 p-1">
+                        <label>@Local["Tên"]</label>
+                        <input id="TD_Name" class="form-control" name="name" type="text" />
+                    </div>
+                    <div class="field col-12 p-1">
+                        <label>@Local["Nội dung"]</label>
+                        <textarea id="TD_Content" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();CloseModal()">@Local["Hủy"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="TDetail_Executed();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let ser_CurrentID = Number("@Model._CurrentID");
+    $(document).ready(function () {
+        if (ser_CurrentID != 0) {
+            TDetail_Load();
+        }
+    })
+    //#region //Load
+    function TDetail_Load () {
+        AjaxLoad(url = "/Setting/Employee/ContractTypeDetail/?handler=LoadDetail"
+            , data = {"CurrentID": ser_CurrentID}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    $("#TD_Name").val(data[0].TypeName);
+                    $("#TD_Content").val(data[0].Note);
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //Executed
+    function TDetail_Executed () {
+        let Name = $("#TD_Name").val() ? $("#TD_Name").val() : '';
+        let Content = $("#TD_Content").val() ? $("#TD_Content").val() : '';
+
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Setting/Employee/ContractTypeDetail/?handler=ExcuteData"
+                , data = {
+                    "CurrentID": ser_CurrentID
+                    , "TypeName": Name
+                    , "Note": Content
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "") {
+                        notiSuccess();
+                        CloseModal();
+                        CType_Load();
+                    }
+                }
+            )
+        }
+    }
+    //#endregion
+</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

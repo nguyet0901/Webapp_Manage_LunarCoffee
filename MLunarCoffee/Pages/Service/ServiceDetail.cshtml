@@ -1,0 +1,1841 @@
+﻿@page
+@model MLunarCoffee.Pages.Service.ServiceDetailModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/AppCustomer/FileUpload.js', true);</script>
+<script>js_require('/js/Service_Detail/price_branch.js');</script>
+<script>js_require('/js/Service_Detail/stage_service.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div id="divServiceDetailMain" style="display: none">
+    <div class="d-lg-flex px-0 align-items-stretch form3" id="ServiceDetailForm">
+        <div class="col-w-600 px-lg-1 card"> 
+            <div class="card-header pb-0 px-3">
+                <div class="d-lg-flex">
+                    <div class=" col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Thông tin chung"]</h6>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+            <div class="card-body pt-2 px-3">
+                <div class="row m-0">
+                    <div class="col-12 col-lg-4 px-0">
+                        <div class="mt-1">                           
+                            <div class="accordion">
+                                <div>
+                                    <button class="accordion-button p-2 px-0 collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#SD_CollapseNoteImg" aria-expanded="true" aria-controls="SD_CollapseNoteImg">
+                                        <h6 class="text-primary text-sm font-weight-bold mb-0">@Local["Hình ảnh"] - @Local["Dịch vụ"]</h6>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pe-2">
+                                <div id="SD_CollapseNoteImg" class="collapse hide collapsesticky">
+                                    <p class="text-dark text-sm fw-bold mb-1">
+                                        @Local["Hướng dẫn"]:
+                                        <span class="text-dark text-sm text-normal ms-2"> @Local["Vui lòng upload hình ảnh đúng kích thước"]</span>
+                                    </p>
+                                    <p class="text-dark text-sm fw-bold mt-2 mb-1">
+                                        @Local["Kích thước"]:
+                                        <span class="text-dark text-sm text-normal ms-2">@Local["Tối đa"] - 300 x 300px</span>
+                                    </p>
+                                    <p class="text-dark text-sm fw-bold mt-2 mb-2">
+                                        @Local["Hình minh họa"]:
+                                    </p>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="d-block avatar avatar-xxl position-relative mb-2">
+                                            <a href="/Image/Illustration/nhom-khach-hang.png" target="_blank">
+                                                <img src="/Image/Illustration/nhom-khach-hang.png" class="border-0" alt="team-2" onerror="Master_OnLoad_Error_Image(this)" style="height: 110px; width: 110px;">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row m-0 d-flex justify-content-center">
+                                    <div class="col-auto px-0 position-relative overflow-hidden">
+                                        <img id="SD_DetailImage" class="border border-radius-md" alt="team-2" src="/default.png" onload="Master_Onload_SuccessPic(this,110,110)" onerror="Master_OnLoad_Error_Image(this)">
+                                        <div class="upload-container">
+                                            <i class="fas fa-camera fs-3"></i>
+                                            <input class="position-absolute opacity-0  w-100 h-100 cursor-pointer top-0 d-flex align-items-center justify-content-center" id="SD_Fileup_LoadImage" accept="image/*" type="file" name="files[]" />
+                                        </div>
+                                    </div>
+                                </div> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="d-md-flex align-items-start form3">
+                            <div class=" row flex-grow-1 ">
+                                <div class="field col-12 px-1 mt-2">
+                                    <label>@Local["Mã dịch vụ/sản phẩm"]</label>
+                                    <input id="txtServiceCode" name="serviceCode" type="text" placeholder="eg .@Local["Mã dịch vụ/sản phẩm tự động tăng"]" class="form-control" />
+                                </div>
+                                <div class="field col-12 mt-2 px-1">
+                                    <label>@Local["Dịch vụ/sản phẩm"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="service_pro" onchange="event.preventDefault();return onchangeServiceProduct();">
+                                        <input type="hidden" name="serviceType" />
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div id="cbbserviceProduct" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 mt-2 px-1">
+                                    <label>@Local["Loại"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="serviceType">
+                                        <input type="hidden" name="serviceType" />
+                                        <i class="dropdown icon"></i>
+                                        <input id="searchserviceType_Option" class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">@Local["Chọn loại"]</div>
+                                        <div id="cbbserviceType" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-6 mt-2 px-1">
+                                    <ul class="list-group">
+                                        <li id="ck_installment" class="list-group-item border-0 px-0">
+                                            <div class="form-check form-switch ps-0">
+                                                <input class="form-check-input ms-auto" type="checkbox" id="is_installment" checked="">
+                                                <label class="form-check-label text-dark ms-3 text-truncate mb-0" for="is_installment">@Local["Trả góp"]</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="field col-6 mt-2 px-1">
+                                    <ul class="list-group">
+                                        <li id="ck_labo" class="list-group-item border-0 px-0">
+                                            <div class="form-check form-switch ps-0">
+                                                <input class="form-check-input ms-auto" type="checkbox" id="is_labo" checked="">
+                                                <label class="form-check-label text-dark ms-3 text-truncate mb-0" for="is_labo">@Local["Labo"]</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+        <div class="flex-grow-1 ms-lg-2 card mt-2">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Chi tiết dịch vụ/sản phẩm"]</h6>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div id="serviceDetailWaiting" style="border: none; height: -webkit-fill-available;">
+                    <div class="ui active inverted dimmer">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- #region control execute-->
+                <div class="row px-1" >
+                    <div class="field col-12 col-md-12 col-xl-6 mt-2 px-1">
+                        <label>@Local["Dịch vụ/sản phẩm"]</label>
+                        <input id="txtName_ServiceDetail" name="name" type="text" class="form-control" placeholder="eg .@Local["Dịch vụ/sản phẩm"]"/>
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-3 mt-2 px-1">
+                        <label>@Local["Giá nhỏ nhất"]</label>
+                        <div class="input-group mb-0">
+                            <input type="text" class="form-control" placeholder="eg. @Local["Giá nhỏ nhất"]" id="txtAmountServiceDetail" onchange="ChangePriceMin()" name="discountAmount">
+                            <span class="input-group-text rounded-2 border-radius-bottom-start-0 border-radius-top-start-0">VND</span>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-3 mt-2 px-1">
+                        <label>@Local["Giá lớn nhất"]</label>
+                        <div class="form-group mb-0">
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="txtAmountServiceDetail_Max" name="discountAmount" placeholder="eg. @Local["Giá lớn nhất"]">
+                                <span class="input-group-text rounded-2 border-radius-bottom-start-0 border-radius-top-start-0">VND</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-md-6 mt-2 px-1">
+                        <label>@Local["Mã định danh"]</label>
+                        <input id="txtIdentificationCode" name="IdentificationCode" type="text" class="form-control" placeholder="eg .@Local["Mã định danh"]"/>
+                    </div>
+                    <div class="field col-12 col-md-6 mt-2 px-1">
+                        <label>@Local["Tên định danh"]</label>
+                        <input id="txtIdentificationName" name="" type="text" class="form-control" placeholder="eg .@Local["Tên định danh"]"/>
+                    </div>
+                    <div class="field col-12 col-md-12 col-xl-6 mt-2 px-1" id="serviceUnitCountDiv">
+                        <label>@Local["Đơn vị"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="serviceUnitCount" onchange="event.preventDefault();return onchangeUnit();">
+                            <input type="hidden" name="unitServiceType" />
+                            <i class="dropdown icon"></i>
+                            <div class="default text">@Local["Chọn đơn vị"]</div>
+                            <div id="cbbserviceUnitCount" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-md-12 col-xl-6 mt-2 px-1" id="time_to_treatment">
+                        <label>@Local["Số lần điều trị"]</label>
+                        <input id="spTotalTreatment" name="Notvalid" type="number" class="form-control" />
+                    </div>
+                    <div class="field col-12 col-md-12 col-xl-6 mt-2 px-1">
+                        <label>@Local["Nội dung"]</label>
+                        <input id="txtContentServiceDetail" name="content" type="text" class="form-control" placeholder="eg .@Local["Nội dung"]"/>
+                    </div>
+                    <div id="teethChoosing" class="field col-12 col-md-12 col-xl-12 mt-2 px-1">
+                        <label>@Local["Răng"]</label>
+                        <div class="row">
+                            <div class="field col-6 col-md-6 pe-1">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <div class="form-check pt-1">
+                                            <input class="form-check-input mt-0" type="radio" id="adult_tab_teeth_type" name="tab_teeth_type_tar" value="0" />
+                                        </div>
+                                    </div>
+                                    <div class="form-control">@Local["Răng người lớn"]</div>
+                                </div>
+                            </div>
+                            <div class="field col-6 col-md-6 ps-1">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <div class="form-check pt-1">
+                                            <input class="form-check-input mt-0" type="radio" id="child_tab_teeth_type" name="tab_teeth_type_tar" value="1" />
+                                        </div>
+                                    </div>
+                                    <div class="form-control">@Local["Răng sữa"]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="field col-12 col-md-12 col-lg-12 mt-2 px-1" id="divCbbMediaFolder" style="display: none;">
+                        <label>@Local["Phương tiện"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="MediaFolder">
+                            <input type="hidden" name="MediaFolder" />
+                            <i class="remove icon"></i>
+                            <i class="dropdown icon"></i>
+                            <div class="default text">@Local["Chọn thư mục phương tiện"]</div>
+                            <div id="cbbMediaFolder" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- #endregion -->
+            </div>
+        </div>
+    </div>
+    <div class="card mt-2">
+        <div class="card-header pb-0">
+            <div class="ms-n2">
+                <div class="ms-auto my-auto mt-1">
+                    <ul class="nav nav-pills nav-fill p-1 bg-transparent d-inline-flex ser_detail_1" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#div_ser_com" role="tab">@Local["Hoa hồng"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#div_revenue" role="tab">@Local["Doanh thu"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a data-bs-toggle="pill" data-bs-target="#divVTTProduct" class="nav-link cursor-pointer" role="tab">@Local["Vật tư tiêu hao"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation" id="tabPriceService">
+                            <a data-bs-toggle="pill" data-bs-target="#PriceService" class="nav-link cursor-pointer" role="tab">@Local["Bảng giá"]</a>
+                        </li>
+
+                        @*id permission tabStageService*@
+                        <li class="nav-item" role="presentation" id="tabStageService">
+                            <a data-bs-toggle="pill" data-bs-target="#StageService" class="nav-link cursor-pointer " role="tab">@Local["Bước điều trị"]</a>
+                        </li>
+                        @*id permission tabNoteService*@
+                        <li class="nav-item" role="presentation" id="tabNoteService">
+                            <a data-bs-toggle="pill" data-bs-target="#NoteService" class="nav-link cursor-pointer " role="tab">@Local["Ghi chú"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation" id="tabDocWarranty">
+                            <a data-bs-toggle="pill" data-bs-target="#DocWarranty" class="nav-link cursor-pointer" role="tab">@Local["Bảo hành"]</a>
+                        </li>
+                        <li class="nav-item" role="presentation" id="tabOther">
+                            <a data-bs-toggle="pill" data-bs-target="#ServiceOther" class="nav-link cursor-pointer" role="tab">@Local["Khác"]</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        <div class="card-body pt-2">
+            <div class="nav-wrapper position-relative end-0 px-2">
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade active show" id="div_ser_com" role="tabpanel">
+                        <div class="text-end me-2 text-danger fs-sm" id="div_Comission_Treat_Note">@Local["Hoa hồng điều trị cài đặt theo tiền được áp dụng trên lần điều trị"]</div>
+                        <div class="row">
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Tư vấn"]</label>
+                                <div class="position-relative">
+                                    <input id="txtPerConsul" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Tư vấn"]" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerConsul" onchange="event.preventDefault();return ChangeEvent_Comission_Consult();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Kỹ thuật viên/phụ tá"]</label>
+                                <div class="position-relative">
+                                    <input id="txtPerTreat" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Kỹ thuật viên/phụ tá"]" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerTreat" onchange="event.preventDefault();return ChangeEvent_Comission_PerTreat();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Bác sĩ điều trị"]</label>
+                                <div class="position-relative">
+                                    <input id="txtPerTreatDoc" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Bác sĩ điều trị"]" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerTreatDoc" onchange="event.preventDefault();return ChangeEvent_Comission_PerTreatDoc();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Bác sĩ điều trị"] (@Local["Thanh toán"])</label>
+                                <div class="position-relative">
+                                    <input id="txtPerPaidDoc" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Bác sĩ điều trị"]  (@Local["Thanh toán"])" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerPaidDoc" onchange="event.preventDefault();return ChangeEvent_Comission_PerPaidDoc();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Hỗ trợ chuyên môn"]</label>
+                                <div class="position-relative">
+                                    <input id="txtPerTreatSpecific" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Hỗ trợ chuyên môn"]" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerTreatSpecific" onchange="event.preventDefault();return PerTreatSpecific();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-md-6 mt-2 px-1">
+                                <label>@Local["Telesale/chăm sóc khách hàng"]</label>
+                                <div class="position-relative">
+                                    <input id="txtPerTelesale" class="border-right-0 form-control amount_thousand" name="" type="number" placeholder="eg .@Local["Telesale/chăm sóc khách hàng"]" onchange="event.preventDefault();Checking_Validate_Comission();">
+                                    <div class="ui fluid search selection dropdown form-control position-absolute end-0 top-0 w-auto ps-2 pe-5" id="PerTelesale" onchange="event.preventDefault();return ChangeEvent_Comission_PerTelesale();">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div class="menu transition hidden" tabindex="-1">
+                                            <div class="item" data-value="1">%</div>
+                                            <div class="item" data-value="2">VND</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="div_revenue" role="tabpanel">
+                        <div class="h-100">
+                            <h6 class="mb-2 text-sm fw-bold">@Local["Chỉ áp dụng với các hoa hồng dựa trên tiền khách hàng đóng"]</h6>
+
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text">@Local["Tỷ lệ thực thu"] (%)</span>
+                            <input id="txtPerRevenue" class="form-control amount_thousand" type="number" onchange="event.preventDefault();Checking_Validate_Comission();">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" role="tabpanel" id="divVTTProduct">
+                        <div class="card-body p-0">
+                            <div class="m-0 mt-3 mobile-responsive">
+                                <div id="vtthWaiting" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto my-auto" id="SD_ConsumableStageDiv">
+                                    <div class="form-check d-flex px-0 p-2">
+                                        <input class="form-check-input m-0" type="checkbox" id="SD_ConsumableStage" onchange="event.preventDefault();return SD_onChangeCkbConsum();">
+                                        <label class="ms-2 mt-0">@Local["Theo bước điều trị"]</label>
+                                    </div>
+                                </div>
+                                <table class="table vt-table mb-0" id="dtTableDetailVTTH">
+                                    <thead>
+                                        <tr>
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">@Local["#"]</th>
+                                            <th>@Local["Vật tư"]</th>
+                                            <th style="min-width: 100px;">@Local["Đơn vị"]</th>
+                                            <th style="width: 120px; min-width: 120px;">@Local["Số lượng tối thiểu"]</th>
+                                            <th style="width: 120px; min-width: 120px;">@Local["Số lượng tối đa"]</th>
+                                            <th style="width: 140px;">@Local["Ghi chú"]</th>
+                                            <th style="width: 20px;">@Local["Xóa"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dtTableDetailVTTHBody">
+                                    </tbody>
+                                </table>
+
+                            </div>
+                            <button class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return Add_new_row_vtth();"></button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" role="tabpanel" id="PriceService">
+                        <div class="card-body p-0">
+                            <div class="m-0 mt-3 mobile-responsive">
+                                <table id="dtTablePriceService" class="table vt-table mb-0">
+                                    <thead class="hiddenCollapse">
+                                        <tr role="row">
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">@Local["#"]</th>
+                                            <th style="width: 150px;">@Local["Giá nhỏ nhất"]</th>
+                                            <th style="width: 150px;">@Local["Giá lớn nhất"]</th>
+                                            <th style="min-width: 100px;">@Local["Tiền tệ"]</th>
+                                            <th style="width: 100px;" >
+                                                <div class="iti__flag-box">
+                                                    <div class="iti__flag iti__vn"></div>
+                                                </div>
+                                            </th>
+                                            <th >@Local["Chi nhánh áp dụng"]</th>
+                                            <th style="width: 50px;">@Local["Xóa"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dtTablePriceServiceBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return Add_new_row_price_service();"></button>
+                        </div>
+                    </div>
+
+
+                    <div class="tab-pane fade" role="tabpanel" id="StageService">
+                        <div class="card-body p-0">
+                            <div class="m-0 mt-3">
+                                <table id="dtTableStageService" class="table vt-table mb-0">
+                                    <thead class="hiddenCollapse">
+                                        <tr role="row">
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">@Local["#"]</th>
+                                            <th>@Local["Bước điều trị"]</th>
+                                            <th style="width: 220px;">
+                                                @Local["Phần trăm"]
+                                                ( <span id="TotalPercentStage"></span>/ 100% )</th>
+                                            <th style="width: 50px;">@Local["Xóa"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dtTableStageServiceBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return Add_new_row_stage_service();"></button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" role="tabpanel" id="NoteService">
+                        <div class="card-body p-0">
+                            <div class="m-0 mt-3 mobile-responsive">
+                                <table id="dtTableNoteService" class="table vt-table mb-0">
+                                    <thead class="hiddenCollapse">
+                                        <tr role="row">
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 50px;">@Local["#"]</th>
+                                            <th style="width: 200px;">@Local["Nhãn"] (@Local["Tối đa 20 ký tự"])</th>
+                                            <th>@Local["Diễn giải"]</th>
+                                            <th style="width: 50px;">@Local["Xóa"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dtTableNoteServiceBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return Add_new_row_note();"></button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" role="tabpanel" id="ServiceOther">
+                        <div class="card-body position-relative">
+                            <div id="SDUpload_wating" class="position-absolute top-0 start-50 translate-middle-x d-none">
+                                <div class="ui active inverted dimmer">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="field col-12 px-1">
+                                    <label>@Local["Dịch vụ/sản phẩm"] <span class="text-capitalize">(@Local["Tiếng anh"])</span></label>
+                                    <input id="txtNameEng_ServiceDetail" name="name" type="text" class="form-control" placeholder="eg .@Local["Dịch vụ/sản phẩm"] (@Local["Tiếng anh"])" />
+                                </div>
+                                <div class="col-12 mt-2 px-1">
+                                    <label>@Local["Liên kết tệp"]</label>
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <label class="mb-0 text-primary fw-bold">@Local["Tải tệp lên"]</label>
+                                                <input class="position-absolute start-0 w-100 opacity-0" id="SDUpload_input" type="file" name="files[]" multiple="">
+                                            </span>
+                                            <input onchange="event.preventDefault();onchange_Document_Guide();" id="txtDocument_Guild" type="text" placeholder="eg. @Local["Liên kết tệp"]" class="ps-2 form-control" readonly>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-12 mt-2 px-1">
+
+
+                                </div>
+                                <div class="col-12 mt-2 px-1">
+                                    <iframe style="display: none;height:500px" id="div_frame_guid_load" allowfullscreen class="w-100"></iframe>
+                                </div>
+                                <div class="col-12 mt-2 px-1" id="div_frame_guid">
+                                    <div class="d-flex ms-2">
+                                        <div class="d-flex flex-column">
+                                            <h6 class="text-dark text-sm mb-0">@Local["Không có tài liệu"]</h6>
+                                            <span class="text-xs">@Local["Liên kết tệp"] (PDF).</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" role="tabpanel" id="DocWarranty">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mt-2 px-1">
+                                    <label>@Local["Số tháng bảo hành"]</label>
+                                    <input id="numMonth_War" placeholder="eg. @Local["Số tháng bảo hành"]" type="number" class="form-control" />
+                                </div>
+                                <div class="col-12 mt-2 px-1">
+                                    <label>@Local["Liên kết tệp"]</label>
+                                    <input id="txtDocument_War" placeholder="eg. @Local["Liên kết tệp"]" type="text" onchange="event.preventDefault();onchange_Document_War();" class="form-control" />
+                                </div>
+
+                                <div class="col-12 mt-2 px-1">
+                                    <iframe style="display: none;height:500px" id="div_frame_war_load" allowfullscreen class="w-100"></iframe>
+                                </div>
+                                <div class="col-12 mt-2 px-1" id="div_frame_war">
+                                    <div class="d-flex ms-2">
+                                        <div class="d-flex flex-column">
+                                            <h6 class="text-dark text-sm mb-0">@Local["Không có tài liệu"]</h6>
+                                            <span class="text-xs">@Local["Liên kết tệp"] (PDF).</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class=" action_Save">
+                <div class="text-danger" id="textShowMessage"></div>
+                <button class="btn btn-secondary  mt-2 me-2" onclick="event.preventDefault(); return CloseDetailService()">@Local["Đóng"]</button>
+                <button id="ServiceDetail_btndele" type="button" class="d-none _tab_control_ btn bg-gradient-danger mt-2 me-2" data-tab="delete_service" onclick="event.preventDefault();return SDe_Delete();">@Local["Xóa"]</button>
+                <div id="divSaveService">
+                    <button id="ServiceDetail_btnSave" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_service" onclick="event.preventDefault();return ExcuteData_Service()">@Local["Lưu"]</button>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+<div class="d-none" id="SD_preview">
+</div>
+<script>js_require('/assests/dist/UploadJS/js/jquery.fileupload.js');</script>
+<script type="text/javascript">
+
+    var sys_DentistCosmetic = Number(@Model.sys_DentistCosmetic);
+    var sys_ExportConsumableAllowStage = Number(@Model.sys_ExportConsumableAllowStage);
+    var data_unit_service;
+    var data_unit_product;
+    var data_unit_product_full;
+    var data_service_type;
+    var data_treat_stage;
+    var data_media;
+    var data_currency;
+    var data_branch;
+    var changingflag = 1;
+    var data_product_vtth;
+    var data_product_vtth_unit;
+    var data_selected_product_vtth = {};
+    var data_note_service = {};
+    var data_stage_service = {};
+    var data_price_service = {};
+    var ser_ServiceDetailCurrentID = @Model._ServiceDetailCurrentID;
+    var service_ser_pro = 1;
+    var service_syntax_code = '';
+    let SD_urlImg = "/Api/Upload/Upload?Type=ServiceImage";
+    let SD_file; 
+    $(document).ready(function() {
+        initNavs();
+        $('.ser_detail a:first').tab('show');
+        $('.ser_detail_1 a:first').tab('show');
+        changingflag = 0;
+        Load_Data_Initialize();
+        if (sys_DentistCosmetic == 1) $('#ck_labo').show();
+        else $('#ck_labo').hide();
+        if (sys_ExportConsumableAllowStage == 1 && service_ser_pro == 1) $('#SD_ConsumableStageDiv').show();
+        else $('#SD_ConsumableStageDiv').hide();
+        SDUpload_Event();
+        $('#txtAmountServiceDetail').divide();
+        $('#txtAmountServiceDetail').val(0);
+        $('#txtAmountServiceDetail_Max').divide();
+        $('#txtAmountServiceDetail_Max').val(0);
+        $('#txtPerRevenue').val(100);
+        $('#txtPerTelesale').val(0);
+        $('#txtPerConsul').val(0);
+        $('#txtPerTreat').val(0);
+        $('#txtPerTreatDoc').val(0);
+        $('#txtPerPaidDoc').val(0);
+        $('#txtPerTreatSpecific').val(0);
+        $("#PerTelesale").dropdown("set selected", "2");
+        $("#PerConsul").dropdown("set selected", "2");
+        $("#PerTreat").dropdown("set selected", "2");
+        $("#PerTreat").dropdown("set selected", "2");
+        $("#PerTreatDoc").dropdown("set selected", "2");
+        $("#PerPaidDoc").dropdown("set selected", "2");
+        $("#PerTreatSpecific").dropdown("set selected", "2");
+        changingflag = 1;
+        $("#adult_tab_teeth_type").prop("checked", true);
+        UploadImage({
+            inputFile: 'SD_Fileup_LoadImage'
+            , btnInput: ''
+            , avatar: 'SD_DetailImage'
+            , condition: 0
+            , success: (_file) => {
+                $("#textShowMessage").html('');
+                SD_file = _file;
+                SD_CropImage(_file); 
+            }
+            , error: (err) => {
+
+            }
+        })
+        ServiceDetail_Event();
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControl, '@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+    });
+
+    function SD_CheckAvatar(wi){
+        return wi <= 300;
+    }
+    function onchangeUnit () {
+        let unit = (Number($('#serviceUnitCount').dropdown('get value')) ? Number($('#serviceUnitCount').dropdown('get value')) : 0)
+        let TypeUnit = (unit != 0 && data_unit_service && data_unit_service.length > 0) ? data_unit_service.filter(item => {return item.ID == unit})[0].Type : '';
+
+        if (Number(sys_dencos_Main == 1) && TypeUnit != "item") {
+            $('#teethChoosing').show();
+        } else {
+            $('#teethChoosing').hide();
+            $("#adult_tab_teeth_type").prop("checked", true);
+        }
+    }
+
+    // #region // Change service product
+    function onchangeServiceProduct() {
+        service_ser_pro = Number($('#service_pro').dropdown('get value')) ? Number($('#service_pro').dropdown('get value')) : 0;
+        if (sys_ExportConsumableAllowStage == 1 && service_ser_pro == 1) $('#SD_ConsumableStageDiv').show();
+        else $('#SD_ConsumableStageDiv').hide();
+        if (service_ser_pro == 1) {
+            let _data = data_service_type.filter(word => {
+                return (word["IsProduct"] == "0");
+            });
+
+            Load_Combo(_data, "cbbserviceType", true);
+            let _type_service = _data.filter((word) => {
+                return (word["ID"] == CurrentServiceGroup)
+            })
+            if (_data.length > 0) {
+                $("#serviceType").dropdown("refresh");
+                $("#serviceType").dropdown("set selected", ((_type_service && _type_service.length != 0) ? CurrentServiceGroup : _data[0].ID));
+            }
+            let _datamedia = data_media.filter(word => {
+                return (word["Type"] == "Service");
+            });
+
+            Load_Combo(_datamedia, "cbbMediaFolder", false);
+            $('#MediaFolder').dropdown('clear');
+
+            Load_Combo(data_unit_service, "cbbserviceUnitCount", true);
+            $('#serviceUnitCount').dropdown('clear');
+            $("#serviceUnitCount").dropdown("refresh");
+
+            if (Number(sys_dencos_Main == 1)) {
+                $('#time_to_treatment').hide();
+                $('#div_Comission_Treat_Note').hide();
+                $("#serviceUnitCount").dropdown("set selected", data_unit_service[0].ID);
+                $('#teethChoosing').show();
+            }
+            else {
+                $("#serviceUnitCount").dropdown("set selected", data_unit_service[0].ID);
+                $('#time_to_treatment').show();
+                $('#div_Comission_Treat_Note').show();
+                $('#teethChoosing').hide();
+            }
+            Active_Comission_Service();
+
+            $('#ck_labo').removeClass('disabled');
+        }
+        else {
+            let _datamedia = data_media.filter(word => {
+                return (word["Type"] == "Product");
+            });
+
+            Load_Combo(_datamedia, "cbbMediaFolder", false);
+            $('#MediaFolder').dropdown('clear');
+
+            let _data = data_service_type.filter(word => {
+                return (word["IsProduct"] == "1");
+            });
+            let _type_service = _data.filter((word) => {
+                return (word["ID"] == CurrentServiceGroup)
+            })
+            Load_Combo(_data, "cbbserviceType", true);
+
+            let _DTUnitPro = data_unit_service.filter((item) => {return item.Type == "item"});
+
+            Load_Combo(_DTUnitPro, "cbbserviceUnitCount", true);
+            $('#serviceUnitCount').dropdown('clear');
+            $("#serviceUnitCount").dropdown("refresh");
+
+            $("#serviceType").dropdown("refresh");
+            $("#serviceType").dropdown("set selected", ((_type_service && _type_service.length != 0) ? CurrentServiceGroup : _data[0].ID));
+            $('#time_to_treatment').hide();
+            $('#div_Comission_Treat_Note').hide();
+            $("#serviceUnitCount").dropdown("set selected", _DTUnitPro[0].ID);
+            Active_Comission_Product();
+            $('#ck_labo').addClass('disabled');
+            $('#is_labo').prop('checked', false);
+        }
+        data_selected_product_vtth = {};
+        $('#dtTableDetailVTTHBody').html('');
+
+    }
+    function Active_Comission_Product() {
+        $('#txtPerTreatDoc').val(0);
+        $("#txtPerTreatDoc").prop('disabled', true);
+        $('#PerTreatDoc').addClass('disabled');
+
+        $('#txtPerPaidDoc').val(0);
+        $("#txtPerPaidDoc").prop('disabled', true);
+        $('#PerPaidDoc').addClass('disabled');
+
+        $('#txtPerTreat').val(0);
+        $("#txtPerTreat").prop('disabled', true);
+        $('#PerTreat').addClass('disabled');
+
+        $('#txtPerTreatSpecific').val(0);
+        $("#txtPerTreatSpecific").prop('disabled', true);
+        $('#PerTreatSpecific').addClass('disabled');
+    }
+    function Active_Comission_Service() {
+        $('#txtPerTreatDoc').val(0);
+        $("#txtPerTreatDoc").prop('disabled', false);
+        $('#PerTreatDoc').removeClass('disabled');
+
+        $('#txtPerPaidDoc').val(0);
+        $("#txtPerPaidDoc").prop('disabled', false);
+        $('#PerPaidDoc').removeClass('disabled');
+
+        $('#txtPerTreat').val(0);
+        $("#txtPerTreat").prop('disabled', false);
+        $('#PerTreat').removeClass('disabled');
+        $('#txtPerTreatSpecific').val(0);
+        $("#txtPerTreatSpecific").prop('disabled', false);
+        $('#PerTreatSpecific').removeClass('disabled');
+    }
+    // #endregion
+
+    // #region // Comission Validate
+    function ChangePriceMin() {
+        let priceMax = Number($('#txtAmountServiceDetail_Max').val() ? $('#txtAmountServiceDetail_Max').val() : 0);
+        let price = Number($('#txtAmountServiceDetail').val() ? $('#txtAmountServiceDetail').val() : 0);
+        if (price > priceMax) $('#txtAmountServiceDetail_Max').val(price);
+    }
+    function ChangeEvent_Comission_Consult() {
+        $('#txtPerConsul').val('0');
+    }
+    function ChangeEvent_Comission_PerTelesale () {
+        $('#txtPerTelesale').val('0');
+    }
+
+    function ChangeEvent_Comission_PerTreat() {
+        $('#txtPerTreat').val('0');
+    }
+    function ChangeEvent_Comission_PerTreatDoc() {
+        $('#txtPerTreatDoc').val('0');
+    }
+
+    function ChangeEvent_Comission_PerPaidDoc() {
+        $('#txtPerPaidDoc').val('0');
+    }
+    function ChangeEvent_Comission_PerTreatSpecific() {
+        $('#txtPerTreatSpecific').val('0');
+    }
+    function Checking_Validate_Comission() {
+        if (changingflag == 1) {
+            changingflag = 0;
+            let priceMax = Number($('#txtAmountServiceDetail_Max').val() ? $('#txtAmountServiceDetail_Max').val() : 0);
+            let price = Number($('#txtAmountServiceDetail').val() ? $('#txtAmountServiceDetail').val() : 0);
+            $('#textShowMessage').html('');
+            //chiết khấu cbbPerConsul
+            let typeDiscountPer_Consul = Number($('#PerConsul').dropdown('get value')) ? Number($('#PerConsul').dropdown('get value')) : 0;
+            if ($('#txtPerConsul').val() == "0") $('#txtPerConsul').val('0');
+            if (!isNaN($('#txtPerConsul').val()) || $('#txtPerConsul').val() == '') {
+
+                let valueDiscountPer_Consul = Number($('#txtPerConsul').val() ? $('#txtPerConsul').val() : 0);
+                if (typeDiscountPer_Consul == 1 && valueDiscountPer_Consul <= 100 && valueDiscountPer_Consul >= 0) {
+                    $('#txtPerConsul').css('background-color', 'white');
+                }
+                else if (typeDiscountPer_Consul == 2 && valueDiscountPer_Consul >= 0) {
+                    $('#txtPerConsul').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html(`@Local["Kiểm tra dữ liệu hoa hồng"]`);
+                    $('#txtPerConsul').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerConsul').css('background-color', 'rgb(255 216 216)');
+            }
+
+             //Ty le doanh thu
+            if ($('#txtPerRevenue').val() == "0") $('#txtPerRevenue').val('0');
+            if (!isNaN($('#txtPerRevenue').val()) || $('#txtPerRevenue').val() == '') {
+                let valuePerRevenue = Number($('#txtPerRevenue').val() ? $('#txtPerRevenue').val() : 0);
+                if (valuePerRevenue <= 100 && valuePerRevenue > 0) {
+                    $('#txtPerRevenue').css('background-color', 'white');
+                }
+                else {
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu doanh thu"]');
+                    $('#txtPerRevenue').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu doanh thu"]');
+                $('#txtPerRevenue').css('background-color', 'rgb(255 216 216)');
+            }
+
+
+             //chiết khấu cbbPerTelesale
+            let typePerTelesale = Number($('#PerTelesale').dropdown('get value')) ? Number($('#PerTelesale').dropdown('get value')) : 0;
+            if ($('#txtPerTelesale').val() == "0") $('#txtPerTelesale').val('0');
+            if (!isNaN($('#txtPerTelesale').val()) || $('#txtPerTelesale').val() == '') {
+
+                let valuePerTelesale = Number($('#txtPerTelesale').val() ? $('#txtPerTelesale').val() : 0);
+                if (typePerTelesale == 1 && valuePerTelesale <= 100 && valuePerTelesale >= 0) {
+                    $('#txtPerTelesale').css('background-color', 'white');
+                }
+                else if (typePerTelesale == 2 && valuePerTelesale >= 0) {
+                    $('#txtPerTelesale').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                    $('#txtPerTelesale').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerTelesale').css('background-color', 'rgb(255 216 216)');
+            }
+
+
+            // chiết khấu cbbPerTreat
+            let typeDiscountPer_Treat = Number($('#PerTreat').dropdown('get value')) ? Number($('#PerTreat').dropdown('get value')) : 0;
+            if (!isNaN($('#txtPerTreat').val()) || $('#txtPerTreat').val() == '') {
+                if ($('#txtPerTreat').val() == "0") $('#txtPerTreat').val('0');
+                let valueDiscountPer_Treat = Number($('#txtPerTreat').val() ? $('#txtPerTreat').val() : 0);
+                if (typeDiscountPer_Treat == 1 && valueDiscountPer_Treat <= 100 && valueDiscountPer_Treat >= 0) {
+                    $('#txtPerTreat').css('background-color', 'white');
+                }
+                else if (typeDiscountPer_Treat == 2 && valueDiscountPer_Treat >= 0) {
+                    $('#txtPerTreat').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                    $('#txtPerTreat').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerTreat').css('background-color', 'rgb(255 216 216)');
+            }
+
+            // chiết khấu PerTreatDoc
+            let typeDiscountPer_TreatDoc = Number($('#PerTreatDoc').dropdown('get value')) ? Number($('#PerTreatDoc').dropdown('get value')) : 0;
+            if (!isNaN($('#txtPerTreatDoc').val()) || $('#txtPerTreatDoc').val() == '') {
+                if ($('#txtPerTreatDoc').val() == "0") $('#txtPerTreatDoc').val('0');
+                let valueDiscountPer_TreatDoc = Number($('#txtPerTreatDoc').val() ? $('#txtPerTreatDoc').val() : 0);
+                if (typeDiscountPer_TreatDoc == 1 && valueDiscountPer_TreatDoc <= 100 && valueDiscountPer_TreatDoc >= 0) {
+                    $('#txtPerTreatDoc').css('background-color', 'white');
+                }
+                else if (typeDiscountPer_TreatDoc == 2 && valueDiscountPer_TreatDoc >= 0) {
+                    $('#txtPerTreatDoc').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                    $('#txtPerTreatDoc').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerTreatDoc').css('background-color', 'rgb(255 216 216)');
+            }
+
+            // chiết khấu PerPaidDoc
+            let typeDiscountPer_PaidDoc = Number($('#PerPaidDoc').dropdown('get value')) ? Number($('#PerPaidDoc').dropdown('get value')) : 0;
+            if (!isNaN($('#txtPerPaidDoc').val()) || $('#txtPerPaidDoc').val() == '') {
+                if ($('#txtPerPaidDoc').val() == "0") $('#txtPerPaidDoc').val('0');
+                let valueDiscountPer_TreatDoc = Number($('#txtPerPaidDoc').val() ? $('#txtPerPaidDoc').val() : 0);
+                if (typeDiscountPer_PaidDoc == 1 && valueDiscountPer_TreatDoc <= 100 && valueDiscountPer_TreatDoc >= 0) {
+                    $('#txtPerPaidDoc').css('background-color', 'white');
+                }
+                else if (typeDiscountPer_PaidDoc == 2 && valueDiscountPer_TreatDoc >= 0) {
+                    $('#txtPerPaidDoc').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                    $('#txtPerPaidDoc').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerPaidDoc').css('background-color', 'rgb(255 216 216)');
+            }
+
+            // chiết khấu PerTreatSpecific
+            let typeDiscountPer_TreatSpecific = Number($('#PerTreatSpecific').dropdown('get value')) ? Number($('#PerTreatSpecific').dropdown('get value')) : 0;
+            if (!isNaN($('#txtPerTreatSpecific').val()) || $('#txtPerTreatSpecific').val() == '') {
+                if ($('#txtPerTreatSpecific').val() == "0") $('#txtPerTreatSpecific').val('0');
+                let valueDiscountPer_TreatSpecific = Number($('#txtPerTreatSpecific').val() ? $('#txtPerTreatSpecific').val() : 0);
+                if (typeDiscountPer_TreatSpecific == 1 && valueDiscountPer_TreatSpecific <= 100 && valueDiscountPer_TreatSpecific >= 0) {
+                    $('#txtPerTreatSpecific').css('background-color', 'white');
+                }
+                else if (typeDiscountPer_TreatSpecific == 2 && valueDiscountPer_TreatSpecific >= 0) {
+                    $('#txtPerTreatSpecific').css('background-color', 'white');
+                }
+                else {
+                    // sai dinh dang
+                    $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                    $('#txtPerTreatSpecific').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                //sai dinh dang
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtPerTreatSpecific').css('background-color', 'rgb(255 216 216)');
+            }
+            if (priceMax < price) {
+                $('#textShowMessage').html('@Local["Kiểm tra dữ liệu hoa hồng"]');
+                $('#txtAmountServiceDetail_Max').css('background-color', 'rgb(255 216 216)');
+                $('#txtAmountServiceDetail').css('background-color', 'rgb(255 216 216)');
+            }
+            else {
+                $('#txtAmountServiceDetail_Max').css('background-color', 'white');
+                $('#txtAmountServiceDetail').css('background-color', 'white');
+            }
+            changingflag = 1;
+        }
+
+    }
+    // #endregion
+
+    async function Load_Data_Initialize() {
+        return new Promise((resolve) => {
+            AjaxLoad(url = "/Service/ServiceDetail/?handler=Load_Data_Initialize"
+                , data = { currentid: ser_ServiceDetailCurrentID }, async = true, error = null
+                , success = function(result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        data_service_type = data.Type;
+                        let dataSerPro = [
+                            { ID: 1, 'Name': '@Local["Dịch vụ"]' },
+                            { ID: 2, 'Name': '@Local["Sản phẩm"]'}
+                        ]
+                        Load_Combo(dataSerPro, "cbbserviceProduct", true);
+
+
+                        data_unit_service = data.ServiceUnit;
+                        if (sys_DentistCosmetic == 0) {
+                            data_unit_service = data_unit_service.filter(item => {return item["Type"] == "item"})
+                        }
+
+                        data_unit_product = data.ProductUnit;
+                        data_unit_product_full = data.UnitFull;
+                        data_product_vtth = data.Product;
+                        data_product_vtth_unit = data.UnitProduct;
+                        data_media = data.Media;
+                        data_currency = data.Currency;
+                        data_branch = data.Branch;
+                        data_treat_stage = data.TreatStage;
+                        //data_doctor = data.Doctor;
+                        //data_assist = data.Assist;
+                        //data_tech = data.Tech;
+                        //data_employee = data.Employee;
+                        if (CurrentServiceGroup != undefined) {
+                            let isProduct = 1;
+                            let SerType = data_service_type.filter((word) => { return word["ID"] == CurrentServiceGroup })
+                            if (SerType && SerType.length != 0) {
+                                isProduct = (SerType[0].IsProduct == 1 ? 2 : 1)
+                            }
+                            $("#service_pro").dropdown("refresh");
+                            $("#service_pro").dropdown("set selected", isProduct);
+                        }
+                        else {
+                            $("#service_pro").dropdown("refresh");
+                            $("#service_pro").dropdown("set selected", 1);
+                        }
+                        let data_syntax = data.SyntaxCode;
+                        if (data_syntax != undefined && data_syntax.length == 1) {
+                            service_syntax_code = data_syntax[0].Syntax;
+                            $("#txtServiceCode").prop('disabled', true);
+                            $('#txtServiceCode').attr('name', '');
+
+                        }
+
+                        let data_main = data.Update_Main;
+                        let data_vtth = data.Update_VTTH;
+                        let data_note = data.Update_Note;
+                        let data_price = data.Update_Price;
+                        let data_stage = data.Update_Stage;
+                        Load_Data_Service_Deatail(data_main, data_vtth, data_note, data_price, data_stage);
+                        $("#divServiceDetailMain").fadeIn(100);
+
+                    } else {
+                        notiError_SW();
+                    }
+                },
+                before = function() {
+                    $("#dtTableDetailVTTH").hide();
+                    $("#vtthWaiting").show();
+                    $("#serviceDetail").hide();
+                    $("#serviceDetailWaiting").show();
+                },
+                complete = function(e) {
+                    $("#dtTableDetailVTTH").show();
+                    $("#vtthWaiting").hide();
+                    $("#serviceDetail").show();
+                    $("#serviceDetailWaiting").hide();
+                }
+            );
+        });
+    }
+
+    function ServiceDetail_Event() {
+        $('#dtTableDetailVTTH tbody').on('click', '.buttonDeleteClass', function (event) {
+            let timespan = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            delete data_selected_product_vtth[timespan];
+            $('#row_' + timespan).remove();
+            event.stopPropagation();
+        });
+    }
+
+
+    //#region // VTTH
+
+    function Add_new_row_vtth() {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.productID = 0;
+        element.unitID = 0;
+        element.minNumber = 0;
+        element.maxNumber = 0;
+        element.note = '';
+        data_selected_product_vtth[id] = element;
+        RenderVTTH_Add(id, element, 'dtTableDetailVTTHBody');
+        return id;
+    }
+
+    function Event_Element_Vtth(key) {
+        $('#dtTableDetailVTTH #productVTTH_'+key+'.ui.dropdown,#dtTableDetailVTTH #unitVTTH_' + key + '.ui.dropdown').dropdown({
+            onShow: function () {
+                let ui_drop = $(this);
+                Dropdown_Set_Position(ui_drop);
+            },
+            onHide: function () {
+                let ui_drop = $(this);
+                Dropdown_Remove_Position(ui_drop);
+            },
+            allowCategorySelection: true,
+            forceSelection: false
+        });
+
+        $("#minNumberVTTH_" + key).change(function() {
+            let id = this.id.replace("minNumberVTTH_", "")
+            data_selected_product_vtth[id].minNumber = this.value;
+            if (service_ser_pro != 1) {
+                data_selected_product_vtth[id].maxNumber = this.value;
+                $('#maxNumberVTTH_' + id).val(this.value);
+            }
+        });
+        $("#maxNumberVTTH_" + key).change(function() {
+            if (!$("#" + this.id).is(":disabled")) {
+                let id = this.id.replace("maxNumberVTTH_", "")
+                data_selected_product_vtth[id].maxNumber = this.value;
+            }
+        });
+        $("#noteVTTH_" + key).change(function () {
+            let id = this.id.replace("noteVTTH_", "")
+            data_selected_product_vtth[id].note = this.value;
+        });
+        $(".productVTTH").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("productVTTH_", "")
+            let productid = Number($('#' + idcom).dropdown('get value')) ? Number($('#' + idcom).dropdown('get value')) : 0;
+            data_selected_product_vtth[id].productID = productid;
+            Render_Unit_Change_Product(productid, id);
+        });
+
+        $('.productVTTH').unbind('keyup').keyup(function(event) {
+            let idcom = this.id
+            let id = idcom.replace("productVTTH_", "")
+            onKeyupProductVTTH(id);
+        });
+        $(".unitVTTH").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("unitVTTH_", "")
+            data_selected_product_vtth[id].unitID = Number($('#' + idcom).dropdown('get value')) ? Number($('#' + idcom).dropdown('get value')) : 0;
+        });
+    }
+
+    function Render_Unit_Change_Product(id, random) {
+        $('#unitVTTH_' + random).dropdown('clear');
+        $('#unitVTTH_' + random).dropdown("refresh");
+        let _data = [];
+        let pro = data_product_vtth.filter(word => word["ID"] == id);
+        if (pro && pro.length > 0) {
+            _data.push({ "ID": pro[0].UnitID, "Name": pro[0].UnitName });
+            let unit = data_product_vtth_unit.filter(word => word["ProductID"] == id);
+            if (unit != undefined && unit.length > 0) {
+                for (let i = 0; i < unit.length; i++) {
+                    _data.push({ "ID": unit[i].UnitChange, "Name": unit[i].UnitChangeName });
+                }
+            }
+            Load_Combo(_data, "cbbunitVTTH_" + random, true);
+            $('#unitVTTH_' + random).dropdown("clear");
+            $('#unitVTTH_' + random).dropdown("refresh");
+            $('#unitVTTH_' + random).dropdown("set selected", Number(_data[0].ID));
+        }
+
+    }
+    function Fill_data_vtth(data, key) {
+        if (data[key] != undefined) {
+            let value = data[key];
+            $("#productVTTH_" + key).dropdown("refresh");
+            $("#productVTTH_" + key).dropdown("set selected", value.productID);
+            if (Number(value.productID) != 0) {
+                Render_Unit_Change_Product(value.productID, key);
+                $("#unitVTTH_" + key).dropdown("refresh");
+                $("#unitVTTH_" + key).dropdown("set selected", value.unitID);
+            }
+
+            $('#noteVTTH_' + key).val(value.note);
+            $('#minNumberVTTH_' + key).val(value.minNumber);
+            $('#maxNumberVTTH_' + key).val(value.maxNumber);
+            if (service_ser_pro == 1) {
+                $('#maxNumberVTTH_' + key).prop('disabled', false);
+            }
+            else {
+                $('#maxNumberVTTH_' + key).prop('disabled', true);
+            }
+        }
+    }
+
+
+    async function RenderVTTH_Add(key, value, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let tr =
+                        '<td style="display:none !important;">' + key + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td>' + AddCell_Product(key) + '</td>'
+                        + '<td>' + AddCell_Unit(key) + '</td>'
+                        + '<td>' + AddCell_minNumber(key, value.minNumber) + '</td>'
+                        + '<td>' + AddCell_maxNumber(key, value.maxNumber) + '</td>'
+                        + '<td>' + AddCell_Note(key, value.note) + '</td>'
+                        + '<td style="width: 50px;">'
+                        + '<button class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'
+                        + '</td>'
+                    tr = '<tr class="rowVTTH vt-number"  id=row_' + key + '>' + tr + '</tr>';
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                Fill_data_vtth(data_selected_product_vtth, key);
+                Event_Element_Vtth(key);
+            }, 100)
+        })
+    }
+
+    function AddCell_Unit(randomNumber) {
+        let resulf = '<div class="ui fluid search selection dropdown unitVTTH  form-control" id="unitVTTH_' + randomNumber
+            + '"><input type="hidden"/><i class="dropdown icon"></i>' +
+            '<input name="unitVTTHSearch" class="search" autocomplete="off" tabindex="0" /><div class="default text">@Local["Đơn vị"]</div><div id="cbbunitVTTH_' + randomNumber + '" class="menu" tabindex="-1">';
+        resulf = resulf + '</div>';
+        return resulf;
+    }
+    function AddCell_Product(randomNumber) {
+        let resulf = '<div class="ui fluid search selection dropdown productVTTH form-control"  id="productVTTH_' + randomNumber
+            + '"><input type="hidden"/><i class="dropdown icon"></i>' +
+            '<input id="productVTTHSearch_' + randomNumber + '" class="search" autocomplete="off" tabindex="0" /><div class="default text">@Local["Sản phẩm"]</div><div id="cbbproductVTTH_' + randomNumber + '" class="menu" tabindex="-1">';
+        for (i = 0; i < data_product_vtth.length; i++) {
+            resulf = resulf + '<div class="item" data-value=' + data_product_vtth[i].ID + '>' + data_product_vtth[i].Name + '</div>'
+        }
+        resulf = resulf + '</div>';
+        return resulf;
+    }
+    function AddCell_minNumber(randomNumber, value) {
+        let resulf = '<input name="numberFloat" class="minNumberVTTH form-control" id="minNumberVTTH_' + randomNumber + '" value="' + value + '" />';
+        resulf = resulf;
+        return resulf;
+    }
+    function AddCell_maxNumber(randomNumber, value) {
+        let resulf = '<input name="numberFloat" class="maxNumberVTTH form-control" id="maxNumberVTTH_' + randomNumber + '" value="' + value + '" />';
+        resulf = resulf;
+        return resulf;
+    }
+    function AddCell_Note(randomNumber, value) {
+        let resulf = '<input class="noteVTTH form-control" id="noteVTTH_' + randomNumber + '" value="' + value + '" type="text"/>';
+        resulf = resulf;
+        return resulf;
+    }
+    function Checking_Validate_VTTH() {
+
+        let isvtth_ = 0;
+        let ismatch = 0;
+        let productcheck = '';
+        for ([key, value] of Object.entries(data_selected_product_vtth)) {
+
+            if (Number(value.productID) == 0) {
+                $('#productVTTH_' + key).css('background-color', 'rgb(255 216 216)'); isvtth_ = 1;
+            }
+            else $('#productVTTH_' + key).css('background-color', 'white');
+
+            if (Number(value.unitID) == 0) {
+                $('#unitVTTH_' + key).css('background-color', 'rgb(255 216 216)'); isvtth_ = 1;
+            }
+            else $('#unitVTTH_' + key).css('background-color', 'white');
+            if (!$.isNumeric(value.minNumber) || Number(value.minNumber) <= 0
+                || Number(value.minNumber) > vtth_range_max
+                || Number(value.minNumber) < vtth_range_min) {
+                $('#minNumberVTTH_' + key).css('background-color', 'rgb(255 216 216)'); isvtth_ = 1;
+            }
+            else $('#minNumberVTTH_' + key).css('background-color', 'white');
+
+            if (!$.isNumeric(value.maxNumber) || Number(value.maxNumber) <= 0
+                || Number(value.maxNumber) > vtth_range_max
+                || Number(value.maxNumber) < vtth_range_min) {
+                $('#maxNumberVTTH_' + key).css('background-color', 'rgb(255 216 216)'); isvtth_ = 1;
+            }
+            else $('#maxNumberVTTH_' + key).css('background-color', 'white');
+
+            if (Number(value.minNumber) > 0 && Number(value.maxNumber) > 0
+                && $.isNumeric(value.minNumber) && $.isNumeric(value.maxNumber)
+                && Number(value.minNumber) <= vtth_range_max
+                && Number(value.minNumber) >= vtth_range_min
+                && Number(value.maxNumber) <= vtth_range_max
+                && Number(value.maxNumber) >= vtth_range_min
+            ) {
+                if (Number(value.minNumber) > Number(value.maxNumber)) {
+                    $('#minNumberVTTH_' + key).css('background-color', 'rgb(255 216 216)');
+                    $('#maxNumberVTTH_' + key).css('background-color', 'rgb(255 216 216)');
+                    isvtth_ = 1;
+                } else {
+                    $('#maxNumberVTTH_' + key).css('background-color', 'white');
+                    $('#minNumberVTTH_' + key).css('background-color', 'white');
+                }
+            }
+
+
+
+            if (productcheck.includes('[' + value.productID + ']')) {
+                ismatch = 1;
+                $('#row_' + key).css('background-color', 'rgb(255 216 216)');
+            }
+            else {
+                $('#row_' + key).css('background-color', 'white');
+            }
+            productcheck = productcheck + '[' + value.productID + ']'
+        }
+        if (isvtth_ == 1 || ismatch == 1) $('#textShowMessage').html('@Local["Kiểm tra dữ liệu vật tư tiêu hao"]');
+    }
+    function Checking_Validate_Image() {
+        if (!SD_CheckAvatar(document.getElementById('SD_DetailImage').clientWidth)) {
+            $('#textShowMessage').html('@Local["Kiểm tra dữ liệu"]');
+            $('#SD_DetailImage').addClass('error');
+        }
+        else {
+            $('#textShowMessage').html('');
+            $('#SD_DetailImage').removeClass('error');
+        }
+    }
+    function SD_onChangeCkbConsum() {
+        if ((sys_ExportConsumableAllowStage == 1 && service_ser_pro == 1 && $('#SD_ConsumableStage')?.is(':checked'))) {
+            data_selected_product_vtth = {};
+            $('#dtTableDetailVTTHBody').html('');
+        }
+    }
+    
+    //#endregion
+
+    // #region //upload document
+    function onchange_Document_Guide() {
+        let link = $('#txtDocument_Guild').val();
+        if (link == "") {
+            $('#div_frame_guid_load').hide();
+            $('#div_frame_guid').show();
+        }
+        else {
+            var $iframe = $('#div_frame_guid_load');
+            $iframe.attr('src', link);
+            $iframe.on('load', function() {
+                $iframe.show();
+                $('#div_frame_guid').hide();
+            });
+        }
+    }
+    function onchange_Document_War() {
+
+        let link = $('#txtDocument_War').val();
+        if (link == "") {
+            $('#div_frame_war_load').hide();
+            $('#div_frame_war').show();
+        }
+        else {
+            var $iframe = $('#div_frame_war_load');
+            $iframe.attr('src', link);
+            $iframe.on('load', function() {
+                $iframe.show();
+                $('#div_frame_war').hide();
+            });
+        }
+    }
+    function SDUpload_Event () {
+
+        let link_Upload = '/Api/Upload/Upload?Type=ServiceFile';
+        AjaxUpload_Multi(url = link_Upload, inputid = 'SDUpload_input'
+            , success = function (resulf, e) {
+                if (resulf != "0") {
+                    $('#txtDocument_Guild').val(resulf);
+                    var $iframe = $('#div_frame_guid_load');
+                    $iframe.attr('src', resulf);
+                    $iframe.on('load', function () {
+                        $iframe.show();
+                        $('#div_frame_guid').hide();
+                    });
+                }
+                else {
+                    notiWarning('@Local["Có lỗi xảy ra"] : ' + e)
+                }
+                $("#SDUpload_wating").addClass('d-none');
+            }
+            , error = function (e) {
+                notiWarning('@Local["Có lỗi xảy ra"] : ' + e);
+                $("#SDUpload_wating").addClass('d-none');
+            }
+            , before = function (e) {
+                $("#SDUpload_wating").removeClass('d-none');
+            }
+            , complete = null
+            , funmaxrange = function (e) {
+                notiWarning('@Local["Giới hạn"] : 5')
+            }
+        );
+    }
+    //#endregion
+
+    //#region // note service
+    function Add_new_row_note() {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.id = 0;
+        element.tag = "";
+        element.explain = "";
+        data_note_service[id] = element;
+        Render_NoteService_Add(id, element, 'dtTableNoteServiceBody');
+        return id;
+    }
+
+    function Event_Element_Note_Service() {
+
+        $(".tagNote").change(function() {
+            let id = this.id.replace("tagNote_", "")
+            data_note_service[id].tag = this.value;
+        });
+        $(".explainNote").change(function() {
+            let id = this.id.replace("explainNote_", "")
+            data_note_service[id].explain = this.value;
+        });
+
+        $('#dtTableNoteService tbody').on('click', '.buttonDeleteClass', function(event) {
+            let timespan = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            delete data_note_service[timespan];
+            $('#rowNote_' + timespan).remove();
+            event.stopPropagation();
+        });
+    }
+
+    async function Render_NoteService_Add(key, value, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let tr =
+                        '<td style="display:none !important;">' + key + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td>' + AddCell_Tag(key) + '</td>'
+                        + '<td>' + AddCell_Explain(key) + '</td>'
+                        + '<td style="width: 50px;">'
+                        + '<button class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'
+                        + '</td>'
+                    tr = '<tr class="rowNoteService vt-number"  id=rowNote_' + key + '>' + tr + '</tr>';
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                Fill_Data_Note_Service(data_note_service);
+                Event_Element_Note_Service();
+            }, 10)
+        });
+    }
+
+    function AddCell_Tag(randomNumber) {
+        let resulf = '<input class="tagNote form-control" id="tagNote_' + randomNumber + '" type="text"/>';
+
+        return resulf;
+    }
+    function AddCell_Explain(randomNumber) {
+        let resulf = '<input class="explainNote form-control" id="explainNote_' + randomNumber + '" type="text"/>';
+
+        return resulf;
+    }
+
+    function Fill_Data_Note_Service(data) {
+        for ([key, value] of Object.entries(data)) {
+            $('#tagNote_' + key).val(value.tag);
+            $('#explainNote_' + key).val(value.explain);
+        }
+    }
+    function Checking_Validate_Note_Service() {
+
+        let isnote_ = 0;
+        for ([key, value] of Object.entries(data_note_service)) {
+
+            if (value.tag.trim() == "" || xoa_dau(value.tag).length > 20) {
+                $('#tagNote_' + key).css('background-color', 'rgb(255 216 216)'); isnote_ = 1;
+            }
+            else {
+                $('#tagNote_' + key).css('background-color', 'white');
+            }
+            if (value.explain.trim() == "") {
+                $('#explainNote_' + key).css('background-color', 'rgb(255 216 216)'); isnote_ = 1;
+            }
+            else $('#explainNote_' + key).css('background-color', 'white');
+
+        }
+        if (isnote_ == 1) $('#textShowMessage').html('@Local["Kiểm tra dữ liệu ghi chú"]');
+    }
+    //#endregion
+
+
+
+    async function ExcuteData_Service() {
+        Checking_Validate_Comission();
+
+        Checking_Validate_Note_Service();
+        Checking_Validate_Stage_Service();
+        Checking_Validate_Price_Service();
+        Checking_Validate_VTTH();
+        Checking_Validate_Image();
+        
+        if ($('#textShowMessage').html() == "") {
+            $('#ServiceDetailForm').form('validate form');
+            if ($('#ServiceDetailForm').form('is valid')) {
+                var data = new Object(); 
+                let Avatar = await AjaxUpload_ImageByfile(SD_urlImg, SD_file);
+                
+                data.Avatar = Avatar != "0" ? Avatar : '';
+                data.ServiceProduct = Number($('#service_pro').dropdown('get value')) ? Number($('#service_pro').dropdown('get value')) : 0;
+                data.ServiceType = Number($('#serviceType').dropdown('get value')) ? Number($('#serviceType').dropdown('get value')) : 0;
+                data.Amount = $('#txtAmountServiceDetail').val() ? $('#txtAmountServiceDetail').val() : 0;
+                data.Amount_Max = $('#txtAmountServiceDetail_Max').val() ? $('#txtAmountServiceDetail_Max').val() : 0;
+
+                let PerConsul = Number($('#PerConsul').dropdown('get value')) ? Number($('#PerConsul').dropdown('get value')) : 0;
+                let PerTelesale = Number($('#PerTelesale').dropdown('get value')) ? Number($('#PerTelesale').dropdown('get value')) : 0;
+                let PerTreat = Number($('#PerTreat').dropdown('get value')) ? Number($('#PerTreat').dropdown('get value')) : 0;
+                let PerTreatDoc = Number($('#PerTreatDoc').dropdown('get value')) ? Number($('#PerTreatDoc').dropdown('get value')) : 0;
+                let PerPaidDoc = Number($('#PerPaidDoc').dropdown('get value')) ? Number($('#PerPaidDoc').dropdown('get value')) : 0;
+                let PerTreatSpecific = Number($('#PerTreatSpecific').dropdown('get value')) ? Number($('#PerTreatSpecific').dropdown('get value')) : 0;
+                let txtPerConsul = $('#txtPerConsul').val() ? $('#txtPerConsul').val() : 0;
+                let txtPerTelesale = $('#txtPerTelesale').val() ? $('#txtPerTelesale').val() : 0;
+                let txtPerRevenue = $('#txtPerRevenue').val() ? $('#txtPerRevenue').val() : 100;
+                let txtPerTreat = $('#txtPerTreat').val() ? $('#txtPerTreat').val() : 0;
+                let txtPerTreatDoc = $('#txtPerTreatDoc').val() ? $('#txtPerTreatDoc').val() : 0;
+                let txtPerPaidDoc = $('#txtPerPaidDoc').val() ? $('#txtPerPaidDoc').val() : 0;
+                let txtPerTreatSpecific = $('#txtPerTreatSpecific').val() ? $('#txtPerTreatSpecific').val() : 0;
+                let teeth_type_tar = $('#teethChoosing input[name="tab_teeth_type_tar"]:checked').val();
+                data.PerConsulAmount = (PerConsul == 2) ? txtPerConsul : 0;
+                data.PerConsulPercent = (PerConsul == 1) ? txtPerConsul : 0;
+                data.PerTelesaleAmount = (PerTelesale == 2) ? txtPerTelesale : 0;
+                data.PerTelesalePercent = (PerTelesale == 1) ? txtPerTelesale : 0;
+                data.PerRevenue =   txtPerRevenue  ;
+
+
+                data.PerTreatPercent = (PerTreat == 1) ? txtPerTreat : 0;
+                data.PerTreatAmount = (PerTreat == 2) ? txtPerTreat : 0;
+                data.PerTreatAmountDoc = (PerTreatDoc == 2) ? txtPerTreatDoc : 0;
+                data.PerTreatPercentDoc = (PerTreatDoc == 1) ? txtPerTreatDoc : 0;
+                data.PerPaidAmountDoc = (PerPaidDoc == 2) ? txtPerPaidDoc : 0;
+                data.PerPaidPercentDoc = (PerPaidDoc == 1) ? txtPerPaidDoc : 0;
+                data.PerTreatPercentSpecific = (PerTreatSpecific == 1) ? txtPerTreatSpecific : 0;
+                data.PerTreatAmountSpecific = (PerTreatSpecific == 2) ? txtPerTreatSpecific : 0;
+                data.Content = $('#txtContentServiceDetail').val() ? $('#txtContentServiceDetail').val() : "";
+                data.Name = $('#txtName_ServiceDetail').val() ? $('#txtName_ServiceDetail').val() : "";
+                data.NameEn = $('#txtNameEng_ServiceDetail').val() ? $('#txtNameEng_ServiceDetail').val() : "";
+                data.ServiceCode = $('#txtServiceCode').val() ? $('#txtServiceCode').val() : "";
+                data.IdentificationCode = $('#txtIdentificationCode').val() ? $('#txtIdentificationCode').val() : "";
+                data.IdentificationName = $('#txtIdentificationName').val() ? $('#txtIdentificationName').val() : "";
+                data.TimeToTreatment = Number($('#spTotalTreatment').val()) ? Number($('#spTotalTreatment').val()) : 1;
+                data.UnitCount = Number($('#serviceUnitCount').dropdown('get value')) ? Number($('#serviceUnitCount').dropdown('get value')) : 0;
+                data.MediaFolder = Number($('#MediaFolder').dropdown('get value')) ? Number($('#MediaFolder').dropdown('get value')) : 0;
+                data.link_guid = $('#txtDocument_Guild').val() != '' ? encodeURI(decodeURI($('#txtDocument_Guild').val())) : '';
+                data.link_warranty = $('#txtDocument_War').val() != '' ? encodeURI(decodeURI($('#txtDocument_War').val())) : '';
+                data.IsInstallment = $('#is_installment').is(':checked') ? 1 : 0;
+                data.IsLabo = $('#is_labo').is(':checked') ? 1 : 0;
+                data.TeethType = teeth_type_tar ? Number(teeth_type_tar) : 0;
+                data.WarrantyMonth = $('#numMonth_War').val() ? $('#numMonth_War').val() : 0;
+                data.UseExportStage = (sys_ExportConsumableAllowStage == 1 && service_ser_pro == 1 && $('#SD_ConsumableStage')?.is(':checked')) ? 1 : 0;
+
+                let vtth = [];
+                for ([key, value] of Object.entries(data_selected_product_vtth)) {
+                    vtth.push(value);
+                }
+
+
+
+                let noteService = [];
+                for ([key, value] of Object.entries(data_note_service)) {
+
+                    noteService.push(value);
+                }
+                let stageService = [];
+                let NumberPercentComplete = 0;
+                $("#dtTableStageService .rowStageService").each(function () {
+                    let idTreatStage = Number(this.id.replace('rowStage_', ''));
+                    if (data_stage_service[idTreatStage] != undefined) {
+                        NumberPercentComplete += Number(data_stage_service[idTreatStage].percent);
+                        data_stage_service[idTreatStage].percentcomplete = NumberPercentComplete;
+                        stageService.push(data_stage_service[idTreatStage]);
+                    }
+                })
+                let priceService = []
+                for ([key, value] of Object.entries(data_price_service)) {
+                    priceService.push(value);
+                }
+                AjaxLoad(url = "/Service/ServiceDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data)
+                        , dataVTTH: JSON.stringify(vtth)
+                        , dataNote: JSON.stringify(noteService)
+
+                        , dataStageService: JSON.stringify(stageService)
+                        , priceService: JSON.stringify(priceService)
+                        , service_syntax_code: service_syntax_code
+                        , CurrentID: ser_ServiceDetailCurrentID
+                    }, async = true, error = null
+                    , success = function(result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            if (data && data.length != 0) {
+                                let IDComplete = Number(data[0].RESULT);
+                                let Code = data[0].CODE;
+                                if (IDComplete != 0) {
+                                    notiSuccess();
+                                    CurrentServiceGroup = Number($('#serviceType').dropdown('get value'));
+                                    CurrentService = IDComplete;
+                                    if (typeof SerList_Type_Load === 'function') SerList_Type_Load(CurrentServiceGroup);
+                                    if (typeof SerList_Load === 'function') SerList_Load(CurrentService);
+                                    CloseDetailService();
+                                    syslog_ser((ser_ServiceDetailCurrentID != '0' ? 'u' : 'i'), Code);
+                                }
+                                else {
+                                    $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                                }
+                            }
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    })
+            }
+        }
+    }
+
+    async function Load_Data_Service_Deatail (main, vtth, data_note, data_price, data_stage) {
+        return new Promise((resolve) => {
+            if (ser_ServiceDetailCurrentID != "0" && main != undefined && vtth != undefined) {
+                if (main[0].Avatar != '') $('#SD_DetailImage').attr('src', main[0].Avatar);
+                $('#ServiceDetail_btndele').removeClass('d-none');
+                $('#spTotalTreatment').val((main[0].TimeToTreatment));
+                $('#txtName_ServiceDetail').val((main[0].Name));  //Name
+                $('#txtNameEng_ServiceDetail').val((main[0].Name_EN))
+                $('#txtServiceCode').val((main[0].ServiceCode));  //servicecode
+                $('#txtIdentificationCode').val((main[0].IdentificationCode));  //IdentificationCode
+                $('#txtIdentificationName').val((main[0].IdentificationName));  //IdentificationName
+                $('#txtAmountServiceDetail').val((main[0].Amount)); //Amount
+                $('#txtAmountServiceDetail_Max').val((main[0].Amount_Max)); //Amount
+                let PerConsulAmount = main[0].PerConsulAmount;
+                let PerConsulPercent = main[0].PerConsulPercent;
+                let PerTelesaleAmount = main[0].PerTelesaleAmount;
+                let PerRevenue = main[0].PerRevenue;
+
+                let PerTelesalePercent = main[0].PerTelesalePercent;
+                let PerTreatAmount = main[0].PerTreatAmount;
+                let PerTreatPercent = main[0].PerTreatPercent;
+                let PerTreatPercentSpecific = main[0].PerTreatPercentSpecific;
+                let PerTreatAmountSpecific = main[0].PerTreatAmountSpecific;
+                let PerTreatAmountDoc = main[0].PerTreatAmountDoc;
+                let PerTreatPercentDoc = main[0].PerTreatPercentDoc;
+                let PerPaidAmountDoc = main[0].PerPaidAmountDoc;
+                let PerPaidPercentDoc = main[0].PerPaidPercentDoc;
+                let IsInstallment = main[0].Is_Installment;
+                let IsLabo = main[0].Is_Labo;
+                let TeethType = main[0].TeethType;
+                $("#PerConsul").dropdown("refresh");
+                $("#PerConsul").dropdown("set selected", ((PerConsulAmount == 0) ? 1 : 2));
+
+                $("#PerTelesale").dropdown("refresh");
+                $("#PerTelesale").dropdown("set selected", ((PerTelesaleAmount == 0) ? 1 : 2));
+
+                $("#PerTreat").dropdown("refresh");
+                $("#PerTreat").dropdown("set selected", ((PerTreatAmount == 0) ? 1 : 2));
+                $("#PerTreatDoc").dropdown("refresh");
+                $("#PerTreatDoc").dropdown("set selected", ((PerTreatAmountDoc == 0) ? 1 : 2));
+                $("#PerPaidDoc").dropdown("refresh");
+                $("#PerPaidDoc").dropdown("set selected", ((PerPaidAmountDoc == 0) ? 1 : 2));
+                $("#PerTreatSpecific").dropdown("refresh");
+                $("#PerTreatSpecific").dropdown("set selected", ((PerTreatAmountSpecific == 0) ? 1 : 2));
+                $("#MediaFolder").dropdown("refresh");
+                $("#MediaFolder").dropdown("set selected", main[0].FolderMedia);
+
+                $('#txtPerConsul').val((PerConsulAmount == 0) ? PerConsulPercent : PerConsulAmount);
+                $('#txtPerTelesale').val((PerTelesaleAmount == 0) ? PerTelesalePercent : PerTelesaleAmount);
+                $('#txtPerRevenue').val(PerRevenue);
+                $('#txtPerTreat').val((PerTreatAmount == 0) ? PerTreatPercent : PerTreatAmount);
+                $('#txtPerTreatDoc').val((PerTreatAmountDoc == 0) ? PerTreatPercentDoc : PerTreatAmountDoc);
+                $('#txtPerPaidDoc').val((PerPaidAmountDoc == 0) ? PerPaidPercentDoc : PerPaidAmountDoc);
+                $('#txtPerTreatSpecific').val((PerTreatAmountSpecific == 0) ? PerTreatPercentSpecific : PerTreatAmountSpecific);
+                $('#txtContentServiceDetail').val((main[0].Content)); //Content
+                $('#txtDocument_War').val(main[0].Link_Warranty);
+                $('#txtDocument_Guild').val(main[0].Link_Guid);
+                $('#numMonth_War').val(main[0].WarrantyMonth);
+
+                IsInstallment == 1 ? $("#is_installment").prop('checked', true) : $("#is_installment").prop('checked', false);
+                IsLabo == 1 ? $("#is_labo").prop('checked', true) : $("#is_labo").prop('checked', false);
+                $('#teethChoosing input[name="tab_teeth_type_tar"][value="' + TeethType + '"]').prop("checked", true);
+                onchange_Document_Guide();
+                onchange_Document_War();
+                $("#serviceUnitCount").dropdown("set selected", main[0].UnitCount);
+                let IsProduct = Number(main[0].IsProduct);
+                $("#service_pro").dropdown("refresh");
+                $("#service_pro").addClass("disabled");
+                if (IsProduct == 1) {
+                    $("#service_pro").dropdown("set selected", 2);
+                    service_ser_pro = 2;
+                }
+                else {
+                    $("#service_pro").dropdown("set selected", 1);
+                    service_ser_pro = 1
+                }
+                $('#SD_ConsumableStage').prop("checked", (main[0].UseExportStage == 1 && sys_ExportConsumableAllowStage == 1));
+
+                SerDetail_Load_VTTH(vtth);
+                SerDetail_Load_Note(data_note);
+                SerDetail_Load_Stage(data_stage);
+                SerDetail_Load_Price(data_price);
+                $("#serviceType").dropdown("refresh");
+                $("#serviceType").dropdown("set selected", main[0].ServiceType); //ServiceType
+            }
+        })
+    }
+
+    //#region // Load Detail
+
+    async function SerDetail_Load_VTTH(dataVTTH) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (dataVTTH && dataVTTH.length != 0) {
+                    for (let i = 0; i < dataVTTH.length; i++) {
+                        let element = {};
+                        element.productID = dataVTTH[i].productID;
+                        element.unitID = dataVTTH[i].unitID;
+                        element.minNumber = dataVTTH[i].minNumber.toString();
+                        element.maxNumber = dataVTTH[i].maxNumber.toString();
+                        element.note = dataVTTH[i].note;
+                        data_selected_product_vtth[dataVTTH[i].id] = element;
+                        RenderVTTH_Add(dataVTTH[i].id, element, 'dtTableDetailVTTHBody');
+                    }
+                }
+            }, 300)
+            resolve();
+        })
+    }
+
+    async function SerDetail_Load_Note(dataNote) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (dataNote && dataNote.length != 0) {
+                    for (let j = 0; j < dataNote.length; j++) {
+                        let element = {};
+                        element.id = dataNote[j].id;
+                        element.tag = dataNote[j].tag;
+                        element.explain = dataNote[j].explain;
+                        data_note_service[dataNote[j].id] = element;
+                        Render_NoteService_Add(dataNote[j].id, element, 'dtTableNoteServiceBody');
+                    }
+                }
+            }, 100)
+            resolve();
+        })
+    }
+
+    async function SerDetail_Load_Stage(dataStage) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let TotalStagePercent = 0;
+                if (dataStage && dataStage.length != 0) {
+                    for (let j = 0; j < dataStage.length; j++) {
+                        TotalStagePercent += Number(dataStage[j].percent);
+                        let element = {};
+                        element.id = dataStage[j].id;
+                        element.treatStageID = dataStage[j].treatStageID;
+                        element.percent = dataStage[j].percent;
+                        element.percentcomplete = 0;
+                        data_stage_service[dataStage[j].id] = element;
+                        Render_StageService_Add(dataStage[j].id, element, 'dtTableStageServiceBody');
+                    }
+                }
+                $("#TotalPercentStage").text(TotalStagePercent + '%');
+            }, 100)
+            resolve();
+        })
+    }
+
+    async function SerDetail_Load_Price(dataPrice) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (dataPrice && dataPrice.length != 0) {
+                    for (let j = 0; j < dataPrice.length; j++) {
+                        let element = {};
+                        element.id = dataPrice[j].id;
+                        element.branchid = dataPrice[j].branchid;
+                        element.exchangeid = dataPrice[j].exchangeid;
+                        element.exname = dataPrice[j].exname;
+                        element.exvalue = dataPrice[j].exvalue;
+                        element.pricemin = dataPrice[j].pricemin;
+                        element.pricemax = dataPrice[j].pricemax;
+                        data_price_service[dataPrice[j].id] = element;
+                        Render_PriceService_Add(dataPrice[j].id, element, 'dtTablePriceServiceBody');
+                    }
+                }
+            }, 100)
+            resolve();
+        })
+    }
+
+
+    //#endregion
+
+    //#region // onkeyOf
+    function onKeyupProductVTTH(id) {
+        let search = xoa_dau($('#productVTTHSearch_' + id).val().toLowerCase());
+        let data = data_product_vtth.filter(word => {
+            return ((xoa_dau(word["Name"]).toLowerCase()).includes(search));
+        });
+        if (data != undefined && data != null && data.length != 0)
+            Load_Combo(data, "cbbproductVTTH_" + id, true);
+    }
+    //#endregion
+    //#region // Delete
+    function SDe_Delete () {
+        const promise = notiConfirm();
+        promise.then(function () {SDe_DeleteExe(ser_ServiceDetailCurrentID);}, function () { });
+    }
+    function SDe_DeleteExe (id) {
+        AjaxLoad(url = "/Service/ServiceDetail/?handler=DeleteItem"
+            , data = {id: id}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    if (typeof SerList_Type_Load === 'function') SerList_Type_Load(CurrentServiceGroup);
+                    if (typeof SerList_Load === 'function') SerList_Load(CurrentService);
+                    CloseDetailService();
+                    syslog_ser('d', result);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+    //#region
+    function SD_CropImage(_file) {
+        $("#divServiceDetailMain").hide();
+        $("#SD_preview").removeClass('d-none');
+        $("#SD_preview").html('');
+        $("#SD_preview").load('/Image/Previewcrop'
+            , function (response, status, xhr) {
+                preview_Setimg(_file
+                    , closefn = function () {
+                        $("#divServiceDetailMain").show();
+                        $("#SD_preview").addClass('d-none');
+                        $("#SD_preview").html(''); 
+                    }
+                    , savefn = function (_f, _input) {
+                        SD_file = _input;
+                        $('#SD_DetailImage').attr('src', _f);
+                    });
+            });
+
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    #SD_DetailImage.error {
+        border: 3px solid rgb(255, 216, 216) !important;
+    }
+</style>

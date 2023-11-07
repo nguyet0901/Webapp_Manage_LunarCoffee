@@ -1,0 +1,127 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Folder.FolderBackUpModel
+@{
+    Layout = null;
+}
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Cấu hình thư mục"]</h6>
+                    <p class="text-sm mb-0">@Local["Cấu hình thư mục upload và sao lưu dữ liệu"]</p>
+                </div>
+            </div>
+            <div class="card-body pt-0  px-2">
+                <div id="FBU_master" class="row px-2 me-n2">
+                    <div class="d-lg-flex d-md-flex px-0 mt-3 ms-0">
+                        <div class="d-lg-flex ps-2 d-md-flex align-items-center col-auto my-auto">
+                            <ul class="ms-n1 nav nav-pills p-1 ps-0 bg-transparent" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a onclick="FBU_DisplayList()" class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" aria-selected="true">
+                                        <i class="text-gradient text-primary fas fa-list-ul"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item " role="presentation">
+                                    <a onclick="FBU_DisplayGrid()" class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab" aria-selected="true">
+                                        <i class="text-gradient text-primary fas fa-th"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <ul id="FBU_list" class="border-1 mt-3 px-3 py-4 bg-gray-100 border-radius-lg nav nav-pills  bg-white border-radius-lg d-block showmineonly d-flex">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let FBU_Data;
+    let FBU_TypeLoad = 'list';
+    $(document).ready(function () {
+        FBU_LoadList();
+    });
+    function FBU_LoadList() {
+        AjaxLoad(url = "/Setting/Folder/FolderBackUp/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    FBU_Data = JSON.parse(result);
+                    FBU_RenderList(FBU_Data, 'FBU_list');
+                }
+            });
+    }
+    function FBU_RenderList(data, id) {
+
+        let Mynode = document.getElementById(id);
+        Mynode.innerHTML = '';
+        if (data && data.length != 0) {
+            let string = '';
+            if (FBU_TypeLoad == 'grid') {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let str = `
+                            <li class="position-relative">
+                                <a class="d-flex w-100 text-sm nav-link cursor-pointer">
+                                    <div class="card shadow-none">
+                                        <div class=" mx-4 p-3 text-center">
+                                            <i class="fs-2 ms-n1 text-gradient text-warning fas fa-folder"></i>
+                                        </div>
+                                        <div class="card-body pt-0 p-3 text-center">
+                                            <h6 class="text-dark text-sm mb-0 text-primary cursor-pointer">${item.Name}</h6>
+                                            <h6 class="text-center text-sm mb-0">${item.UrlType}</h6>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    string += str;
+                }
+            }
+            else {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let str = `
+                            <li class="d-flex text-dark w-100 text-sm cursor-pointer">
+                                <div class="row d-flex col-12 px-3 py-2 align-items-center">
+                                    <div class="col-12 col-md-6 col-xl-3 p-1">
+                                        <div class="col-auto my-auto  d-flex align-items-center">
+                                            <i class="fs-2 ms-n1 text-gradient text-warning fas fa-folder w-auto"></i>
+                                            <span class="text-dark ms-3">${item.Name}</span>
+                                        </div>
+                                    </div>
+                                     <div class="col-12 col-md-6 col-xl-3 p-1 ">
+                                        <i class="fas fa-check text-success fw-bold pe-2"></i>${(item.IsManagement == 1) ? `Management` : `Backup`}
+                                    </div>
+                                    <div class="col-12 col-md-12 col-xl-6 p-1">
+                                        ${item.Url}
+                                    </div>
+                                </div>
+                            </li>
+                            ${(i == data.length - 1) ? `` : `<hr class="w-100 bg-primary horizontal dark my-0 ">`}
+                    `
+                    string += str;
+                }
+            }
+            Mynode.innerHTML = string;
+        }
+    }
+
+    function FBU_DisplayGrid() {
+        FBU_TypeLoad = 'grid';
+        $('#FBU_list').addClass('d-flex');
+        FBU_RenderList(FBU_Data, 'FBU_list');
+    }
+    function FBU_DisplayList() {
+
+        FBU_TypeLoad = 'list';
+        $('#FBU_list').removeClass('d-flex');
+        FBU_RenderList(FBU_Data, 'FBU_list');
+    }
+
+        //#endregion
+
+</script>

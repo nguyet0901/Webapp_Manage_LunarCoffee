@@ -1,0 +1,235 @@
+﻿@page
+@model MLunarCoffee.Pages.Account.Deposit.SupplierDepositDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Tiền cọc"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết tiền cọc"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3" id="form3">
+                    <div class="col-12 mt-2 d-flex">
+                        <p class="text-sm fw-bold text-dark mb-2">@Local["Nhà cung cấp"]: </p>&nbsp;
+                        <p class="mb-2 text-sm text-nowrap font-weight-bold text-primary" id="SD_NameSupplier">-</p>
+                    </div>
+                    <div class="field col-12 p-1">
+                        <label>@Local["Chi nhánh"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="SD_Branch">
+                            <input type="hidden" name="branch" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chi nhánh"]</div>
+                            <div id="SD_CbbBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Hình thức"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="SD_Method">
+                            <input type="hidden" name="paymentMethod" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. @Local["Hình thức"]</div>
+                            <div id="SD_CbbMethod" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Chi tiết"]</label>
+                        <div class="ui fluid search selection dropdown disabled form-control" id="SD_MethodType">
+                            <input type="hidden" name="paymentMethodType" class="input payment" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Chi tiết"]</div>
+                            <div id="SD_CbbMethodType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Số tiền"]</label>
+                        <input id="SD_Amount" type="text" class="form-control money" placeholder="eg .@Local["Số tiền"]" />
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Mã hóa đơn ngân hàng"]</label>
+                        <input id="SD_InvoiceCode" class="form-control" type="text" disabled="disabled" placeholder="eg .@Local["Mã hóa đơn ngân hàng"]" />
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Mã hóa đơn"]</label>
+                        <input id="SD_BillCode" type="text" class="form-control" placeholder="eg .@Local["Mã hóa đơn"]" />
+                    </div>
+                    <div class="field col-12 col-sm-6 p-1">
+                        <label>@Local["Ngày tạo"]</label>
+                        <input id="SD_DateCreate" class="flatpickr detail form-control" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                    </div>
+                    <div class="field col-12 p-1">
+                        <label>@Local["Nội dung"]</label>
+                        <textarea id="SD_Note" data-validation="content_customer" name="content" class="form-control _validation_option_" rows="4" placeholder="eg .@Local["Nội dung"]"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="CloseModal()">Cancel</button>
+                        <button id="SD_BtnExecuted" type="button" form="form3" class="btn bg-gradient-primary mt-2 me-2" onclick="SDetail_Executed();">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ser_SD_SupID = Number('@Model.SupID');
+    let SD_DataMethodType = [];
+
+    $(document).ready(function () {
+        $("#SD_DateCreate.flatpickr").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+        SDetail_LoadInit();
+        SDetail_Event();
+        $("#SD_Amount").divide();
+    })
+
+    //#region //Load && Executed
+
+    function SDetail_LoadInit () {
+        AjaxLoad(url = "/Account/Deposit/SupplierDepositDetail/?handler=LoadInitialize"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataSupplier = data.Supplier;
+                    Load_Combo(data.Branch, "SD_CbbBranch", true);
+                    $("#SD_Branch").dropdown("refresh");
+                    $("#SD_Branch").dropdown("set selected", Master_branchID);
+
+                    Load_Combo(data.Method, "SD_CbbMethod", true);
+                    $("#SD_Method").dropdown("refresh");
+                    $("#SD_Method").dropdown("set selected", data.Method[0].ID);
+
+                    dataSupplier = dataSupplier.reduce((pre, arr) => {
+                        if (arr.ID) pre[arr.ID] = arr;
+                        return pre;
+                    }, {})
+
+                    let SupplierContent = dataSupplier[ser_SD_SupID];
+                    $("#SD_NameSupplier").html(SupplierContent["Code"] + " - " + SupplierContent["Name"]);
+                    SD_DataMethodType = data.MethodType;
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function SDetail_Executed () {
+        Checking_Require_Validation('@Model._dtPermissionCurrentPage');
+        let data = new Object();
+
+        data.SupplierID = (ser_SD_SupID != undefined ? ser_SD_SupID : 0);
+        data.BranchID = $("#SD_Branch").dropdown("get value") ? Number($("#SD_Branch").dropdown("get value")) : 0;
+        data.PaymentMethodID = $("#SD_Method").dropdown("get value") ? Number($("#SD_Method").dropdown("get value")) : 0;
+        data.Amount = $("#SD_Amount").val() ? Number($("#SD_Amount").val()) : 0;
+        data.Note = $("#SD_Note").val() ? $("#SD_Note").val() : '';
+        data.MethodType = $("#SD_MethodType").dropdown("get value") ? Number($("#SD_MethodType").dropdown("get value")) : 0;
+        data.PosTypeID = (data.PaymentMethodID == 5 ? data.MethodType : 0);
+        data.TransferTypeID = (data.PaymentMethodID == 4 ? data.MethodType : 0);
+        data.MedthodDetail = ((data.PaymentMethodID != 4 && data.PaymentMethodID != 5) ? data.MethodType : 0);
+        data.BankInvoiceCode = $("#SD_InvoiceCode").val() ? $("#SD_InvoiceCode").val() : '';
+        data.BillCode = $("#SD_BillCode").val() ? $("#SD_BillCode").val() : '';
+        data.DateCreate = $("#SD_DateCreate").val() ? $("#SD_DateCreate").val() : new Date();
+        SDetail_BeforeExecuted(data);
+        $('#form3').form('validate form');
+        if (document.getElementById("textShowMessage").innerHTML == "") {
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Account/Deposit/SupplierDepositDetail/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(data)
+                    }
+                    , async = true
+                    , error = function () {notiError_SW()}
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+
+                            if (data != undefined && data.length == 1 && data[0]["RESULT"] != "0") {
+                                
+                                SuppDetail_LoadInvoice(data[0]["RESULT"], 'deposit');
+                                notiSuccess();
+                                CloseModal();
+                            } else {
+                                notiError_SW();
+                            }
+                        } else notiError_SW();
+
+                    }, sender = $("#SD_BtnExecuted")
+                );
+
+            }
+            return false;
+        }
+    }
+
+    function SDetail_BeforeExecuted (data) {
+        $("#textShowMessage").html("");
+        $('#SD_Amount').css('background-color', 'white');
+        if (isNaN(data.Amount) || data.Amount == 0) {
+            $('#SD_Amount').css('background-color', 'rgb(255 216 216)');
+            $("#textShowMessage").html("@Local["Kiểm tra dữ liệu"]");
+        };
+    }
+    //#endregion
+
+
+    //#region //Event
+
+    function SDetail_Event () {
+        $("#SD_Method").on("change", function () {
+            let MethodID = $("#SD_Method").dropdown("get value") ? Number($("#SD_Method").dropdown("get value")) : 0;
+            $("#SD_MethodType").dropdown("clear");
+            $("#SD_CbbMethodType").html("");
+
+            let Data = SD_DataMethodType.filter(word => {return word["Type"] == MethodID});
+            Load_Combo(Data, "SD_CbbMethodType", true);
+
+            if (MethodID == 5) {
+                $("#SD_InvoiceCode").prop('disabled', false);
+            }
+            else {
+                $("#SD_InvoiceCode").prop('disabled', true);
+                $("#SD_InvoiceCode").val("");
+            }
+            if (Data.length > 0) {
+                $("#SD_MethodType").removeClass('disabled');
+                $("#SD_MethodType").dropdown("refresh");
+                $("#SD_MethodType").dropdown("set selected", Data[0]?.ID);
+                $("#SD_MethodType input.payment").attr('name', "paymentMethodType");
+            }
+            else {
+                $("#SD_MethodType").addClass('disabled');
+                $("#SD_MethodType input.payment").attr('name', "");
+            }
+        })
+    }
+    //#endregion
+</script>

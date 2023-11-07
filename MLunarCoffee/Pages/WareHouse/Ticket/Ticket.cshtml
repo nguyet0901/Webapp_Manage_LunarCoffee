@@ -1,0 +1,283 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Ticket.Ticket
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card-header pb-0">
+    <div class="d-lg-flex">
+        <div class="col-auto my-auto">
+            <div class="h-100">
+                <h6 class="mb-0">@Local["Thẻ kho"]</h6>
+                <p class="text-sm mb-0">@Local["Thẻ kho này chỉ xem không thể chỉnh sửa"]</p>
+            </div>
+        </div>
+        <div class="ms-auto my-auto mt-1 d-flex">
+            <div id="ticketwa_edit" style="display:none;" class="border-dashed border-1 border-secondary p-2 m-2 bg-gray-100 border-radius-lg">
+                <div class="text-sm text-dark font-weight-bold pb-2">@Local["Số liệu đã lưu"]</div>
+                <div class="d-flex">
+                    <span class="text-sm">@Local["Số lượng tồn"]:</span>
+                    <span id="tkware_numedit" class="text-sm text-dark font-weight-bold ms-2"></span>
+                    <span id="tkware_unitedit" class="text-sm text-dark font-weight-bold ms-2"></span>
+                </div>
+                <div class="d-flex">
+                    <span class="text-sm">@Local["Đơn giá trung bình"]:</span>
+                    <span id="tkware_amountedit" class="text-sm text-dark font-weight-bold ms-2"></span>
+                </div>
+            </div>
+            <div class="border-0 p-2 m-2   border-radius-lg">
+                <div class="text-sm text-dark font-weight-bold pb-2">@Local["Số liệu tính toán"]</div>
+                <div class="d-flex">
+                    <span class="text-sm">@Local["Số lượng tồn"]:</span>
+                    <span id="tkware_num" class="text-sm text-dark font-weight-bold ms-2"></span>
+                    <span id="tkware_unit" class="text-sm text-dark font-weight-bold ms-2"></span>
+                </div>
+                <div class="d-flex">
+                    <span class="text-sm">@Local["Đơn giá trung bình"]:</span>
+                    <span id="tkware_amount" class="text-sm text-dark font-weight-bold ms-2"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-body pt-2 ">
+    <div id="ticketwa_nameproduct" class="text-md text-primary font-weight-bold text-center"></div>
+    <div class="text-md text-dark font-weight-bold text-center">
+        <span id="ticketwa_datef" class="text-sm text-dark font-weight-bold ms-2"></span>
+        <span class="text-sm text-dark font-weight-bold ms-2">-</span>
+        <span id="ticketwa_datet" class="text-sm text-dark font-weight-bold ms-2"></span>
+    </div>
+    <div class="m-0 my-3 mobile-responsive">
+        <div id="ticketloadder" class="waitingdiv text-center" style="border: none; display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <table class="table vt-table mb-0" id="dtContentCard">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 25px;">@Local["#"]</th>
+                    <th colspan="3">@Local["Chứng từ"]</th>
+                    <th rowspan="2">@Local["Đầu kỳ"]</th>
+                    <th rowspan="2">@Local["Nhập"]</th>
+                    <th colspan="3">@Local["Xuất"]</th>
+                    <th rowspan="2">@Local["Tồn"]</th>
+                    <th colspan="3"></th>
+                </tr>
+                <tr>
+                    <th>@Local["Mã"]Code</th>
+                    <th>@Local["Ngày"]</th>
+                    <th>@Local["Mã khách hàng"]</th>
+                    <th>@Local["Xuất"]</th>
+                    <th>@Local["Xuất bán"]</th>
+                    <th>@Local["Xuất điều trị"]</th>
+                    <th>@Local["Thực tế"]</th>
+                    <th>@Local["Hệ số"]</th>
+                    <th>@Local["Giá trị"]</th>
+                </tr>
+            </thead>
+            <tbody id="dtContentCardBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="nav-wrapper end-0" id="viewformTabHeader" style="display:none;">
+        <ul class="nav nav-pills mt-2 p-1 pt-1 mx-n1" role="tablist" id="viewformTab">
+        </ul>
+    </div>
+    <div id="viewformTabContent">
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var ticketproduct = 0;
+    function WareLock_CardViewLoadEdit(productname, productID, lockID) {
+        ticketproduct = productID;
+        $('#ticketwa_edit').show();
+        $('#ticketwa_nameproduct').html(productname);
+        $("#viewformTabHeader").hide();
+        $("#viewformTabContent").html("");
+        AjaxLoad(url = "/WareHouse/Ticket/Ticket/?handler=LoadTicketEdit"
+            , data = { 'lockID': lockID, 'ProductID': productID }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    WareLock_CardViewRender(data.Table, "dtContentCardBody");
+                    $('#tkware_unitedit').html(data.Table1[0].UnitName);
+                    $('#tkware_numedit').html(formatNumber(Math.round(data.Table1[0].Num * 100) / 100));
+                    $('#tkware_amountedit').html(formatNumber(Math.round(data.Table1[0].Amount_Item * 100) / 100));
+                }
+            }, sender = null
+            , before = function (e) {
+                $("#ticketloadder").show();
+                $("#dtContentCard").hide();
+            }
+            , complete = function (e) {
+                $("#ticketloadder").hide();
+                $("#dtContentCard").show();
+            }
+        );
+        return false;
+    }
+
+    //#region // CardView
+
+    function WareLock_CardViewLoad(productname, productID, wareID, preID, dateto) {
+        ticketproduct = productID;
+        $('#ticketwa_nameproduct').html(productname);
+        $("#viewformTabHeader").hide();
+        $("#viewformTabContent").html("");
+        AjaxLoad(url = "/WareHouse/Ticket/Ticket/?handler=LoadTicket"
+            , data = {
+                'WareID': wareID,
+                'ProductID': productID,
+                'ser_preID': preID,
+                'DateTo': dateto
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    WareLock_CardViewRender(data, "dtContentCardBody");
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#ticketloadder").show();
+                $("#dtContentCard").hide();
+            }
+            , complete = function (e) {
+                $("#ticketloadder").hide();
+                $("#dtContentCard").show();
+            }
+        );
+        return false;
+    }
+
+    function WareLock_CardViewRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let normbegin = 0;
+            let normend = 0;
+            let unitname = '';
+            let totalamount = 0;
+            let totalnum = 0;
+            let datef, datet;
+            const addZeroToNumber = (value) => {
+                return value.toLocaleString("vn", { useGrouping: false, minimumFractionDigits: 0 })
+            }
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr;
+                    if (item.Type == 1) {
+                        normbegin = item.Number; normend = item.Number;
+                        unitname = item.UnitName;
+                        datef = item.DateFrom.includes('1900') ? '' : GetDateTime_String_DMYHM(item.DateFrom);
+                        datet = item.DateTo.includes('1900') ? '' : GetDateTime_String_DMYHM(item.DateTo);
+                    }
+                    else {
+                        if (item.Type == 2 || item.Type == 3) {
+                            normend = normbegin + item.Number;
+                        }
+                        else {
+                            normend = normbegin - item.Number;
+                        }
+                    }
+                    totalnum = totalnum + item.Number;
+                    totalamount = totalamount + item.TotalAmount;
+                    tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td >'
+                        + ((item.Type == 1)
+                            ? '@Local["Đầu kỳ"]'
+                            : '<a class="cursor-pointer viewform d-block fw-bold" data-code="' + item.Code + '"  data-type="' + item.Type + '">' + item.Code + '</a>'
+                        )
+                        + '</td>'
+                        + '<td >' + GetDateTime_String_DMYHM(item.DateExe) + '</td>'
+                        + '<td >'
+                        + ((item.CustCode != '')
+                            ? '<a class="d-block fw-bold" target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + '">' + item.CustCode + '</a>'
+                            : ''
+                        )
+                        + '</td>'
+                        + '<td>' + formatNumber(Math.round(normbegin * 100) / 100) + '</td>'
+                        + '<td>' + ((item.Type == 2 || item.Type == 3) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                        + '<td>' + ((item.Type == 4 || item.Type == 5) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                        + '<td>' + ((item.Type == 7) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                        + '<td>' + ((item.Type == 6) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                        + '<td>' + formatNumber(Math.round(normend * 100) / 100) + '</td>'
+
+                        + '<td>'
+                        + ((item.Type == 1) ? '-' : (formatNumber(item.NumberExe) + ' ' + item.UnitNameExe))
+                        + '</td>'
+                        + '<td>'
+                        + ((item.NumberExe != 0) ? addZeroToNumber(item.Number / item.NumberExe) : '-')
+                        + '</td>'
+                        + '<td>'
+                        + ((item.Type == 2 || item.Type == 1)
+                            ? formatNumber(Math.round(item.TotalAmount * 100) / 100)
+                            : '-'
+                        )
+                        + '</td>';
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                    normbegin = normend;
+                }
+            }
+            myNode.innerHTML = stringContent;
+            $('#tkware_num').html(formatNumber(Math.round(normend * 100) / 100));
+            if (totalnum != 0) $('#tkware_amount').html(formatNumber(Math.round(totalamount / totalnum * 100) / 100));
+            else $('#tkware_amount').html('0');
+            $('#tkware_unit').html(unitname);
+            $('#ticketwa_datef').html(datef);
+            $('#ticketwa_datet').html(datet);
+
+        }
+        WareLock_CardView_Event();
+    }
+
+    function WareLock_CardView_Event() {
+        $("#dtContentCard .viewform").unbind('click').click(function (e) {
+            $("#viewformTabHeader").show();
+            let type = $(this).attr("data-type");
+            let code = $(this).attr("data-code");
+            WareLock_CardViewForm_Add(type, code);
+            WareLock_CardViewForm_Event();
+        });
+    }
+
+    function WareLock_CardViewForm_Add(type, code) {
+        if ($('#viewformTab a[data-uni="' + code + '"]').length == 0) {
+            let tr = '<li class="nav-item">'
+                + '<a data-uni="' + code + '" class="tabviewform nav-link mb-0 px-2 py-1 text-sm" data-bs-toggle="tab" href="#" role="tab" aria-selected="false" >'
+                + code
+                + '</a>'
+                + '</li>';
+            $("#viewformTab").append(tr);
+            $(".viewcontent").hide();
+            let div = '<div class="my-4 viewcontent border-dashed border-1 border-secondary border-radius-md p-5" data-code="' + code + '"></div>';
+            $("#viewformTabContent").append(div);
+            $('#viewformTabContent .viewcontent[data-code="' + code + '"]').load("/WareHouse/Ticket/ViewForm?type=" + type
+                + "&code=" + code
+                + "&ticketproduct=" + ticketproduct)
+        }
+        else {
+            $(".viewcontent").hide();
+            $('#viewformTabContent .viewcontent[data-code="' + code + '"]').show();
+        }
+        $('#viewformTab a[data-uni="' + code + '"]').tab('show');
+    }
+
+    function WareLock_CardViewForm_Event() {
+        $('#viewformTabHeader .tabviewform').unbind('click').click(function (event) {
+            let code = $(this).attr("data-uni");
+            $(".viewcontent").hide();
+            $('#viewformTabContent .viewcontent[data-code="' + code + '"]').show();
+        });
+    }
+
+</script>

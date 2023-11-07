@@ -1,0 +1,188 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketListRecoverModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Ticket đã xoá"]</h6>
+                    <p class="text-sm mb-0">@Local["Khôi phục ticket đã xoá"]</p>
+                </div>
+                <div class="right">
+                    <div class="vtcondition w-100">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row d-lg-flex m-0">
+                                <div class="col-12 col-md-6 col-w-300 p-1 flex-grow-1" id="RecoverListTele">
+                                    <div class="ui fluid search selection dropdown form-control" onchange="RecoverList_Load()">
+                                        <input type="hidden" name="branch" />
+                                        <div class="default text">eg .@Local["Nhóm Tele"]</div>
+                                        <div id="cbbRecoverListTele" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 p-1 col-w-300 flex-grow-1">
+                                    <input id="RecoverList_Date" class="form-control flatpickr" type="text" placeholder="eg .date" onchange="RecoverList_Load()" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-3">
+                <div class="table-responsive  px-0 vt-header-sticky">
+                    <table class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th>@Local["#"]</th>
+                                <th>@Local["Tên"] Ticket</th>
+                                <th>@Local["Nguồn"]</th>
+                                <th>@Local["Số điện thoại"]</th>
+                                <th>@Local["Trạng thái"]</th>
+                                <th>@Local["Ngày xoá"]</th>
+                                <th>@Local["Người xoá"]</th>
+                                <th>@Local["Lý do"]</th>
+                                <th>@Local["Khôi phục"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="RlTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let flagTicketRecover = 0;
+    $(document).ready(function () {
+        RecoverList_Initialize();
+    });
+    function RecoverList_Initialize() {
+        $("#RecoverList_Date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#RecoverList_Date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+
+        AjaxLoad(url = "/Marketing/TicketListRecover/?handler=InitializeCombo"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let data_Grouptele = data.GroupTele;
+                Load_Combo(data_Grouptele, "cbbRecoverListTele", true);
+                if (data_Grouptele != undefined && data_Grouptele.length != 0) {
+                    if (Number(data_Grouptele[0].ID) == 0) {
+                        $("#RecoverListTele").hide();
+                    } else {
+                        $("#RecoverListTele").dropdown("refresh");
+                        $("#RecoverListTele").dropdown("set selected", Number(data_Grouptele[0].ID));
+                    }
+                }
+                flagTicketRecover = 1;
+                RecoverList_Load();
+            }
+        );
+    }
+    function RecoverList_Load() {
+        if (flagTicketRecover == 1) {
+            let date = $('#RecoverList_Date').val() ? $('#RecoverList_Date').val() : new Date();
+            let dateFrom = "";
+            let dateTo = "";
+            if (date.includes(" to ")) {
+                dateFrom = date.split(" to ")[0];
+                dateTo = date.split(" to ")[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            let groupTeleID = Number($('#RecoverListTele').dropdown('get value')) ? Number($('#RecoverListTele').dropdown('get value')) : 0;
+            AjaxLoad(url = "/Marketing/TicketListRecover/?handler=LoadTicketList"
+                , data = { 'dateFrom': dateFrom, 'dateTo': dateTo, 'groupTeleID': groupTeleID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    RecoverList_Render(data, "RlTableBody");
+                }
+            );
+        }
+    }
+    function RecoverList_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent +
+                        `
+                                <tr class="vt-number">
+                                    <td class="vt-number-order"></td>
+                                    <td>${item.TicketName}</td>
+                                    <td>${item.SrourceName}</td>
+                                    <td>${item.Phone}</td>
+                                    <td>${item.StatusName}</td>
+                                    <td>${ConvertDateTimeUTC_DMYHM(item.DateExecute)}</td>
+                                    <td>${item.PerExe}</td>
+                                    <td>${item.Reason}</td>
+                                    <td class="text-center">
+                                        <button class="buttonGrid">
+                                            <i data-id="${item.TicketID}" class="buttonRecoverClass  vtt-icon vttech-icon-refesh"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+        `;
+
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        RecoverList_Event();
+    }
+    function RecoverList_Event() {
+        $('#RlTableBody .buttonRecoverClass').unbind('click').click(function () {
+            let dataid = Number($(this).attr('data-id'));
+            const promise = notiConfirm();
+            promise.then(function () { RecoverList_DeleteExe(dataid); }, function () { });
+
+        });
+
+    }
+    function RecoverList_DeleteExe(id) {
+        AjaxLoad(url = "/Marketing/TicketListRecover/?handler=Recover"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    RecoverList_Load();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+</script>
+<style>
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+</style>

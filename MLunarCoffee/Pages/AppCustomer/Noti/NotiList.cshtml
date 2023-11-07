@@ -1,0 +1,247 @@
+﻿@page
+@model MLunarCoffee.Pages.AppCustomer.Noti.NotiListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+
+@Html.AntiForgeryToken()
+<div id="NL_Master" class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Gửi thông báo"]</h6>
+                    <p class="text-sm mb-0">
+                        @Local["Thông Báo đến ứng dụng di động"]
+                    </p>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="vtcondition">
+                    <a class="sign" data-open="@Local[" Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row px-2 mt-1">
+                            <div class="field col-12 col-sm-12 col-md-6 col-xl-3 p-1">
+                                <input id="NL_Date" class="flatpickr form-control" type="text" placeholder="eg .date" autocomplete="off" />
+                            </div>
+                            <div class="field col-12 col-sm-12 col-md-6 col-xl-3 p-1">
+                                <div class="ui fluid search selection dropdown" id="NL_Sender">
+                                    <input type="hidden" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .@Local["Người gửi"]</div>
+                                    <div id="NL_SenderCbb" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="field col-12 col-sm-12 col-md-6 col-xl-3 p-1">
+                                <div class="field ui fluid search selection dropdown" id="NL_Indivi">
+                                    <input type="hidden" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .Specific noti</div>
+                                    <div id="NL_IndiviCbb" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-sm-12 col-md-6 col-xl-3 p-1">
+                                <div class="d-flex">
+                                    <div class="me-1">
+                                        <button class="btn bg-dark text-white m-0" title="@Local[" Tìm kiếm"]" onclick="return NL_Load();"><i class="fas fa-search"></i></button>
+                                    </div>
+                                    <div class="me-1">
+                                        <button class="btn bg-primary text-white m-0 " title="@Local[" Tạo chiến dịch"]" onclick="return NL_AddNew();"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-0 my-3 mobile-responsive">
+                    <table class="table vt-table mb-0" id="NL_Content">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>@Local["Loại"]</th>
+                                <th>@Local["Nội dung"]</th>
+                                <th>@Local["Người gửi"]</th>
+                                <th>@Local["Ngày gửi"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="NL_ContentBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <button id="NL_Loadmore" class="btn btnsysmore btn-secondary w-100 p-1" onclick="NL_Load(1,0)">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="NL_Detail" class="d-none">
+
+</div>
+
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT
+
+    let NLBeginID = 0;
+    let NLFlag = 0;
+    let NLxhrLoad;
+
+    $(document).ready(function () {
+        $("#NL_Date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var firstDay = new Date();
+        var secondDay = (new Date()).setDate((new Date()).getDate() - 7);
+        $("#NL_Date").val(formatDateClient(secondDay) + ' to ' + formatDateClient(firstDay));
+
+        Load_Combo([{ "ID": 1, "Name": "@Local["Hệ thống"]" }, { "ID": 2, "Name": "@Local["Cá nhân"]" }], "NL_SenderCbb", false, "@Local["Tất cả người gửi"]");
+        Load_Combo([{ "ID": 1, "Name": "@Local["Nhiều thiết bị"]" }, { "ID": 2, "Name": "@Local["Một thiết bị"]" }], "NL_IndiviCbb", false, "@Local["Tất cả thiết bị"]");
+
+        $("#NL_Sender").dropdown("refresh");
+        $("#NL_Sender").dropdown("set selected", "0");
+
+        $("#NL_Indivi").dropdown("refresh");
+        $("#NL_Indivi").dropdown("set selected", "0");
+        NLFlag = 1;
+        NL_Load()
+
+    });
+
+    //#endregion
+
+
+    //#region // LOAD
+
+    function NL_Load(isloadMore = 0, detail = 0) {
+        if (NLFlag == 1) {
+            if (NLxhrLoad && NLxhrLoad.readyState != 4) NLxhrLoad.abort();
+            let date = $('#NL_Date').val() ? $('#NL_Date').val() : new Date()
+            if (date.includes(" to ")) {
+                dateFrom = date.split(" to ")[0];
+                dateTo = date.split(" to ")[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            if (Number(isloadMore) == 0 && detail == 0) {
+                NLBeginID = 0;
+                $('#NL_ContentBody').html('');
+            }
+            let Sender = Number($('#NL_Sender').dropdown('get value')) ? Number($('#NL_Sender').dropdown('get value')) : 0;
+            if (Sender == 0) Sender = 2; else Sender = Sender - 1;
+            let Indivi = Number($('#NL_Indivi').dropdown('get value')) ? Number($('#NL_Indivi').dropdown('get value')) : 0;
+            if (Indivi == 0) Indivi = 2; else Indivi = Indivi - 1;
+            NLxhrLoad = AjaxLoad(url = "/AppCustomer/Noti/NotiList/?handler=LoadNoti"
+                , data = {
+                    datefrom: dateFrom,
+                    dateTo: dateTo,
+                    Limit: 100,
+                    Sender: Sender,
+                    Indivi: Indivi,
+                    BeginID: NLBeginID,
+                    CurrentID: detail
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (detail == 0) {
+                            fnRenderBlock(data, "NL_ContentBody"
+                                , blocknum = 30
+                                , fnrender = NL_Render
+                                , fnsuccess = function (e) { }
+                                , fnbegin = function (e) { }
+                            );
+                            if (data.length > 0) NLBeginID = data[data.length - 1].ID
+                        }
+                        else {
+                            if (data && data.length != 0)
+                                document.getElementById('NL_ContentBody').insertAdjacentHTML('afterbegin', NL_RenderEach(data[0]))
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function NL_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let ii = 0; ii < data.length; ii++) {
+                            let item = data[ii];
+                            let tr = NL_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+
+    function NL_RenderEach(item) {
+        try {
+            let tr = `
+                    <td class="vt-number-order"></td>
+                    <td>${(item.IsIndi == 1) ? '@Local["Một thiết bị"]' : '@Local["Nhiều thiết bị"]'}</td>
+                    <td><span class="content_line_clamp">${item.Title}</span></td>
+                    <td>${(item.Sender == 1) ? item.CreatedName : '@Local["Hệ thống"]'}</td>
+                    <td>${GetDateTime_String_DMY(item.Date)}</td>
+                `
+            return `<tr role="row" class="vt-number ">${tr}</tr>`
+        }
+        catch (ex) {
+            return '';
+        }
+
+    }
+
+    //#endregion
+
+
+    //#region // ORTHER
+
+    function NL_AddNew () {
+
+        NL_Detail_Open();
+        $("#NL_Detail").load('/AppCustomer/Noti/NotiDetail?ver=' + versionofWebApplication);
+    }
+
+    function NL_Detail_Open() {
+        $("#NL_Master").hide();
+        $("#NL_Detail").removeClass('d-none');
+    }
+
+    function NL_Detail_Close() {
+        $("#NL_Master").show()
+         $("#NL_Detail").empty();
+        $("#NL_Detail").addClass('d-none');
+    }
+
+    //#endregion
+
+
+</script>

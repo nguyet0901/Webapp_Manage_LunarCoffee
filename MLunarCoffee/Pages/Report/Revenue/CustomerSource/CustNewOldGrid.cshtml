@@ -1,0 +1,247 @@
+﻿@page
+@model SourceMain.Pages.Report.RevenuePayment.CustomerSource.CustNewOldGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagedyn="report_general"
+                   class="text-md text-dark font-weight-bold mb-1">
+                    Khách Cũ Mới Theo Nguồn
+                </p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#CustNewOldGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_TypeCustomerNewGrid()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_TypeCustomerNewGrid()"></i>
+              
+            </div>
+        </div>
+
+    </div>
+    <div class="collapsesticky collapse show" id="CustNewOldGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReport_TypeCustomerNewGrid">
+                    <thead id="HerderReport_Branch" data-languagedyn="div2">
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportBody_TypeCustomerNewGrid">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="detailShow" class="card mt-2" style="display: none">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p id="nameDetail" class="text-md text-dark font-weight-bold mb-1"></p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#CustNewOldGridDetail" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i data-tab="export_excel" class="_tab_control_ vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_Detail()"></i>
+
+            </div>
+        </div>
+
+    </div>
+    <div class="collapsesticky collapse show" id="CustNewOldGridDetail">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReport_DetailGrid">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th data-languagestatic="cust_code" style="width: 100px;">MSKH</th>
+                            <th data-languagestatic="cust">Khách Hàng</th>
+                            <th data-languagestatic="revenue_real">Doanh Thu</th>
+                            <th data-languagestatic="new_customer">Khách Mới</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>js_require('/js/main.js');</script>
+<script type="text/javascript">
+    var dataCus;
+    $(document).ready(function () {
+        
+        LoadDataReport_TypeCustomerNewGrid();
+        $('#dtContentReport_TypeCustomerNewGrid tbody').on('click', 'tr', function () {
+            $("#detailShow").show();
+            $(this).parent().children().removeClass('active')
+            $(this).closest('tr').addClass('active');
+            let idDetail = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            employeename = $(this).closest('tr')[0].childNodes[1].innerHTML;
+         
+            $('#nameDetail').html($(this).closest('tr')[0].childNodes[2].innerHTML);
+            let dataDetail = dataCus.filter(dataCus => dataCus.Type == idDetail);
+            RenderReportDetail(dataDetail, 'dtContentReportBody');
+            $('html, body').animate({
+                scrollTop: $("#detailShow").offset().top
+            }, 300);
+        });
+        $('#dtContentReport_DetailGrid').tablesort();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+    function LoadDataReport_TypeCustomerNewGrid() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo>";
+        let _TokenBranch = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/RevenuePayment/CustomerSource/CustNewOldGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'TokenBranch': _TokenBranch }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let dataCusType = JSON.parse(result)["Table"];
+                    let dataBranch = JSON.parse(result)["Table1"];
+                    let data = JSON.parse(result)["Table2"];
+                    dataCus = JSON.parse(result)["Table3"];
+
+                    RenderReport_HeaderBranch(dataBranch, 'HerderReport_Branch');
+                    RenderReport_TypeCustomerNewGrid(dataBranch, dataCusType, data, "dtContentReportBody_TypeCustomerNewGrid");
+                    $('#dtContentReport_TypeCustomerNewGrid').tablesort();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    function RenderReport_HeaderBranch(dataBranch, id) {
+        if (dataBranch && dataBranch.length > 0) {
+            let stringContent = '';
+            let tr =
+                '<th class="no-sort" colspan="2" style = "width:20px"></th>'
+            let tr1 = '<th style ="display: none !important">#</th>'
+                + '<th style ="width:50px">#</th>'
+                + '<th>Nguồn Khách Hàng</th>'
+            for (var i = 0; i < dataBranch.length; i++) {
+                let item = dataBranch[i];
+                tr = tr + '<th class="no-sort" colspan="8">' + item.Name + '</th>';
+                tr1 = tr1
+                    + '<th class="_oldcustomer">Khách Cũ CkeckIn</th>'
+                    + '<th class="_oldcustomer">Khách Cũ Thanh Toán</th>'
+                    + '<th class="_oldcustomer">Doanh Số</th>'
+                    + '<th class="_oldcustomer">Doanh Thu</th>'
+
+                    + '<th class="_newcustomer">Khách Mới CkeckIn</th>'
+                    + '<th class="_newcustomer" data-languagestatic="new_customer_paid">Khách Mới Thanh Toán</th>'
+                    + '<th class="_newcustomer">Doanh Số</th>'
+                    + '<th class="_newcustomer">Doanh Thu</th>'
+            }
+            stringContent = stringContent + '<tr role="row">' + tr + '</tr><tr>' + tr1 + '</tr>';
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function RenderReport_TypeCustomerNewGrid(dataBranch, dataCusType, data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < dataCusType.length; i++) {
+                    let sv = dataCusType[i];
+                    let items = data.filter(data => data.TypeID == dataCusType[i].ID);
+                    let tr = '<td style="display: none !important">' + sv.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td>' + sv.Name + '</td>'
+                    for (let j = 0; j < dataBranch.length; j++) {
+                        let item = items.filter(data => data.BranchID == dataBranch[j].ID);
+                        if (item.length > 0) {
+                            tr = tr
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(item[0].TotalCustScheOld) + '">' + item[0].TotalCustScheOld + '</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(item[0].TypeCus) + '">' + item[0].TypeCus + '</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(item[0].AmountSaleOld) + '">' + formatNumber(item[0].AmountSaleOld) + '</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(item[0].AmountOld) + '">' + formatNumber(item[0].AmountOld) + '</td>'
+
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(item[0].TotalCustScheNew) + '">' + item[0].TotalCustScheNew + '</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(item[0].TypeCusNew) + '">' + item[0].TypeCusNew + '</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(item[0].AmountSaleNew) + '">' + formatNumber(item[0].AmountSaleNew) + '</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(item[0].AmountNew) + '">' + formatNumber(item[0].AmountNew) + '</td>'
+                        } else {
+                            tr = tr
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_oldcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                                + '<td class="_newcustomer" data-sortvalue="' + Number(0) + '">0</td>'
+                        }
+                    }
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function RenderReportDetail(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td><a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + "&ver=" + versionofWebApplication + '">' + item.CustCode + '</a></td>'
+                        + '<td>' + item.CustName + '</td>'
+                        + '<td data-sortvalue="' + (item.Amount) + '">' + formatNumber(item.Amount) + '</td>'
+                        + '<td style="text-align: center;">' + ((item.is_CustomerNew == 1) ? ('<span style="display:none;">X</span><i class="buttonActionClass vtt-icon vttech-icon-check"></i>') : '') + '</td>'
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function exportData_TypeCustomerNewGrid() {
+        exportToExcel("dtContentReport_TypeCustomerNewGrid", 'Doanh-Thu-Khach-Cu-Moi-Theo-Nguon');
+    }
+    function exportData_Detail() {
+        exportToExcel("dtContentReport_DetailGrid", 'Chi-Tiet-Doanh-Thu-Khach-Cu-Moi-Theo-Nguon');
+    }
+</script>
+<style>
+    ._oldcustomer {
+        background: #fbbd0814 !important;
+    }
+
+    ._newcustomer {
+        background: #21ba451a !important;
+    }
+</style>

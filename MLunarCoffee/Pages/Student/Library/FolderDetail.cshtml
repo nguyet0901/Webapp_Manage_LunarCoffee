@@ -1,0 +1,163 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Library.FolderDetail
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-100 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 text-capitalize">@Local["Thêm mới folder"]</h6>
+                                <span class="text-sm mb-0">@Local["Folder không chứa ký tự đặt biệt"]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="row px-2 form3" id="fd_form">
+                        <div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                            <label>@Local["Tên thư mục"]</label>
+                            <input id="fd_name" name="folderimage" type="text" class="form-control ms-1" />
+                        </div>
+                        <div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                            <label>Loại</label>
+                            <div class="ui fluid search selection dropdown form-control" id="fd_type">
+                                <input type="hidden" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchserviceType_Option" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .type</div>
+                                <div id="cbfd_type" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-sm-12 col-xl-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="fd_content" type="text" class="form-control ms-1" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="action_Save-Content">
+                            <button id="fd_delete" form="fd_form" type="button" class="d-none btn bg-gradient-danger mt-2 me-2" onclick="fd_Delete()">@Local["Xóa"]</button>
+                            <button class="btn btn-secondary" form="fd_form" onclick="fd_Cancel()">@Local["Hủy"]</button>
+                            <button id="fd_save" form="fd_form" type="button" class="d-none btn bg-gradient-primary mt-2 me-2" onclick="fd_Save()">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let fd_FolderID = '@Model._FolderID';
+    let fd_ParentID = '@Model._ParentID';
+    $(document).ready(function () {
+        fd_LoadInitialize();
+    });
+    function fd_LoadInitialize () {
+        AjaxLoad(url = "/Student/Library/FolderDetail?handler=LoadCombo"
+            , data = {
+                "id": fd_FolderID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data, "cbfd_type", false);
+                    if (fd_FolderID != 0) {
+                        fd_LoadDetail();
+                    }
+                    else {
+                        $('#fd_save').removeClass('d-none');
+                    }
+                }
+            }
+        );
+    }
+
+    function fd_LoadDetail () {
+        AjaxLoad(url = "/Student/Library/FolderDetail?handler=LoadData"
+            , data = {
+                "id": fd_FolderID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        $("#fd_type").dropdown("refresh");
+                        $("#fd_type").dropdown("set selected", item.MediaType);
+
+                        $('#fd_name').val(item.Name);
+                        $('#fd_content').val(item.Note);
+                        if (item.AllowEdit == 1) {
+                            $('#fd_delete').removeClass('d-none');
+                            $('#fd_save').removeClass('d-none');
+                        }
+                    }
+                } else {
+                    notiError('@Local["Không thể tạo folder"]');
+                }
+            }
+        );
+    }
+    function fd_Save () {
+        let name = $('#fd_name').val() ? $('#fd_name').val() : "";
+        let content = $('#fd_content').val() ? $('#fd_content').val() : "";
+        let type = Number($('#fd_type').dropdown('get value')) ? Number($('#fd_type').dropdown('get value')) : 0;
+        $('#fd_form').form('validate form');
+        if ($('#fd_form').form('is valid')) {
+            AjaxLoad(url = "/Student/Library/FolderDetail?handler=ExcuteData"
+                , data = {
+                    "id": fd_FolderID,
+                    "parentid": fd_ParentID,
+                    "name": name,
+                    "type": type,
+                    "content": content
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        if (typeof CLibra_Load === 'function') CLibra_Load(isnew = 0, loadmore = 0);
+                        fd_Cancel();
+                    } else {
+                        notiError('@Local["Không thể tạo hoặc chỉnh sửa folder"]');
+                    }
+                }
+            );
+        }
+    }
+    function fd_Cancel () {
+        CloseModal();
+    }
+    function fd_Delete () {
+        const promise = notiConfirm('@Local["Tất cả các file trong folder sẽ bị xóa"]');
+        promise.then(function () {fd_DeleteExe();}, function () { });
+    }
+    function fd_DeleteExe () {
+        AjaxLoad(url = "/Student/Library/FolderDetail?handler=DeleteData"
+            , data = {
+                'id': fd_FolderID
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    if (typeof CLibra_Load === 'function') CLibra_Load(isnew = 0, loadmore = 0);
+                    fd_Cancel();
+                } else {
+                    notiError('@Local["Không thể xóa folder có chứa các folder con"]');
+                }
+            }
+        );
+
+
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

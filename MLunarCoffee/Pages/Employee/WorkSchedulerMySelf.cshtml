@@ -1,0 +1,522 @@
+﻿@page
+@model SourceMain.Pages.Employee.WorkSchedulerMySelfModel
+@{
+
+}
+
+    <link rel="stylesheet" href="/assests/dist/Calendar_TUI/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assests/dist/Calendar_TUI/tui-time-picker.css" />
+    <link rel="stylesheet" type="text/css" href="/assests/dist/Calendar_TUI/tui-date-picker.css" />
+    <link rel="stylesheet" type="text/css" href="/assests/dist/Calendar_TUI/dist/tui-calendar.css" />
+    <link rel="stylesheet" type="text/css" href="/assests/dist/Calendar_TUI/css/default.css" />
+    <link rel="stylesheet" type="text/css" href="/assests/dist/Calendar_TUI/css/icons.css" />
+    <div class="pusher">
+        <div class="navslide navwrap">
+            <div id="worl_scheduler_list" class="row" style="background-color: white; margin-left: 0">
+                <div style="display: flex; width: 100%; height: 90%; padding-top: 10px;">
+
+                    <div class="divScroll" id="canlendar_div" style="width: 100%;">
+                        <div class="ui segment">
+                            <div id="menu">
+                                <span class="dropdown">
+                                    <button style="display: none;" id="dropdownMenu-calendarType" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" disabled>
+                                        <i id="calendarTypeIcon" class="calendar-icon ic_view_month" style="margin-right: 4px;"></i>
+                                        <span id="calendarTypeName">Dropdown</span>&nbsp;
+
+                                        <i class="calendar-icon tui-full-calendar-dropdown-arrow"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu-calendarType">
+                                        <li role="presentation">
+                                            <a class="dropdown-menu-title" role="menuitem" data-action="toggle-daily">
+                                                <i class="calendar-icon ic_view_day"></i>@Local["Hằng ngày"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weekly">
+                                                <i class="calendar-icon ic_view_week"></i>@Local["Hằng tuần"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a class="dropdown-menu-title" role="menuitem" data-action="toggle-monthly">
+                                                <i class="calendar-icon ic_view_month"></i>@Local["Hằng tháng"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weeks2">
+                                                <i class="calendar-icon ic_view_week"></i>2 @Local["Tuần"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weeks3">
+                                                <i class="calendar-icon ic_view_week"></i>3 @Local["Tuần"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation" class="dropdown-divider"></li>
+                                        <li role="presentation">
+                                            <a role="menuitem" data-action="toggle-workweek">
+                                                <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-workweek" checked>
+                                                <span class="checkbox-title"></span>@Local["Hiển thị cuối tuần"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a role="menuitem" data-action="toggle-start-day-1">
+                                                <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-start-day-1">
+                                                <span class="checkbox-title"></span>@Local["Bắt đầu từ thứ hai"]
+                                            </a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a role="menuitem" data-action="toggle-narrow-weekend">
+                                                <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-narrow-weekend">
+                                                <span class="checkbox-title"></span>@Local["Thu gọn cuối tuần"]
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </span>
+                                <span id="menu-navi">
+                                    <button type="button" class="btn btn-default btn-sm move-today" data-action="move-today">@Local["Hôm nay"]</button>
+                                    <button type="button" class="btn btn-default btn-sm move-day" data-action="move-prev">
+                                        <i class="calendar-icon ic-arrow-line-left" data-action="move-prev"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-default btn-sm move-day" data-action="move-next">
+                                        <i class="calendar-icon ic-arrow-line-right" data-action="move-next"></i>
+                                    </button>
+                                </span>
+                                <span id="renderRange" class="render-range"></span>
+                                <div id="btnNewWorkSchedule" style="float: right">
+                                    <button style="display: none;" id="btnupdateWorkScheduler" class="ui greenli button modalfour" data-value="fade up" onclick="return UpdateWorkScheduler()">@Local["Cập nhật"]</button>
+                                </div>
+                            </div>
+                            <div id="calendar" style="height: calc(100vh - 164px);"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div id="work_scheduler_detail" class="row" style="display: none; background-color: white; padding: 20px">
+            </div>
+        </div>
+    </div>
+    <script>
+        var CurrentMyEmpWorkCalID = "0";
+        var CalendarList = [];
+        var ScheduleList = [];
+
+        var calendar_My_Work_Date_To;
+        var calendar_My_Work_Date_From;
+
+        $(document).ready(function () {
+
+            CurrentMyEmpWorkCalID = '@Model._CurrentEmployeeID';
+            OnChange_Calendar_My_Work_Value_Mutation();
+            //#region Calendar
+            $('#calendarTypeName')
+                .popup({
+                    position: 'right center',
+                    target: '#calendarTypeName',
+                    title: '@Local["Chọn view"]',
+                    content: '@Local["Xem lịch hẹn theo ngày, tuần và tháng"]'
+                });
+
+            //DeclareNiceScroll_Horizontal('canlendar_div');
+
+            cal.on({
+                'clickMore': function (e) {
+                },
+                'clickSchedule': function (e) {
+                },
+                'clickDayname': function (date) {
+                    // console.log('clickDaynames', date);
+                },
+                'beforeCreateSchedule': function (e) {
+                    //console.log('beforeCreateScheduless', e);
+                    //saveNewSchedule(e);
+                    refreshScheduleVisibility();
+
+                },
+                'beforeUpdateSchedule': function (e) {
+                    //console.log('beforeUpdateScheduless', e);
+                },
+                'beforeDeleteSchedule': function (e) {
+                    // console.log('beforeDeleteSchedules', e);
+                    // cal.deleteSchedule(e.schedule.id, e.schedule.calendarId);
+                },
+                'afterRenderSchedule': function (e) {
+                    // var schedule = e.schedule;
+                    // var element = cal.getElement(schedule.id, schedule.calendarId);
+                    // console.log('afterRenderSchedule', element);
+                },
+                'clickTimezonesCollapseBtn': function (timezonesCollapsed) {
+                    // console.log('timezonesCollapsed', timezonesCollapsed);
+
+                    if (timezonesCollapsed) {
+                        cal.setTheme({
+                            'week.daygridLeft.width': '77px',
+                            'week.timegridLeft.width': '77px'
+                        });
+                    } else {
+                        cal.setTheme({
+                            'week.daygridLeft.width': '60px',
+                            'week.timegridLeft.width': '60px'
+                        });
+                    }
+
+                    return true;
+                }
+            });
+            $('.dropdown-menu-title[data-action=toggle-monthly]').click();
+            //#endregion
+
+            calendar_My_Work_Date_To = ConvertDateTimeUTC_YMD(new Date(cal._renderRange.end));
+            calendar_My_Work_Date_From = ConvertDateTimeUTC_YMD(new Date(cal._renderRange.start));
+            LoadMyWorkSchedulerCalendar(CurrentMyEmpWorkCalID);
+        });
+
+        function LoadMyWorkSchedulerCalendar(empid) {
+            AjaxLoad(url = "/Employee/WorkSchedulerMyself/?handler=LoadScheduler"
+                , data = {
+                    empid: empid,
+                    dateFrom: calendar_My_Work_Date_From,
+                    dateTo: calendar_My_Work_Date_To}, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        CreateSchedulerMyWorkCalDetail(data);
+                    }
+                });
+        }
+        function ObjectCalendarInfo() {
+            this.id = null;
+            this.name = null;
+            this.checked = true;
+            this.color = null;
+            this.bgColor = null;
+            this.borderColor = null;
+        }
+        function ObjectScheduleInfo() {
+            this.id = null;
+            this.calendarId = null;
+
+            this.title = null;
+            this.body = null;
+            this.isAllday = false;
+            this.start = null;
+            this.end = null;
+            this.category = '';
+            this.dueDateClass = '';
+
+            this.color = null;
+            this.bgColor = null;
+            this.dragBgColor = null;
+            this.borderColor = null;
+            this.customStyle = '';
+
+            this.isFocused = false;
+            this.isPending = false;
+            this.isVisible = true;
+            this.isReadOnly = false;
+            this.goingDuration = 0;
+            this.comingDuration = 0;
+            this.recurrenceRule = '';
+
+            this.raw = {
+                memo: '',
+                hasToOrCc: false,
+                hasRecurrenceRule: false,
+                location: null,
+                class: 'public', // or 'private'
+                creator: {
+                    name: '',
+                    avatar: '',
+                    company: '',
+                    email: '',
+                    phone: ''
+                }
+            };
+        }
+        function CreateSchedulerMyWorkCalDetail(data) {
+            if (data != undefined && data != null) {
+                let ScheduleList = [];
+                cal.clear();
+                for (var i = 0; i < data.length; i++) {
+                    var schedule = new ObjectScheduleInfo();
+                    schedule.id = String(data[i]["Date"]);
+                    schedule.calendarId = "1";
+                    schedule.title = String(data[i]["Content"]);
+                    schedule.body = String(data[i]["Content"]);
+                    schedule.isAllDay = false;
+                    schedule.isReadOnly = true;
+                    schedule.isVisible = true;
+                    schedule.start = String(data[i]["Date_From"]);
+                    schedule.end = String(data[i]["Date_To"]);
+                    schedule.isPrivate = false;
+                    schedule.isFocused = false;
+                    schedule.isPending = false;
+                    schedule.location = "";
+                    schedule.color = "white";
+                    schedule.bgColor = String(data[i]["Color"]);
+                    schedule.dragBgColor = String(data[i]["Color"]);
+                    schedule.borderColor = String(data[i]["Color"]);
+                    // schedule.attendees = '';
+                    // schedule.recurrenceRule = '';
+                    schedule.dueDateClass = '';
+                    schedule.customStyle = '';
+                    schedule.category = 'time';
+                    schedule.state = "";
+
+                    schedule.raw.memo = String(data[i]["Text"]);
+                    schedule.raw.creator.name = String(data[i]["Date_Sheduler"]);
+
+                    schedule.raw.creator.company = "";
+                    //schedule.raw.creator.avatar = "";
+                    // generateTime(schedule, renderStart, renderEnd);
+                    //schedule.raw.creator.email = String(data[i]["StatusApp"]);
+                    //schedule.raw.creator.phone = String(data[i]["StatusApp"]);
+                    //schedule.goingDuration = 30;
+                    // schedule.comingDuration = 30;
+                    ScheduleList.push(schedule);
+                }
+                cal.createSchedules(ScheduleList);
+                refreshScheduleVisibility();
+                //RefreshNiceScroll();
+            }
+        }
+        function refreshScheduleVisibility() {
+            var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
+            CalendarList.forEach(function (calendar) {
+                cal.toggleSchedules(calendar.id, !calendar.checked, false);
+            });
+            cal.render(true);
+            calendarElements.forEach(function (input) {
+                var span = input.nextElementSibling;
+                span.style.backgroundColor = input.checked ? span.style.borderColor : 'transparent';
+            });
+        }
+
+        function OnChange_Calendar_My_Work_Value_Mutation() {
+            const targetNode = document.getElementById('renderRange');
+            const config = { attributes: true, childList: true, subtree: true };
+            const callback = function (mutationsList, observer) {
+                for (const mutation of mutationsList) {
+                    if (mutation.type === 'childList') {
+                        calendar_My_Work_Date_To = ConvertDateTimeUTC_YMD(new Date(cal._renderRange.end));
+                        calendar_My_Work_Date_From = ConvertDateTimeUTC_YMD(new Date(cal._renderRange.start));
+                        LoadMyWorkSchedulerCalendar(CurrentMyEmpWorkCalID);
+                    }
+                }
+            };
+            const observer = new MutationObserver(callback);
+            observer.observe(targetNode, config);
+        }
+    </script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/bootstrap.min.js');</script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/tui-code-snippet.min.js');</script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/tui-time-picker.min.js');</script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/tui-date-picker.min.js');</script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/moment.min.js');</script>
+    <script src="/assests/dist/Calendar_TUI/chance.min.js"></script>
+    <script src="/assests/dist/Calendar_TUI/dist/tui-calendar.js"></script>
+    <script>js_require_notasync('/assests/dist/Calendar_TUI/js/app_cust.js');</script>
+    <script>js_require('/assests/dist/plugins/cookie/js.cookie.js');</script>
+
+    <style>
+        #lnb {
+            position: unset;
+            height: auto;
+            top: unset;
+            bottom: unset;
+            width: 100%;
+            padding: 0;
+        }
+
+        #menu {
+            padding: 16px 0;
+        }
+
+        #calendarList {
+            -webkit-box-pack: justify;
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            border: none;
+        }
+
+            #calendarList .lnb-calendars-item {
+                margin-right: 15px;
+                width: 150px;
+            }
+
+        .row {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        #right {
+            position: unset;
+            top: unset;
+            bottom: unset;
+            left: unset;
+            width: 100%;
+        }
+
+        #calendar {
+            position: unset;
+        }
+
+        .ui.tiny.progress {
+            height: auto;
+            padding: 0;
+            overflow: unset;
+        }
+
+        .btn {
+            color: #0288d1;
+            background-color: white;
+            border-radius: 21px;
+            font-size: 12px;
+            /* font-weight: bold; */
+            border-style: solid;
+            border-width: 1px;
+            border-color: unset;
+        }
+
+            .btn > .btn {
+                border: unset;
+                padding: 0;
+            }
+
+        div[data-auto-height=true] {
+            height: 800px !important;
+        }
+
+        #menu .ui.active.selection.dropdown {
+            border-radius: 20px !important;
+        }
+
+        #lnb-calendars {
+            display: flex;
+        }
+
+        input[type='checkbox'].tui-full-calendar-checkbox-round + span {
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            margin-right: 10px;
+            border-radius: 12px;
+        }
+
+        #lnb-calendars > .lnb-calendars-item {
+            margin-right: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: none
+        }
+
+            #lnb-calendars > .lnb-calendars-item label {
+                width: 200px;
+            }
+
+        input[type='checkbox'].tui-full-calendar-checkbox-square:checked + span {
+            background-size: cover;
+        }
+
+        input[type='checkbox'].tui-full-calendar-checkbox-square + span {
+            width: 16px;
+            height: 16px;
+            background-size: cover;
+        }
+
+        @@media only screen and (max-width:1400px) {
+            #calendarList {
+                justify-content: unset;
+            }
+        }
+
+        @@media only screen and (max-width:900px) {
+            .navslide > .row {
+                flex-wrap: wrap;
+                position: relative;
+            }
+
+            #lnb-calendars > .lnb-calendars-item label {
+                width: 70px;
+            }
+
+            #calendarList .lnb-calendars-item {
+                width: 33.3%;
+                margin-right: 0;
+            }
+
+            #calendarList {
+                flex-wrap: wrap;
+            }
+
+            #lnb {
+                width: 100%;
+                z-index: 2;
+                top: 142px;
+            }
+
+            #right {
+                width: 100%;
+            }
+        }
+
+        @@media only screen and (max-width:678px) {
+            #calendarList .lnb-calendars-item {
+                width: 50%;
+            }
+
+            #calendar {
+                overflow-x: scroll;
+            }
+
+            .tui-full-calendar-layout {
+                width: 900px
+            }
+        }
+
+        .ui.modal {
+            bottom: unset;
+        }
+    </style>
+
+
+    <style>
+        .rowEmployee {
+            border: none;
+            box-shadow: none;
+        }
+
+        .selectedtd {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .tui-full-calendar-weekday-schedule-bullet {
+            display: none !important;
+        }
+
+        .tui-full-calendar-weekday-schedule.tui-full-calendar-weekday-schedule-time .tui-full-calendar-weekday-schedule-title {
+            padding-left: 0px !important;
+        }
+
+        .headerGridCalendar {
+            display: block;
+            padding-left: 5px;
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        .headrGridCanlendar_title {
+            float: right;
+            padding-right: 5px;
+        }
+
+        #renderRange {
+            color: #0064b0;
+            font-size: 17px;
+        }
+    </style>

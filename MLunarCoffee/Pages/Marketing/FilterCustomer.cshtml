@@ -1,0 +1,1823 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.FilterCustomerModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div id="FC_SetFilter">
+                <div class="card card-plain">
+                    <div class="vtcardheader card-header pb-0">
+                        <div class="left">
+                            <h6 class="mb-0">@Local["Lọc khách hàng"]</h6>
+                            <p class="text-sm mb-0">@Local["Lọc theo điều kiện và tối đa một lần lọc là 10,000 dữ liệu"]</p>
+                        </div>
+                        <div class="right overflow-auto">
+                            <button id="FC_HiddenCollap" class="btn btn-dark btn-sm mt-1" data-bs-toggle="collapse" data-bs-target="#FC_Fill" aria-expanded="true">
+                                <i class="fas fa-chevron-down"></i>
+                                <i class="fas fa-chevron-up d-none"></i>
+                            </button>
+                            <button class="btn bg-gradient-primary btn-sm mt-1 ms-1" onclick="event.preventDefault();FCus_LoadData(0)">@Local["Lọc"]</button>
+                            <button id="Fc_btnDevideCustCare" class="btn bg-gradient-primary btn-sm mt-1 mx-1" onclick="FC_DevideCustomerCare()">@Local["Chuyển"]</button>
+                            <button class="btn btn-dark btn-sm mt-1 reset mx-1 text-nowrap">@Local["Đặt lại"]</button>
+                            <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#FC_ShowMore">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                        <div class="toggle">
+                            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="FC_ShowMore" style="min-width:250px;">
+                                <ul class="card card-body text-dark text-capitalize opacity-10">
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="address" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Địa chỉ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="city" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thành phố"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="district" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Quận/Huyện"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="career" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nghề nghiệp"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="doccode" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="custoldcode" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="age" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Tuổi"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="gender" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Giới tính"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="service" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="serviceType" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nhóm dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="servicedate" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày tạo dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="lasttreatdate" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày điều trị cuối cùng"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="amount" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Doanh thu"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Tạo hồ sơ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="InfoTele" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Tele phụ trách"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="dateTreatService" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày điều trị dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="dateCheckinLast" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày check-in gần nhất"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="marStaff" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nhân viên marketing phụ trách"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="ccStaff" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nhân viên chăm sóc"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="Broker" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người giới thiệu"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="Debt" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Công nợ dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="Email" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Email"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="Period" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thu trong kỳ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="gclid" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Gclid"]</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="collapsesticky z-index-sticky w-100 shadow-lg rounded-3 py-2 position-absolute bg-white collapse start-0 px-3" id="FC_Fill">
+                            <div class="row m-0">
+                                <div class="col-12 px-0">
+                                    <div class="list-group-item checklist-item checklist-item-success border-0 p-0 ps-2">
+                                        <div class="row pb-2 px-2">
+                                            <div class="d-flex ps-2 pb-2 pt-3">
+                                                <div class="w-auto">
+                                                    <h6 class="mb-0 text-sm text-dark fw-bold">@Local["Thông tin khách hàng"]</h6>
+                                                    <p class="text-sm mb-0">@Local["Lọc theo thông tin khách hàng"]</p>
+                                                </div>
+                                                <div class="w-auto ms-auto">
+                                                    <i class="fas fa-thumbtack cursor-pointer opacity-5" id="FC_Pin"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Thời gian tạo hồ sơ"]</label>
+                                                <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                    <input id="FC_CreateCust" type="text" class="flat flatpickr form-control" autocomplete="off">
+                                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Chi nhánh"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control" id="FC_TKBranch">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKBranch" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Giới tính"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="FC_Gender">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CbbGender" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Nhóm khách hàng"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control" id="FC_TKCustomerGroup">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKCustomerGroup" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Ngày sinh nhật"]</label>
+                                                <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                    <input id="FC_BirthDay" type="text" class="flat flatpickrDayMonth form-control" autocomplete="off">
+                                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Tuổi"]</label>
+                                                <div class="row">
+                                                    <div class="col-6 pe-0">
+                                                        <input id="FC_CustomerAgeFrom" class="form-control" type="number" max="100" placeholder="eg. @Local["Từ"]" />
+                                                    </div>
+                                                    <div class="col-6 ps-2">
+                                                        <input id="FC_CustomerAgeTo" class="form-control" type="number" max="100" placeholder="eg. @Local["Đến"]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Tỉnh/Thành phố"]</label>
+                                                <div class="ui fluid search selection dropdown address_customer_dropdown form-control" id="FC_City" onchange="event.preventDefault();return FCus_ChangeCity()">
+                                                    <input type="hidden" name="" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CbbCity" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Quận/Huyện"]</label>
+                                                <div class="ui fluid search selection dropdown address_customer_dropdown form-control" id="FC_District">
+                                                    <input type="hidden" name="" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CbbDistrict" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Nghề nghiệp"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control" id="FC_TKCareer">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKCareer" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Bảo hiểm"]</label>
+                                                <div class="ui fluid search selection dropdown form-control FCPeriod" id="FC_TKInsurance">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKInsurance" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Nguồn"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control" id="FC_TKSource">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKSource" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                <label>@Local["Người giới thiệu"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="FC_TKBroker">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CbbTKBroker" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Nhân viên chăm sóc"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="FC_TKCustCareID">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_cbbTKCustCareID" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Tele phụ trách"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="FC_TKTeleID">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_cbbTKTeleID" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 px-0">
+                                    <div class="list-group-item checklist-item checklist-item-primary border-0 p-0 ps-2">
+                                        <div class="row pb-2 px-2">
+                                            <div class="d-flex flex-column justify-content-center ps-2 pb-2 pt-3">
+                                                <h6 class="mb-0 text-sm text-dark fw-bold">@Local["Điều trị"]</h6>
+                                                <p class="text-sm mb-0">@Local["Lọc theo thời gian & trạng thái điều trị của khách hàng"]</p>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Thời gian điều trị cuối cùng"]</label>
+                                                <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                    <input id="FC_CusTreatFinal" type="text" class="flat flatpickr form-control" autocomplete="off">
+                                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Nhóm dịch vụ điều trị"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control FCPeriod" id="FC_ServiceTreatType">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CbbServiceTreatType" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Dịch vụ điều trị"]</label>
+                                                <div class="ui fluid search selection dropdown form-control FCPeriod" id="FC_ServiceTreat">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbServiceTreat" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Thời gian điều trị dịch vụ"]</label>
+                                                <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                    <input id="FC_DateTreatService" type="text" class="flat flatpickr form-control FCPeriod" autocomplete="off">
+                                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Trạng thái điều trị"]</label>
+                                                <div class="ui fluid search selection dropdown form-control FCPeriod" id="FC_TreatStatus">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTreatStatus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item checklist-item checklist-item-info border-0 p-0 ps-2">
+                                        <div class="row pb-2 px-2">
+                                            <div class="d-flex flex-column justify-content-center ps-2 pb-2 pt-3">
+                                                <h6 class="mb-0 text-sm text-dark fw-bold">@Local["Dịch vụ"]</h6>
+                                                <p class="text-sm mb-0">@Local["Lọc theo thời gian & dịch vụ của khách hàng"]</p>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Thời gian sử dụng dịch vụ/sản phẩm"]</label>
+                                                <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                    <input id="FC_UsedService" type="text" class="flat flatpickr form-control FCPeriod" autocomplete="off">
+                                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Nhóm dịch vụ/sản phẩm"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control FCPeriod" id="FC_TKServiceType">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKServiceType" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-xl-3 field ps-1 pe-0">
+                                                <label>@Local["Dịch vụ"]</label>
+                                                <div class="ui fluid search selection dropdown multiple form-control FCPeriod" id="FC_TKService">
+                                                    <input type="hidden" name="tokenService" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text"></div>
+                                                    <div id="FC_CcbTKService" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-3 field ps-1">
+                                                <label>@Local["Công nợ dịch vụ"]</label>
+                                                <div class="row">
+                                                    <div class="col-sm-6 pe-0 pb-2">
+                                                        <input id="FC_SerDebtFrom" class="form-control money FCPeriod" placeholder="eg. @Local["Từ"]" />
+                                                    </div>
+                                                    <div class="col-sm-6 pe-0 ps-1">
+                                                        <input id="FC_SerDebtTo" class="form-control money FCPeriod" placeholder="eg. @Local["Đến"]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="list-group-item checklist-item checklist-item-warning border-0 p-0 ps-2">
+                                            <div class="row px-2">
+                                                <div class="d-flex flex-column justify-content-center ps-2 pb-2 pt-3">
+                                                    <h6 class="mb-0 text-sm text-dark fw-bold">@Local["Tiền khách hàng"]</h6>
+                                                    <p class="text-sm mb-0"></p>
+                                                </div>
+                                                <div class="col-12 col-sm-6 col-xl-6 field ps-1">
+                                                    <label>@Local["Tổng tiền thanh toán"]</label>
+                                                    <div class="row">
+                                                        <div class="col-sm-6 pe-0 pb-2">
+                                                            <input id="FC_TotalPaidFrom" class="form-control money FCPeriod" placeholder="eg. @Local["Từ"]" />
+                                                        </div>
+                                                        <div class="col-sm-6 pe-0 ps-1">
+                                                            <input id="FC_TotalPaidTo" class="form-control money FCPeriod" placeholder="eg. @Local["Đến"]" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                    <label>@Local["Thẻ thành viên"]</label>
+                                                    <div class="ui fluid search selection dropdown form-control" id="FC_MemberShipCard" onchange="event.preventDefault();return FCus_ChangeMemberShip()">
+                                                        <input type="hidden" name="" />
+                                                        <input class="search" autocomplete="off" tabindex="0" />
+                                                        <div class="default text"></div>
+                                                        <div id="FC_CbbMemberShipCard" class="menu" tabindex="-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-sm-6 col-xl-3 field pe-0 ps-1">
+                                                    <label>@Local["Thu trong kỳ"]</label>
+                                                    <div class="input-group flex-nowrap rounded-0 FC-EventHover">
+                                                        <input id="FC_PayPeriod" type="text" class="flat flatpickr form-control bg-gray-200" disabled autocomplete="off">
+                                                        <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vtcardheader card-header p-0 pb-2 border-0">
+                            <div class="left">
+                                <div class="form-check d-flex px-0">
+                                    <input class="form-check-input m-0" type="checkbox" id="FC_ckbAllowChooseData" onchange="event.preventDefault();return FC_SelectAll();">
+                                    <label class="ms-2 mt-0">@Local["Tùy chọn dữ liệu"]</label>
+                                </div>
+                            </div>
+                            <div class="right align-items-center">
+                                <div class="col-auto pe-0 text-danger text-end text-gradient text-sm font-weight-bold p-0" id="FC_textShowMessage"></div>
+                                <div id="FC_NumberRow" class="text-primary fw-bold ps-0 ps-md-3 col-auto me-2">
+                                    <span id="FC_CurrentData">0</span>
+                                    <span class="mx-2">/</span>
+                                    <span id="FC_TotalData">0</span>
+                                </div>
+                                <a id="per_BtnCustFilterSendMail" class="text-nowrap text-sm mx-2" onclick="event.preventDefault(); return FCus_SendMail()">
+                                    <span>@Local["Gửi email"]</span>
+                                </a>
+                                <a class="text-nowrap mx-2 text-sm" onclick="event.preventDefault(); return FCus_SendSMS()">
+                                    <span>@Local["Gửi sms"]</span>
+                                </a>
+                                <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                                    <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                            data-bs-original-title="@Local["Xuất excel"]">
+                                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                                    </div>
+                                    <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return FCus_ExportExcel(0)">@Local["Tất cả"]</i>
+                                    </div>
+                                    <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return FCus_ExportExcel(1)">@Local["Tùy chọn"]</i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mobile-responsive vt-header-sticky pb-2">
+                            <div id="FC_Loadding" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table data-name="FilterCustomer" class="table vt-table mb-0" id="FC_TableContent">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">
+                                            <div class="form-check text-lg d-inline-flex p-2">
+                                                <input id="FC_ckbChooseAll" class="form-check-input m-0 text-sm checkTicketToken" name="ticketAll" type="checkbox" checked disabled onchange="event.preventDefault();return FC_SelectAll();">
+                                                <label class="form-check-label text-sm font-weight-bold"></label>
+                                            </div>
+                                        </th>
+                                        <th>#</th>
+                                        <th>@Local["Mã khách hàng"]</th>
+                                        <th>@Local["Tên"]</th>
+                                        <th data-name="custoldcode">@Local["Mã khách hàng cũ"]</th>
+                                        <th>@Local["Ngày sinh"]</th>
+                                        <th>@Local["Điện thoại"]</th>
+                                        <th>@Local["Nguồn"]</th>
+                                        <th>@Local["Nhóm khách hàng"]</th>
+                                        <th data-name="address" class="vtt-filter">@Local["Địa chỉ"]</th>
+                                        <th data-name="district" class="vtt-filter">@Local["Quận/Huyện"]</th>
+                                        <th data-name="city" class="vtt-filter">@Local["Thành phố"]</th>
+                                        <th data-name="career" class="vtt-filter">@Local["Nghề nghiệp"]</th>
+                                        <th data-name="doccode">@Local["Mã hồ sơ"]</th>
+                                        <th data-name="branch">@Local["Chi nhánh"]</th>
+                                        <th data-name="age">@Local["Tuổi"]</th>
+                                        <th data-name="gender">@Local["Giới tính"]</th>
+                                        <th data-name="Email">@Local["Email"]</th>
+                                        <th data-name="service">@Local["Dịch vụ"]</th>
+                                        <th data-name="serviceType">@Local["Nhóm dịch vụ"]</th>
+                                        <th data-name="servicedate">@Local["Ngày tạo dịch vụ"]</th>
+                                        <th data-name="lasttreatdate">@Local["Ngày điều trị cuối cùng"]</th>
+                                        <th data-name="amount">@Local["Doanh thu"]</th>
+                                        <th data-name="created">@Local["Ngày tạo hồ sơ"]</th>
+                                        <th data-name="InfoTele">@Local["Tele phụ trách"]</th>
+                                        <th data-name="dateTreatService">@Local["Ngày điều trị dịch vụ"]</th>
+                                        <th data-name="dateCheckinLast">@Local["Ngày check-in gần nhất"]</th>
+                                        <th data-name="marStaff">@Local["Nhân viên marketing phụ trách"]</th>
+                                        <th data-name="ccStaff">@Local["Nhân viên chăm sóc"]</th>
+                                        <th data-name="Broker">@Local["Người giới thiệu"]</th>
+                                        <th data-name="Debt">@Local["Công nợ dịch vụ"]</th>
+                                        <th data-name="Period">@Local["Thu trong kỳ"]</th>
+                                        <th data-name="gclid">@Local["Gclid"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="FC_TableContentBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button id="FC_btnLoadMore" class="btn btnsysmore btn-secondary w-100 p-1 " onclick="FCus_ViewMore()" style="display: none">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!--#region Chưa dùng tới-->
+            <div class="card card-plain" id="content_devide_customer" style="display:none;">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chia dữ liệu chăm sóc"]</h6>
+                        <p class="text-sm mb-0">@Local["Tổng số lượng chia phải bằng tổng dữ liệu đã chọn"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row px-2 form3">
+                        <div class="col-12 col-sm-6 col-xl-3 p-1">
+                            <label>@Local["Đã chọn"]</label>
+                            <input id="txtTotalCustomerDevide" class="form-control" name="content" type="number" disabled />
+                        </div>
+                        <div class="col-12 col-sm-6 col-xl-3 p-1">
+                            <label>@Local["Đã chia"]</label>
+                            <input id="txtRecordUsingDevide" class="form-control" name="content" type="number" disabled />
+                        </div>
+                        <div class="col-12 col-sm-6 col-xl-3 p-1">
+                            <label>@Local["Nhóm"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="GroupTele" onchange="event.preventDefault();return CustomerDevide_FilterTele();">
+                                <input type="hidden" name="devideType" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Nhóm"]</div>
+                                <div id="cbbGroupTele" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6 col-xl-3 p-1">
+                            <label>@Local["Cấp bậc"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="Level" onchange="event.preventDefault();return CustomerDevide_FilterTele();">
+                                <input type="hidden" name="devideType" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Cấp bậc"]</div>
+                                <div id="cbbLevel" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-2 form3">
+                        <div class="col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="CustomerDevieNote" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive" id="TableTicketDevide">
+                        <table class="table vt-table mb-0" id="dtTableTicketDevide">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["Nhân viên"]</th>
+                                    <th>@Local["Nhóm"]</th>
+                                    <th>@Local["Số lượng chia"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtTableTicketDevideBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                <div class="card-footer pt-0 fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="message_ticket_file_devide"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" onclick="event.preventDefault();return Close_Devide_Customer()">@Local["Đóng"]</button>
+                            <button id="btnExcuteDevide" class="btn bg-gradient-primary mt-2 me-2" type="submit" onclick="return CustomerDevide_ExcuteData();">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-plain" id="ContentMultiSMS" style="display:none;">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Soạn tin nhắn"]</h6>
+                        <p class="text-sm mb-0">@Local["Gửi tin nhắn cho những khách hàng được chọn"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row px-2 form3">
+                        <div class="col-12 p-1">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea id="txtContentMultiSMS" class="form-control" name="name"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer pt-0 fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="checkContent"></div>
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="messageCheckSuccess"></div>
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn bg-gradient-info" onclick="event.preventDefault();return CheckContentSMS()">@Local["Kiểm tra nội dung"]</button>
+                            <button class="btn btn-secondary" onclick="event.preventDefault();return Close_Devide_Customer()">@Local["Đóng"]</button>
+                            <button type="submit" class="btn bg-gradient-primary mt-2 me-2" onclick="return ExcuteSendMulti()">@Local["Gửi"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--#endregion-->
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let data_user_devide = {};
+    let data_customer_choosen = {};
+    let data_customer_choosen_sms = [];
+    let Total_Customer_Choosen = 0;
+    let FClimit = 10000;
+    let shtable;
+    let FCdata_city;
+    let FCdata_MemberShip;
+    let FCdata_district;
+    let FCnum_rendered = 0;
+    let FCblockIndex = 0;
+    let FCdata_loaded = [];
+    let FCdata_spilited = [];
+    let FC_isAllowChoose = false;
+    let FCdata_objDataMain = {}
+    let DCD_Branch = {}, DCD_ServiceType = {}, DCD_CustGroup = {}, DCD_CustSource = {}, DCD_Career = {}
+        , DCD_City = {}, DCD_District = {}, DCD_AllService = {};
+    $(document).ready(function () {
+        ToolPopper();
+        $("#FC_Pin").unbind('click').click(function () {
+            if (!$('#FC_Fill').hasClass('pinned')) $('#FC_Fill').addClass('pinned');
+            else $('#FC_Fill').removeClass('pinned');
+        })
+        FCus_LoadInitialize();
+        FCus_EventInit();
+    });
+
+    //#region //LOAD
+    async function FCus_LoadInitialize() {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Marketing/FilterCustomer/?handler=InitializeComboType"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        FCdata_city = data.City;
+                        FCdata_district = data.District;
+                        FCdata_MemberShip = data.MemberShip;
+                        Load_Combo(data.Service, "FC_CcbTKService", false);
+                        Load_Combo(data.Branch, "FC_CcbTKBranch", false);
+                        Load_Combo(data.CustomerGroup, "FC_CcbTKCustomerGroup", false);
+                        Load_Combo(data.CustomerSource, "FC_CcbTKSource", false);
+                        Load_Combo(data.Broker, "FC_CbbTKBroker", false);
+
+                        Load_Combo(data.Gender, "FC_CbbGender", true, '@Local["Tất cả giới tính"]');
+                        Load_Combo(FCdata_city, "FC_CbbCity", false);
+                        Load_Combo(data.Career, "FC_CcbTKCareer", false,);
+                        Load_Combo(data.ServiceType, "FC_CcbTKServiceType", false);
+                        Load_Combo(data.Insurance, "FC_CcbTKInsurance", false);
+                        Load_Combo(data.TreatStatus, "FC_CcbTreatStatus", false);
+                        Load_Combo(data.Tele, "FC_cbbTKTeleID", false);
+                        Load_Combo(data.Marketing, "FC_cbbTKCustCareID", false);
+                        Load_Combo(FCdata_district, "FC_CbbDistrict", false);
+                        Load_Combo(data.MemberShip, "FC_CbbMemberShipCard", false);
+                        Load_Combo(data.Service, "FC_CcbServiceTreat", false);
+                        Load_Combo(data.ServiceType, "FC_CbbServiceTreatType", false);
+
+                        $('#FC_Fill .ui.dropdown').dropdown('restore defaults');
+                        $("#FC_Gender").dropdown("refresh");
+
+                        //#region // Create data key value
+                        DCD_Branch = (data.Branch).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        DCD_ServiceType = (data.ServiceType).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        DCD_CustGroup = (data.CustomerGroup).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+
+                        DCD_CustSource = (data.CustomerSource).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        DCD_Career = (data.Career).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+
+                        DCD_City = (FCdata_city).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        DCD_District = (FCdata_district).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        DCD_AllService = (data.AllService).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {});
+                        //#endregion
+                    }
+                }
+            );
+            resolve();
+        })
+    }
+
+    function FCus_LoadData() {
+        $("#FC_ckbAllowChooseData").prop('checked', false);
+        $("#FC_TableContentBody").html('');
+        FCnum_rendered = 0;
+        FCblockIndex = 0;
+        FCdata_loaded = [];
+        FCdata_spilited = [];
+        let FC_CusGroup = '', FC_Branch = '', FC_Career = '', FC_Source = '', FC_ServiceType = '', FC_Service = '', FC_SeriveTreat = '', FC_ServiceTreatType = '';
+        let FC_BirthDayFrom = '01-01', FC_BirthDayTo = '01-01';
+        let FC_DateFrom = '01-01-1900', FC_DateTo = '01-01-1900', FC_TreatServiceFrom = '01-01-1900', FC_TreatServiceTo = '01-01-1900', FC_PayFrom = '01-01-1900', FC_PayTo = '01-01-1900';
+        let FC_UsedServiceFrom = '01-01-1900', FC_UsedServiceTo = '01-01-1900', FC_CusTreatFrom = '01-01-1900', FC_CusTreatTo = '01-01-1900';
+        let FC_Gender = 0, FC_AgeFrom = 0, FC_AgeTo = 0, FC_City = 0, FC_District = 0, FC_Insurance = 0, FC_TreatmentStatus = 0;
+        let FC_SearchDayService = 0, FC_SearchCusLastTreat = 0, FC_SearchDay = 0, FC_SearchDayBirth = 0, FC_SearchDayTreatService = 0;
+        let FC_AmountFrom = 0, FC_AmountTo = 0, FC_SearchAmount = 0, FC_SearchAge = 0;
+        let FC_CheckSelect = 0
+        let FC_Broker = 0, FC_SerDebtFrom = 0, FC_SerDebtTo = 0;
+        let FC_TeleID = 0, FC_CustCareID=0
+
+        // ngày tạo khách hàng
+        var FC_GetDateCreate = $('#FC_CreateCust').val() ? $('#FC_CreateCust').val() : "";
+        if (FC_GetDateCreate != "") {
+            FC_CheckSelect = 1;
+            FC_SearchDay = 1;
+            FC_DateFrom = FCus_GetDate(FC_GetDateCreate, 'from');
+            FC_DateTo = FCus_GetDate(FC_GetDateCreate, 'to');
+        }
+        // nhóm khách hàng
+        var FC_GetCusGroup = $('#FC_TKCustomerGroup').dropdown('get value').toString() ? $('#FC_TKCustomerGroup').dropdown('get value').toString() : "";
+        if (FC_GetCusGroup != "") {
+            FC_CheckSelect = 1;
+            FC_CusGroup = ',' + FC_GetCusGroup + ',';
+        }
+        // giới tính
+        var FC_GetGender = ($('#FC_Gender').dropdown('get value').length > 0) ? Number($('#FC_Gender').dropdown('get value')) : -1;
+        if (FC_GetGender != -1) {
+            FC_CheckSelect = 1;
+            FC_Gender = FC_GetGender;
+        }
+
+        // chi nhánh
+        var FC_GetBranch = $('#FC_TKBranch').dropdown('get value').toString() ? $('#FC_TKBranch').dropdown('get value').toString() : "";
+        if (FC_GetBranch != "") {
+            FC_CheckSelect = 1;
+            FC_Branch = ',' + FC_GetBranch + ',';
+        }
+
+        // nguồn khách hàng
+        var FC_GetSource = $('#FC_TKSource').dropdown('get value').toString() ? $('#FC_TKSource').dropdown('get value').toString() : "";
+        if (FC_GetSource != "") {
+            FC_CheckSelect = 1;
+            FC_Source = ',' + FC_GetSource + ',';
+        }
+
+        // người giới thiệu
+        var FC_GetBroker = $('#FC_TKBroker').dropdown('get value').toString() ? $('#FC_TKBroker').dropdown('get value').toString() : 0;
+        if (FC_GetBroker != "") {
+            FC_CheckSelect = 1;
+            FC_Broker = FC_GetBroker;
+        }
+
+
+
+        // tỉnh
+        var FC_GetCity = Number($('#FC_City').dropdown('get value')) ? Number($('#FC_City').dropdown('get value')) : 0;
+        if (FC_GetCity != 0) {
+            FC_CheckSelect = 1;
+            FC_City = FC_GetCity
+        }
+
+        // quận/ huyện
+        var FC_GetDistrict = Number($('#FC_District').dropdown('get value')) ? Number($('#FC_District').dropdown('get value')) : 0;
+        if (FC_GetDistrict != 0) {
+            FC_CheckSelect = 1;
+            FC_District = FC_GetDistrict
+        }
+
+        // thời gian sử dụng dv
+        var FC_GetUsedService = $('#FC_UsedService').val() ? $('#FC_UsedService').val() : "";
+        if (FC_GetUsedService != "") {
+            FC_CheckSelect = 1;
+            FC_SearchDayService = 1;
+            FC_UsedServiceFrom = FCus_GetDate(FC_GetUsedService, 'from');
+            FC_UsedServiceTo = FCus_GetDate(FC_GetUsedService, 'to');
+        }
+
+        // thời gian khách hàng điều trị cuối cùng
+        var FC_GetCusLastTreat = $("#FC_CusTreatFinal").val() ? $("#FC_CusTreatFinal").val() : "";
+        if (FC_GetCusLastTreat != "") {
+            FC_CheckSelect = 1;
+            FC_SearchCusLastTreat = 1;
+            FC_CusTreatFrom = FCus_GetDate(FC_GetCusLastTreat, 'from');
+            FC_CusTreatTo = FCus_GetDate(FC_GetCusLastTreat, 'to');
+        }
+
+        // ngày sinh nhật
+        var FC_GetBirthDay = $('#FC_BirthDay').val() ? $('#FC_BirthDay').val() : "";
+        if (FC_GetBirthDay != "") {
+            FC_CheckSelect = 1;
+            FC_SearchDayBirth = 1;
+            let FC_ConvertMonthDayF = FCus_GetDate(FC_GetBirthDay, 'from').split('-');
+            let FC_ConvertMonthDayT = FCus_GetDate(FC_GetBirthDay, 'to').split('-');
+            FC_BirthDayFrom = FC_ConvertMonthDayF[1] + '-' + FC_ConvertMonthDayF[0];
+            FC_BirthDayTo = FC_ConvertMonthDayT[1] + '-' + FC_ConvertMonthDayT[0];
+        }
+
+        // nhóm dịch vụ sử dụng
+        var FC_GetServiceType = $('#FC_TKServiceType').dropdown('get value').toString() ? $('#FC_TKServiceType').dropdown('get value').toString() : "";
+        if (FC_GetServiceType != "") {
+            FC_CheckSelect = 1;
+            FC_ServiceType = ',' + FC_GetServiceType + ',';
+        }
+
+        // dịch vụ sử dụng
+        var FC_GetService = $('#FC_TKService').dropdown('get value').toString() ? $('#FC_TKService').dropdown('get value').toString() : "";
+        if (FC_GetService != "") {
+            FC_CheckSelect = 1;
+            FC_Service = ',' + FC_GetService + ',';
+        }
+
+        // bảo hiểm đã sử dụng
+        var FC_GetInsurance = Number($('#FC_TKInsurance').dropdown('get value')) ? Number($('#FC_TKInsurance').dropdown('get value')) : 0;
+        if (FC_GetInsurance != 0) {
+            FC_CheckSelect = 1;
+            FC_Insurance = FC_GetInsurance
+        }
+
+        // trạng thái điều trị
+        var FC_GetTreatmentStatus = Number($('#FC_TreatStatus').dropdown('get value')) ? Number($('#FC_TreatStatus').dropdown('get value')) : 0;
+        if (FC_GetTreatmentStatus != 0) {
+            FC_CheckSelect = 1;
+            FC_TreatmentStatus = FC_GetTreatmentStatus
+        }
+
+        // tuổi
+        var FC_GetAgeFrom = Number($('#FC_CustomerAgeFrom').val()) ? Number($('#FC_CustomerAgeFrom').val()) : '';
+        var FC_GetAgeTo = Number($('#FC_CustomerAgeTo').val()) ? Number($('#FC_CustomerAgeTo').val()) : '';
+        if (FC_GetAgeFrom != '' || FC_GetAgeTo != '') {
+            FC_CheckSelect = 1;
+            FC_SearchAge = 1;
+            FC_AgeFrom = FC_GetAgeFrom;
+            FC_AgeTo = FC_GetAgeTo;
+        }
+
+        // tổng tiền đã đóng
+        var FC_GetPaidFrom = $('#FC_TotalPaidFrom').val() ? Number($('#FC_TotalPaidFrom').val()) : '';
+        var FC_GetPaidTo = $('#FC_TotalPaidTo').val() ? Number($('#FC_TotalPaidTo').val()) : '';
+        if (typeof FC_GetPaidFrom == 'number' && typeof FC_GetPaidTo == 'number') {
+            FC_CheckSelect = 1;
+            FC_SearchAmount = 1
+            FC_AmountFrom = FC_GetPaidFrom
+            FC_AmountTo = FC_GetPaidTo
+
+        }
+
+        // nghề nghiệp
+        var FC_GetCareer = $('#FC_TKCareer').dropdown('get value').toString() ? $('#FC_TKCareer').dropdown('get value').toString() : "";
+        if (FC_GetCareer != "") {
+            FC_CheckSelect = 1;
+            FC_Career = ',' + FC_GetCareer + ',';
+        }
+        // dịch vụ điều trị
+        var FC_GetServiceTreat = $("#FC_ServiceTreat").dropdown('get value').toString() ? Number($("#FC_ServiceTreat").dropdown('get value').toString()) : 0;
+        if (FC_GetServiceTreat != "") {
+            FC_CheckSelect = 1;
+            FC_SeriveTreat = FC_GetServiceTreat;
+        }
+
+        // thời gian điều trị dịch vụ
+        var FC_GetDateTreatService = $("#FC_DateTreatService").val() ? $("#FC_DateTreatService").val() : "";
+        if (FC_GetDateTreatService != "") {
+            FC_CheckSelect = 1;
+            FC_SearchDayTreatService = 1;
+            FC_TreatServiceFrom = FCus_GetDate(FC_GetDateTreatService, 'from');
+            FC_TreatServiceTo = FCus_GetDate(FC_GetDateTreatService, 'to');
+        }
+
+        // Nhóm dịch vụ điều trị
+        var FC_GetServiceTreatType = $('#FC_ServiceTreatType').dropdown('get value').toString() ? $('#FC_ServiceTreatType').dropdown('get value').toString() : "";
+        if (FC_GetServiceTreatType != "") {
+            FC_CheckSelect = 1;
+            FC_ServiceTreatType = ',' + FC_GetServiceTreatType + ',';
+        }
+
+        // Công nợ dịch vụ
+        var FC_GetSerDebtFrom = $("#FC_SerDebtFrom").val() ? Number($("#FC_SerDebtFrom").val()) : 0;
+        var FC_GetSerDebtTo = $("#FC_SerDebtTo").val() ? Number($("#FC_SerDebtTo").val()) : 0;
+        if (FC_GetSerDebtFrom != 0 || FC_GetSerDebtTo != 0) {
+            FC_CheckSelect = 1;
+            FC_SerDebtFrom = FC_GetSerDebtFrom;
+            FC_SerDebtTo = FC_GetSerDebtTo;
+        }
+        // Thu trong kỳ
+        var FC_GetPayPeriod = $("#FC_PayPeriod").val() ? $("#FC_PayPeriod").val() : "";
+        if (FC_GetPayPeriod != ""){
+            FC_PayFrom = FCus_GetDate(FC_GetPayPeriod, 'from');
+            FC_PayTo = FCus_GetDate(FC_GetPayPeriod, 'to');
+        }
+
+        // Telesale
+        var FC_GetTelesale = !isNaN(Number($('#FC_TKTeleID').dropdown('get value'))) ? Number($('#FC_TKTeleID').dropdown('get value')) : 0;
+        if (FC_GetTelesale != "") {
+            FC_CheckSelect = 1;
+            FC_TeleID = FC_GetTelesale;
+        }
+        // CustCare
+        var FC_GetCustCare = !isNaN(Number($('#FC_TKCustCareID').dropdown('get value'))) ? Number($('#FC_TKCustCareID').dropdown('get value')) : 0;
+        if (FC_GetCustCare != "") {
+            FC_CheckSelect = 1;
+            FC_CustCareID = FC_GetCustCare;
+        }
+
+        if (FC_CheckSelect == 1) {
+            $('#FC_textShowMessage').html('');
+            AjaxLoad(url = "/Marketing/FilterCustomer/?handler=LoadataCustomer"
+                , data = {
+                    "DateFrom": FC_DateFrom
+                    , "DateTo": FC_DateTo
+                    , "SearchDay": FC_SearchDay
+                    , "CusGroup": FC_CusGroup
+                    , "CusGender": FC_Gender
+                    , "AmountFrom": FC_AmountFrom
+                    , "AmountTo": FC_AmountTo
+                    , "SearchAmount": FC_SearchAmount
+                    , "CusAgeFrom": FC_AgeFrom
+                    , "CusAgeTo": FC_AgeTo
+                    , "SearchAge": FC_SearchAge
+                    , "CusBranch": FC_Branch
+                    , "CusSource": FC_Source
+                    , "CusBroker": FC_Broker
+
+                    , "CusCity": FC_City
+                    , "CusDistrict": FC_District
+                    , "UsedServiceFrom": FC_UsedServiceFrom
+                    , "UsedServiceTo": FC_UsedServiceTo
+                    , "SearchDayService": FC_SearchDayService
+                    , "CusTreatFrom": FC_CusTreatFrom
+                    , "CusTreatTo": FC_CusTreatTo
+                    , "SearchCusLastTreat": FC_SearchCusLastTreat
+                    , "BirthDayFrom": FC_BirthDayFrom
+                    , "BirthDayTo": FC_BirthDayTo
+                    , "SearchDayBirth": FC_SearchDayBirth
+                    , "ServiceType": FC_ServiceType
+                    , "Insurance": FC_Insurance
+                    , "TreatmentStatus": FC_TreatmentStatus
+                    , "Career": FC_Career
+                    , "limit": FClimit
+                    , "isdentic": sys_dencos_Main
+                    , "service": FC_Service
+                    , "SeriveTreat": FC_SeriveTreat
+                    , "ServiceTreatFrom": FC_TreatServiceFrom
+                    , "ServiceTreatTo": FC_TreatServiceTo
+                    , "SearchServiceTreat": FC_SearchDayTreatService
+                    , "ServiceTreatType": FC_ServiceTreatType
+                    , "SerDebtFrom": FC_SerDebtFrom
+                    , "SerDebtTo": FC_SerDebtTo
+                    , "PayFrom": FC_PayFrom
+                    , "PayTo": FC_PayTo
+                    , "TeleID": FC_TeleID
+                    , "CustCareID": FC_CustCareID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        FCdata_loaded = JSON.parse(result);
+                        FCdata_objDataMain = (JSON.parse(result)).reduce((pre, arr) => { if (!pre[arr.ID]) pre[arr.ID] = arr; return pre; }, {})
+                        $('#FC_TotalData').html(formatNumber(FCdata_loaded.length));
+                        $('#FC_CurrentData').html('0');
+                        FCdata_spilited = sliceIntoChunks(JSON.parse(JSON.stringify(FCdata_loaded)), 500);
+                        FCus_ViewMore();
+
+                        if (data.length != 0) {
+                            $('#FC_TotalRow').html(formatNumber(data.length));
+                            $('#FC_CurrentRow').html(0);
+                        }
+                        else {
+                            $('#FC_TotalRow').html('-');
+                            $('#FC_CurrentRow').html('-');
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#FC_Loadding").show();
+                }
+                , complete = function (e) {
+                    $("#FC_Loadding").hide();
+                }
+            );
+        }
+        else {
+            $('#FC_textShowMessage').html('@Local["Chưa nhập dữ liệu lọc"]');
+            $('#FC_TotalData').html('0');
+            $('#FC_CurrentData').html('0');
+        }
+    }
+
+    function FCus_GetDate(date, type) {
+        let result = date;
+        if (date.includes('to')) {
+            let dateTemp = date.split(" to ");
+            if (type == 'from') {
+                result = dateTemp[0];
+            }
+            else {
+                result = dateTemp[1];
+            }
+        }
+        return result;
+    }
+    //#endregion
+
+    //#region //RENDER
+
+    async function FCus_Render(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        let content = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr =
+                                '<td class="text-center" for="' + item.ID + '">'
+                                + '<div class="form-check text-lg d-inline-flex p-2" data-children-count="1">'
+                                + '<input type="checkbox" data-id="' + item.ID + '" data-phone="' + item.Phone + '" class="form-check-input checkTicketToken m-0  text-sm" checked disabled >'
+                                + '<label class="form-check-label text-sm font-weight-bold"></label>'
+                                + '</div>'
+                                + '</td>'
+
+                                + '<td class="vt-number-order"></td>'
+                                + '<td><a class="text-decoration-underline fw-bold" target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.ID + '">' + item.Code + '</a></td>'
+                                + '<td>' + item.Name + '</td>'
+                                + '<td data-name="custoldcode">' + item.Cust_Code_Old + '</td>'
+                                + '<td>' + (!item.CusBirthday.includes('1900') ? ConvertDateTimeUTC_DMY(item.CusBirthday) : '') + '</td>'
+                                + '<td data-name="phone" class="_tab_control_" data-tab="phone_customer">' + item.Phone + '</td>'
+
+                                + '<td>' + FCus_GetName(DCD_CustSource, item.SourceID) + '</td>'
+                                + '<td>' + FCus_GetName(DCD_CustGroup, item.GroupID) + '</td>'
+                                + '<td data-name="address">' + item.Address + '</td>'
+                                + '<td data-name="district">' + FCus_GetName(DCD_District, item.District) + '</td>'
+                                + '<td data-name="city">' + FCus_GetName(DCD_City, item.City) + '</td>'
+
+                                + '<td data-name="career">' + FCus_GetName(DCD_Career, item.Carrer) + '</td>'
+                                + '<td data-name="doccode">' + item.DocCode + '</td>'
+                                + '<td data-name="branch">' + FCus_GetName(DCD_Branch, item.BranchID) + '</td>'
+                                + '<td data-name="age">' + (Number(item.CusAge) > 100 ? '-' : item.CusAge) + '</td>'
+                                + '<td data-name="gender">' + `${Number(item.CustGender) == 60 ? '@Local["Nam"]' : '@Local["Nữ"]'}` + '</td>'
+                                + '<td data-name="Email">' + item.Email + '</td>'
+                                + '<td data-name="service">' + FCus_GetName(DCD_AllService, item.ServiceID) + '</td>'
+                                + '<td data-name="serviceType">' + FCus_GetName(DCD_ServiceType, item.ServiceTypeID) + '</td>'
+                                + '<td data-name="servicedate">' + (!item.ServiceCreated.includes('1900') ? ConvertDateTimeUTC_DMY(item.ServiceCreated) : '') + '</td>'
+                                + '<td data-name="lasttreatdate">' + (!item.LastTreat == 0 ? ConvertYMDInt_ToDate(item.LastTreat) : '') + '</td>'
+                                + '<td data-name="amount">' + formatNumber(item.Amount) + '</td>'
+                                + '<td data-name="created">' + (!item.Created.includes('1900') ? ConvertDateTimeUTC_DMY(item.Created) : '') + '</td>'
+                                + '<td data-name="InfoTele">' + FCus_GetName(MTDataEmployee, item.Employee_ID) + '</td>'
+                                + '<td data-name="dateTreatService">' + (!item.DateTreatService == 0 ? ConvertYMDInt_ToDate(item.DateTreatService) : '') + '</td>'
+                                + '<td data-name="dateCheckinLast">' + ConvertYMDInt_ToDate(item.LastCheckin) + '</td>'
+                                + '<td data-name="marStaff">' + FCus_GetName(MTDataEmployee, item.MarStaffID) + '</td>'
+                                + '<td data-name="ccStaff">' + FCus_GetName(MTDataEmployee, item.CCStaffID) + '</td>'
+                                + '<td data-name="Broker">' + item.BrokerName + '</td>'
+                                + '<td data-name="Debt">' + formatNumber(item.SerDebt) + '</td>'
+                                + '<td data-name="Period">' + formatNumber(item.PayPeriod) + '</td>'
+                                + '<td data-name="gclid"><span class="content_line_clamp">' + item.Gclid + '</span></td>'
+                                ;
+                            tr = '<tr class="vt-number CountRow">' + tr + '</tr>';
+                            content = content + tr;
+                        }
+                        myNode.innerHTML = myNode.innerHTML + content;
+                        $('#FC_CurrentRow').html(formatNumber($('.CountRow').length));
+                        Checking_TabControl_Permission();
+                    }
+                }
+                shtable.Refresh();
+                Checking_TabControl_Permission();
+            }, 10)
+        })
+    }
+
+    function FCus_GetName(d, id) {
+        try {
+            if (d[id] != undefined) return d[id].Name;
+            else return '';
+        }
+        catch (ex) { return '' }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function FCus_EventInit() {
+        shtable = $("#FC_TableContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $("#FC_TableContent").tablecontrol();
+        $("#FC_BirthDay").flatpickr().destroy();
+        $("#FC_Fill .flatpickr").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            allowInput: true,
+        });
+
+        // Flatpick ngày sinh nhật
+        $("#FC_Fill .flatpickrDayMonth").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m',
+            enableTime: false,
+            allowInput: true,
+        });
+
+        $("#FC_SetFilter .reset").click(function () {
+            $('#FC_Fill input').each(function () {
+                $(this).val('');
+            });
+            $('#FC_Fill .ui.dropdown').dropdown('restore defaults');
+        });
+
+        //#region button remove filter day
+        $(".FC-EventHover").mouseenter(function () {
+            $(this).find('.btn_clear').addClass("opacity-10").removeClass("opacity-1");
+        });
+        $(".FC-EventHover").mouseleave(function () {
+            $(this).find('.btn_clear').removeClass("opacity-10").addClass("opacity-1");
+        })
+        $(".FC-EventHover").on("click", ".btn_clear", function () {
+            $(this).closest(".FC-EventHover").find(".flat").val('');
+            $(this).closest(".FC-EventHover").find(".flat").trigger("change");
+        })
+        //#endregion
+
+        $('#FC_Fill .money').divide();
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControl ,'@Model._dtPermissionCurrentPage');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+
+        $("#FC_TotalPaidFrom, #FC_TotalPaidTo").divide();
+
+        $("#FC_HiddenCollap").on("click", function (e) {
+            let obj = $(this).children(".fa-chevron-up");
+            if (obj.hasClass('d-none')) {
+                obj.removeClass('d-none');
+                $(this).children('.fa-chevron-down').addClass('d-none')
+            }
+            else {
+                obj.addClass('d-none');
+                $(this).children(".fa-chevron-down").removeClass('d-none')
+            }
+        })
+        $(".FCPeriod").on("change", function (e){
+            let y = document.getElementsByClassName("FCPeriod");
+            let flag = 0;
+            for (let i = 0; i < y.length; i++) {
+                if ($(y[i]).val() != "" && $(y[i]).val() != 0 || $(y[i]).dropdown('get value') != ""){
+                    i = y.length;
+                    flag = 1;
+                }
+            }
+            if (flag != 1){
+                $("#FC_PayPeriod").attr("disabled", true);
+                $("#FC_PayPeriod").addClass("bg-gray-200");
+            } else {
+                $("#FC_PayPeriod").attr("disabled", false);
+                $("#FC_PayPeriod").removeClass("bg-gray-200");
+            }
+        })
+    }
+
+    function FC_SelectAll() {
+        FC_isAllowChoose = $("#FC_ckbAllowChooseData").length ? $("#FC_ckbAllowChooseData").is(":checked") : false;
+        let isCheck = $("#FC_ckbChooseAll").is(":checked") || !FC_isAllowChoose;
+        $(".checkTicketToken").prop("checked", isCheck);
+        $(".checkTicketToken").prop("disabled", !FC_isAllowChoose);
+    }
+
+    async function FC_checkDataChoose() {
+        return new Promise((resolve)=>{
+            if(FC_isAllowChoose) {
+                let objTicket = [];
+                $(".checkTicketToken").each(function () {
+                    let isChecked = $(this).is(":checked");
+                    let id = Number($(this).attr("data-id"));
+                    if (isChecked) {
+                        let item = FCdata_objDataMain[id];
+                        if(item) objTicket.push(item);
+
+                    }
+                });
+                resolve(objTicket);
+            }
+            else {
+                resolve(FCdata_loaded);
+            }
+
+        })
+    }
+    //#endregion
+
+    //#region //HANDLE
+
+    function FCus_ChangeCity() {
+        $("#FC_District").dropdown("clear");
+        let data = [];
+        let CityID = Number($('#FC_City').dropdown('get value')) ? Number($('#FC_City').dropdown('get value')) : 0;
+        if (CityID != 0) { data = FCdata_district.filter(a => a.CityID == CityID); }
+        else { data = FCdata_district; }
+        Load_Combo(data, "FC_CbbDistrict", false);
+    }
+
+    function FCus_ChangeMemberShip() {
+        let MemberID = $('#FC_MemberShipCard').dropdown('get value') ? Number($('#FC_MemberShipCard').dropdown('get value')) : 0;
+        let data = [];
+        if (MemberID != 0) { data = FCdata_MemberShip.filter(a => a.ID == MemberID); }
+        else { $("#FC_TotalPaidFrom, #FC_TotalPaidTo").val(''); }
+        $("#FC_TotalPaidFrom").val((data.length > 0 ? data[0].AmountFrom : ''));
+        $("#FC_TotalPaidTo").val((data.length > 0 ? data[0].AmountTo : ''));
+    }
+
+    function FCus_ViewMore() {
+        var p = fnRenderArray(data = FCdata_spilited
+            , id = "FC_TableContentBody"
+            , index = FCblockIndex
+            , fnrender = FCus_Render
+            , fnsuccess = function () { }
+            , fnbegin = function () { });
+
+        p.then(function (v) {
+            FCblockIndex = v;
+            if (FCblockIndex <= FCdata_spilited.length) {
+                $('#FC_btnLoadMore').show();
+                FCnum_rendered = FCnum_rendered + FCdata_spilited[FCblockIndex - 1].length;
+                FCnum_rendered = FCnum_rendered > FCdata_loaded.length ? FCdata_loaded.length : FCnum_rendered;
+                $('#FC_CurrentData').html(formatNumber(FCnum_rendered));
+            }
+            else $('#FC_btnLoadMore').hide();
+        });
+    }
+    //#endregion
+
+    //#region //EXCEL - PRINT
+
+    async function FCus_ExportExcel(isOption = 0) {
+        let dataRoot = FCdata_loaded;
+        let eleContainer = $('#FC_ShowMore');
+        let isAll = (isOption == 0);
+        let dataExport = {
+            "Code": "@Local["Mã khách hàng"]"
+            , "Name": "@Local["Khách hàng"]"
+            , "Cust_Code_Old": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custoldcode']`)).is(":checked"),
+                data: "@Local["Mã khách hàng cũ"]"
+            }
+            , "Phone": {
+                dataNamePer: 'phone',
+                data: ["@Local["Điện thoại"]", null, 'phone_customer']
+            }
+            , "CusAge": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='age']`)).is(":checked"),
+                data: "@Local["Tuổi"]"
+            }
+            , "DocCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                data: "@Local["Mã hồ sơ"]"
+            }
+            , "SourceID": ["@Local["Nguồn"]", (v) => { return FCus_GetName(DCD_CustSource, v) }]
+            , "CusBirthday": ["@Local["Ngày sinh"]", (v) => { return (!v.includes('1900') ? ConvertDateTimeUTC_DMY(v) : '') }]
+            , "CustGender": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gender']`)).is(":checked"),
+                data: ["@Local["Giới tính"]", (v) => { return Number(v) == 60 ? '@Local["Nam"]' : decodeHtml('@Local["Nữ"]') }]
+            }
+            , "Email": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Email']`)).is(":checked"),
+                data: "@Local["Email"]"
+            }
+            , "Created": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='created']`)).is(":checked"),
+                data: ["@Local["Ngày tạo hồ sơ"]", (v) => { return (!v.includes('1900') ? ConvertDateTimeUTC_DMY(v) : '') }]
+            }
+            , "ServiceTypeID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='serviceType']`)).is(":checked"),
+                data: ["@Local["Nhóm dịch vụ"]", (v) => { return FCus_GetName(DCD_ServiceType, v) }]
+            }
+            , "ServiceID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='service']`)).is(":checked"),
+                data: ["@Local["Dịch vụ"]", (v) => {return FCus_GetName(DCD_AllService, v) }]
+            }
+            , "ServiceCreated": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='lasttreatdate']`)).is(":checked"),
+                data: ["@Local["Ngày tạo dịch vụ"]", (v) => { return (!v.includes('1900') ? ConvertDateTimeUTC_DMY(v) : '') }]
+            }
+            , "LastTreat": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='lasttreatdate']`)).is(":checked"),
+                data: ["@Local["Ngày điều trị cuối cùng"]", (v) => { return (!v == 0 ? ConvertYMDInt_ToDate(v) : '') }]
+            }
+            , "Amount": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='amount']`)).is(":checked"),
+                data: ["@Local["Doanh thu"]", (v) => { return formatNumber(v) }]
+            }
+            , "Address": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='address']`)).is(":checked"),
+                data: ["@Local["Địa chỉ"]"]
+            }
+            , "District": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='district']`)).is(":checked"),
+                data: ["@Local["Quận huyện"]", (v) => { return FCus_GetName(DCD_District, v) }]
+            }
+            , "City": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='city']`)).is(":checked"),
+                data: ["@Local["Thành phố"]", (v) => { return FCus_GetName(DCD_City, v) }]
+            }
+            , "GroupID": ["@Local["Nhóm"]", (v) => { return FCus_GetName(DCD_CustGroup, v) }]
+            , "Carrer": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='career']`)).is(":checked"),
+                data: ["@Local["Nghề nghiệp"]", (v) => { return FCus_GetName(DCD_Career, v) }]
+            }
+            , "BranchID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                data: ["@Local["Chi nhánh"]", (v) => { return FCus_GetName(DCD_Branch, v) }]
+            }
+            , "Employee_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='InfoTele']`)).is(":checked"),
+                data: ["@Local["Tele phụ trách"]", (v) => { return FCus_GetName(MTDataEmployee, v) }]
+            }
+            , "DateTreatService": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='dateTreatService']`)).is(":checked"),
+                data: ["@Local["Ngày điều trị dịch vụ"]", (v) => { return (!v == 0 ? ConvertYMDInt_ToDate(v) : '') }]
+            }
+            , "LastCheckin": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='dateCheckinLast']`)).is(":checked"),
+                data: ["@Local["Ngày check-in gần nhất"]", (v) => { return (!v == 0 ? ConvertYMDInt_ToDate(v) : '') }]
+            }
+            , "MarStaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='marStaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên marketing phụ trách"]", (v) => { return FCus_GetName(MTDataEmployee, v) }]
+            }
+            , "CCStaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='ccStaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên chăm sóc"]", (v) => { return FCus_GetName(MTDataEmployee, v) }]
+            }
+            , "BrokerName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Broker']`)).is(":checked"),
+                data: "@Local["Người giới thiệu"]"
+            }
+            , "SerDebt": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Debt']`)).is(":checked"),
+                data: "@Local["Công nợ dịch vụ"]"
+            }
+            , "Gclid": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gclid']`)).is(":checked"),
+                data: "@Local["Gclid"]"
+            }
+        };
+        dataExport = Checking_TabControl_System_RebuildHeader(dataExport, tableBodyId = 'FC_TableContentBody', PermissionTable_TabControl);
+        let nameFile = Outlang["Loc_khach_hang"];
+        $("#FC_NumberRow").hide();
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        $("#FC_NumberRow").show();
+        return false;
+    }
+    //#endregion
+
+    //#region //CHƯA DÙNG TỚI
+    //#region // devide data
+    function Devide_Customer_For_Staff() {
+        Total_Customer_Choosen = 0;
+        data_customer_choosen = {};
+        var y = document.getElementsByClassName("checkTicketToken");
+        for (let i = 0; i < y.length; i++) {
+            if (y[i].checked) {
+                let idDriver = y[i].id;
+                let item = {};
+                item.CustomerID = idDriver;
+                data_customer_choosen[idDriver] = item;
+            }
+        }
+        Total_Customer_Choosen = Object.keys(data_customer_choosen).length;
+
+        $("#txtTotalCustomerDevide").val(Total_Customer_Choosen);
+        $("#content_devide_customer").slideDown(100);
+        $("#content_data_filter").hide();
+        $("#FC_SetFilter").hide();
+        CustomerDevide_InitializeCombo();
+
+    }
+
+
+    async function CustomerDevide_InitializeCombo() {
+        return new Promise((resolve) => {
+            AjaxLoad(url = "/Marketing/FilterCustomer/?handler=LoadInitialize_Devide_Data"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        let dataGroupTele = data.dataGroup;
+                        let dataLevel = data.dataLevel;
+                        if (dataGroupTele != null && dataGroupTele.length != 0) {
+                            Load_Combo(dataGroupTele, "cbbGroupTele", true);
+                            $("#GroupTele").dropdown("refresh");
+                            $("#GroupTele").dropdown("set selected", Number(dataGroupTele[0].ID));
+                        }
+                        if (dataLevel != null && dataLevel.length != 0) {
+                            Load_Combo(dataLevel, "cbbLevel", true);
+                            $("#Level").dropdown("refresh");
+                            $("#Level").dropdown("set selected", Number(dataLevel[0].ID));
+                        }
+                        CustomerDevide_FilterTele();
+                    }
+                }
+            );
+        })
+    }
+    function Close_Devide_Customer() {
+        $("#content_devide_customer").hide();
+        $("#content_data_filter").show();
+        $("#FC_SetFilter").show();
+
+        //SMS
+        $("#ContentMultiSMS").hide();
+        $("#textShowMessage").html("");
+        $("#messageCheckSuccess").html("");
+        $("#messageCheckSuccess").hide();
+        $("#checkContent").html("");
+        $("#checkContent").hide();
+    }
+
+    async function CustomerDevide_FilterTele() {
+        return new Promise((resolve) => {
+            $('#dtTableTicketDevideBody').html('');
+            let Group_ID = Number($('#GroupTele').dropdown('get value')) ? Number($('#GroupTele').dropdown('get value')) : 0;
+            let Level_ID = Number($('#Level').dropdown('get value')) ? Number($('#Level').dropdown('get value')) : 0;
+            if (Level_ID != 0 && Group_ID != 0) {
+                if (Level_ID == -1) Level_ID = 0;
+                if (Group_ID == -1) Group_ID = 0;
+                AjaxLoad(url = "/Marketing/FilterCustomer/?handler=LoadDataUser"
+                    , data = { 'GroupID': Group_ID, 'LevelID': Level_ID }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result);
+                            let dataUserDevide = data.dataUser;
+                            data_user_devide = {};
+                            if (dataUserDevide.length != 0) {
+                                for (let i = 0; i < dataUserDevide.length; i++) {
+                                    let item = {};
+                                    item.Number = dataUserDevide[i].Number;
+                                    data_user_devide[dataUserDevide[i].ID] = item;
+                                }
+                                Render_User_Devide(dataUserDevide, 'dtTableTicketDevideBody');
+                            }
+                        }
+                    }
+                );
+            }
+        })
+    }
+    //#endregion
+
+    //#region // Render Data Devide & Event Element Devide
+    async function Render_User_Devide(data, id) {
+        return new Promise((resolve) => {
+            let dataABS = Math.trunc(Total_Customer_Choosen / data.length);
+            let allDataMove = 0;
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let numberDevide = ((i != (data.length - 1)) ? (dataABS) : (Total_Customer_Choosen - allDataMove));
+                        data_user_devide[item.ID].Number = numberDevide;
+                        let tr =
+                            '<td>' + AddCell_TeleSaleName(item.ID, item.Name) + '</td>'
+                            + '<td>' + AddCell_TeleSaleGroup(item.ID, item.GroupName) + '</td>'
+                            + '<td>' + AddCell_NumberDevide(item.ID, numberDevide) + '</td>'
+                        tr = '<tr class="rowDevide" data-id="' + item.ID + '" id="rowDevide_' + item.ID + '">' + tr + '</tr>';
+                        stringContent = stringContent + tr;
+                        allDataMove += dataABS;
+                    }
+                    $('#txtRecordUsingDevide').val(Total_Customer_Choosen);
+
+                }
+                myNode.innerHTML = stringContent;
+            }
+            Event_Element_Devide();
+        })
+    }
+
+    function AddCell_TeleSaleName(key, value) {
+        let resulf = '<span class="TeleSaleName" id="TeleSaleName_' + key + '">' + value + '</span>';
+        return resulf;
+    }
+    function AddCell_TeleSaleGroup(key, value) {
+        let resulf = '<span class="TeleSaleGroup" id="TeleSaleGroup_' + key + '">' + value + '</span>';
+        return resulf;
+    }
+    function AddCell_NumberDevide(key, value) {
+        let resulf = '<input class="form-control NumberDevide" id="NumberDevide_' + key + '" value="' + value + '" type="number" />';
+        return resulf;
+    }
+    function Event_Element_Devide() {
+        $('.NumberDevide').change(function () {
+            let id = this.id.replace("NumberDevide_", "");
+            $('#txtRecordUsingDevide').val(Number($('#txtRecordUsingDevide').val()) + (this.value - data_user_devide[id].Number));
+            data_user_devide[id].Number = this.value;
+        });
+    }
+    //#endregion
+
+    //#region // Send SMS
+    function Prepage_Send_SMS() {
+        data_customer_choosen_sms = [];
+        var y = document.getElementsByClassName("checkTicketToken");
+        for (let i = 0; i < y.length; i++) {
+            if (y[i].checked) {
+                let CustID = y[i].id;
+                let CustPhone = y[i].getAttribute("data-phone");
+                let item = {};
+                item.CusID = CustID;
+                item.Phone = CustPhone;
+                data_customer_choosen_sms.push(item);
+            }
+        }
+        $("#content_data_filter").hide();
+        $("#FC_SetFilter").hide();
+        $("#ContentMultiSMS").slideDown(100);
+    }
+
+    function CheckContentSMS() {
+        var content = $('#txtContentMultiSMS').val();
+        AjaxLoad(url = "/Marketing/FilterCustomer/?handler=CheckContent"
+            , data = { 'content': content }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    document.getElementById("checkContent").innerHTML = "";
+                    document.getElementById("checkContent").style.display = "none";
+                    document.getElementById("messageCheckSuccess").innerHTML = "@Local["Sẵn sàng gửi"]";
+                    document.getElementById("messageCheckSuccess").style.display = "block";
+                }
+                else {
+                    document.getElementById("checkContent").innerHTML = '@Local["Sai định dạng"]' + '|' + '@Local["Phải lớn hơn 05"]';
+                    document.getElementById("checkContent").style.display = "block";
+                    document.getElementById("messageCheckSuccess").innerHTML = "";
+                    document.getElementById("messageCheckSuccess").style.display = "none";
+                }
+            }
+        );
+        return false;
+    }
+
+
+    function ExcuteSendMulti() {
+        if (data_customer_choosen_sms != undefined && data_customer_choosen_sms != null && data_customer_choosen_sms.length != 0) {
+            const promise = notiConfirm("Send SMS for " + data_customer_choosen_sms.length + "customer");
+            promise.then(function () { ExcuteSendMultiAction(); }, function () { });
+        }
+        else
+            $("#textShowMessage").html("@Local["Không có người nhận"]");
+        return false;
+    }
+
+    function ExcuteSendMultiAction() {
+        $("#textShowMessage").html("");
+        var content = $('#txtContentMultiSMS').val();
+        if (data_customer_choosen_sms != undefined && data_customer_choosen_sms != null && data_customer_choosen_sms.length != 0) {
+            AjaxLoad(url = "/Marketing/FilterCustomer/?handler=SendSMSMulti"
+                , data = {
+                    'data': JSON.stringify(data_customer_choosen_sms)
+                    , 'content': content
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess("Success");
+                    }
+                    else if (result == "-2") {
+                        $("#textShowMessage").html("@Local["Nội dung chứa ký tự không cho phép. Kiểm tra nội dung tin bằng cách click chọn : Kiểm tra nội dung"]");
+                    }
+                    else {
+                        notiError_SW('@Local["Sai định dạng"]');
+                    }
+                }
+            );
+            Close_Devide_Customer();
+        }
+        else {
+            $("#textShowMessage").html("@Local["Không có người nhận"]");
+        }
+        return false;
+    }
+    //#endregion
+
+    //#region // Send Mail & SMS
+    function FCus_SendMail() {
+        $("#MainSendMail_Content").empty();
+        $("#MainSendMail_Content").load('/Student/Email/EmailTemplate?ver=' + versionofWebApplication + '&hasoption=1'
+            , function (responseTxt, statusTxt, xhr) {
+                if (statusTxt == "success") {
+                    $("#MainSendMail").addClass('active');
+                    if (typeof ETemp_SendMailCust === 'function') {
+                        FC_checkDataChoose().then(r => {
+                            ETemp_SendMailCust(r);
+                        })
+                    }
+                }
+                if (statusTxt == "error") {
+
+                }
+            })
+    }
+    function FCus_SendSMS () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Sms/SmsLessDetail", function (responseTxt, statusTxt, xhr) {
+            if (statusTxt == "success") {
+                FC_checkDataChoose().then(r => {
+                    smsle_custlistrender(r);
+                })
+            }
+        });
+        $('#DetailModal').modal('show');
+    }
+
+    //#endregion
+    //#region // Excute Data
+    function CustomerDevide_ExcuteData() {
+        CustomerDevide_CheckDataDevide();
+        if ($("#message_ticket_file_devide").html() == "") {
+            let data_customer_devide_final = [];
+            let count = 0;
+            let stringStaff = '';
+            for ([StaffID, valueStaff] of Object.entries(data_user_devide)) {
+                if (Number(valueStaff.Number) > 0) {
+                    stringStaff = stringStaff + StaffID + ',';
+                    count = 0;
+                    for ([CustomerID, valueCust] of Object.entries(data_customer_choosen)) {
+                        if (count < valueStaff.Number) {
+                            let item = {};
+                            item.CustomerID = CustomerID;
+                            item.StaffID = StaffID;
+                            data_customer_devide_final.push(item);
+                            delete data_customer_choosen[CustomerID];
+                            count++;
+                        }
+                        else {
+                            break;
+                        }
+
+                    }
+
+                }
+            }
+
+            if (data_customer_devide_final.length > 0) {
+                let note = $('#CustomerDevieNote').val() ? $('#CustomerDevieNote').val() : "";
+                AjaxLoad(url = "/Marketing/FilterCustomer/?handler=ExcuteDevideCustomer"
+                    , data = { 'data': JSON.stringify(data_customer_devide_final), 'note': note, 'stringStaff': stringStaff }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            Close_Devide_Customer();
+                            document.getElementById("dtContentFilterBody").innerHTML = '';
+                            $("#checkChooseAll").prop('checked', false);
+                            $('#FC_TestData').hide();
+                            fcm_sendmultiuser(stringStaff, Master_circleAvatar, sys_employeeName_Main, 'Receipt data');
+                        } else {
+                            notiError_SW();
+                        }
+                    }
+                );
+            }
+        }
+        return false;
+    }
+
+    function CustomerDevide_CheckDataDevide() {
+        var total = 0;
+        for ([key, value] of Object.entries(data_user_devide)) {
+            total = total + Number(value.Number);
+        }
+        if (total != Total_Customer_Choosen) {
+            $("#message_ticket_file_devide").html("Kiểm Tra Dữ Liệu");
+        }
+        else $("#message_ticket_file_devide").html("");
+    }
+
+    //#endregion
+    //#endregion
+
+    function FC_DevideCustomerCare() {
+        if (FCdata_loaded && FCdata_loaded.length > 0) {
+            $("#DetailModal_Content").empty();
+            $("#DetailModal_Content").load("/Marketing/FilterCustomerMoveMulti?ver=" + versionofWebApplication
+                , function (responseTxt, statusTxt, xhr) {
+                    if (statusTxt == "success") {
+                        if (typeof FCMMulti_GetDataTicket === 'function') {
+                            FC_checkDataChoose().then(r => {
+                                FCMMulti_GetDataTicket(r, FCus_LoadData);
+                            })
+                        }
+                    }
+                    if (statusTxt == "error") {
+
+                    }
+                }
+            );
+            $('#DetailModal').modal('show');
+        }
+        else {
+            notiWarning('@Local["Không có dữ liệu để chuyển"]!');
+        }
+
+    }
+
+
+</script>
+<style>
+    #FC_Fill.pinned {
+        position: relative !important;
+        border: unset !important;
+        box-shadow: none !important;
+        padding:0px!important;
+    }
+
+        #FC_Fill.pinned #FC_Pin {
+            opacity: 1 !important;
+            color: rgb(var(--bs-primary)) !important;
+        }
+
+    #FC_Pin:hover {
+        opacity: 1 !important;
+    }
+</style>

@@ -1,0 +1,208 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerInfoLayoutModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/assests/library/jquery-ui.js', true);</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid p-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Bố cục màn hình hồ sơ khách hàng"]</h6>
+                        <p class="text-sm mb-0">@Local["Cấu hình cần đăng xuất và đăng nhập lại"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" id="CIL_EditLayout" onclick="event.preventDefault();return CIL_EditLayout();">@Local["Chỉnh sửa"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="mt-3 h-100 mx-auto gap-2" id="main_area">
+                        <div class="field">
+                            <div class="row bg-gray-100 rounded-3 p-3 pt-1 m-0" id="main_area_info">
+                                <div class="col-12 col-lg-3 mt-3 px-2">
+                                    <div class="card  h-100">
+                                        <div class="card-body p-3 h-100 mb-4">
+                                            <span class="text-dark text-sm fw-bold text-nowrap">@Local["Thông tin chung"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-6 mt-3 px-2">
+                                    <div class="card h-100">
+                                        <div class="card-body p-3 h-100 mb-4">
+                                            <span class="text-dark text-sm fw-bold text-nowrap">@Local["Thông tin nhân viên"]</span>
+                                            <div class="form-check form-switch ms-0 ps-0 mt-3">
+                                                <input class="form-check-input ms-0" type="checkbox" checked disabled>
+                                                <label class="form-check-label text-dark ps-2 w-80 mb-0">@Local["Nhóm khách hàng"]</label>
+                                            </div>
+                                            <div class="form-check form-switch ms-0 ps-0">
+                                                <input class="form-check-input ms-0" type="checkbox" checked disabled>
+                                                <label class="form-check-label text-dark ps-2 w-80 mb-0">@Local["Tele phụ trách"]</label>
+                                            </div>
+                                            <div class="form-check form-switch ms-0 ps-0">
+                                                <input class="form-check-input ms-0" type="checkbox" checked disabled>
+                                                <label class="form-check-label text-dark ps-2 w-80 mb-0">@Local["Chăm sóc khách hàng"]</label>
+                                            </div>
+                                            <div id="CIL_ChildSide">
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3 mt-3 px-2">
+                                    <div class="card h-100">
+                                        <div class="card-body p-3 h-100 mb-4">
+                                            <span class="text-dark text-sm fw-bold text-nowrap">@Local["Lịch hẹn"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-8 col-sm px-2" id="CIL_LeftSide">
+                                </div>
+                                <div class="col-12 col-lg-4 col-sm px-2" id="CIL_RightSide">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/main.js');</script>
+<script>
+    let IsEdit = 1;
+    $(document).ready(function () {
+        CIL_LoadData();
+    });
+    function CIL_LoadData(){
+        AjaxLoad(url = "/Setting/CustomerInfoLayout/?handler=LoadData"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if(result != ""){
+                    let datas = JSON.parse(result);
+                    CIL_RenderData(datas.Table, 'CIL_LeftSide', 'CIL_RightSide');
+                    CIL_RenderChildData(datas.Table1, 'CIL_ChildSide');
+                }
+            }
+        );
+    }
+    function CIL_RenderData(data, leftID, rigthID) {
+        if(data && data.length != 0){
+            let MyNodeLeft = document.getElementById(leftID);
+            let MyNodeRight = document.getElementById(rigthID);
+            let stringLeft = '';
+            let stringRight = '';
+            for(let i=0 ; i< data.length ; i++){
+                let item = data[i];
+                let Namelayout = author_get("UserLang") == 'en' ? Outlang[item.NameLangKey] : item.Name;
+                let str = `
+                    <div class="col-12 my-3 ${item.IsDisabled == 1 ? 'opacity-5' : ''} ${IsEdit == 1 && item.IsDisabled == 1 ? 'd-none' : ''}" id="${item.AreaID}">
+                        <div class="card">
+                            <div class="card-body p-3 d-flex h-100 mb-2">
+                                <span class="text-dark text-sm fw-bold text-nowrap mb-4">${Namelayout}</span>
+                                <button class="btn shadow-none p-0 ms-auto ${IsEdit == 1 ? 'd-none' : ''}">
+                                    <i class="CIL_Excute vtt-icon ${item.IsDisabled == 0 ? 'vttech-icon-nohide text-dark' : 'vttech-icon-hide'} ms-auto" data-id="${item.ID}"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if(item.ID < 5) stringLeft += str;
+                else stringRight += str;
+            }
+            MyNodeLeft.innerHTML = stringLeft;
+            MyNodeRight.innerHTML = stringRight;
+            CIL_ExcuteData();
+        }
+    }
+    function CIL_RenderChildData (data, id) {
+        if (data && data.length != 0) {
+            let MyNode = document.getElementById(id);
+            let stringcontent = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let Namelayout = author_get("UserLang") == 'en' ? Outlang[item.NameLangKey] : item.Name;
+                let str =
+                    `<div class="form-check form-switch ms-0 ps-0">
+                        <input data-id="${item.ID}" class="CIL_Excutechild form-check-input ms-0" type="checkbox" ${IsEdit == 1 ? `disabled` : ``} ${item.Value == 1 ?`checked`:``}>
+                            <label class="form-check-label text-dark ps-2 w-80 mb-0">${Namelayout}</label>
+                    </div>`
+                 ;
+                stringcontent += str;
+            }
+            MyNode.innerHTML = stringcontent;
+            CIL_ExcuteChildData();
+        }
+    }
+
+
+
+    async function CIL_ExcuteData(){
+        new Promise((resolve, reject) => {
+            $(".CIL_Excute").unbind('click').click(function () {
+                $('.CIL_Excute').attr('disabled', true);
+                let ID = $(this).attr('data-id');
+                AjaxLoad(url = "/Setting/CustomerInfoLayout/?handler=ExcuteData"
+                    , data = {currentID : ID}
+                    , async = true, error = null
+                    , success = function (result){
+                        if(result == "1"){
+                            notiSuccess();
+                            IsEdit = 1;
+                            CIL_EditLayout();
+                        }
+                        else notiError_SW();
+                    }
+                    , before = $(".CIL_Excute")
+                    , complete = function () { $('.CIL_Excute').attr('disabled', false); }
+                );
+            });
+        })
+    }
+    async function CIL_ExcuteChildData () {
+        new Promise((resolve, reject) => {
+            $(".CIL_Excutechild").unbind('change').change(function () {
+                if (IsEdit == 0) {
+                    $('.CIL_Excutechild').attr('disabled', true);
+                    let ID = $(this).attr('data-id');
+                    AjaxLoad(url = "/Setting/CustomerInfoLayout/?handler=ExcuteDataChild"
+                        , data =
+                        {
+                            currentID: ID
+                            , value: this.checked?1:0
+                        }
+                        , async = true, error = null
+                        , success = function (result) {
+                            if (result == "1") {
+                                notiSuccess();
+                                IsEdit = 1;
+                                CIL_EditLayout();
+                            }
+                            else notiError_SW();
+                        }
+                        , before = $(".CIL_Excutechild")
+                        , complete = function () { $('.CIL_Excutechild').attr('disabled', false); }
+                    );
+                }
+
+            });
+        })
+    }
+    function CIL_EditLayout () {
+        if(IsEdit == 1){
+            $('#CIL_EditLayout').text(decodeHtml("@Local["Đóng"]"));
+            CIL_LoadData();
+            $(".CIL_Excutechild").prop("disabled", false);
+            IsEdit = 0;
+        }
+        else{
+            $('#CIL_EditLayout').text(decodeHtml("@Local["Chỉnh sửa"]"));
+            IsEdit = 1;
+            $(".CIL_Excutechild").prop("disabled", true);
+            CIL_LoadData();
+        }
+    }
+</script>

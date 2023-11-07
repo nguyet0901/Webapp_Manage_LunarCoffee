@@ -1,0 +1,94 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Target.TargetTypeDetail.TargetTypeDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="card-header pb-0 pt-3">
+                    <div class="d-lg-flex">
+                        <div class="w-lg-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 text-capitalize">@Local["Nhóm tiêu chí"]</h6>
+                                <p class="text-sm mb-0">
+                                    @Local["Chi tiết"]
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="p-3 pt-0">
+                        <div class="row form3" id="formTargetType">
+                            <div class="field col-6 p-1">
+                                <label>@Local["Tên"]</label>
+                                <input id="TargetTypeName" name="name" type="text" class="form-control" />
+                            </div>
+                            <div class="field col-6 p-1">
+                                <label>@Local["Mã"]</label>
+                                <input id="TargetTypeCode" name="code" type="text" class="form-control" />
+                            </div>
+                            <div class="field col-12 p-1">
+                                <label>@Local["Ghi chú"]</label>
+                                <input id="TargetTypeNote" type="text" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton d-flex align-items-center">
+            <div class="text-danger text-gadient text-sm font-weight-bold pe-2" id="textShowMessage">
+            </div>
+            <div class="action_Save-Content mt-2">
+                <button class="btn btn-secondary" onclick=" event.preventDefault(); return TargetType_CloseDetail()">@Local["Hủy"]</button>
+                <button id="TargetTypebtnDetail" type="button" class="btn bg-gradient-primary _tab_control_" onclick="event.preventDefault();TargetType_ExcuteDetail()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var ser_SourceDetailID;
+    $(document).ready(function() {
+        ser_SourceDetailID = '@Model._DataDetailID';
+        if (ser_SourceDetailID != "0") TargetType_LoadDataUpdate();
+    });
+    function TargetType_LoadDataUpdate() {
+        AjaxLoad(url = "/Student/Settings/Target/TargetTypeDetail?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, asyns = true, error = null
+            , success = function(result) {
+                Data = JSON.parse(result);
+                TargetType_FillDataDetail(Data[0]);
+            }
+        )
+    }
+    function TargetType_FillDataDetail(item) {
+        $('#TargetTypeName').val((item.Name));
+        $('#TargetTypeCode').val((item.Code));
+        $('#TargetTypeNote').val((item.Note));
+    }
+    function TargetType_ExcuteDetail() {
+        var data = new Object();
+        data.Name = $('#TargetTypeName').val() ? $('#TargetTypeName').val() : "";
+        data.Code = $('#TargetTypeCode').val() ? $('#TargetTypeCode').val() : "";
+        data.Note = $('#TargetTypeNote').val() ? $('#TargetTypeNote').val() : "";
+        $('#formTargetType').form('validate form');
+        if ($('#formTargetType').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/Target/TargetTypeDetail?handler=ExcuteData"
+                , data = { data: JSON.stringify(data), CurrentID: ser_SourceDetailID }, async = true, error = null
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        TargetType_LoadList();
+                        TargetType_CloseDetail();
+                    } else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Trùng dữ liệu"]!';
+                    }
+                });
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

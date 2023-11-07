@@ -1,0 +1,1173 @@
+﻿
+<!DOCTYPE html>
+<html lang="en" class="scrollbar-gutter-y">
+<head runat="server">
+    <script>
+        const VDTIME = '@ViewData["TIME"]'.toLowerCase();
+        const VDNAME = '@ViewData["NAME"]'.toLowerCase();
+        const VDVERSION = '@ViewData["VERSION"]'.toLowerCase();
+        const VDCODE = '@ViewData["CODE"]';
+        const _LINK_SOURCE = "";
+
+
+        const session_base = "BaseData";
+        const session_setting = "BaseSetting";
+        const indexedDBVer = 10; //Version is number table
+    </script>
+    <title>VTTech Solution</title>
+    <link rel="shortcut icon" href="/assests/img/logo/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="/assests/img/logo/favicon.ico">
+    <link href="/css/master1.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/css/responsive.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/css/sunmoon.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/css/root_element_color.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/css/root_element_grid.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="/assets/css/nucleo-svg.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assests/dist/FontAwesome/css/all.min.css">
+    <link href="/assets/css/nucleo-svg.css" rel="stylesheet" />
+    <script src="/assests/js/RSVP/rsvp.min.js" type="text/javascript"></script>
+    <script src="/assests/library/jquery-2.1.4.min.js" type="text/javascript"></script>
+
+    <script src="/assests/js/ajax.min.js?ver=@ViewData["VERSION"]" type="text/javascript"></script>
+    <script src="/js/Preload/basket.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/assests/icon/dist/css/font.css" />
+
+    <script src="/js/Preload/preload.js?ver=@ViewData["TIME"]" type="text/javascript"></script>
+    <script src="/assests/dist/SemanticUI/form.min.js"></script>
+    <script src="/js/MasterSettingLocal.js?ver=@ViewData["TIME"]" type="text/javascript"></script>
+    <script>
+        js_require_notasync('/js/comon/showmore.js', true);
+        js_require_notasync('/assests/dist/SemanticUI/dropdown.min.js');
+        js_require_notasync('/assests/dist/SemanticUI/popup.min.js');
+        js_require_notasync('/assests/dist/SemanticUI/transition.min.js');
+        js_require_notasync('/assets/js/soft-ui-dashboard.js');
+        const Outlang = Master_Load_Lan();
+        function Master_Load_Lan () {
+            let _lan = author_get("UserLang");
+            try {
+                switch (_lan) {
+                    case 'vi':
+                        js_require_notasync('/Language/OutResource.vi.js', true);
+                        break;
+                    case 'en':
+                        js_require_notasync('/Language/OutResource.en.js', true);
+                        break;
+                    default: break;
+                }
+                if (typeof DataOutlang !== 'object') return {};
+                return DataOutlang.reduce((pre, arr) => {
+                    if (arr.Key) pre[arr.Key] = arr.Value;
+                    return pre;
+                }, {})
+            }
+            catch (e) {
+                return {};
+            }
+        }
+        function Logo_OnLoad_Success_Image (img) {
+            try {
+                let wi = img.width;
+                let he = img.height;
+                if (wi >= he) {
+                    img.style.maxHeight = "45px";
+                }
+                else img.style.maxWidth = "90px";
+            }
+            catch (ex) {
+
+            }
+        }
+    </script>
+    <script>css_require('/css/main.custom.css')</script>
+    <link href="/assests/dist/plugins/pacejs/pace.css" rel="stylesheet" />
+    <script>css_require("/css/button.css")</script>
+    <link href="/assests/dist/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assests/dist/flatpickr/flatpickr.min.css" />
+    <link href="/assests/dist/MultiColumnCombo/jquery.inputpicker.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assests/dist/UploadJS/css/jquery.fileupload.css" />
+    <link rel="stylesheet" href="/assests/dist/UploadJS/css/jquery.fileupload-ui.css" />
+    <link href="/assests/dist/Guide/enjoyhint.css" rel="stylesheet" />
+    <link href="/assests/dist/Phone/css/intlTelInput.css" rel="stylesheet" />
+    <link href="/assets/css/soft-ui-dashboard.css?ver=@ViewData["TIME"]" rel="stylesheet" />
+    <script>css_require("/assests/Error/css/style.css")</script>
+    <script>css_require("/css/scrollbar.css")</script>
+    <script>css_require('/assests/dist/ColorPicker/spectrum.css');</script>
+</head>
+<body class="g-sidenav-show" id="BodyMain" style="display:none;">
+    <aside class="bg-gray-100 sidenav navbar navbar-vertical navbar-expand-xs fixed-start  pe-2 ps--active-y" id="sidenav-main">
+        <div class="sidenav-header nav-item mobile-sticky ms-1 stickyheader" style="height: 56px; z-index: 1030; ">
+            <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-xl-none sidenav-toggler" aria-hidden="true" id="iconSidenav"></i>
+            <a data-bs-toggle="collapse" class="ps-0 nav-link collapsed text-nowrap pb-0" role="button">
+                <img id="SoftwareLogo" src="/default.png" onload="Logo_OnLoad_Success_Image(this)" onerror="Master_OnLoad_Error_Image(this)" class="" style="margin-left: 0.7rem; border-radius: 15px; ">
+                <h6 id="SoftwareClientName" class="ms-2 text-primary font-weight-bolder d-inline-block mb-0 sidenav-normal">VTTECH V2</h6>
+            </a>
+        </div>
+        <hr class="horizontal dark mt-1 mb-0">
+        <div class="collapse navbar-collapse  w-auto h-auto h-100 " id="sidenav-collapse-main">
+            <ul data-menu="menu" id="menuDesktopCategory" class="ps-1 mt-1 navbar-nav">
+            </ul>
+        </div>
+    </aside>
+    <main class="main-content border-radius-lg ">
+        <nav class="navbar navbar-main navbar-expand-lg px-0 bg-gray-100 z-index-sticky shadow-none">
+            <div id="TTmenu_Area" style="display:none;" class="container-fluid my-0 px-3">
+                <button class="navbar-toggler shadow-none ms-n2" type="button" data-bs-toggle="collapse" data-bs-target="#TTnavigation" aria-controls="TTnavigation" aria-expanded="false">
+                    <span class="navbar-toggler-icon mt-2">
+                        <span class="navbar-toggler-bar bar1"></span>
+                        <span class="navbar-toggler-bar bar2"></span>
+                        <span class="navbar-toggler-bar bar3"></span>
+                    </span>
+                </button>
+
+                <div class="collapse collapsesticky navbar-collapse w-100 pt-3 pb-2 py-lg-0  d-none" id="TTnavigation">
+                    <ul id="TTmenu_Top" class="navbar-nav navbar-nav-hover mx-auto p-2">
+                    </ul>
+                </div>
+                <div id="navbarBlurtop" style="display: none;" class="navbarBlur ">
+                </div>
+
+            </div>
+            <div id="navbarBlur" style="min-height: 42px; display: none;" class="navbarBlur mx-3 w-100">
+            </div>
+        </nav>
+        <div id="MessPageDiv" style="display: none;">
+            <div class="notiBody">
+                <div class="notiContent" style="border-top: 2px solid rgb(54, 156, 199); background-color: rgb(232, 240, 244);">
+                    <span id="MessPageName" class="textNotiHeader"></span>
+                    <span id="MessRecipientName" class="textNotiName"></span>
+                    <div id="MessageNoti" class="notiMessage"></div>
+
+                </div>
+            </div>
+        </div>
+        <div id="AppNotiDiv" style="display: none;" onclick="AcceptAppNoti()">
+            <div class="notiBody">
+                <div class="notiContent" style="border-top: 2px solid rgb(23, 199, 61); background-color: rgb(199, 249, 219);">
+                    <div style="width: 100%;">
+                        <span id="AppPageName" class="textNotiHeader"></span>
+                        <span id="AppPageBranch" style="float: right; margin: 0px 0px 5px; padding: 0px; font-weight: bold; color: rgb(129, 150, 158);"></span>
+                    </div>
+                    <span id="AppRecipientName" class="textNotiName"></span>
+                    <div id="AppageNoti" class="notiMessage"></div>
+
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="DetailModal" data-bs-backdrop="static" data-bs-focus="false" style="display:none;">
+            <div class="modal-dialog modal-xl bg-gray-100">
+                <div id="DetailModal_Content" class="modal-content bg-gray-100">
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="DetailModalSign" data-bs-backdrop="static" data-bs-focus="false" style="display:none;">
+            <div class="modal-dialog modal-fullscreen modal-md-lg">
+                <div id="DetailModalSign_Content" class="modal-content">
+                </div>
+            </div>
+        </div>
+        <div id="tablePrintForAll" style="display: none"></div>
+        <div id="pdfEditor"></div>
+        <div id="DetailModalPopup" style="display: none"></div>
+        <div id="DetailModalTodoChangeStatus" style="display: none"></div>
+        <div id="DetailModalLaboChangeStatus" style="display: none"></div>
+        <div id="MainRenderBody" class="py-0 container-fluid p-3">
+            @Html.AntiForgeryToken()
+            @RenderBody()
+        </div>
+        <div id="MainRenderBody_Manual" class="pusher mx-3 border-radius-lg px-0 ">
+        </div>
+        <div id="MainSendMail" class="position-fixed bottom-0 start-0 container-fluid p-0 ">
+            <div id="MainSendMail_Content" class="bg-gray-100 shadow-lg rounded-3 h-100 overflow-y">
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed-plugin">
+        <div class="card shadow-lg blur mw-100" style="overflow-x:hidden;overflow-y:auto;">
+            <div class="card-header pb-0 pt-3  bg-transparent ">
+                <div class="float-start">
+                    <h6 id="Master_nameClient" class="mt-1 mb-n1 fw-bold text-xs mb-0 text-primary"></h6>
+                    <p class="text-sm d-inline fst-italic text-xs">ver.</p>
+                    <p class="text-sm d-inline fst-italic text-xs" id="versionWebApplication"></p>
+                </div>
+                <div class="float-end mt-2">
+                    <button class="btn btn-link p-0 fixed-plugin-close-button fs-5 mt-n2 mb-0">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body pt-sm-2 pt-0">
+                <hr class="horizontal dark my-1">
+                <div style=" margin-left: 4px;" class="d-flex mb-2 justify-content-start align-items-center mt-2" onclick="event.preventDefault();return CheckVoiceDevice_Click()">
+                    <i style="margin-right: 2px;" class="image_signal fas fa-microphone fs-6 pe-3 text-dark"></i>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">Voice device</h1>
+                        <p id="StatusOfVoiceDevice" class="text-xs pb-0 mb-0">Checking voice device</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-2 justify-content-start align-items-center mt-2" onclick="event.preventDefault();return CheckConnection_Click()">
+                    <i class="image_signal fas fa-link fs-6 pe-3 text-dark"></i>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">Network</h1>
+                        <p id="StatusOfNetwork" class="text-xs pb-0 mb-0">Internet speed test</p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-2 justify-content-start align-items-center mt-2" onclick="event.preventDefault();return CheckCallCenter_Click()">
+                    <i class="image_signal fas fa-headphones fs-6 pe-3 text-dark"></i>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">Call center</h1>
+                        <p id="StatusOfLineCenter" class="text-xs pb-0 mb-0">Checking connect call center</p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-2 justify-content-start align-items-center mt-2">
+                    <i class="image_signal fas fa-sms fs-6 pe-3 text-dark"></i>
+                    <div class="setting d-flex flex-column">
+                        <h1 id="ZSMSType" class="mb-0 text-dark text-sm fw-bold">SMS-ZNS</h1>
+                        <p id="StatusOfSMS" class="text-xs pb-0 mb-0">No connect</p>
+                    </div>
+                </div>
+                <div id="fieldEInvoice" class="d-flex mb-2 justify-content-start align-items-center mt-2">
+                    <div class="pe-3 " style="margin-right: 2px;">
+                        <i id="IconEInvoice" class="image_signal fas fa-file-medical-alt fs-6 text-dark"></i>
+                    </div>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">E-Invoice</h1>
+                        <p id="NameOfInvoice" class="text-xs pb-0 mb-0">No connect</p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-2 justify-content-start align-items-center mt-2">
+                    <i class="image_signal fas fa-at fs-6 pe-3 text-dark"></i>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">Mail</h1>
+                        <p id="StatusOfMail" class="text-xs pb-0 mb-0">No mail</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-2 justify-content-start align-items-center mt-2" id="div_Refresh_Preload" onclick="event.preventDefault();return Hard_Reload()">
+                    <div class="pe-3 ">
+                        <i id="IconHardReload" class="image_signal fas fa-redo-alt fs-6 text-dark"></i>
+                    </div>
+                    <div class="setting d-flex flex-column">
+                        <h1 class="mb-0 text-dark text-sm fw-bold">Reload</h1>
+                        <p class="text-xs pb-0 mb-0">Executing hard reload</p>
+                    </div>
+                </div>
+                <a id="btnChangeBranch" style="display: none;" class="btn bg-primary text-white w-100 my-1" onclick="Master_ChangeBranchMulti();"></a>
+
+                <hr class="horizontal dark my-sm-2 mt-sm-3">
+                <div class="mt-2">
+                    <h6 class="mb-0 text-sm">@Local["Mã màu"]</h6>
+                    <div class="d-flex mt-2">
+                        <a href="#" class="switch-trigger background-color">
+                            <div id="Master_Bagde_Color" class="badge-colors text-start">
+                                <span class="badge filter bg-gradient-primary active" data-color="primary" onclick="sidebarColor(this)"></span>
+                                <span class="badge filter bg-gradient-dark" data-color="dark" onclick="sidebarColor(this)"></span>
+                                <span class="badge filter bg-gradient-info" data-color="info" onclick="sidebarColor(this)"></span>
+                                <span class="badge filter bg-gradient-success" data-color="success" onclick="sidebarColor(this)"></span>
+                                <span class="badge filter bg-gradient-warning" data-color="warning" onclick="sidebarColor(this)"></span>
+                                <span class="badge filter bg-gradient-danger" data-color="danger" onclick="sidebarColor(this)"></span>
+                            </div>
+                        </a>
+                        <div id="dark-versionarea" class="form-check form-switch ms-auto p-0 my-auto mt-0 position-relative ">
+                            <i class="night fas fa-cloud-moon"></i>
+                            <i class="morning fas fa-sun"></i>
+                            <input class="form-check-input ms-auto" type="checkbox" id="dark-version">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="mb-0 text-sm">Sidenav Type</h6>
+                    <div class="d-flex">
+                        <div class="form-group">
+                            <div class="input-group d-flex mt-2" id="Master_Bagde_Navtype">
+                                <button class="btn bg-gradient-primary settype mb-0" data-type="normal" data-class="bg-transparent" style=" padding: 5px 15px !important;">trans</button>
+                                <button class="btn bg-gradient-primary text-white settype mb-0 active" data-type="color" data-class="bg-white" style=" padding: 5px 15px !important;">white</button>
+                            </div>
+                        </div>
+                        <div class="form-group ps-2 ">
+                            <div class="input-group d-flex mt-2" id="Master_Bagde_Position">
+                                <button class="btn bg-gradient-primary settype mb-0" data-class="bg-transparent" data-type="left" style=" padding: 5px 15px !important;">left</button>
+                                <button class="btn bg-gradient-primary settype mb-0" data-class="bg-transparent" data-type="top" style=" padding: 5px 15px !important;">top</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <hr class="horizontal dark my-sm-2">
+
+                <div class="mt-3 d-flex justify-content-start">
+                    <div class="my-0">
+                        <div class="p-2 border rounded-3" id="Master_qrcode"></div>
+                        <a href="https://vttechsolution.com" target="_blank" class="mt-2 d-flex justify-content-center fw-bolder text-sm text-primary">© VTTECH</a>
+                    </div>
+
+                    <div class="ps-2 mt-2">
+                        <div class="ps-1 fw-bold d-flex text-sm">
+                            <h6 class="text-dark text-sm ps-1 pe-2">@Local["Liên hệ"]</h6> <a href="tel:19006627" class="">1900 6627</a>
+                        </div>
+
+
+                        <div class="d-flex">
+                            <a href="https://zalo.me/2093355405338256825" class="d-flex mb-1 align-items-center btn btn-dark mx-1" target="_blank">
+                                zalo
+                            </a>
+                            <a href="https://m.me/vttechsolution.com" class="d-flex mb-1 align-items-center btn btn-dark mx-1" target="_blank">
+                                <i class="fab fa-facebook-messenger me-2"></i> mess
+                            </a>
+                           
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="mt-3 d-flex justify-content-start">
+                    <div id="MS_QRotherarea" class="my-0 position-relative">
+                        <div class="expired bg-white rounded-3 position-absolute top-50 z-index-2 start-50 translate-middle">
+                            <img onclick="Master_ScanQRInfo()" class="p-1 avatar avatar-xs " src="/Image/dinosaur.png" />
+                        </div>
+                        <div onclick="Master_ScanQRInfo()" class="cursor-pointer p-2 border rounded-3 opacity-2" id="Master_qrsourcecode"></div>
+                    </div>
+                    <div class="ps-2 mt-2">
+                        <div class="ps-1 text-sm">
+                            <h6 class="text-dark text-sm mb-0">@Local["Cấu hình QR"]</h6>
+                            <p class="text-xs text-nowrap mb-1">@Local["Đăng nhập vào các thiết bị khác"]</p>
+                            <p class="text-xs text-nowrap ">@Local["Hết hạn"]<span class="text-primary ps-2" id="Master_QRTime"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="position-fixed bottom-1 end-1 z-index-2" id="MS_Notification"></div>
+    <div class="position-fixed top-0 start-50 translate-middle-x z-index-sticky" id="MS_NotificationTop">
+        <div id="CallCenter_Area" class="card shadow-lg blur fade show p-2 mt-2 bg-gradient-dark d-none" role="alert" aria-live="assertive" aria-atomic="true">
+            <audio id="audio_callcenter" autoplay="autoplay" loop></audio>
+            <div class="toast-body text-white p-2">
+                <div class="d-flex align-items-center">
+                    <div class="icon icon-shape icon-sm me-3 shadow text-center">
+                        <img id="CallCenter_Avatar" alt="avatar" src="/assests/img/gray.png"
+                             class="call-animation avatar avatar-sm" />
+                    </div>
+                    <div class="d-flex flex-column">
+                        <div class="d-flex align-items-center mb-1">
+                            <span id="CallCenter_Header" class="ffst-italic text-info text-xs pe-2"></span>
+                            <span id="CallCenter_Phone" class="text-sm fw-bold text-white mb-0 _tab_control_" data-tab="phone_customer" data-tab-change="1"></span>
+                        </div>
+
+                        <h6 id="CallCenter_Name" class="mb-1 text-sm text-white"></h6>
+                    </div>
+                </div>
+                <div class="mx-1 mt-3" id="CallCenter_MultiPhone">
+                </div>
+                <div class="d-flex mt-4" id="CallCenter_HangDiv">
+                    <div class="text-center">
+                        <button class="btn bg-gradient-light btn-sm my-0"
+                                onclick="event.preventDefault();return CCF_Incom_Decline()">
+                            Decline
+                        </button>
+                    </div>
+                    <div class="d-flex flex-column ms-auto">
+                        <button class="btn bg-gradient-success btn-sm my-0"
+                                onclick="event.preventDefault();return CCF_Incom_Accept();">
+                            Accept
+                        </button>
+                    </div>
+                </div>
+
+                <div id="CallCenter_ProgressingArea" class="mt-2 d-none">
+                    <div>
+                        <hr class="horizontal light m-0 my-3">
+                        <div class="d-flex">
+                            <div class="text-center">
+                                <div id="CallCenter_ProgressingTime"></div>
+                            </div>
+                            <div class="d-flex ms-auto">
+
+                                <div id="CallCenter_ProgressingMute" class=" cursor-pointer  icon-shape icon-xs shadow border-radius-lg blur text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-microphone text-dark  text-md "></i>
+                                </div>
+                                <div id="CallCenter_ProgressingUnMute" class="cursor-pointer  icon icon-shape icon-xs shadow border-radius-lg bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center d-none">
+                                    <i class="text-white fas fa-microphone-slash text-md"></i>
+                                </div>
+
+                                <span id="CallCenter_ProgressingEndCall" class="cursor-pointer badge bg-gradient-danger">End call</span>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- #region // TOAST EXPORT EXCEL -->
+
+    <div class="position-fixed top-10 end-0 p-3 z-index-sticky">
+        <div id="liveToastExport" class="toast hide bg-gradient-primary text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <div id="liveToastExport_Icon"></div>
+                <strong id="liveToastExport_Title" class="me-auto ms-2">Export Data</strong>
+            </div>
+            <div id="liveToastExport_Body" class="toast-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- #endregion -->
+    <!-- #region // Table Filter -->
+    <div id="BodyMainOther"></div>
+    <!-- #endregion -->
+    <div class="card position-fixed rounded-2 row shadow-xl w-90 w-lg-30 w-md-40 pt-3" data-scroll="true" id="Master_ViewContent" style="z-index:10000;display: none;">
+        <div class="card-body p-3 mb-4 overflow-auto max-height-vh-60">
+            <div class="text-sm text-dark white-space-pre-line" id="Master_Content"></div>
+        </div>
+        <div class="action_save">
+            <div class="row">
+                <div class="col-auto px-1 ms-auto">
+                    <button type="button" class="btn btn-secondary" onclick="return Master_ClosePopupContent()">@Local["Đóng"]</button>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn bg-gradient-primary" id="Master_ShowAll" onclick="return Master_ToggleShowContent()">@Local["Hiển thị tất cả"]</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row d-flex d-none" id="notiMessToUser">
+    </div>
+
+    <script>
+        document.addEventListener('visibilitychange', function (event) {
+            if (!document.hidden) {
+                //function check current user
+                Master_checkUserCurrentTab();
+            }
+        });
+
+        var Master_Data = JSON.parse(localstorage_get(session_base)).data;
+
+        //#region // Permission
+        var sys_PerControl = JSON.parse(Master_Data.sys_PermissionControl);
+        var sys_PerControlMH = JSON.parse(Master_Data.sys_PermisstionControlMustHide);
+        sys_PerControl = sys_PerControl != null ? sys_PerControl : [];
+        sys_PerControlMH = sys_PerControlMH != null ? sys_PerControlMH : [];
+        var sys_isMobile = 0 // Check device Is Mobile
+        var sys_isIpad = 0 // Check device Is Mobile
+
+        //#endregion
+
+        // #region // Variable
+
+        var sys_CustomerTab = JSON.parse(Master_Data.sys_CustomerTab);
+
+        var versionofWebApplication;
+        var Incommingaudio = new Audio('/assests/img/Call/incommingCall.mp3');
+        var Messagegaudio = new Audio('/assests/img/Call/message.mp3');
+        var vtth_range_min = 0.000001;
+        var vtth_range_max = 10000000;
+        var Master_Default_Pic = '/default.png';
+        var Master_Default_Image = Master_Data._defaultImage;
+        var CCOutsite_Line = '';
+        var CCOutsite_Link = '';
+        var Master_nameClient = Master_Data._nameClient;
+        var defaultColor = '@ViewData["PrimaryColor"]';
+        var MenuDefaultType = "normal";
+        var Master_DBName = '@ViewData["SessionData"]';
+        var Master_TableName = ['@ViewData["Session_Branch"]'
+            , '@ViewData["Session_Teeth"]'
+            , '@ViewData["Session_Service"]'
+            , '@ViewData["Session_ServiceCare"]'
+            , '@ViewData["Session_Employee"]'
+            , '@ViewData["Session_User"]'
+            , '@ViewData["Session_City"]'
+            , '@ViewData["Session_District"]'
+            , '@ViewData["Session_National"]'
+            , '@ViewData["Session_Commune"]'
+        ];
+
+        //#region // TELE
+        var Master_PermissionTele = '@ViewData["PermissionTele"]';
+
+        //#endregion
+
+        var _CompanyWebsite
+            , _CompanyName
+            , _SoftwareSmallLogo
+            , _SoftwareLogo;
+        var sys_HTTPImageRoot = Master_Data.sys_HTTPImageRoot;
+        var Master_branchNameCurrent
+            , Master_branchID
+            , Master_roleGroupCurrent
+            , Master_LayoutCustomer
+            , Master_LayoutChildCustomer
+            , Master_roleID
+            , Master_areaBranch
+            , Master_isAllBranch
+            , Master_circleAvatar
+            , Master_userPopupMenu;
+
+        var sys_employeeID_Main
+            , sys_dencos_Main
+            , sys_userID_Main
+            , sys_userName_Main;
+        var sys_TeleLevel = '0', sys_TeleGroup = '0';
+        let usingCallCenter
+            , checkingCallCenter
+            , callextension
+            , linkClickToCall
+            , calloutbound
+            , calllogintimeexpired
+            , callport
+            , calldomain
+            , calldomainApi
+            , callApi_Key
+            , callpassword
+            , PortClient;
+
+        var _GuideForCurrentPage
+
+            , PermissionTable_TabControl
+            , RequireValidation;
+        var  Master_heartbeat = Master_Data._sys_heartbeat;
+        var _Session_CusLayoutName = Master_Data._Session_Preload_CustomerLayout;
+        var _Session_Data = Master_Data._Session_Data;
+        var _Session_Branch = Master_Data._Session_Branch;
+        var _Session_Teeth = Master_Data._Session_Teeth;
+        var _Session_Service = Master_Data._Session_Service;
+        var _Session_ServiceCare = Master_Data._Session_ServiceCare;
+        var _Session_Employee = Master_Data._Session_Employee;
+        var _Session_User = Master_Data._Session_User;
+        var _Session_City = Master_Data._Session_City;
+        var _Session_District = Master_Data._Session_District;
+        var _Session_National = Master_Data._Session_National;
+        var _Session_Commune = Master_Data._Session_Commune;
+        var _setting_AppointmentDoctor = Master_Data._setting_AppointmentDoctor;
+        var _dtConnectCall = Master_Data._dtConnectCall;
+        var PermissionTableMenu;
+        var SMSBrandName, MAILBrandName;
+        var _syn_sys_Zuser;
+        let Master_HasDasboard;
+        var MS_UrlRoot = '';
+        var MS_UrlChild = '';
+        var sys_Custimgblod = 0, sys_Custimgblockshare = 0, sys_Custimgwatermark = "";
+        var sys_UsingbranchAddress = 0;
+        var sys_Allowsearchticket = 0;
+
+        // #endregion
+
+        //#region // Syntax code
+        var syntax_scmcn = Master_Data.syntax_scmcn;
+        var syntax_scmcn_doc = Master_Data.syntax_scmcn_doc;
+        var syntax_sn = Master_Data.syntax_sn;
+        var syntax_ss = Master_Data.syntax_ss;
+        var syntax_customercode = Master_Data.syntax_customercode;
+        var syntax_documentcode = Master_Data.syntax_documentcode;
+        //#endregion
+
+        //#region // Third Party
+
+        //#region // Invoice
+        var syn_Einvoicebrand = Master_Data.sys_EinvoiceBrand;
+        var syn_Einvoicetype = Master_Data.sys_EinvoiceType;
+        //#endregion
+
+        //#region // Account
+        var syn_Accountbrand = Master_Data?.sys_AccountBrand;
+        var syn_AccountType = Master_Data?.sys_AccountType;
+        //#endregion
+
+        //#endregion
+
+        //#region // Minify
+        var sys_Minify = Master_Data.sys_Minify;
+        //#endregion
+
+        var sys_PositionPopup = {};
+
+        //#region // Load JS , Customer Layout
+        //const Outlang = Master_Load_Lan();
+        Master_Load_JS();
+        Master_Asign_Value_Initiliaze();
+        Master_ReadContentCollapse();
+
+
+        $(document).ready(function () {
+            $("#BodyMain").fadeIn(200);
+            $(".navbarBlur").fadeIn(200);
+            MSV_Initiliaze();
+            Master_LoginFrom();
+            Master_Load_Value_Initiliaze();
+            Master_HandleMenu();
+            Master_Checking_CallCenter();
+            var QR_CODE = new QRCode("Master_qrcode", {
+                width: 70,
+                height: 70,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H,
+            });
+            QR_CODE.makeCode("https://vttechsolution.com");
+            Master_getQRSourceCode();
+            MS_RefernceIP();
+        });
+
+        function Master_getQRSourceCode() {
+            $('#Master_qrsourcecode').html('');
+            var QR_SOURCECODE = new QRCode("Master_qrsourcecode", {
+                width: 70,
+                height: 70,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H,
+            });
+            if (checkCookie('QRMLunarCoffee')) {
+                let Cookie = JSON.parse(getCookie('QRMLunarCoffee'));
+                let urlLogin = Cookie.urlLogin;
+                let timeExpired = Cookie.timeExpired;
+                $('#Master_QRTime').html(ConvertTimeSpanUTC_Time(timeExpired))
+                QR_SOURCECODE.makeCode(urlLogin);
+                $('#MS_QRotherarea').addClass('valid');
+            }
+            else {
+                $('#MS_QRotherarea').removeClass('valid');
+                $('#Master_QRTime').html('')
+                QR_SOURCECODE.makeCode('@Local["Hết hạn"]');
+            }
+
+        }
+
+        function Master_Asign_Value_Initiliaze() {
+            versionofWebApplication = Master_Data._versionofWebApplication;
+
+            Master_HasDasboard = Master_Data._isHasDashboard;
+            _GuideForCurrentPage = '[]';
+            PermissionTable_TabControl = JSON.parse(Master_Data.PermissionTable_TabControl).reduce((pre, arr) => { pre[(arr.Name).trim()] = arr; return pre; }, {});
+            Master_branchNameCurrent = Master_Data._branchNameCurrent;
+            Master_branchID = Master_Data._branchIDCurrent;
+            Master_roleGroupCurrent = Master_Data._roleGroupCurrent;
+            Master_LayoutCustomer = Master_Data._LayoutCustomer;
+            Master_LayoutChildCustomer = Master_Data._LayoutChildCustomer;
+            Master_roleID = Master_Data._roleIDCurrent;
+            Master_areaBranch = Master_Data._areaBranch;
+            Master_isAllBranch = Master_Data._isAllBranch;
+            Master_circleAvatar = Master_Data._circleAvatar;
+            sys_employeeID_Main = Master_Data._employeeID_Main;
+            sys_dencos_Main = Master_Data._dencos_Main;
+
+            sys_employeeName_Main = Master_Data._employeeName_Main;
+            sys_TeleLevel = Master_Data.sys_TeleLevel;
+            sys_TeleGroup = Master_Data.sys_TeleGroup;
+            sys_userID_Main = Master_Data._userID_Main;
+            sys_userName_Main = Master_Data._userNameCurrent;
+            Master_userPopupMenu = JSON.parse(Master_Data._userPopupMenu);
+            PermissionTableMenu = JSON.parse(Master_Data.PermissionTable_Menu);
+            SMSBrandName = Master_Data._SMSBrandName;
+            _syn_sys_Zuser = Master_Data._sys_Zuser;
+            MAILBrandName = Master_Data._MailBrand;
+            _CompanyWebsite = Master_Data._CompanyWebsite;
+            _CompanyName = Master_Data._CompanyName;
+            _SoftwareSmallLogo = Master_Data._SoftwareSmallLogo != "" ? Master_Data._SoftwareSmallLogo : Master_Default_Pic;
+            _SoftwareLogo = Master_Data._SoftwareLogo != "" ? Master_Data._SoftwareLogo : Master_Default_Pic;
+            usingCallCenter = Master_Data._usingCallCenter;
+            checkingCallCenter = Master_Data._checkingCallCenter;
+            callextension = Master_Data._callextension;
+            linkClickToCall = Master_Data._LinkClickToCall;
+            calldomainApi = Master_Data._sys_DomainAPI;
+            callApi_Key = Master_Data._sys_CallApi_Key;
+            calloutbound = Master_Data._calloutbound;
+            calllogintimeexpired = Master_Data._calllogintimeexpired;
+            callport = Master_Data._callport;
+            calldomain = Master_Data._calldomain;
+            callpassword = Master_Data._callpassword;
+            PortClient = Master_Data._URL_PortClient;
+            RequireValidation = JSON.parse(Master_Data._RequireValidation);
+            sys_Custimgblod = Master_Data._sys_Custimgblod;
+            sys_Custimgblockshare = Master_Data._sys_Custimgblockshare;
+            sys_Custimgwatermark = Master_Data._sys_Custimgwatermark;
+            sys_UsingbranchAddress = Master_Data._sys_UsingbranchAddress;
+            sys_Allowsearchticket = Master_Data._sys_Allowsearchticket;
+        };
+
+        function Master_Load_Value_Initiliaze() {
+            if ($("#btnChangeBranch").length) {
+                $('#btnChangeBranch').html(Master_branchNameCurrent);
+                $('#btnChangeBranch').show();
+            }
+            $('#versionWebApplication').html(versionofWebApplication);
+            $('#Master_nameClient').html(Master_nameClient);
+            $('#SoftwareSmallLogo').attr('src', _SoftwareSmallLogo);
+            (_SoftwareLogo != '') ? ($('#SoftwareLogo').attr('src', _SoftwareLogo)) : ($('#SoftwareLogo').attr('src', Master_Default_Pic));
+            $('#SoftwareLogo').show();
+            if ($('#BodyMain').hasClass('menutop-version')) {
+                $('#navbarBlurtop').empty();
+                $("#navbarBlurtop").load("/Master/Master_Top?ver=" + versionofWebApplication);
+                $("#navbarBlurtop").show();
+            }
+            else {
+                $('#navbarBlur').empty();
+                $("#navbarBlur").load("/Master/Master_Top?ver=" + versionofWebApplication);
+                $("#navbarBlur").show();
+            }
+
+
+            let brandname = '';
+            if (SMSBrandName != undefined && SMSBrandName.length > 0) {
+                for (let i = 0; i < SMSBrandName.length; i++) {
+                    if (i < 2) {
+                        brandname = brandname + '<span class="text-primary fw-bold pe-2">' + SMSBrandName[i] + '</span>';
+                    }
+                    else {
+                        brandname = brandname + '<span class="text-danger fw-bold pe-2">+' + (SMSBrandName.length - 2) + ' more</span>';
+                        break;
+                    }
+                }
+            }
+            else {
+                $("#StatusOfSMS").html(brandname != "" ? brandname:'@Local["Không có nội dung"]');
+            }
+            if (_syn_sys_Zuser != '') {
+                brandname = brandname + '<span class="text-info fw-bold pe-2">ZALO OA</span>';
+            }
+
+            if (MAILBrandName != undefined && MAILBrandName.length > 0) {
+                let mailname = '';
+                for (let i = 0; i < MAILBrandName.length; i++) {
+                    if (i < 2) {
+                        mailname = mailname + '<span class="d-block text-primary fw-bold pe-2">' + MAILBrandName[i] + '</span>';
+                    }
+                    else {
+                        mailname = mailname + '<span class="d-block text-danger fw-bold pe-2">+' + (MAILBrandName.length - 2) + ' more</span>';
+                        break;
+                    }
+
+                }
+                $("#StatusOfMail").html(mailname);
+            }
+            if (syn_Einvoicebrand != undefined && syn_Einvoicebrand != "" && syn_Accountbrand != "") {
+                $("#NameOfInvoice").html(`
+                            <span class="text-primary fw-bold text-uppercase">${syn_Einvoicebrand}</span>
+                            <span class="text-danger fw-bold text-uppercase ps-1">${syn_Einvoicetype}</span>
+                            <span class="text-primary fw-bold text-uppercase ps-1">${syn_Accountbrand}</span>
+                            <span class="text-danger fw-bold text-uppercase ps-1">${syn_AccountType}</span>
+
+                        `);
+                $("#")
+            }
+            else $("#fieldEInvoice").remove();
+        }
+
+        //#endregion
+        //#region // Check branch and ip
+        async function MS_RefernceIP () {
+            new Promise((reolve) => {
+                setTimeout(() => {
+                    try {
+                        let _branchname = '';
+                        let _notice = false;
+                        let _ip = author_get('ip');
+                        if (_ip != undefined && _ip.length>10) {
+                            Master_IndexDB_Reads(_Session_Data, [_Session_Branch], function (data) {
+                                let branch = data[0];
+                                let _branchcur = branch[Master_branchID];
+                                if (_branchcur != undefined && _branchcur!="") {
+                                    let _rangeip = _branchcur.IP;
+                                    _branchname = _branchcur.Name;
+                                    if (_rangeip != undefined && _rangeip.length > 10) {
+                                        _ip = ';' + _ip + ';'
+                                        _rangeip = ';' + _rangeip + ';';
+                                        if (!_rangeip.includes(_ip)) _notice = true;
+                                    }
+
+                                }
+                                if (_notice) {
+                                    notiWarning('@Local["Chi nhánh phần mềm"] ' + _branchname);
+                                }
+                            });
+                        }
+
+                    }
+                    catch (ex) {
+                    }
+                }, 1000)
+            })
+        }
+        //#endregion
+        //#region // HARD RELOAD
+
+        function Hard_Reload() {
+            $("#BodyMain").addClass('pe-none');
+            $("#IconHardReload").addClass('pending');
+            ver_reset();
+            Hard_Reload_GetSessionData(function () {
+                Hard_Reload_RebuildLan();
+            })
+        }
+        async function Hard_Reload_GetSessionData(callback) {
+            new Promise((reolve) => {
+                setTimeout(() => {
+                    try {
+                        Master_IndexDB_Delete(Master_DBName, function () {
+                            AjaxJWT(url = "/api/Home/SessionData"
+                                , data = JSON.stringify({})
+                                , async = true
+                                , success = function (result) {
+                                    if (result != "0") {
+                                        callback();
+                                        let data = JSON.parse(result);
+                                        Hard_Reload_LoadSessionBase(data);
+                                    }
+                                }
+                            );
+
+                        });
+                    }
+                    catch (ex) {
+                        window.location.reload(true);
+                    }
+                }, 100)
+            })
+        }
+        function Hard_Reload_RebuildLan() {
+            AjaxJWT(url = "/api/Home/RebuildLocalization"
+                , data = JSON.stringify({})
+                , async = true
+            );
+        }
+
+
+        function Hard_Reload_LoadSessionBase(datas) {
+            try {
+                var promises = [];
+                let i = 1;
+                for (const [key, value] of Object.entries(datas)) {
+                    promises.push(Master_IndexDB_IniTable(Master_DBName, Master_TableName[i - 1], value, i));
+                    i++;
+                }
+                Promise.all(promises).then((values) => {
+                    window.location.reload(true)
+                });
+            }
+            catch (ex) {
+                window.location.reload(true);
+            }
+        }
+
+
+        //#endregion
+
+        //#region // Handle Menu Master Page
+
+        function Master_HandleMenu () {
+
+            RenderMenuDesktop(PermissionTableMenu, "menuDesktopCategory","TTmenu_Top");
+            Master_EventRedirect();
+            Master_Evenmenutop();
+            Master_CheckingMenuSelected();
+        }
+
+        function Master_CheckingMenuSelected() {
+            let url = window.location.pathname;
+            if ($('#BodyMain').hasClass('menutop-version')) {
+                $("#TTmenu_Top .menudesktop_render").each((idx, ele) => {
+                    let currlink = $(ele).attr("href");
+                    if (currlink.includes(url)) {
+                        if (ele.id != "menuCustomerCreate") {
+                            MS_UrlRoot = "";
+                            MS_UrlChild = $(ele).text();
+                            Master_SetTitle();
+                        }
+                    }
+
+                });
+            }
+            else {
+                $("#menuDesktopCategory .menudesktop_render").each((idx, ele) => {
+                    let currlink = $(ele).attr("href");
+                    $(ele).removeClass("active");
+                    if (currlink.includes(url)) {
+                        if (ele.id != "menuCustomerCreate") {
+                            $(ele).addClass("active");
+                            let collapseItem = $(ele).closest(".collapsesticky");
+                            let collapseItemContent = collapseItem.parent().siblings('.nav-item');
+                            collapseItem.siblings('.nav-link').addClass("active");
+                            collapseItem.addClass("show");
+                            collapseItemContent.children('.menuparent_render').removeClass('active');
+                            collapseItemContent.children('.collapsesticky').removeClass('show');
+                            MS_UrlRoot = collapseItem.siblings('.nav-link').find(".nav-link-text").text();
+                            MS_UrlChild = $(ele).children('.sidenav-normal').text();
+                            Master_SetTitle();
+                        }
+                    }
+                });
+            }
+
+
+        }
+        function Master_SetTitle () {
+            try {
+                if (MS_UrlRoot != "" || MS_UrlChild != "") {
+                    document.title = MS_UrlRoot != "" ? (MS_UrlRoot + ' - ' + MS_UrlChild) : MS_UrlChild;
+                }
+               else  document.title = 'VTTECH SOLUTION';
+            }
+            catch (ex) {
+                document.title = 'VTTECH SOLUTION';
+            }
+        }
+        function Master_Evenmenutop () {
+            $('#TTmenu_Top .nav-link').unbind('click').click(function (e) {
+                e.preventDefault();
+                if ($(this).hasClass('active')) {
+                    $('#TTmenu_Top .nav-link').removeClass("active").removeClass("show");
+                    $('#TTmenu_Top .dropdown-menu').removeClass("show");
+                }
+                else {
+                    $('#TTmenu_Top .nav-link').removeClass("active").removeClass("show");
+                    $('#TTmenu_Top .dropdown-menu').removeClass("show");
+
+                    $(this).addClass("active").addClass("show");
+                    $(this).siblings(".dropdown-menu").addClass("show");
+                }
+
+
+            })
+        }
+        function Master_EventRedirect() {
+            $('#menuDesktopCategory').on('click', '.menuparent_render', function (e) {
+                $('#menuDesktopCategory .menuparent_render').removeClass('active');
+                $(this).closest(".collapsesticky").siblings(".menuparent_render").addClass("active");
+                $(this).addClass("active");
+            })
+            $('#menuDesktopCategory').on('click', '.menudesktop_render', function (e) {
+                e.preventDefault();
+                $('#menuDesktopCategory .menudesktop_render').removeClass('active');
+                let namechild = '', namegroup = '';
+                namechild = $(this).attr("data-name");
+                $(this).addClass('active');
+                let objparent = $(this).parent().parent();
+                if (objparent != undefined) {
+                    objparent.addClass('active');
+                    namegroup = objparent.attr("data-name");
+                }
+                let href = $(this).attr('href');
+                MS_UrlRoot = namegroup;
+                MS_UrlChild = namechild;
+                window.history.pushState(href, 'Title', href);
+                Master_RedirectLoadPage(href);
+                if(sys_isMobile==1) $('#BodyMain').removeClass('g-sidenav-pinned').addClass('g-sidenav-hidden');
+            });
+            $('#TTmenu_Top').on('click', '.menudesktop_render', function (e) {
+                e.preventDefault();
+                let namechild = '', namegroup = '';
+                namechild = $(this).attr("data-name");
+                let objparent = $(this).parent().parent();
+                if (objparent != undefined) {
+                    namegroup = objparent.attr("data-name");
+                }
+                let href = $(this).attr('href');
+                MS_UrlRoot = namegroup;
+                MS_UrlChild = namechild;
+                window.history.pushState(href, 'Title', href);
+                Master_RedirectLoadPage(href);
+            });
+            window.addEventListener('popstate', function (e) {
+                if (e.state) Master_RedirectLoadPage(e.state);
+            });
+        }
+
+        function Master_RedirectLoadPage(href) {
+            try {
+                if (href != '#') {
+                    Master_CheckingMenuSelected();
+                    let hreflayoutnone = href + (href.includes("?") ? "&" : "?") + 'layout=none' + '&ver=' + versionofWebApplication;
+                    $("#MainRenderBody").empty().hide();
+                    $("#MainRenderBody_Manual").hide();
+                    $("#MainRenderBody_Manual").load(hreflayoutnone, function () {
+                        $(this).fadeIn(100);
+                        MS_SetHeaderNavi();
+                        Master_SetTitle()
+                    });
+                }
+            }
+            catch (ex) {
+
+            }
+        }
+
+        //#endregion
+
+        //#region // Load from
+        async function Master_LoginFrom() {
+            new Promise((reolve) => {
+                setTimeout(() => {
+                    try {
+                        AjaxJWT(url = "/api/Author/loginfrom"
+                            , data = JSON.stringify({})
+                            , async = true
+                            , success = function (result) {
+                                switch (result) {
+                                    case "checkin": {
+                                        Master_CheckinHR();
+                                    }
+                                    break;
+                                }
+                            }
+                        );
+                    }
+                    catch (ex) {
+                    }
+                }, 200)
+            })
+        }
+
+        function Master_CheckinHR() {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/HR/Checkin/CheckinDetail?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+
+        //#endregion
+
+        // #region // Event
+
+        function Master_EventAddCustomer() {
+            if ($('#menuDesktopCategory #menuCustomerCreate').length) {
+                $("#menuDesktopCategory #menuCustomerCreate").unbind('click').click(function (event) {
+                    $("#DetailModal_Content").html('');
+                    $("#DetailModal_Content").load("/Customer/CustomerDetail" + '?ver=' + versionofWebApplication);
+                    $('#DetailModal').modal('show');
+                });
+            }
+            if ($('#TTmenu_Top #menuCustomerCreate').length) {
+                $("#TTmenu_Top #menuCustomerCreate").unbind('click').click(function (event) {
+                    $("#DetailModal_Content").html('');
+                    $("#DetailModal_Content").load("/Customer/CustomerDetail" + '?ver=' + versionofWebApplication);
+                    $('#DetailModal').modal('show');
+                });
+            }
+        }
+
+        function Master_ChangeBranchMulti() {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/ChangeBranch/ChangeBranch?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+
+        function Master_Update_Branch() {
+            AjaxJWT(url = "/api/Author/BaseData"
+                , data = JSON.stringify({})
+                , async = true
+                , success = function (result) {
+                    localstorage_set(session_base, JSON.parse(result));
+                    location.reload();
+                }
+            );
+        }
+
+        function Master_ScanQRInfo() {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Login/ScanQRInfo?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+        //#endregion
+
+        //#region // check curent user
+        function Master_checkUserCurrentTab() {
+            try {
+                let userInpage = sys_userName_Main.toLowerCase().trim();
+                let userNew = '';
+                if (author_get("author") != '') {
+                    userNew = JSON.parse(author_get("author")).username.toLowerCase().trim();
+                    if (userInpage != userNew && userInpage != '') {
+                        Swal.fire({
+                            title: "@Local["Thông báo"]!",
+                            text: decodeHtml('@Local["Trang đã thay đổi user"].\n\@Local["Nhấn OK để tải lại trang"]'),
+                            type: "success"
+                        }).then(function() {
+                           location.reload();
+                        });
+                    }
+                }
+            } catch (ex) {
+
+            }
+        }
+        //#endregion
+
+
+        
+
+    </script>
+    <script src="/assets/js/core/popper.min.js"></script>
+    <script src="/assets/js/core/bootstrap.js"></script>
+    <script>js_require('/js/ProjectClosure/ProjectClosure.js');</script>
+    <script>js_require('/assets/js/plugins/perfect-scrollbar.min.js');</script>
+    <script>js_require('/assets/js/plugins/smooth-scrollbar.min.js');</script>
+    <script>js_require_notasync('/assets/js/plugins/countup.min.js', true);</script>
+    <script>js_require_notasync('/assests/dist/datetimepicker/build/jquery.datetimepicker.full.js', true);</script>
+    <script>js_require('/assests/dist/Timer/easytimer.min.js')</script>
+    <script>js_require('/assests/sweetalert2.js');</script>
+    <link href="/css/master.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <link href="/css/dark-mode.css?ver=@ViewData["VERSION"]" rel="stylesheet" />
+    <script src='https://www.gstatic.com/firebasejs/6.4.2/firebase-app.js' type="text/javascript"></script>
+    <script src='https://www.gstatic.com/firebasejs/6.4.2/firebase-messaging.js' type="text/javascript"></script>
+    <script src='/jssip/jssip-3.0.7-custom.js' type="text/javascript"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src='/jssip/callexecute.js?ver=@ViewData["VERSION"]' type="text/javascript"></script>
+    <script src='/js/firebasemessage.js' type="text/javascript"></script>
+    <script src='/js/Email.js?ver=@ViewData["VERSION"]' type="text/javascript"></script>
+    <script src='/js/sms.js?ver=@ViewData["VERSION"]' type="text/javascript"></script>
+    <script src='/Invoice/minvoice.js' type="text/javascript"></script>
+    <script src='/js/ThirdParty/AccountAction.js' type="text/javascript"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script>js_require('/Facebook/sdk.js');</script>
+    <style>
+        /*#region popup call */
+        #CallCenter_Area {
+            width: 350px;
+            max-width: 100%;
+            font-size: 0.875rem;
+            pointer-events: auto;
+            background-color: rgba(255, 255, 255, 0.85);
+            background-clip: padding-box;
+            border: 0 solid transparent;
+            box-shadow: 0 0.25rem 0.375rem -0.0625rem rgb(20 20 20 / 12%), 0 0.125rem 0.25rem -0.0625rem rgb(20 20 20 / 7%);
+            border-radius: 0.5rem;
+        }
+
+        .navbar-collapse {
+            position: unset !important;
+        }
+
+        @@media only screen and (max-width: 1200px) {
+            .mobile-sticky {
+                position: sticky;
+                top: 0px;
+                z-index: 100;
+            }
+        }
+        /*#endregion */
+
+    </style>
+
+    <link type="text/css" rel="stylesheet" href="/assests/dist/lightGallery/css/lg-zoom.css" />
+    <link type="text/css" rel="stylesheet" href="/assests/dist/lightGallery/css/lg-rotate.css" />
+    <link type="text/css" rel="stylesheet" href="/assests/dist/lightGallery/css/lg-share.css" />
+    <link type="text/css" rel="stylesheet" href="/assests/dist/lightGallery/css/lightgallery.css" />
+</body>
+</html>

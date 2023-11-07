@@ -1,0 +1,429 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.StatusListModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" id="CSL_MasterContainer">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="position-relative">
+                            <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#CSL_FilterArea">
+                                        <i class="text-gradient text-primary fas fa-filter"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#CSL_infodes">
+                                        <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div id="CSL_FilterArea" class="collapse collapsesticky top-100 card p-3 pb-0 position-absolute z-index-3 end-1 mt-1 shadow-lg" style="min-width:250px;">
+                                <div class="my-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="CSL_TypeParent">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text">eg .@Local["Trạng thái hiện tại"]</div>
+                                        <div id="CSL_CbbTypeParent" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="my-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="CSL_Type">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text">eg .@Local["Trạng thái chi tiết"]</div>
+                                        <div id="CSL_CbbType" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="my-3 d-flex justify-content-end" id="actionFilter">
+                                    <button class="btn btn-sm badge bg-gradient-dark ms-2" onclick="event.preventDefault();return CSL_CloseFilter();">@Local["Đóng"]</button>
+                                    <button class="btn btn-sm badge bg-gradient-primary ms-2" onclick="event.preventDefault();return CSL_Load(0,0);">Ok</button>
+                                </div>
+                            </div>
+                        </div>
+                        @*<div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Quy định chỉnh sửa"]</h6>
+                                <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa"]</p>
+                            </div>
+                        </div>*@
+                        <div class="ms-auto my-auto mt-1">
+                            <button id="btnPrintConsultRecord" data-tab="print_tab_cust_status" class="_tab_control_ btn btn-dark btn-sm mt-1 d-none"
+                                    onclick="PrintCustomerStatus(ser_MainCustomerID)">
+                                @Local["In hồ sơ"]
+                            </button>
+                            <button id="btnPrintConsultTemplate" data-tab="print_tab_cust_status" class="_tab_control_ btn btn-dark btn-sm mt-1 d-none"
+                                    onclick="PrintCustomerStatusNotData(ser_MainCustomerID)">
+                                @Local["In mẫu tư vấn"]
+                            </button>
+                            <button id="btnConsultLess" class="_tab_control_ bg-gradient-primary btn btn-dark btn-sm mt-1" data-tab="print_tab_cust_status" onclick="CSL_Table_Add()">
+                                @Local["Thêm mới"]
+                            </button>
+
+                            <div class="position-relative d-inline">
+                                <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                    @Local["Xem thêm"]
+                                </button>
+                                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="statusdetail" type="checkbox" checked="checked">
+                                            </div>
+                                            <p class="text-sm">@Local["Tình trạng chi tiết"]</p>
+                                        </li>
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="createdname" type="checkbox">
+                                            </div>
+                                            <p class="text-sm">@Local["Người tạo"]</p>
+                                        </li>
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="handlelname" type="checkbox">
+                                            </div>
+                                            <p class="text-sm">@Local["Người sửa"]</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="CSL_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-2 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Quy định chỉnh sửa"]</h6>
+                        <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="m-0 my-3 mobile-responsive" style="max-height:80vh;">
+                        <div id="CSL_WaitingDiv" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table data-name="ContentStatus" class="table vt-table mb-0" id="CSL_dtContent">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>#</th>
+                                    <th>@Local["Ngày"]</th>
+                                    <th>@Local["Thông tin tư vấn"]</th>
+                                    <th>@Local["Nhu cầu phát sinh"]</th>
+                                    <th>@Local["Trạng thái"]</th>
+                                    <th data-name="statusdetail">@Local["Trạng thái chi tiết"]</th>
+                                    <th data-name="createdname" style="min-width: 140px;">@Local["Người tạo"]</th>
+                                    <th data-name="handlelname" style="min-width: 140px;">@Local["Người sửa"]</th>
+                                    <th>@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="CSL_dtContentBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="CSL_btnloadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" style="pointer-events: auto;" onclick="event.preventDefault(); return CSL_Load(0, 1);">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+            <div id="CSL_DetailContainer" style="display: none">
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    //#region //DECLARE - INIT
+    var ser_StatusCustomerID = "@Model._StatusCustomerID";
+    var CSL_DataService;
+    let shtable;
+    let CSL_data;
+    let CSL_limit = 100, CSL_beginID = 0;
+    let CSL_isDoneLoadMore = false;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Service]
+            , function (data) {
+                CSL_DataService = data[0];
+                CSL_LoadCombo();
+            })
+        shtable = $("#CSL_dtContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControl, '@Model._dtPermissionCurrentPage');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+
+    });
+    //#endregion
+
+    //#region //LOAD DATA
+    function CSL_LoadCombo () {
+        AjaxLoad(url = "/Customer/StatusList/?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != []) {
+                    let Data = JSON.parse(result);
+                    let DtTypePar = Data.filter(item => {return (item["ParentID"]) == 0});
+                    let DtType = Data.filter(item => {return (item["ParentID"]) != 0});
+                    if (DtTypePar && DtTypePar.length > 0) {
+                        Load_Combo(DtTypePar, "CSL_CbbTypeParent", false, "@Local["Tất cả trạng thái"]");
+                        $("#CSL_TypeParent").dropdown("refresh");
+                        $("#CSL_TypeParent").dropdown("set selected", "0");
+                    }
+                    if (DtType && DtType.length > 0) {
+                        Load_Combo(DtType, "CSL_CbbType", true, "@Local["Tất cả"] @Local["Trạng thái chi tiết"]");
+                        $("#CSL_Type").dropdown("refresh");
+                        $("#CSL_Type").dropdown("set selected", "0");
+                    }
+                    CSL_Load(0, 0);
+                }
+            }
+            , before = function () { }
+            , complete = function (e) {}
+        );
+    }
+
+    function CSL_Load(CSL_currentID, CSL_isLoadMore = 0) {
+        if (CSL_currentID == 0 && CSL_isLoadMore == 0) {
+            CSL_data = [];
+            CSL_beginID = 0;
+            CSL_isDoneLoadMore = false;
+            $('#CSL_dtContentBody').html('');
+        }
+
+        let Type = Number($('#CSL_Type').dropdown('get value')) ? Number($('#CSL_Type').dropdown('get value')) : 0;
+        let TypeParent = Number($('#CSL_TypeParent').dropdown('get value')) ? Number($('#CSL_TypeParent').dropdown('get value')) : 0;
+
+        AjaxLoad(url = "/Customer/StatusList/?handler=LoadataStatus"
+            , data =
+            {
+                'customerID': ser_StatusCustomerID
+                , 'id': CSL_currentID
+                , 'limit': CSL_limit
+                , 'beginID': CSL_beginID
+                , 'Type': Type
+                , 'TypeParent': TypeParent
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    if (CSL_currentID == 0) {
+                        CSL_data = CSL_data.concat(data);
+                        CSL_beginID = data[data.length - 1].ID;
+                        fnRenderBlock(data, "CSL_dtContentBody"
+                            , blocknum = 50
+                            , fnrender = CSL_RenderData
+                            , fnsuccess = function (e) { }
+                            , fnbegin = function (e) { }
+                        );
+                    }
+                    else {
+                        if (data && data.length != 0) {
+                            if ($('#CSL_rowContent_' + CSL_currentID).length > 0) {
+                                CSL_data = CSL_data.reduce((pre, arr) => {
+                                    if (arr.ID == data[0].ID) arr = data[0];
+                                    pre.push(arr);
+                                    return pre;
+                                }, []);
+                                $('#CSL_rowContent_' + CSL_currentID).replaceWith(CSL_RenderEach(data[0]));
+                                CSL_Event();
+                            }
+                            else {
+                                if (CSL_isDoneLoadMore) {
+                                    CSL_data.push(data[0]);
+                                    $('#CSL_dtContentBody').prepend(CSL_RenderEach(data[0]));
+                                    CSL_Event();
+                                }
+                                else {
+                                    CSL_Load(0, 0);
+                                }
+                            }
+                        }
+                        else {
+                            if ($('#CSL_rowContent_' + CSL_currentID).length > 0) {
+                                CSL_data = CSL_data.filter(word => {
+                                    return word.ID != CSL_currentID
+                                })
+                                $('#CSL_rowContent_' + CSL_currentID).remove();
+                            }
+                        }
+                    }
+                }
+                else if (result == "[]") {
+                    if (CSL_isLoadMore == 1) {
+                        $("#CSL_btnloadMore").hide();
+                        CSL_isDoneLoadMore = true;
+                    }
+                    else {
+                        if (CSL_currentID != 0) {
+                            if ($('#CSL_rowContent_' + CSL_currentID).length > 0) {
+                                CSL_data = CSL_data.filter(word => {
+                                    return word.ID != CSL_currentID
+                                })
+                                $('#CSL_rowContent_' + CSL_currentID).remove();
+                            }
+                        }
+                        else {
+
+                        }
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+                shtable.Refresh();
+            }
+            , before = function () {
+                $("#CSL_WaitingDiv").show();
+            }
+            , complete = function (e) {
+                $("#CSL_WaitingDiv").hide();
+            }
+        );
+    }
+    //#endregion
+
+    //#region //RENDER DATA
+    async function CSL_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CSL_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        CSL_Event();
+                        shtable.Refresh();
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+
+    function CSL_RenderEach(item) {
+        try {
+            let tr = `<td class="d-none">${item.ID}</td>
+                          <td class="vt-number-order"></td>
+                          <td data-sortvalue="${item.CreatedNumber}">${item.DateCreated}</td>
+                          <td><span class="white-space-pre-line content_line_clamp">${item.Content}</span></td>
+                          <td>${item.Advice}</td>
+                          <td>
+                          <span class="badge" style="background-color: ${item.ColorCode}">${item.TypeParent}</span>
+                          </td>
+                          <td data-name="statusdetail">${item.StatusDetail}</td>
+                          <td data-name="createdname">
+                          <span>${item.CreatedName}</span>
+                          </br><span>${item.CreatedString}</span>
+                          </td>
+                          <td data-name="handlelname">
+                          <span>${item.ModifiedName}</span>
+                          </br><span>${item.ModifiedString}</span>
+                          </td>
+                          <td>
+                          <div class="text-nowrap">
+                          ${CSL_RenderTable_Button(item.ID, item.EditButton, item.DeleteButton)}
+                          </div>
+                          </td>`;
+            tr = `<tr id="CSL_rowContent_${item.ID}" role="row" class="vt-number CLS_clsRowContent cursor-pointer vt-number" style="background-color: ${item.ColorCode}1b;">${tr}</tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function CSL_RenderTable_Button(ID, EditButton, DeleteButton) {
+        let buttons = [];
+        if (EditButton === 1) {
+            buttons.push('<button class="buttonGrid" value="'
+                + ID
+                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>');
+        }
+        if (DeleteButton === 1) {
+            buttons.push('<button class="buttonGrid" value="'
+                + ID
+                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>');
+        }
+
+        return Render_Button_Grid(buttons)
+    }
+    //#endregion
+
+    //#region //HANDLE EVENT
+    function CSL_Event() {
+        $('#CSL_dtContent tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CSL_Table_Edit(ID, ser_StatusCustomerID);
+        });
+        $('#CSL_dtContent tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CSL_Table_DeleteRow(ID)
+        });
+    }
+    function CSL_Table_DeleteRow(id) {
+        const promise = notiConfirm();
+        promise.then(function () { CSL_Table_ExcuteDelete(id); }, function () { });
+    }
+    function CSL_Table_ExcuteDelete(id) {
+        AjaxLoad(url = "/Customer/StatusList/?handler=DeleteItem"
+            , data = {
+                'id': id
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result == "1") {
+                    syslog_cutcon('d', ser_StatusCustomerID, '');
+                    notiSuccess();
+                    CSL_Load(id, 0);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function CSL_Table_Edit(id, customerid) {
+        CSL_OpenDetail();
+        $("#CSL_DetailContainer").load("/Customer/ConsultationRegimen/ConsultLessFast?CurrentID=" + id + "&CustomerID=" + customerid + "&ver=" + versionofWebApplication);
+        $('#CSL_DetailContainer').show();
+    }
+    function CSL_Table_Add() {
+        CSL_OpenDetail();
+        $("#CSL_DetailContainer").load("/Customer/ConsultationRegimen/ConsultLessFast?CustomerID=" + ser_StatusCustomerID + "&ver=" + versionofWebApplication);
+        $('#CSL_DetailContainer').show();
+    }
+    function CSL_OpenDetail() {
+        $("#CSL_DetailContainer").empty();
+        $("#CSL_MasterContainer").hide();
+        document.getElementById("CSL_DetailContainer").innerHTML = '';
+    }
+    function CSL_CloseDetail() {
+        document.getElementById("CSL_DetailContainer").innerHTML = '';
+        $("#CSL_MasterContainer").show();
+        $("#CSL_DetailContainer").hide();
+    }
+    function CSL_CloseFilter () {
+        $('#CSL_FilterArea').collapse('hide');
+    }
+    //#endregion
+</script>
+
+<script>js_require('/js/main.js');</script>
+
+

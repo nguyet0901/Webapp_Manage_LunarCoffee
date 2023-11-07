@@ -1,0 +1,102 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketSourceCatDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Nhóm"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="form3">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên nhóm"]</label>
+                            <input id="NameCat" class="form-control" name="name" type="text" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea id="ContentCat" class="form-control" rows="2" name="content"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="button_customer_detail_save" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();ExcuteData(1)">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    var ser_SourceCatID = "@Model._SourceCatID";
+    $(document).ready(function () {
+        if (ser_SourceCatID != "0") {
+            TicketSourceCat_LoadUpdate();
+        }
+        Checking_TabControl_Permission();
+    });
+
+    function TicketSourceCat_LoadUpdate() {
+        AjaxLoad(url = "/Marketing/TicketSourceCatDetail/?handler=LoadDataUpdate"
+            , data = { 'CurrentID': ser_SourceCatID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        $('#NameCat').val((data[0].Name));
+                        $('#ContentCat').val((data[0].Content));
+                    }
+                }
+            }
+        );
+
+    }
+    function ExcuteData() {
+        var data = new Object();
+        data.Name = $('#NameCat').val() ? $('#NameCat').val() : "";
+        data.Content = $('#ContentCat').val() ? $('#ContentCat').val() : "";
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Marketing/TicketSourceCatDetail/?handler=ExcuteData"
+                , data = { 'data': JSON.stringify(data), 'CurrentID': ser_SourceCatID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        LoadTicketSourceAjax();
+                        CloseModal();
+                    } else {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    }
+                }
+            );
+        }
+
+        return false;
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

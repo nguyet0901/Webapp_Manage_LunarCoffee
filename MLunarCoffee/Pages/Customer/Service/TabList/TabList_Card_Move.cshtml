@@ -1,0 +1,317 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Service.TabList.TabList_Card_MoveModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chuyển thẻ trả trước"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết chuyển thẻ trả trước"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" >
+                        <div class="field col-12 col-md-4 p-1">
+                            <div class="card bg-transparent shadow-xl max-width-500 mx-auto">
+                                <div class="overflow-hidden position-relative border-radius-xl">
+                                    <span class="mask bg-gradient-primary"></span>
+                                    <div class="card-body position-relative z-index-1 p-3">
+                                        <img id="logoCompanyCardMove" src="#" class="avatar avatar-xs me-2 rounded-0" alt="logo image">
+                                        <h5 id="CM_Code" class="text-white mt-4 mb-5 pb-2"></h5>
+                                        <div class="d-flex">
+                                            <div class="d-flex">
+                                                <div class="me-4">
+                                                    <p class="text-white text-sm opacity-8 mb-0">@Local["Chủ thẻ"]</p>
+                                                    <h6 id="CM_Holder" class="text-white mb-0">-</h6>
+                                                </div>
+                                                <div class="me-4">
+                                                    <p class="text-white text-sm opacity-8 mb-0">@Local["Giá trị"]</p>
+                                                    <h6 id="CM_AmountUse" class="text-white mb-0">0</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field mt-3">
+                                <div class="border-0 p-3 bg-gray-100 border-radius-lg">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="mt-1 text-sm">@Local["Giá trị sử dụng"]</span>
+                                        <span id="CM_PriceUse" class="text-dark ms-4">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="mt-1 text-sm">@Local["Đã sử dụng"]</span>
+                                        <span id="CM_PriceUseTab" class="text-dark ms-4">0</span>
+                                    </div>
+                                    <hr class="horizontal dark my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="mt-1 text-sm">@Local["Còn lại"]</span>
+                                        <span id="CM_PriceLeft" class="text-dark font-weight-bold ms-4">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field mt-3">
+                                <label>@Local["Ghi chú"]</label>
+                                <textarea id="CM_Note" class="form-control" type="text" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-8 p-1">
+                            <div class="">
+                                <label>@Local["Tìm kiếm theo tên, số điện thoại hoặc mã số"]</label>
+                                <div class="d-flex ">
+                                    <input id="TC_textsearch" name="name" class="form-control" type="text" placeholder="eg .@Local["Tìm kiếm theo tên, số điện thoại hoặc mã số"]" autocomplete="off" />
+                                    <a class="btn btn-primary m-auto ms-2" onclick="event.preventDefault();return Card_Move_SearchCustomer();">
+                                        <i class="fas fa-search"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="m-0 my-3 mobile-responsive max-height-400 overflow-y">
+                                <div id="loaderCardMove" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <table class="table vt-table mb-0" >
+                                    <thead>
+                                        <tr>
+                                            <th class="d-none">CusID</th>
+                                            <th style="width: 40px">#</th>
+                                            <th>@Local["Mã khách Hàng"]</th>
+                                            <th>@Local["Khách Hàng"]</th>
+                                            <th>@Local["Số điện thoại"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dtCardMoveBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formScheduleColorExecute" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="button_Schedule_Color_Code_save" form="formScheduleColorExecute" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_"
+                                data-tab="edit_tab_customer" onclick="event.preventDefault(); return Card_Move_Execute();">
+                            @Local["Lưu"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT COMBO
+
+    let serCustomerID ='@Model._CardCustomerID';
+    let serCardCurrentID = '@Model._CardCurrentID';
+    let xhrSearchCustomer;
+
+    $(document).ready(function () {
+        (_SoftwareLogo != '') ? ($('#logoCompanyCardMove').attr('src', _SoftwareLogo)) : ($('#logoCompanyCardMove').attr('src', Master_Default_Pic));
+        //$("#CM_Holder").html(NameCustomer)
+        Card_Move_Load();
+    })
+
+    async function Card_Move_Load() {
+        new Promise((resolve) => {
+            if (serCardCurrentID != "0") {
+                AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Move/?handler=LoadDetail"
+                    , data = {
+                        'CurrentID': serCardCurrentID
+                    }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "[]") {
+                            let data = JSON.parse(result);
+                            Card_Move_LoadInfoCard(data[0]);
+                        }
+                    }
+                );
+            }
+            else {
+                CloseModal();
+            }
+        })
+    }
+
+    //#endregion
+
+    //#region // LOAD INFO CARD
+
+    function Card_Move_LoadInfoCard ({Code, PriceUse, PriceUseTab, CustomerName}) {
+        $("#CM_Code").html(Code);
+        $("#CM_AmountUse").html(formatNumber(PriceUse));
+        $("#CM_PriceUse").html(formatNumber(PriceUse));
+        $("#CM_PriceUseTab").html(formatNumber(PriceUseTab));
+        $("#CM_PriceLeft").html(formatNumber(Number(PriceUse) - Number(PriceUseTab)));
+        $("#CM_Holder").html(CustomerName)
+    }
+
+    //#endregion
+
+
+
+
+
+    //#region // ONCHANGE
+
+    function Card_Move_Event() {
+
+        $('input[name="customercard"]').bind('change').on('change', function () {
+            let checkCust = $('input[name="customercard"]:checked');
+            checkCust.closest('tr').addClass('active').siblings('tr').removeClass("active");
+        })
+
+    }
+
+
+    //#endregion
+
+
+
+    //#region // SEARCH CUSTOMER
+
+    async function Card_Move_SearchCustomer() {
+        new Promise(() => {
+            if (xhrSearchCustomer && xhrSearchCustomer.readyState != 4) xhrSearchCustomer.abort();
+
+            var textSearch = $("#TC_textsearch").val() ? xoa_dau(($("#TC_textsearch").val().replace(/[^a-zA-Z0-9 ]/g, '')).trim()).toLowerCase() : "";
+            if (textSearch.length > 3) {
+                xhrSearchCustomer = AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Move/?handler=SearchCustomer"
+                    , data = {
+                        'TextSearch': textSearch,
+                        'CustomerID': serCustomerID
+                    }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "[]") {
+                            let data = JSON.parse(result);
+                            Card_Move_Render(data, 'dtCardMoveBody')
+                        }
+                    }
+                    , sender = null
+                    , before = function (e) {
+                        $("#loaderCardMove").show();
+                    }
+                    , complete = function (e) {
+                        $("#loaderCardMove").hide();
+                    }
+                );
+            }
+            else {
+                $("#loaderCardMove").hide();
+            }
+        })
+    }
+
+    //#endregion
+
+    //#rengion // RENDER DATA
+
+    async function Card_Move_Render(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                            <tr class="vt-number">
+                                <td class="d-none">${item.CustomerID}</td>
+                                <td class="vt-number-order"></td>
+                                <td >
+                                    <div class="d-flex px-2 py-0">
+                                        <div class="form-check pt-1">
+                                            <input id="Customer_Card_${item.CustomerID}" name="customercard" class="form-check-input customercard" type="radio" value="${item.CustomerID}" data-name="${item.CustomerName}" />
+                                                <label for="Customer_Card_${item.CustomerID}" class="mb-0 cursor-pointer fw-bold">${item.CustCode}</label>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td >${item.CustomerName}</td>
+                                <td >${item.CustomerPhone}</td>
+                            </tr>
+                        `
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+                Card_Move_Event();
+            }
+        })
+    }
+
+    //#endregion
+
+
+    //#region // EXECUTE DATA
+    function Card_Move_Execute() {
+        let checkCust = $('input[name="customercard"]:checked');
+        let CustomerMoveID = Number(checkCust.val()) ? Number(checkCust.val()) : 0;
+        if (CustomerMoveID != 0) {
+            const promise = notiConfirm("@Local["Bạn chắc chắn muốn chuyển thẻ này đến"] " + checkCust.attr('data-name'));
+            promise.then(function () { Card_Move_Execute_Next(); }, function () { });
+        }
+        else {
+            notiWarning("@Local["Chưa chọn khách hàng cần chuyển thẻ"]")
+        }
+    }
+
+
+
+    function Card_Move_Execute_Next() {
+        let Note = $("#CM_Note").val() ? $("#CM_Note").val() : "";
+        let CustomerMoveID = Number($('input[name="customercard"]:checked').val()) ? Number($('input[name="customercard"]:checked').val()) : 0;
+        if (CustomerMoveID != 0) {
+            AjaxLoad(url = "/Customer/Service/TabList/TabList_Card_Move/?handler=ExcuteData"
+                , data = {
+                    'CustomerID': CustomerMoveID,
+                    'CurrentID': serCardCurrentID,
+                    'Note': Note
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let CardCode = data[0].CARDCODE;
+                        let CardCodeNew = data[0].CARDCODE_NEW;
+                        syslog_cutcard('u', CardCode, serCustomerID, '');
+                        syslog_cutcard('i', CardCodeNew, CustomerMoveID, '');
+                        CloseModal();
+                        if (typeof Tab_List_Customer_Card === 'function') Tab_List_Customer_Card(serCardCurrentID, 0);
+                        if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                        if (typeof CardList_MoveCardRemove === 'function') CardList_MoveCardRemove(serCardCurrentID);
+
+                    }
+                    else {
+                        notiError_SW()
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                }
+                , complete = function (e) {
+                }
+            );
+        }
+    }
+
+    //#endregion
+</script>

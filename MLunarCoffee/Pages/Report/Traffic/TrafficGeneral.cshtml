@@ -1,0 +1,625 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Traffic.TrafficGeneralModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left d-flex">
+            <div class="form-check">
+                <input id="TS_Source" onchange="event.preventDefault();return TS_Filter();" class="form-check-input pr-2"
+                       type="checkbox" checked="checked">
+                <label class="custom-control-label">@Local["Nguồn khách hàng"]</label>
+            </div>
+            <div class="form-check ms-3">
+                <input id="TS_Group" onchange="event.preventDefault();return TS_Filter();" class="form-check-input pr-2"
+                       type="checkbox">
+                <label class="custom-control-label">@Local["Nhóm khách hàng"]</label>
+            </div>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#TS_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return TS_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return TS_Export()"></i>
+            </div>
+        </div>
+    </div>     
+</div>
+<div class="collapsesticky collapse show" id="TS_GridArea">
+    <div class="card-body p-0 pt-0">
+        <div class="row m-0">
+            <div class="col-lg-3 px-0 pe-lg-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tổng lịch hẹn"]</h6>
+                    <h6 class="font-weight-bolder"> <span id="TSL_Total">0</span></h6>
+                </div>
+            </div>
+            <div class="col-lg-3 px-0 pe-lg-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">@Local["Đã đến"]</h6>
+                    <h6 class="font-weight-bolder"> <span id="TSL_Checked">0</span></h6>
+                </div>
+            </div>
+            <div class="col-lg-3 px-0 pe-lg-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">@Local["Chưa đến"]</h6>
+                    <h6 class="font-weight-bolder"> <span id="TSL_NotYet">0</span></h6>
+                </div>
+            </div>
+            <div class="col-lg-3 px-0">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">@Local["Lịch hủy"]</h6>
+                    <h6 class="font-weight-bolder"> <span id="TSL_Canceled">0</span></h6>
+                </div>
+            </div>
+        </div>
+        <div class="m-0 my-3 mobile-responsive">
+            <table class="table vt-table mb-0" id="TS_Grid">
+                <thead>
+                    <tr role="row">
+                        <th rowspan="3">@Local["#"]</th>
+                        <th rowspan="3">@Local["Ngày"]</th>
+                        <th colspan="3">@Local["Loại lịch"]</th>
+                        <th colspan="3">@Local["Trạng thái"]</th>
+                        <th class="source">@Local["Nguồn khách hàng"]</th>
+                        <th class="group">@Local["Nhóm khách hàng"]</th>
+                    </tr>
+                    <tr role="row">
+                        <th rowspan="2">@Local["Tổng"]</th>
+                        <th rowspan="2">@Local["Tư vấn"]</th>
+                        <th rowspan="2">@Local["Điều trị"]</th>
+                        <th rowspan="2">@Local["Đã đến"]</th>
+                        <th rowspan="2">@Local["Chưa đến"]</th>
+                        <th rowspan="2">@Local["Lịch hủy"]</th>
+                    </tr>
+                    <tr rowspan="2" class="detail" role="row">
+                    </tr>
+                </thead>
+                <tbody id="TS_GridBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<div id="TrafficGeneralDetail" class="mt-3" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0 pt-2">
+            <div class="left">
+                <p id="lbDetailDate" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right overflow-unset">
+                <div class="wrap overflow-unset">
+                    <div class="wrapblock overflow-unset">
+                        <div class="me-1 my-auto">
+                            <div class="ui dropdown text-dark fw-bold text-sm border-0 text-nowrap" id="TS_TypeSche" onchange="TS_FillType();">
+                                <input type="hidden" />
+                                <div class="default text">eg .@Local["Loại lịch"]</div>
+                                <div id="TS_CbbTypeSche" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="me-3 my-auto">
+                            <div class="ui dropdown text-dark fw-bold text-sm border-0 text-nowrap" id="TS_TypeDetail" onchange="TS_FillType();">
+                                <input type="hidden" />
+                                <div class="default text">eg .@Local["Loại lịch chi tiết"]</div>
+                                <div id="TS_CbbTypeDetail" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrapblock">
+                        <div class="icon-hover mx-1  my-auto"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                               onclick="event.preventDefault(); return TS_ExportDetail()"></i>
+                        </div>
+                        <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#ViewMore">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="ViewMore" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custage" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tuổi"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custdoccode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                        </li>
+                         <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custoldcode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                        </li>
+                         <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custaddress" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Địa chỉ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="phone" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số điện thoại"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="type" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Loại"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="typedetail" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Loại chi tiết"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="group" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhóm"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="createby" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Người tạo"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="consult" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Người tư vấn"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="CustGroupCheckInDetail">
+            <div class="card-body p-0 pt-0">
+                <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                    <table data-name="TS_GridDetail" class="table vt-table mb-0" id="TS_GridDetail">
+                        <thead>
+                            <tr>
+                                <th class="_allcustomer" style="width: 60px">@Local["#"]</th>
+                                <th>@Local["Mã khách hàng"]</th>
+                                <th data-name="custdoccode">@Local["Mã hồ sơ"]</th>
+                                <th data-name="custoldcode">@Local["Mã khách hàng cũ"]</th>
+                                <th>@Local["Khách hàng"]</th>
+                                <th data-name="phone">@Local["Số điện thoại"]</th>
+                                <th data-name="custage">@Local["Tuổi"]</th>
+                                <th data-name="custaddress">@Local["Địa chỉ"]</th>
+                                <th data-name="custaddress">@Local["Phường xã"]</th>
+                                <th data-name="custaddress">@Local["Quận huyện"]</th>
+                                <th data-name="custaddress">@Local["Tỉnh/Thành phố"]</th>
+                                <th>@Local["Giờ hẹn"]</th>
+                                <th>@Local["Thời gian lịch hẹn"]</th>
+                                <th data-name="type">@Local["Loại"]</th>
+                                <th data-name="typedetail">@Local["Loại chi tiết"]</th>
+                                <th>@Local["Trạng thái"]</th>
+                                <th data-name="branch">@Local["Chi nhánh"]</th>
+                                <th data-name="source">@Local["Nguồn"]</th>
+                                <th data-name="group">@Local["Nhóm"]</th>
+                                <th data-name="createby" class="no-sort vtt-filter">@Local["Người tạo"]</th>
+                                <th data-name="consult">@Local["Người tư vấn"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="TS_GridDetailBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return TS_DetailRenderMore();">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+    let xhrLoadList, xhrLoadDetail;
+    let TS_DataList = [], TS_DataDetail = [];
+    let TS_IndexData = 0;
+    let TS_FlagChangeType = 0;
+    let TS_shtable;
+
+    $(document).ready(function ()
+    {
+        TS_shtable = $("#TS_GridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        TS_LoadInit();
+        Checking_TabControl_Permission();
+        $('#TS_GridDetail').tablecontrol();
+    });
+
+    function TS_LoadInit () {
+        AjaxLoad(url = "/Report/Traffic/TrafficGeneral/?handler=LoadCombo"
+            , data = {}, async = true
+            , error = function () {notiError_SW()}
+            , success = function (result){
+                if (result != 0) {
+                    let data = JSON.parse(result);
+                    Load_Combo(data.Type, "TS_CbbTypeSche", true, '@Local["Loại lịch"]');
+                    Load_Combo(data.SchedulerType, "TS_CbbTypeDetail", true, '@Local["Loại chi tiết"]');
+                    TS_Load();
+                }
+            }
+            , sender = null
+        );
+    }
+
+    function TS_Load()
+    {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadList = AjaxLoad(url = "/Report/Traffic/TrafficGeneral/?handler=Loadata"
+            , data = {
+                'branchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+                    let data1 = datas["Table1"];
+                    let data2 = datas["Table2"];
+                    $('#TS_Grid .detail')[0].innerHTML = '';
+                    let source_unique = data1.map(item => item.SourceID).filter((value, index, self) => self.indexOf(value) === index);
+                    TS_RenderSource(source_unique, "TS_Grid");
+                    let group_unique = data2.map(item => item.GroupID).filter((value, index, self) => self.indexOf(value) === index);
+                    TS_RenderGroup(group_unique, "TS_Grid");
+
+
+                    TS_Render(data, source_unique, group_unique, data1, data2, "TS_GridBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    async function TS_Render(data, source_unique, group_unique, sourcedata, groupdata, id)
+    {
+        new Promise((resolve) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let trtotal = '';
+                    let tapp = 0, tappconsul = 0, tapptreat = 0, tappchecked = 0, tappnotyet = 0, tappcancel = 0;
+                    let tsource = [], tgroup = []
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let dateRow = ConvertDateTimeUTC_DMY(item.DateSchedule);
+                        tapp = tapp + item.TotalSchedule;
+                        tappconsul = tappconsul + item.Consult;
+                        tapptreat = tapptreat + item.Treatment;
+                        tappchecked = tappchecked + item.Checkedin;
+                        tappnotyet = tappnotyet + item.Notyet;
+                        tappcancel = tappcancel + item.Canceled;
+                        let tr = `
+                                            <td class="vt-number-order"></td>
+                                            <td class="text-center" style="max-width:110px;min-width:110px;">
+                                                <a href="#" class="border-1 border-primary border-bottom buttonViewClass" data-date="${dateRow}" >
+                                                    ${dateRow}
+                                                </a>
+                                            </td>
+                                            <td class="text-center">${formatNumber(item.TotalSchedule)}</td>
+                                            <td class="text-center">${formatNumber(item.Consult)}</td>
+                                            <td class="text-center">${formatNumber(item.Treatment)}</td>
+                                            <td class="text-center">${formatNumber(item.Checkedin)}</td>
+                                            <td class="text-center">${formatNumber(item.Notyet)}</td>
+                                            <td class="text-center">${formatNumber(item.Canceled)}</td>`
+
+                        for (let j = 0; j < source_unique.length; j++) {
+                            let _item = sourcedata.filter(v => v.DateSchedule === item.DateSchedule && v.SourceID === source_unique[j]);
+                            let _itemapp = _item[0] != undefined ? _item[0].TotalSchedule : 0;
+                            tr = tr + '<td class="source text-center">' + formatNumber(_itemapp) + '</td>';
+                            tsource[j] = (tsource[j] != undefined ? tsource[j] : 0) + _itemapp;
+                        }
+                        for (let j = 0; j < group_unique.length; j++) {
+                            let _item = groupdata.filter(v => v.DateSchedule === item.DateSchedule && v.GroupID === group_unique[j]);
+                            let _itemapp = _item[0] != undefined ? _item[0].TotalSchedule : 0;
+                            tr = tr + '<td class="group text-center">' + formatNumber(_itemapp) + '</td>';
+                            tgroup[j] = (tgroup[j] != undefined ? tgroup[j] : 0) + _itemapp;
+                        }
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td class="text-center" style="max-width:110px;min-width:110px;">'
+                                + '<a href="#" class="border-1 border-primary border-bottom buttonViewClass text-white" data-date="0" >@Local["Tổng"]</a>'
+                                + '</td> '
+                                + '<td class="text-center">' + formatNumber(tapp) + '</td>'
+                                + '<td class="text-center">' + formatNumber(tappconsul) + '</td>'
+                                + '<td class="text-center">' + formatNumber(tapptreat) + '</td>'
+                                + '<td class="text-center">' + formatNumber(tappchecked) + '</td>'
+                                + '<td class="text-center">' + formatNumber(tappnotyet) + '</td>'
+                                + '<td class="text-center">' + formatNumber(tappcancel) + '</td>';
+
+                            for (let j = 0; j < tsource.length; j++) {
+                                trtotal = trtotal + '<td class="source text-center">' + formatNumber(tsource[j]) + '</td>'
+                            }
+                            for (let j = 0; j < tgroup.length; j++) {
+                                trtotal = trtotal + '<td class="group text-center">' + formatNumber(tgroup[j]) + '</td>'
+                            }
+
+                            stringContent = stringContent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+                    $('#TSL_Total').html(formatNumber(tapp));
+                    $('#TSL_Checked').html(formatNumber(tappchecked));
+                    $('#TSL_NotYet').html(formatNumber(tappnotyet));
+                    $('#TSL_Canceled').html(formatNumber(tappcancel));
+
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            TS_Event();
+            TS_Filter();
+        })
+    }
+
+    //#region // Render Header
+    function TS_RenderSource(data, id)
+    {
+        var myNode = $('#' + id + ' .detail')[0];
+        var myNodeParent = $('#' + id + ' .source')[0];
+        if (myNode != null) {
+            let stringContent = '';
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = RP_DataCustomerSource[data[i]];
+                    stringContent = stringContent + `<th class="source">${item != undefined ? item.Name : '@Local["Khác"]'}</th >`;
+                }
+                myNode.innerHTML = myNode.innerHTML + stringContent;
+                myNodeParent.setAttribute("colspan", data.length);
+            }
+            else myNodeParent.classList.add("d-none");
+        }
+    }
+    function TS_RenderGroup(data, id)
+    {
+        var myNode = $('#' + id + ' .detail')[0];
+        var myNodeParent = $('#' + id + ' .group')[0];
+        if (myNode != null) {
+            let stringContent = '';
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = RP_DataCustomerGroup[data[i]];
+                    stringContent = stringContent + `<th class="group">${item != undefined ? item.Name : '@Local["Khác"]'}</th >`;
+                }
+                myNode.innerHTML = myNode.innerHTML + stringContent;
+                myNodeParent.setAttribute("colspan", data.length);
+            }
+            else myNodeParent.classList.add("d-none");
+        }
+    }
+    //#endregion
+
+    //#region // LOAD DETAIL AND RENDER
+    function TS_DetailLoad(date)
+    {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        xhrLoadDetail = AjaxLoad(url = "/Report/Traffic/TrafficGeneral/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'date': date,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    TS_FlagChangeType = 1;
+                    $("#TS_TypeSche").dropdown("refresh");
+                    $("#TS_TypeSche").dropdown("set selected", '0');
+                    $("#TS_TypeDetail").dropdown("refresh");
+                    $("#TS_TypeDetail").dropdown("set selected", '0');
+                    TS_FlagChangeType = 0;
+
+
+                    TS_DataDetail = JSON.parse(result);
+                    TS_CallFirstRender(TS_DataDetail);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TS_DetailRenderMore () {
+        TS_IndexData += 1;
+        if (TS_DataList && TS_DataList[TS_IndexData]) {
+            fnRenderBlock(TS_DataList[TS_IndexData], "TS_GridDetailBody"
+                , blocknum = 100
+                , fnrender = TS_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+
+    function TS_CallFirstRender (data) {
+        TS_IndexData = 0;
+        $("#TS_GridDetailBody").empty();
+        TS_DataList = sliceIntoChunks(JSON.parse(JSON.stringify(data)), 500);
+        fnRenderBlock(TS_DataList[TS_IndexData], "TS_GridDetailBody"
+            , blocknum = 100
+            , fnrender = TS_DetailRender
+            , fnsuccess = null
+        );
+    }
+
+    async function TS_DetailRender(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let status = item.IsCancel == 1 ? '@Local["Lịch huỷ"]' : (item.Status != 1 ? '@Local["Đã đến"]' : '@Local["Chưa đến"]');
+                            let custAge = (item.CustDOB.includes('1900-01-01') || item.CustDOB == '') ? '' : ((new Date()).getFullYear() - (new Date(item.CustDOB)).getFullYear() )
+                            let tr = `
+                                <tr class="vt-number">
+                                    <td class="vt-number-order"></td>
+                                    <td>
+                                        <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustCode}</a>
+                                    </td>
+                                    <td data-name="custdoccode">${item.CustDocCode}</td>
+                                    <td data-name="custoldcode">${item.CustOldCode}</td>
+                                    <td>${item.CustName}</td>
+                                    <td data-name="phone"><span class="_tab_control_" data-tab="phone_customer">${item.Phone}</span></td>
+                                    <td data-name="custage">${custAge}</td>
+                                    <td data-name="custaddress"><span class="_tab_control_" data-tab="address_customer">${item.CustAddress}</span></td>
+                                    <td data-name="custaddress"><span class="_tab_control_" data-tab="address_customer">${Fun_GetName_ByID(RP_DataCommune, item.CustCommuneID)}</span></td>
+                                    <td data-name="custaddress"><span class="_tab_control_" data-tab="address_customer">${Fun_GetName_ByID(RP_DataDistrict, item.CustDistrictID)}</span></td>
+                                    <td data-name="custaddress"><span class="_tab_control_" data-tab="address_customer">${Fun_GetName_ByID(RP_DataCity, item.CustCityID)}</span></td>
+
+                                    <td>${ConvertDateTimeUTC_Time_OnlyHour(item.DateSchedule)}</td>
+                                    <td>${ConvertDateTimeUTC_DMY(item.DateSchedule)}</td>
+                                    <td data-name="type">${item.TypeID == 1 ? `Tư Vấn` : `Điều Trị`}</td>
+                                    <td data-name="typedetail">${item.ScheduleName}</td>
+                                    <td>${status}</td>
+                                    <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined) ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                                    <td data-name="source">${(RP_DataCustomerSource[item.SourceID] != undefined) ? RP_DataCustomerSource[item.SourceID].Name : ''}</td>
+                                    <td data-name="group">${(RP_DataCustomerGroup[item.GroupID] != undefined) ? RP_DataCustomerGroup[item.GroupID].Name : ''}</td>
+                                    <td data-name="createby">${(RP_DataEmployee[item.AppCreateBy] != undefined) ? RP_DataEmployee[item.AppCreateBy].Name : ''}</td>
+                                    <td data-name="consult">${Fun_GetName_ByID(RP_DataEmployee, item.ConsultID)}</td>
+                                </tr>
+                                `
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        $('#TS_GridDetail').tablesort();
+                        Checking_TabControl_Permission();
+                        TS_shtable.Refresh();
+                    }
+                }
+                resolve();
+            }, 10)
+
+        })
+    }
+
+    function TS_FillType () {
+        if (TS_FlagChangeType == 0) {
+            let TypeID = $("#TS_TypeSche").dropdown("get value") ? Number($("#TS_TypeSche").dropdown("get value")) : 0;
+            let TypeDetailID = $("#TS_TypeDetail").dropdown("get value") ? Number($("#TS_TypeDetail").dropdown("get value")) : 0;
+            let data = TS_DataDetail;
+
+            if (TypeID != 0 || TypeDetailID != 0) {
+                data = data.filter((item) => {
+                    return ((TypeID == 0 || item["TypeID"] == TypeID) && (TypeDetailID == 0 || item["ScheduleID"] == TypeDetailID))
+                })
+            }
+            TS_CallFirstRender(data);
+        }
+    }
+    //#endregion
+
+    //#region // Event
+    function TS_Event()
+    {
+        $("#TS_GridBody .buttonViewClass").unbind('click').on("click", function ()
+        {
+            let date = $(this).attr('data-date');
+            $("#TrafficGeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#TrafficGeneralDetail").offset().top
+            }, 300);
+            if (date == "0") {
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                $("#lbDetailDate").html(_dateFrom + ' to ' + _dateTo);
+            }
+            else {
+                $("#lbDetailDate").html(date);
+            }
+            TS_DetailLoad(date);
+        })
+    }
+    function TS_Filter()
+    {
+
+        if ($('#TS_Source').is(":checked")) $('#TS_Grid .source').removeClass("d-none");
+        else $('#TS_Grid .source').addClass("d-none");
+        if ($('#TS_Group').is(":checked")) $('#TS_Grid .group').removeClass("d-none");
+        else $('#TS_Grid .group').addClass("d-none");
+
+    }
+    function TS_Export()
+    {
+        syslog_ExpExcel('e', Outlang['Luu_luong_lich_hen']);
+        exportToExcel("TS_Grid", Outlang['Luu_luong_lich_hen']);
+    }
+    async function TS_ExportDetail()
+    {
+        let fileName = xoa_dau($("#lbDetailDate").text()).replaceAll(' ', '-');
+        syslog_ExpExcel('e', fileName);
+        await exportToExcel("TS_GridDetail", fileName);
+    }
+             //#endregion
+
+</script>

@@ -1,0 +1,248 @@
+﻿@page
+@model SourceMain.Pages.Report.Labo.BalanceSupplierLaboGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="balance_supplier_labo_header" class="text-md text-dark font-weight-bold mb-1">
+                    Công Nợ Nhà Cung Câp Labo
+                </p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#BalanceSupplierLaboGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_BalanceSuppLaboGrid()"></i>
+ 
+            </div>
+        </div>
+      
+    </div>
+    <div class="collapsesticky collapse show" id="BalanceSupplierLaboGrid">
+
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <div id="balanceSuppLaboGrid_waiting" class="waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+
+                </div>
+                <table class="table vt-table mb-0" id="dtBalanceSuppLaboMaster">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th data-languagestatic="supplier">Nhà Cung Cấp</th>
+                            <th data-languagestatic="sign_fund">Ký Quỹ</th>
+                            <th data-languagestatic="rasing">Phát Sinh</th>
+                            <th data-languagestatic="rp_paid">Thanh Toán</th>
+                            <th data-languagestatic="left">Nợ</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtBalanceSuppLaboMasterBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="detailShow" class="card mt-2"  >
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p id="lbDetailSupplier" class="text-md text-dark font-weight-bold mb-1"></p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#BalanceSupplierLaboGridDetail" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+                <i data-tab="export_excel" class="_tab_control_ vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_BalanceSuppLaboGrid()"></i>
+
+            </div>
+        </div>
+
+    </div>
+    <div class="collapsesticky collapse show" id="BalanceSupplierLaboGridDetail">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0">
+                    <thead>
+                        <tr>
+                            <th data-languagestatic="no" style="width: 35px;">#</th>
+                            <th data-languagestatic="customer" style="width: 300px;">Khách Hàng</th>
+                            <th data-languagestatic="service">Dịch Vụ</th>
+                            <th data-languagestatic="quantity" style="width: 120px;">Số Lượng</th>
+                            <th data-languagestatic="teeth" style="width: 120px;">Răng</th>
+                            <th data-languagestatic="date_request" style="width: 300px;">Ngày Yêu Cầu</th>
+                            <th data-languagestatic="doctor" style="width: 300px;">BS Yêu Cầu</th>
+                            <th data-languagestatic="rasing" style="width: 120px;">Phát Sinh</th>
+                            <th data-languagestatic="rp_paid" style="width: 120px;">Thanh Toán</th>
+                            <th data-languagestatic="left" style="width: 120px;">Còn Lại</th>
+                        </tr>
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtBalanceSuppLaboDetailBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var data_balance_master;
+    var data_balance_detail;
+    var Name_File_Export = "Tat-Ca";
+    var DataTeeth;
+    $(document).ready(function () {
+ 
+        Master_IndexDB_Reads(_Session_Data, [_Session_Teeth]
+            , function (data) {
+                DataTeeth = data[0];
+                LoadDataReport_BalanceSuppLaboGrid();
+            });
+
+
+        $('#dtBalanceSuppLaboMaster').tablesort();
+        $('#dtdtBalanceSuppLaboDetail').tablesort();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+    });
+
+    function LoadDataReport_BalanceSuppLaboGrid() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/Labo/BalanceSupplierLaboGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo  }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    data_balance_master = JSON.parse(result)["Table1"];
+                    data_balance_detail = JSON.parse(result)["Table2"];
+                    Render_BalanceSuppLabo_Master(data_balance_master, "dtBalanceSuppLaboMasterBody");
+                     
+                    $("#dtBalanceSuppLaboMaster tr:first-child").trigger('click')
+                    //Render_BalanceSuppLabo_Detail(data_balance_detail, "dtBalanceSuppLaboDetailBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#balanceSuppLaboGrid_waiting").show();
+            }
+            , complete = function (e) {
+                $("#balanceSuppLaboGrid_waiting").hide();
+            }
+        );
+        return false;
+    }
+
+    function EventRowMasterGrid() {
+        $('#dtBalanceSuppLaboMaster').delegate('.rowMaster', 'click', function (event) {
+            let id = Number($(this).attr("data-id"));
+            Name_File_Export = $(this).attr("data-name");
+            $('#lbDetailSupplier').html(Name_File_Export);
+            Load_BalanceSuppLabo_Detail(id);
+            $('.rowMaster').removeClass('active');
+            $(this).addClass('active');
+ 
+        });
+         
+    }
+    function Load_BalanceSuppLabo_Detail(id) {
+        if (id == -1) {
+            Render_BalanceSuppLabo_Detail(data_balance_detail, "dtBalanceSuppLaboDetailBody");
+        }
+        else {
+            let data = data_balance_detail.filter(word => word.SupplierID == id);
+            Render_BalanceSuppLabo_Detail(data, "dtBalanceSuppLaboDetailBody");
+        }
+
+    }
+
+    function Render_BalanceSuppLabo_Master(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td data-sortvalue="' + item.Fund + '" style="text-align:right">' + formatNumber(item.Fund)
+                        + '</td>'
+                        + '<td data-sortvalue="' + item.TotalAmout + '" style="text-align:right">' + formatNumber(item.TotalAmout) + '</td>'
+                        + '</td>'
+                        + '<td data-sortvalue="' + item.TotalPaid + '" style="text-align:right">' + formatNumber(item.TotalPaid) + '</td>'
+                        + '</td>'
+                        + '<td data-sortvalue="' + item.TotalOwe + '" style="text-align:right">' + formatNumber(item.TotalOwe) + '</td>';
+                    stringContent = stringContent + '<tr role="row" class="vt-number rowMaster ' + ((item.ID == -1) ? 'row_total' : '') + '" data-id="' + item.ID + '" data-name="' + item.Name + '" >' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        EventRowMasterGrid();
+    }
+    function Render_BalanceSuppLabo_Detail(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td style="text-align:left"><a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + "&ver=" + versionofWebApplication + '">' + item.CustCode + '</a></br>' + '<span>' + item.CustName + '</span>'
+                        + '</td>'
+
+
+                        + '<td>'
+                        + item.LaboName
+                        + '</td>'
+
+                        + '<td  >' + item.Quantity + '</td>'
+
+                        + '<td>'
+                        + ((item.TeethChoosing != '') ? Fun_GetTeeth_ByToken(DataTeeth, item.TeethChoosing, item.TeethType) : '')
+                        + '</td>'
+
+
+                        + '<td>' + ConvertDateTimeToStringDMY_HM(item.Created) + '</td>'
+                        + '<td>' + item.Doctor + '</td>'
+
+                        + '<td data-sortvalue="' + item.Amount + '"  >' + formatNumber(item.Amount) + '</td>'
+                        + '<td data-sortvalue="' + item.Paid + '"  >' + formatNumber(item.Paid) + '</td>'
+                        + '<td data-sortvalue="' + item.AmountOve + '"  >' + formatNumber(item.AmountOve) + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function exportData_BalanceSuppLaboGrid() {
+        exportToExcel("dtdtBalanceSuppLaboDetail", 'Cong-No-NCC (' + Name_File_Export+')');
+    }
+ 
+</script>
+
+

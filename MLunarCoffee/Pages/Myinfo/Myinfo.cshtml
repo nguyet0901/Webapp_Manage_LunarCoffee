@@ -1,0 +1,151 @@
+﻿@page
+@model MLunarCoffee.Pages.Myinfo.Myinfo
+@{
+}
+
+<div>
+    <div class="mt-2">
+        <div class="d-lg-flex">
+            <ul id="myinfoheader" class="nav nav-pills p-1 bg-transparent permissionlist px-0" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="myinfoheader nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" data-bs-target="#tabmyinfo">@Local["Thông tin chung"]</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabuserlog">@Local["Lịch sử"]</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body px-0">
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade active show" id="tabmyinfo" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-lg-3">
+                        <div class="card card-plain position-sticky top-1 ">
+                            <ul id="myinfoitem" class="nav nav-pills flex-column bg-white border-radius-lg p-3">
+                                <li class="nav-item">
+                                    <a class="myinfoitem nav-link text-body" data-fun="setting" data-hover>
+                                        <div class="d-inline me-2">
+                                            <i class="fas fa-cog text-primary"></i>
+                                        </div>
+                                        <span class="text-sm">@Local["Cài đặt"]</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item pt-2">
+                                    <a class="myinfoitem nav-link text-body" data-fun="profile" data-hover>
+                                        <div class="d-inline me-2">
+                                            <i class="fas fa-user-alt text-primary"></i>
+                                        </div>
+                                        <span class="text-sm">@Local["Mã hồ sơ"]</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item pt-2">
+                                    <a class="myinfoitem nav-link text-body" data-fun="password" data-hover>
+                                        <div class="d-inline me-2">
+                                            <i class="fas fa-key text-primary"></i>
+                                        </div>
+                                        <span class="text-sm">@Local["Đổi mật khẩu"]</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item pt-2">
+                                    <a class="myinfoitem nav-link text-body" data-fun="sign" data-hover>
+                                        <div class="d-inline me-1">
+                                            <i class="fas fa-signature text-primary"></i>
+                                        </div>
+                                        <span class="text-sm">@Local["Cập nhật chữ ký"]</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item pt-2">
+                                    <a class="d-flex myinfoitem nav-link text-body" data-fun="form" data-hover>
+                                        <div class="d-flex w-100 align-items-center">
+                                            <div class="d-inline me-2">
+                                                <i class="fas fa-align-justify text-primary"></i>
+                                            </div>
+                                            <span class="text-sm">@Local["Phiếu duyệt"]</span>
+
+                                            <div class="d-flex ms-auto">
+                                                <span id="myinfoitem_num" class="badge badge-md badge-circle badge-floating badge-danger border-white"></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-9 mt-lg-0 mt-4" id="divmyinfodetail">
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tabuserlog" role="tabpanel">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        Myinfo_Getdata();
+        $('#myinfoheader a:first').trigger('click');
+        $(".myinfoheader").click(function(event) {});
+        EventLinkClick_Myinfo();
+        $('#myinfoitem a:first').trigger('click');
+    });
+
+    function Myinfo_Getdata() {
+        AjaxLoad(url = "/Myinfo/Myinfo/?handler=GetData"
+            , data = {}, async = true, error = null
+            , success = function(result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        $("#myinfoitem_num").html(data[0].Order);
+                        if (data[0].Order == 0) {
+                            $("#myinfoitem_num").removeClass('badge-danger').addClass('badge-success');
+                        }
+                        else $("#myinfoitem_num").removeClass('badge-success').addClass('badge-danger');
+                    }
+                }
+            }
+        );
+    }
+
+    function EventLinkClick_Myinfo() {
+        $(".myinfoitem").click(function(event) {
+            let fun = $(this).attr("data-fun");
+            $('.myinfoitem').removeClass('active');
+            $(this).addClass('active');
+            switch (fun) {
+                case "setting":
+                    $("#divmyinfodetail").empty();
+                    $("#divmyinfodetail").load("/MyInfo/MySetting");
+                    break;
+                case "profile":
+                    $("#divmyinfodetail").empty();
+                    $("#divmyinfodetail").load("/Employee/EmployeeDetail?Type=updatePersonal");
+                    break;
+                case "password":
+                    $("#divmyinfodetail").empty();
+                    $("#divmyinfodetail").load("/Login/ChangePassword");
+                    break;
+                case "sign":
+                    $("#divmyinfodetail").empty();
+                    $("#divmyinfodetail").load("/MyInfo/Mysignature");
+                    break;
+                case "form":
+                    $("#divmyinfodetail").empty();
+                    $("#divmyinfodetail").load("/MyInfo/MyApproveform");
+                    break;
+
+                default: break;
+            }
+        });
+
+        $('#myinfoheader a[data-bs-target="#tabuserlog"]').on("click", function() {
+            $("#tabuserlog").load("/MyInfo/UserLog?UserID=" + sys_userID_Main);
+        })
+    }
+
+
+</script>

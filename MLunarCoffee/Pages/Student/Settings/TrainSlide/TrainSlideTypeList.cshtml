@@ -1,0 +1,194 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.TrainSlide.TrainSlideTypeListModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row" id="TrainSlideType_Main">
+    <div class="col-12">
+        <div class="card-header pb-0">
+            <div class="d-flex">
+                <div class="w-50 col-auto my-auto">
+                    <div class="h-100">
+                        <h6 class="mb-0 text-capitalize">@Local["Danh sách loại tài liệu"]</h6>
+                    </div>
+                </div>
+                <div class="ms-auto my-auto mt-1">
+                    <button id="btn_addTrainSlideType" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return TrainSlideType_AddNew()">
+                        @Local["Thêm mới"]
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body pt-2">
+            <div class=" m-0 my-3 mobile-responsive">
+                <table id="dtContentTrainSlideType" class="table vt-table mb-0">
+                    <thead class="hiddenCollapse">
+                        <tr role="row">
+                            <th class="d-none">ID</th>
+                            <th style="width: 40px;">#</th>
+                            <th class="col-3">@Local["Loại tài liệu"]</th>
+                            <th>@Local["Mã"]</th>
+                            <th>@Local["Ghi chú"]</th>
+                            <th class="col-2">@Local["Người tạo"]</th>
+                            <th style="width: 40px;">@Local["Xóa"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dtContentTrainSlideTypebody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="TrainSlideType_Detail"></div>
+
+<script>
+
+    //#region // DECLARE & INIT
+
+    let DataEmployee;
+
+    $(document).ready(function() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function(data) {
+                DataEmployee = data[0];
+                TrainSlideType_LoadList();
+            });
+        TrainSlideType_Event();
+    });
+
+    //#endregion
+
+
+    //#region // LOAD LIST
+
+    function TrainSlideType_LoadList() {
+        AjaxLoad(url = "/Student/Settings/TrainSlide/TrainSlideTypeList?handler=Loadata"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function(result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    TrainSlideType_RenderList(data, "dtContentTrainSlideTypebody");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+
+    //#region // DELETE
+
+    function TrainSlideType_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function() { TrainSlideType_DeleteExecute(id); }, function() { });
+    }
+
+    function TrainSlideType_DeleteExecute(id) {
+        if (id != null && !isNaN(id)) {
+            AjaxLoad(url = "/Student/Settings/TrainSlide/TrainSlideTypeList?handler=DeleteItem"
+                , data = { 'id': id }
+                , async = true
+                , error = function() { notiError_SW(); }
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        TrainSlideType_LoadList();
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function TrainSlideType_RenderList(data, id) {
+        new Promise((resolve) => {
+            let myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if ((data && data.length) > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let objCreated = DataEmployee[item.CreatedBy] != undefined ? DataEmployee[item.CreatedBy] : '';
+                        let tr = `<td class="d-none">${item.ID}</td>
+                                    <td class="vt-number-order"></td>
+                                    <td><a href="#" class="text-decoration-underline fw-bold buttonEditClass">${item.Name}</a></td>
+                                    <td>${item.Code}</td>
+                                    <td>${item.Note}</td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <div class="icon icon-shape icon-sm me-2 text-center align-items-center">
+                                                <img class="avatar avatar-xs mt-2" src="${objCreated.Avatar != '' ? objCreated.Avatar : Master_Default_Pic}" alt="label-image">
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <h6 class="mb-0 text-dark text-sm mb-0">${objCreated.Name}</h6>
+                                                <span class="text-xs">${ConvertDateTimeUTC_YMD(item.Created)}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></td>
+                            `
+                        stringContent += '<tr class="vt-number" role="row">' + tr + '</tr>';
+                    }
+                    myNode.innerHTML = stringContent;
+                }
+                TrainSlideType_Event();
+            }
+        });
+    }
+
+    //#endregion
+
+
+    //#region // EVENT
+
+    function TrainSlideType_Event() {
+        $('#dtContentTrainSlideTypebody .buttonEditClass').on('click', function() {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            TrainSlideType_Edit(ID);
+        });
+        $('#dtContentTrainSlideTypebody .buttonDeleteClass').on('click', function() {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            TrainSlideType_Delete(ID);
+        });
+    }
+    function TrainSlideType_AddNew(){
+
+        TrainSlideType_OpenDetail();
+        $("#TrainSlideType_Detail").empty();
+        $("#TrainSlideType_Detail").load("/Student/Settings/TrainSlide/TrainSlideTypeDetail" + "?ver=" + versionofWebApplication);
+        return false;
+    }
+    function TrainSlideType_Edit(ID) {
+        TrainSlideType_OpenDetail();
+        $("#TrainSlideType_Detail").empty();
+        $("#TrainSlideType_Detail").load("/Student/Settings/TrainSlide/TrainSlideTypeDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        return false;
+    }
+
+    function TrainSlideType_OpenDetail() {
+        $("#TrainSlideType_Main").hide();
+        $("#TrainSlideType_Detail").show();
+    }
+    function TrainSlideType_CloseDetail() {
+        $("#TrainSlideType_Main").show();
+        $("#TrainSlideType_Detail").hide();
+    }
+    //#endregion
+
+
+</script>

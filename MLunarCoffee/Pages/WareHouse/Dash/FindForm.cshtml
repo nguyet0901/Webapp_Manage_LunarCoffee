@@ -1,0 +1,108 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Dash.FindForm
+@{
+    Layout=null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Tìm kiếm chứng từ"]</h6>
+                    <p class="text-sm mb-0">@Local["Chứng từ xuất kho, nhập kho, phiếu order nhà cung cấp"]</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="divfind" class="waitingdiv text-center" style="display: none; position: absolute; left: 50%;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div class="vtcondition">
+                    <a class="sign" data-open="@Local[" Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row m-0 form3">
+                            <div class="row">
+                                <div class="col-12 col-xl-12 px-0">
+                                    <p class="text-dark text-sm mb-2 ps-1">@Local["Nhập mã chứng từ để tìm kiếm"]</p>
+                                    <div class="d-flex align-items-center">
+                                        <div class="form-group w-lg-30">
+                                            <div class="input-group bg-gray-200">
+                                                <input id="txtFindForm" class="form-control " placeholder="eg .@Local[" Mã chứng từ"]" type="text">
+                                                <span class="input-group-text bg-transparent" data-bs-toggle="tooltip" data-bs-placement="top"><i class="fas fa-barcode"></i></span>
+                                            </div>
+                                        </div>
+                                        <a class="btn btn-outline-secondary ms-2 px-3" onclick="FindFormLoad()">@Local["OK"]</a>
+                                    </div>
+                                    <p id="FindFormNoresult" class="text-gradient text-danger text-sm mb-1" style="display:none;">@Local["Không có kết quả"].</p>
+                                </div>
+                                <div class="col-12  col-xl-12 px-0 mt-2">
+                                    <div class="border-dashed border-1 border-secondary border-radius-md mt-lg-4 p-3" style="display:none" id="FindFormDetail">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    function FindFormLoad () {
+
+        let code = xoa_dau($('#txtFindForm').val().toLowerCase()).trim();
+        if (code != undefined && code.length > 3) {
+            AjaxLoad(url = "/WareHouse/Dash/FindForm/?handler=LoadData"
+                , data = {'code': code}, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data[0].RESULT == 0) {
+                            $("#FindFormNoresult").show();
+                        }
+                        else {
+                            let type = data[0].RESULT;
+                            FindForm_Render(type, code);
+                        }
+
+                    }
+                    else {
+                        $("#FindFormNoresult").show();
+                    }
+                },
+                sender = null,
+                before = function (e) {
+                    $('#FindFormDetail').hide();
+                    $("#FindFormNoresult").hide();
+                    $("#divfind").show();
+                },
+                complete = function (e) {
+                    $("#divfind").hide();
+                }
+            );
+        }
+    }
+    async function FindForm_Render (type, code) {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    $('#FindFormDetail').empty();
+                    $('#FindFormDetail').load("/WareHouse/Ticket/ViewForm?type=" + type
+                        + "&code=" + code
+                        + "&ticketproduct=" + 0, function () {
+                            $('#FindFormDetail').show();
+                        })
+                }
+            )
+        })
+
+
+    }
+
+</script>

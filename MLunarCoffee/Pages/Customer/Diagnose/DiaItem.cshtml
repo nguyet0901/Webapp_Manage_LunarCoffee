@@ -1,0 +1,1037 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Diagnose.DiaItem
+@{
+    Layout = null;
+}
+
+<div class="container-fluid pb-3 px-1">
+    <div class="row ms-n2">
+        <div id="Dit_Graphic" class="row px-1 d-none">
+            <div class="col-12 col-md-12 col-xl-7 px-1 mt-0">
+                <div class="d-none" id="difree_area">
+                    <div class="fredia position-relative  d-flex">
+                        <div class="row px-1 w-100 d-none">
+                            <span class="text-dark text-xs d-block w-100 pb-2 ">@Local["Mức độ"] - @Local["Tăng dần"] (1 - 10)</span>
+                            <div class="form-group mb-1 d-flex">
+                                <div id="diset_type" class="input-group" style="min-width: 130px; max-width: 130px; ">
+                                    <a data-value="hand" class="input-group-text item p-2 py-1 fw-bold nav-link text-dark cursor-pointer active">
+                                        <i class="fas fa-hand-point-up"></i>
+                                    </a>
+                                    <a data-value="pen" class="input-group-text item p-2 py-1 fw-bold nav-link text-dark cursor-pointer">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <a data-value="eraser" class="input-group-text item p-2 py-1 fw-bold nav-link text-dark cursor-pointer">
+                                        <i class="fas fa-eraser"></i>
+                                    </a>
+                                    <a data-value="trash" class="input-group-text item p-2 py-1 fw-bold nav-link text-danger cursor-pointer">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                                <div id="diset_size" class="input-group">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mx-0">
+                            <div id="diset_color" class="input-group">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-5">
+                        <div id="difree_canvascon" class="d-flex justify-content-center position-relative">
+                            <canvas id="difree_canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-none" id="dicanvas_area">
+                    <div class="d-flex justify-content-center">
+                        <div class="position-relative">
+                            <canvas id="diitem_canvas"></canvas>
+                            <div id="diitem_popup" class="position-absolute bg-white" style="z-index: 2000; display: none;">
+                                <div class=" rounded-3 shadow-lg p-3" style="width: 300px;">
+                                    <label>@Local["Tìm kiếm"]</label>
+                                    <input class="form-control" onkeyup="Dit_StatusSearch()" id="diitem_stasearch" type="text" placeholder="@Local["Tìm kiếm"]" autocomplete="off">
+                                    <div id="diitem_statusnote" class="ellipsis_three_line py-1 text-secondary text-sm" data-bs-toggle="tooltip">
+                                    </div>
+                                    <ul id="diitem_status" class="bg-white rounded-1 d-block height-200 mt-2 nav nav-pills overflow-auto px-0">
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-12 col-xl-5 p-1">
+                <div class="mt-1">
+                    <label class="border-bottom ms-1 text-sm fw-bold">@Local["Chi tiết"]</label>
+                    <div class="overflow-auto">
+                        <ul class="row font-weight-normal mx-auto p-0 m-0 overflow-hidden" id="diitem_disease">
+                        </ul>
+                    </div>
+                    <div class="overflow-auto">
+                        <ul class="row font-weight-normal mx-auto p-0 m-0 " id="diitem_freenote">
+                        </ul>
+                    </div>
+                </div>
+                <div id="diitem_icdstatusArea" class="d-none mt-2">
+                    <label>@Local["Tình trạng"] ICD10</label>
+                    <div class="ui fluid search selection dropdown multiple" id="diitem_icdstatus">
+                        <input type="hidden" name="noskills" />
+                        <input class="search" autocomplete="off" tabindex="0" />
+                        <div class="default text">eg .@Local["Tình trạng"]</div>
+                        <div id="cbbdiitem_icdstatus" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+                
+
+
+                <div class="mt-2">
+                    <label class="border-bottom ms-1 text-sm fw-bold">@Local["Ghi chú"]</label>
+                    <textarea id="diitem_diseasenote" class="form-control" name="content" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="row px-2">
+            <div class="mt-2 row overflow-auto border-dashed border-radius-md  border-1 border-secondary m-0 position-relative">
+                <div id="Dit_QuestionWaiting" class="position-absolute top-0 start-50 translate-middle waitingdiv text-center w-100 mt-5 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                    </div>
+                </div>
+                <div class="row w-100 d-flex justify-content-center p-3" id="Dit_QuestionContent">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer fixed-botombutton">
+        <div class="action_Save">
+            <div class="text-danger text-gradient text-sm font-weight-bold" id="DiaDetail_Message"></div>
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" onclick="DiaDetail_Close()">@Local["Đóng"]</button>
+                <button id="BtnDiagnose_Delete" class="btn btn-danger d-none"
+                        onclick="event.preventDefault();DiaDetail_Delete()">
+                    @Local["Xóa"]
+                </button>
+                <button id="BtnDiagnose_Print" class="btn bg-gradient-info mt-2 me-3 d-none" onclick="Dit_QuesPrint()">@Local["In"]</button>
+                <button type="button" class="btn bg-gradient-primary mt-2 me-3" id="Diagnose_btnSave" onclick="DiaDetail_Save()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/html2canvas.js');</script>
+
+<script type="text/javascript">
+    var dit_stroke = '#673ab72e';
+    var dit_fill = '#673ab72e';
+
+    var dit_fillOther = '#e5e5e5';
+    var dit_strokeOther = '#d3d3d3';
+
+    var dit_selcolor = '#640000';
+    var dit_seldash = [5, 3];
+    var dit_selheight = 2;
+
+    var dit_datachoose = {};
+
+    var dit_currentselect = "";
+    var dit_Status = [], dit_StatusSearch = [];
+    var dit_StatusAllkv = {};
+    var dit_StatusSign = {};
+    let dit_Question = {};
+    var dit_Type;
+    var dit_allpath;
+    var dit_CurrentID = 0;
+    var dit_areaName = {};
+    var dit_frcolor = "gray";
+    var dit_frtype = "hand";
+    var dit_frradius = 20;
+    var dit_frLine = 2;
+    var dit_height = 0;
+    var dit_width = 0;
+    var dfre_canvas, dfre_ctx;
+    var prevX = 0,
+        currX = 0,
+        prevY = 0,
+        currY = 0, dit_frdotflag = false, dit_frflag = false;
+    var ditfreColor = [{"level": "M1", "color": "#DEFFDA", "op": "1"}
+        , {"level": "M2", "color": "#A6D6A1","op":"1"}
+        , {"level": "M3", "color": "#57D24B", "op": "0"}
+        , {"level": "M4", "color": "#13D100", "op": "0"}
+        , {"level": "M5", "color": "#74A9E7", "op": "0"}
+        , {"level": "M6", "color": "#006AE3", "op": "0"}
+        , {"level": "M7", "color": "#FFD8CF", "op": "1"}
+        , {"level": "M8", "color": "#FEB7A7", "op": "1"}
+        , {"level": "M9", "color": "#FF6F4F", "op": "0"}
+        , {"level": "M10", "color": "#FF2D00", "op": "0"}
+    ];
+    var ditfreSize = [5, 2];
+    var ditfreData = {};
+    var ditfreXYSelect = {};
+    var ditfree_flag = 0;
+    $(document).on("mousedown", function (e) {
+        let _canvas = $("#diitem_canvas");
+        let _popup = $("#diitem_popup");
+        if (!$(_popup).is(e.target) && $(_popup).has(e.target).length === 0
+            && !$(_canvas).is(e.target) && $(_canvas).has(e.target).length === 0) {
+            $("#diitem_popup").hide();
+        }
+    });
+    $(document).ready(function () {
+        Diset_ColorRender(ditfreColor, "diset_color", function () {
+            $("#diset_color .item:first-child").click();
+        });
+        Diset_SizeRender(ditfreSize, "diset_size", function () {
+            $("#diset_size .item:first-child").click();
+        });
+       
+        
+    });
+    function Dit_IniCanvas (currentid, type, svg, colordraw, width, height, question, isICD) {
+
+        dit_CurrentID = currentid;
+        if (dit_CurrentID != 0) {
+            $('#BtnDiagnose_Delete').removeClass('d-none');
+            Dit_DetailLoad(currentid);
+        }
+        else {
+            Dit_DetailComponent(_ques = question, _svg = "", _freeimg = "", _freedata = "")
+        }
+        if (type != "" && svg != "") {
+            if (colordraw != '') {
+                dit_fillOther = colordraw;
+                dit_strokeOther = colordraw;
+            }
+            $('#dicanvas_area').removeClass('d-none');
+            dit_height = height;
+            dit_width = width;
+            var canvas = document.getElementById('diitem_canvas');
+            canvas.height = dit_height;
+            canvas.width = dit_width;
+            dit_Type = type;
+            var xmlDoc = $.parseXML(svg);
+            dit_allpath = $(xmlDoc).find("path");
+            Dit_Drawlayout("diitem_canvas", dit_allpath);
+            dit_Status = DiagnoseStatus.filter(word => word["Type"] == dit_Type);
+            dit_StatusSign = DiagnoseSign.filter(word => word["Type"] == dit_Type).reduce((pre, arr) => {
+                if (arr.Type && arr.TypeID) pre[arr.Type + '_' + arr.TypeID] = arr;
+                return pre;
+            }, {});
+            dit_StatusAllkv = DiagnoseStatus.reduce((pre, arr) => {
+                if (arr.ID) pre[arr.ID] = arr;
+                return pre;
+            }, {});
+            Dit_StatusRender(dit_Status, "diitem_status");
+            $('#Dit_Graphic').removeClass('d-none');
+            
+        }
+        if (Number(isICD) == 1) {
+            $("#diitem_icdstatus").dropdown('refresh');
+            Load_Combo(DiagnoseICD, "cbbdiitem_icdstatus", false);
+            $('#diitem_icdstatusArea').removeClass('d-none');
+        }
+      
+    }
+
+
+    function Dit_IniImage (currentid, type, image, width, height, question, isICD) {
+        dit_Type = type;
+        dit_CurrentID = currentid;
+        if (dit_CurrentID != 0) {
+            $('#BtnDiagnose_Delete').removeClass('d-none');
+            Dit_DetailLoad(currentid);
+        }
+        else {
+            Dit_DetailComponent(_ques = question, _svg = "", _freeimg = image, _freedata = "")
+        }
+        if (image != "") {
+            dit_height = height;
+            dit_width = width;
+            $('#difree_area').removeClass('d-none');
+            $("#difree_canvascon").width(dit_width).height(dit_height);
+            $('#difree_canvascon').css("background-image", "url('" + image.replace(/(\r\n|\n|\r)/gm, "") + "')");
+            var canvas = document.getElementById('difree_canvas');
+            canvas.height = dit_height;
+            canvas.width = dit_width;
+            Dit_FreeIni();
+            $('#Dit_Graphic').removeClass('d-none');
+        }
+        if (Number(isICD) == 1) {
+            $("#diitem_icdstatus").dropdown('refresh');
+            Load_Combo(DiagnoseICD, "cbbdiitem_icdstatus", false);
+            $('#diitem_icdstatusArea').removeClass('d-none');
+        }
+    }
+    async function Dit_DetailLoad (id) {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Diagnose/DiaItem/?handler=LoadData"
+                , data = {'CurrentID': id}
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    if (result != "" && result != "null") {
+                        let datas = JSON.parse(result);
+                        let dataDetail = datas.DataDetail;
+                        $('#diitem_diseasenote').val(dataDetail[0].Note)
+                        Dit_DetailComponent(_ques = dataDetail[0].DataQuestion, _svg = dataDetail[0].DataSVG
+                            , _freeimg = dataDetail[0].DataImage, _freedata = dataDetail[0].DataFree);
+                        if (dataDetail[0].StatusICD != "") {
+                            $('#diitem_icdstatus').dropdown('refresh')
+                            $('#diitem_icdstatus').dropdown('set selected', dataDetail[0].StatusICD.split(","));
+                        }
+                    }
+                }
+                , sender = null
+                , before = function () {
+
+                }
+                , complete = function (e) {
+
+                }
+            );
+        })
+    }
+    function Dit_DetailComponent (_ques, _svg, _freeimg, _freedata) {
+        if (_ques != '') {
+            dit_Question = JSON.parse(_ques);
+            Dit_QuestionRender(dit_Question, DiaQuestionField, "Dit_QuestionContent");
+            $('#BtnDiagnose_Print').removeClass('d-none');
+        }
+        if (_svg != '') {
+            dit_datachoose = JSON.parse(_svg);
+            Dit_DiseaseRender(dit_datachoose, "diitem_disease");
+            Dit_DrawEle("diitem_canvas", dit_allpath, '');
+        }
+        if (_freedata != '') {
+            ditfreData = JSON.parse(_freedata);
+            dit_freerender(ditfreData, "diitem_freenote");
+            dit_DotRender(ditfreData, "difree_canvascon");
+
+
+        }
+        if (_freeimg != '') {
+            var canvas = document.getElementById("difree_canvas");
+            var ctx = canvas.getContext("2d");
+            var image = new Image();
+            image.onload = function () {
+                ctx.drawImage(image, 0, 0);
+            };
+            image.src = _freeimg;
+        }
+    }
+
+    // #region // Canvas
+    async function Dit_Drawlayout (can, paths) {
+        return new Promise((resolve, reject) => {
+            var canvas = document.getElementById(can);
+            var ctx = canvas.getContext('2d');
+            Dit_DrawEle(can, paths, '');
+            canvas.addEventListener("click", function (e) {
+                for (var i = 0; i < paths.length; i++) {
+                    var r = this.getBoundingClientRect();
+                    var x1 = e.clientX - r.left
+                    var y1 = e.clientY - r.top;
+                    var x = paths[i];
+                    let dataid = x.id;
+
+                    if (dataid != undefined && dataid != "0" && dataid != "") {
+
+                        var path = x.getAttribute("d");
+                        var p = new Path2D(path);
+                        if (ctx.isPointInPath(p, x1, y1)) {
+                            if (dit_currentselect.includes(',' + dataid + ',')) {
+                                dit_currentselect = dit_currentselect.replace(',' + dataid + ',', ',')
+                            }
+                            else {
+                                dit_currentselect = dit_currentselect + dataid + ','
+                            }
+                            if (dit_currentselect != '') {
+                                if (dit_currentselect.charAt(0) != ',') dit_currentselect = ',' + dit_currentselect;
+                                if (dit_currentselect.charAt(dit_currentselect.length - 1) != ',') dit_currentselect = dit_currentselect + ',';
+                            }
+                            Dit_DrawEle(can, paths, dit_currentselect);
+                            Dit_StatusSeleted(dataid, dit_currentselect);
+                            if (!$("#diitem_popup").is(":visible"))
+                                $("#diitem_popup").css({
+                                    "top": 50, "left": '95%'
+                                }).animate({
+                                    "left": '100%'
+                                }).show();
+                        }
+                    }
+                }
+            })
+        })
+    }
+
+    async function Dit_DrawEle (can, paths, choosen) {
+        return new Promise((resolve, reject) => {
+            if (paths != undefined) {
+                var canvas = document.getElementById(can);
+                var ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                dit_areaName = {};
+                for (var i = 0; i < paths.length; i++) {
+                    var x = paths[i];
+                    var path = x.getAttribute("d");
+                    let dataid = x.id;
+                    let name = x.getAttribute('name');
+                    if (name != undefined && dataid != undefined) {
+                        let e = {};
+                        e.ID = dataid;
+                        e.Name = name;
+                        dit_areaName[dataid] = e;
+                    }
+                    var p = new Path2D(path);
+                    if (dataid != undefined && dataid != '' && choosen.includes(',' + dataid + ',')) {
+                        ctx.strokeStyle = dit_selcolor;
+                        ctx.setLineDash(dit_seldash);
+                        ctx.lineWidth = dit_selheight;
+                    }
+                    else {
+                        ctx.setLineDash([]);
+                        ctx.strokeStyle = dit_stroke;
+                        ctx.lineWidth = 1;
+                    }
+                    let isnormal = 0;
+                    let color = '';
+                    for ([key, value] of Object.entries(dit_datachoose)) {
+                        if (value.area != '' && value.area.includes(',' + dataid + ',')) {
+                            if (dit_StatusAllkv[value.id] != undefined) {
+                                isnormal = 1;
+                                color = dit_StatusAllkv[value.id].Color;
+                            }
+                        }
+                    }
+
+                    if (dataid != undefined && dataid != '') {
+
+                        if (isnormal == 0) ctx.fillStyle = dit_fill;
+                        else ctx.fillStyle = color;
+                    }
+                    else {
+                        ctx.strokeStyle = dit_strokeOther;
+                        ctx.fillStyle = dit_fillOther;
+                    }
+
+                    ctx.stroke(p);
+                    ctx.fill(p);
+                }
+            }
+        })
+    }
+    // #endregion
+
+    // #region // Status
+    async function Dit_StatusSeleted (chooseid, choosetoken) {
+        try {
+            let dataChoose = choosetoken.split(',');
+            let dataStatus = dit_Status.filter((item) => dataChoose.includes(item.SignID.toString()));
+
+            if (dataStatus && dataStatus.length != 0) {
+                Dit_StatusRender(dataStatus, "diitem_status");
+                dit_StatusSearch = dataStatus;
+            }
+            else {
+                Dit_StatusRender(dit_Status, "diitem_status");
+                dit_StatusSearch = dit_Status
+            }
+            if (dataChoose && dataChoose[1] != undefined) {
+                let typechoose = dit_StatusSign[dit_Type + '_' + dataChoose[1]];
+                if (typechoose != undefined && typechoose.Content != undefined) {
+                    $("#diitem_statusnote").html(typechoose?.Content || "");
+                    $("#diitem_statusnote").attr('title', typechoose?.Content || "");
+                    $("#diitem_statusnote").Tooltip();
+                }
+                else $("#diitem_statusnote").empty();
+            }
+            else $("#diitem_statusnote").empty();
+
+            // diitem_statusnote
+        }
+        catch (ex) {
+
+        }
+
+    }
+
+    async function Dit_StatusRender (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                            <li class="nav-item diaitem cursor-pointer " data-id="${item.ID}">
+                                <a class="align-items-center cursor-pointer d-flex gap-2 nav-link text-sm px-1" data-hover >
+                                    <span style="background:${item.Color}" class="badge avatar-xs"> </span>
+                                    <span>${item.Name}</span>
+                                </a>
+                            </li>
+                        `
+                        stringContent = stringContent + tr;
+                    }
+                }
+                myNode.innerHTML = stringContent;
+            }
+            Dit_StatusEvent();
+        })
+    }
+    function Dit_StatusEvent () {
+        $("#diitem_status .diaitem").unbind('click').click(function () {
+            if (dit_currentselect != '') {
+                let id = $(this).attr("data-id");
+                let key = (new Date()).getTime();
+                let e = {};
+                e.id = id;
+                e.area = dit_currentselect;
+                dit_datachoose[key] = e;
+                Dit_DiseaseRender(dit_datachoose, "diitem_disease");
+                dit_currentselect = '';
+                Dit_DrawEle("diitem_canvas", dit_allpath, dit_currentselect);
+                $("#diitem_popup").hide();
+            }
+        })
+    }
+    function Dit_StatusSearch () {
+        let search = xoa_dau($('#diitem_stasearch').val().toLowerCase());
+        data = dit_StatusSearch.filter(word => xoa_dau((word["Name"]).toLowerCase()).includes(search));
+        Dit_StatusRender(data, "diitem_status");
+    }
+    // #endregion
+
+    // #region // Disease
+    async function Dit_DiseaseRender (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                for ([key, value] of Object.entries(data)) {
+                    let area, status = '', _color = 'white';
+                    area = Fun_GetString_ByToken(dit_areaName, value.area);
+                    let _d = dit_Status.filter(word => word["ID"] == value.id);
+                    if (_d != undefined && _d.length == 1) {
+                        status = _d[0].Name;
+                        _color = _d[0].Color;
+                    }
+                    let tr = `
+                        <div class="item cursor-pointer col-12 px-1 mt-2">
+                            <div class="p-0">
+                                <div class="d-flex ">
+                                    <span style="background:${_color}" class="badge me-2 mt-1 avatar-xs"> </span>
+                                    <div class="d-flex flex-column justify-content-center">
+                                        <h6 class="text-dark fw-bold mb-0 text-sm">${status}</h6>
+                                        <h6 class="d-inline mb-0  text-sm">${area}</h6>
+                                    </div>
+                                    <div class="d-flex ms-auto">
+                                        <button data-id='${key}' class="btn btn-link btn-icon-only btn-rounded btn-sm opacity-1 my-auto removeStatus"><i class="text-danger fs-6 remove icon"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="horizontal dark my-2">
+                        </div>
+                    `
+                    document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+
+                }
+            }
+            Dit_DiseaseEvent();
+        })
+    }
+    function Dit_DiseaseEvent () {
+        $("#diitem_disease .removeStatus").click(function () {
+            let id = $(this).attr("data-id");
+            delete dit_datachoose[id];
+            Dit_DiseaseRender(dit_datachoose, "diitem_disease")
+            Dit_DrawEle("diitem_canvas", dit_allpath, '');
+        })
+    }
+    // #endregion
+
+    //#region // Question
+    async function Dit_QuestionRender (data, datafield, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id);
+                }
+                Dit_QuestionEvent();
+            }
+        })
+    }
+    function Dit_QuestionEvent () {
+        $("#Dit_QuestionContent input[type='checkbox']").change(function (event) {
+            let answer = this.checked;
+            let id = $(this).attr("id");
+            fn_FormUpdate(id, answer, dit_Question);
+        });
+        $("#Dit_QuestionContent input[type='radio']").change(function (event) {
+            let id = $(this).attr("id");
+            let name = $(this).attr("name");
+            let _obj = $('#Dit_QuestionContent input[type="radio"][name="' + name + '"]');
+            if (_obj != undefined) {
+                _obj.each(function () {
+                    if ($(this).attr("id") == id) {
+                        fn_FormUpdate($(this).attr("id"), 'on', dit_Question);
+                    } else fn_FormUpdate($(this).attr("id"), '', dit_Question);
+
+                });
+            }
+        });
+
+        Dit_QTextareaEvent();
+    }
+    function Dit_QTextareaEvent () {
+        $("#Dit_QuestionContent input[type!='checkbox'][type!='radio'],#Dit_QuestionContent textarea").change(function () {
+            let id = $(this).attr("id");
+            let answer = $(this).val();
+            fn_FormUpdate(id, answer, dit_Question);
+        })
+        $('#Dit_QuestionContent textarea').each(function () {
+            this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+        }).on('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+    function Dit_QuesPrint () {
+        let element = document.getElementById("diitem_canvas");
+        html2canvas(element, {
+            allowTaint: true
+        }).then(canvas => {
+            $(".div-canvas").html(canvas);
+            fn_Print(printedid = "Dit_QuestionContent"
+                , beforefun = function () {
+                    $("#Dit_QuestionContent div").parent().find('.vtprint-hiderow').removeClass("active");
+                    $('#Dit_QuestionWaiting').removeClass('d-none');
+                    $("#Dit_QuestionContent textarea").replaceWith(function () {
+                        return $("<pre />", {
+                            id: $(this).attr('id'),
+                            html: $(this).val(),
+                            class: this.classList.value,
+                            css: {"white-space": "break-spaces"}
+                        })
+                    })
+                }
+                , afterfun = function () {
+                    $("#Dit_QuestionContent div").parent().find('.vtprint-hiderow').addClass("active");
+                    $('#Dit_QuestionWaiting').addClass('d-none');
+                    $(".div-canvas").children().remove();
+                    $("#Dit_QuestionContent pre").replaceWith(function () {
+                        return $("<textarea />", {
+                            id: $(this).attr('id'),
+                            html: $(this).html(),
+                            class: this.classList.value,
+                            css: {"oveflow-y": "hidden"}
+                        })
+                    });
+                    Dit_QTextareaEvent();
+                }
+            );
+        })
+    }
+    //#endregion
+
+    //#region // Main Event
+    function DiaDetail_Save () {
+        let note = $('#diitem_diseasenote').val() ? $('#diitem_diseasenote').val() : '';
+        var statusICD = $('#diitem_icdstatus').dropdown('get value') ? $('#diitem_icdstatus').dropdown('get value') : '';
+        let free_data = {};
+        if (!$('#difree_area').hasClass('d-none')) {
+            free_data = ditfreData;
+
+        }
+        AjaxLoad(url = "/Customer/Diagnose/DiaItem/?handler=ExcuteData"
+            , data = {
+                'CurrentID': dit_CurrentID,
+                'CustomerID': ser_MainCustomerID,
+                'dataSVG': JSON.stringify(dit_datachoose),
+                'dataQues': JSON.stringify(dit_Question),
+                'dataFree': JSON.stringify(free_data),
+                'StatusICD': statusICD,
+                'Note': note,
+                'Type': dit_Type
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+                    if (typeof DiaList_Load !== 'undefined') {
+                        DiaList_Load();
+                    }
+                    syslog_cutdia(dit_CurrentID == 0 ? 'i' : 'u', ser_MainCustomerID, '');
+                    notiSuccess();
+                }
+            }
+            , sender = $('#Diagnose_btnSave')
+        );
+        $('#DiaDetail_Message').html('');
+        return false
+
+    }
+    //#endregion
+
+    //#region // Free canvas
+    async function Diset_ColorRender (data, id, callback) {
+
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                          <a data-value="${item.color}" class="input-group-text item p-2 fw-bold nav-link cursor-pointer ">
+                             <span class="text-dark text-sm d-block w-100">${item.level} </span>
+                             <i style="color: ${item.color} !important;" class="fs-5 fas fa-square"></i>
+                           </a>
+                        `
+                        stringContent = stringContent + tr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            Diset_AllEvent();
+            callback();
+        })
+    }
+    async function Diset_SizeRender (data, id, callback) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                          <a data-value="${item}" class="input-group-text  item p-2 py-1 fw-bold nav-link text-dark cursor-pointer ">
+                                    <i style="font-size: ${(Number(item) + 8).toString()}px !important;" class="fas fa-circle"></i>
+                                </a>
+                        `
+                        stringContent = stringContent + tr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            Diset_AllEvent();
+            callback();
+        })
+    }
+    function Diset_AllEvent () {
+        $("#diset_color .item").unbind('click').click(function () {
+            $("#diset_color .item").removeClass('active');
+            $(this).addClass('active');
+            dit_frcolor = $(this).attr('data-value');
+
+        })
+        $("#diset_size .item").unbind('click').click(function () {
+            $("#diset_size .item").removeClass('active');
+            $(this).addClass('active');
+            dit_frLine = Number($(this).attr('data-value'));
+        })
+        $("#diset_type .item").unbind('click').click(function () {
+            let _type = $(this).attr('data-value');
+            if (_type == 'trash') {
+                const promise = notiConfirm();
+                promise.then(function () {
+                    dit_frdraw(clear = 1);
+                }, function () { });
+            }
+            else {
+                $("#diset_type .item").removeClass('active');
+                $(this).addClass('active');
+                dit_frtype = $(this).attr('data-value');
+            }
+
+
+
+        })
+
+    }
+    function Dit_FreeIni () {
+
+        dfre_canvas = document.getElementById('difree_canvas');
+
+        dfre_ctx = dfre_canvas.getContext("2d");
+        dfre_canvas.addEventListener("mousemove", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('move', e)
+        }, false);
+        dfre_canvas.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('down', e)
+        }, false);
+        dfre_canvas.addEventListener("mouseup", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('up', e)
+        }, false);
+        dfre_canvas.addEventListener("mouseout", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('out', e)
+        }, false);
+        dfre_canvas.addEventListener("touchmove", function (e) {
+
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('move', e.touches[0])
+        }, false);
+        dfre_canvas.addEventListener("touchstart", function (e) {
+
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('down', e.touches[0])
+        }, false);
+        dfre_canvas.addEventListener("touchend", function (e) {
+
+            e.preventDefault();
+            e.stopPropagation();
+            findxy('up', e.touches[0])
+        }, false);
+
+    }
+    function findxy (res, e) {
+
+        var rect = dfre_canvas.getBoundingClientRect();
+        if (res == 'down') {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - rect.left;
+            currY = e.clientY - rect.top;
+            dit_frflag = true;
+            dit_frdotflag = true;
+            if (dit_frdotflag) {
+                dfre_ctx.beginPath();
+                dfre_ctx.fillStyle = dit_frcolor;
+                switch (dit_frtype) {
+                    case "hand": {
+                        //dfre_ctx.globalCompositeOperation = "source-over";
+                        //dfre_ctx.arc(currX, currY, dit_frradius, 0, 2 * Math.PI, false);
+                        //dfre_ctx.fillStyle = dit_frcolor;
+                        //dfre_ctx.fill();
+                        dit_CreatedDot(currX, currY);
+                    } break;
+                    case "pen": {
+                        dfre_ctx.globalCompositeOperation = "source-over";
+                        dfre_ctx.fillRect(currX, currY, 2, 2);
+                    } break;
+
+                }
+
+                dfre_ctx.closePath();
+                dit_frdotflag = false;
+            }
+        }
+        if (res == 'up' || res == "out") {
+            dit_frflag = false;
+        }
+        if (res == 'move') {
+            if (dit_frflag) {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - rect.left;
+                currY = e.clientY - rect.top;
+                dit_frdraw();
+            }
+        }
+    }
+    function dit_frdraw (clear) {
+        if (clear != undefined && clear == '1') {
+            dfre_ctx.beginPath();
+            dfre_ctx.globalCompositeOperation = "destination-out";
+            dfre_ctx.rect(0, 0, dit_width, dit_height);
+            //  dfre_ctx.clearRect(0,0,dit_width, dit_height);
+            dfre_ctx.fill();
+            dfre_ctx.closePath();
+
+        }
+        switch (dit_frtype) {
+            case "eraser": {
+                dfre_ctx.beginPath();
+                dfre_ctx.globalCompositeOperation = "destination-out";
+                dfre_ctx.arc(currX, currY, dit_frradius, 0, 2 * Math.PI, false);
+                dfre_ctx.fill();
+                dfre_ctx.closePath();
+            } break;
+            case "pen": {
+                dfre_ctx.beginPath();
+                dfre_ctx.globalCompositeOperation = "source-over";
+                dfre_ctx.moveTo(prevX, prevY);
+                dfre_ctx.lineTo(currX, currY);
+                dfre_ctx.strokeStyle = dit_frcolor;
+                dfre_ctx.lineWidth = dit_frLine;
+                dfre_ctx.stroke();
+                dfre_ctx.closePath();
+            } break;
+        }
+
+    }
+    function dit_CreatedDot (left, top) {
+        let random = new Date().getTime();
+        let length = Object.keys(ditfreData).length;
+        length = length + 1;
+        let e = {};
+        e.ID = random;
+        e.Note = "";
+        e.Left = left;
+        e.Top = top;
+        e.Color = dit_frcolor;
+        e.Index = length;
+        ditfreData[random] = e;
+        let _le = ditfreColor.filter(word => word["color"] == dit_frcolor);
+        let _lecolor = (_le != undefined && _le.length == 1 && _le[0].op == "1") ? 'text-dark' : 'text-white';
+        let x = `<a id="dfr_candot${random}" data-value="red" style="left:${left - 13}px;top:${top - 13}px;background-color:${dit_frcolor}" class="${_lecolor} dot rounded-circle  d-flex justify-content-center position-absolute">
+                ${length}
+              </a>`;
+        $("#difree_canvascon").append(x);
+        dit_freerender(ditfreData, "diitem_freenote");
+    }
+    async function dit_DotRender (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            let _index = 0;
+            if (myNode != null) {
+                for ([key, value] of Object.entries(data)) {
+                    _index = _index + 1;
+                    let _le = ditfreColor.filter(word => word["color"] == value.Color);
+                    let _lecolor = (_le != undefined && _le.length == 1 && _le[0].op == "1") ? 'text-dark' : 'text-white';
+                    let tr = `
+                        <a id="dfr_candot${key}" data-value="red" style="left:${value.Left - 13}px;top:${value.Top - 13}px;background-color:${value.Color}" class="dot rounded-circle ${_lecolor} d-flex justify-content-center position-absolute">
+                            ${_index}
+                          </a>
+                    `
+                    document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+                    i++;
+                }
+            }
+
+        })
+    }
+
+    async function dit_freerender (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let _index = 0;
+                for ([key, value] of Object.entries(data)) {
+                    _index = _index + 1;
+                    let _le = ditfreColor.filter(word => word["color"] == value.Color);
+                    let _lename = (_le != undefined && _le.length == 1) ? _le[0].level : "";
+                    let _lecolor = (_le != undefined && _le.length == 1 && _le[0].op == "1") ? 'text-dark' : 'text-white';
+
+                    let tr = `
+                       <div id="ditfritem_${key}" class="item cursor-pointer col-12 px-1 position-relative mt-2">
+                            <div class="p-0">
+                                <div class="d-flex overflow-hidden justify-content-center align-items-center">
+
+                                    <div class="d-flex w-100 justify-content-center">
+                                        <div class="form-group w-100 mb-0">
+                                            <div class="input-group ms-0">
+                                               <span class="input-group-text">
+                                                    <span id="dfr_liststatus${key}" style="background:${value.Color}" class="${_lecolor} badge pat rounded-circle fw-bold d-flex justify-content-center">${_index}</span>
+                                                </span>
+                                               <span class="input-group-text">${_lename}</span>
+                                               <input data-id='${key}' id="dfr_listnote${key}" class="dfr_listnote ps-2  form-control border-start">
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="d-flex  position-absolute ms-auto" style="top: 7px;right: 16px;">
+                                        <button data-id='${key}' class="btn btn-link btn-icon-only btn-rounded opacity-1 btn-sm my-auto removefree"><i class="text-danger fs-5 remove icon"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    `
+                    document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+
+                }
+            }
+            dit_freefill();
+            dit_freeEvent();
+        })
+    }
+    function dit_freefill () {
+        ditfree_flag = 0;
+        for ([key, value] of Object.entries(ditfreData)) {
+            $('#dfr_listnote' + key).val(value.Note);
+        }
+        ditfree_flag = 1;
+    }
+    function dit_freeEvent () {
+        $("#diitem_freenote .removefree").unbind().click(function () {
+            let id = $(this).attr("data-id");
+            delete ditfreData[id];
+            $('#dfr_candot' + id).remove();
+            $('#ditfritem_' + id).remove();
+            let index = 1;
+            for ([key, value] of Object.entries(ditfreData)) {
+                $('#dfr_candot' + key).html(index.toString());
+                $('#dfr_liststatus' + key).html(index.toString());
+                index = index + 1;
+            }
+        })
+        $("#diitem_freenote .dfr_listnote").unbind('keyup').keyup(function () {
+            if (ditfree_flag == 1) {
+                ditfree_flag = 0;
+                let value = $(this).val();
+                let id = $(this).attr("data-id");
+                ditfreData[id].Note = value;
+                ditfree_flag = 1;
+            }
+        })
+    }
+    //#endregion
+</script>
+<style>
+    #diitem_disease .item:hover .removeStatus {
+        opacity: 1 !important;
+    }
+
+    #diitem_freenote .item:hover .removefree {
+        opacity: 1 !important;
+    }
+
+
+    .fredia .item.active {
+        background: #ddd;
+    }
+
+    #difree_canvascon .dot {
+        height: 26px;
+        width: 26px;
+        border: 1px solid #6c757d;
+    }
+
+    #diitem_freenote .pat {
+        height: 28px;
+        width: 28px;
+        font-size: 17px;
+        padding: 8px 0px 0px 0px;
+        border: 1px solid #6c757d;
+        text-align: center;
+    }
+
+    #difree_canvascon {
+
+        cursor: crosshair;
+        background-repeat: no-repeat;
+
+    }
+</style>
+

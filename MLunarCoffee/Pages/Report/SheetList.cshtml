@@ -1,0 +1,274 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.SheetList
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script src="/assets/js/plugins/quill.min.js"></script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid bg-white px-2 pt-3">
+    <div class="d-lg-flex">
+        <div class="w-lg-50 col-auto my-auto">
+            <p class="text-md text-dark font-weight-bold mb-0">@Local["Bảng báo cáo"]</p>
+            <p class="text-sm mb-0 mt-n1">@Local["Danh sách bảng báo cáo"]</p>
+        </div>
+        <div class="ms-auto my-auto mt-1 px-0">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2">
+                <span class="text-sm text-primary text-gradient mb-0">@Local["Tổng"]</span>
+                <span class="fw-bold text-dark text-sm" id="totalSheet"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row px-1 ">
+        <div class="col-12 col-md-6 col-xl-4 px-1 mt-2 ">
+            <div class="row m-0 mt-2">
+                <div class="input-group px-1" id="ReportSheet_Sort">
+                    <span class="input-group-text input-group-text px-2">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                    </span>
+                    <input id="searching_report" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]">
+                    <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                </div>
+            </div>
+            <div class="px-1 me-2 mb-3 mt-2 mobile-responsive max-height-600 overflow-auto">
+                <table class="table vt-table mb-0" id="dtContentReportSheet">
+                    <thead>
+                        <tr>
+                            <th class="d-none">ID</th>
+                            <th>@Local["#"]</th>
+                            <th>@Local["Tên"]</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="dtContentReportSheetBody">
+                    </tbody>
+                </table>
+            </div>
+
+
+        </div>
+        <div class="field col-12 col-md-6 col-xl-8 px-1 mt-1">
+            <div class=" p-1 pt-0 form form3" id="forsh_detail">
+                <div class="row col-12 m-0 mt-2">
+                    <div class="field  col-12 col-md-6 p-1 col-lg-6">
+                        <input class="form-control" name="name" id="SheetDetail_Name" placeholder="eg .@Local["Tên"]" />
+                    </div>
+                    <div class="field col-12 col-md-6 p-1 col-lg-6">
+                        <div class="ui fluid search selection dropdown form-control" id="SheetDetail_Type">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Loại"]</div>
+                            <div id="cbbSheetDetail_Type" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row col-12 m-0 mt-1">
+                    <div class="field px-1 col-12">
+                        <div class="ui fluid search selection dropdown multiple form-control" id="SheetDetail_Tag">
+                            <input type="hidden" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Tag"]</div>
+                            <div id="cbbSheetDetail_Tag" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row m-0">
+                    <div class="col-sm-6 px-1">
+                        <label class="mt-4">@Local["Mô tả"]</label>
+                        <div id="sheet_description" class="max-height-400 overflow-auto">
+                        </div>
+                    </div>
+                    <div class="col-sm-6 px-1 mt-sm-0 mt-4">
+                        <label class="mt-4">@Local["Mã mô tả"]</label>
+                        <div id="sheet_codedescription" class="max-height-400 overflow-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+        <div class="card-footer fixed-botombutton">
+            <div class="action_Save">
+                <div class="action_Save-Content">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <button type="button" class="btn bg-gradient-primary mt-2 me-2"
+                            form="forsh_detail" onclick="ReportSheet_Save()">
+                        @Local["Lưu"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    let DataSheet;
+    let DataListNameTag;
+    let currrentDetail = 0;
+    let quilldes, quillcode;
+    var data_TimerOnchange;
+
+    $(document).ready(function () {
+        LoadSheetAjax();
+        ToolPopper();
+        if (document.getElementById('sheet_description')) {
+            quilldes = new Quill('#sheet_description', { theme: 'snow' });
+        };
+        if (document.getElementById('sheet_codedescription')) {
+            quillcode = new Quill('#sheet_codedescription', { theme: 'snow' });
+        };
+
+    });
+
+    function LoadSheetAjax(id) {
+        AjaxLoad(url = "/Report/SheetList/?handler=Loadata"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                DataSheet = JSON.parse(result)["Table"];
+                DataListNameTag = JSON.parse(result)["Table1"];
+                Count_Up('totalSheet', JSON.parse(result)["Table2"][0].SUM)
+                ReportSheet_Render(DataSheet, "dtContentReportSheetBody");
+                if (id != undefined) {
+                    $(".masterrow[data-id='" + id + "']").click();
+                } else {
+                    $('.masterrow')[0].click();
+                }
+                Load_Combo(DataListNameTag, "cbbSheetDetail_Tag", false);
+                let datatype = [
+                    { 'ID': 'gr', 'Name': 'Grid' }
+                    , { 'ID': 'bar', 'Name': 'Bar Chart' }
+                    , { 'ID': 'pie', 'Name': 'Pie Chart' }
+                    , { 'ID': 'line', 'Name': 'Line Chart' }
+                ];
+                Load_Combo(datatype, "cbbSheetDetail_Type", true);
+            });
+
+        return false;
+    }
+
+    function ReportSheet_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td>'
+
+                        + '<div class="text-wrap">'
+                        + item.Name
+                        + '</div>'
+                        + '</td>'
+                    stringContent = stringContent + '<tr data-id="' + item.ID + '" class="vt-number masterrow" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        ReportSheet_Event();
+    }
+    function ReportSheet_Event() {
+        $('#dtContentReportSheetBody').on('click', 'tr', function () {
+            currrentDetail = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+
+            $(this).parent().children().removeClass('active')
+            $(this).closest('tr').addClass('active');
+            let _detail = DataSheet.filter(s => s.ID == currrentDetail);
+            quilldes.setContents([
+                { insert: _detail[0].Description },
+            ]);
+            quillcode.setContents([
+                { insert: _detail[0].Description_code },
+            ]);
+            $('#SheetDetail_Name').val(_detail[0].Name)
+            $('#SheetDetail_Tag').dropdown('clear');
+            $('#SheetDetail_Tag').dropdown('set selected', _detail[0].Tag.split(","));
+            $('#SheetDetail_Type').dropdown('clear')
+            $('#SheetDetail_Type').dropdown('set selected', _detail[0].Type);
+        });
+        $('#searching_report').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#ReportSheet_Sort .fa-search").hide();
+            $("#ReportSheet_Sort .spinner-border").show();
+            clearTimeout(data_TimerOnchange);
+            data_TimerOnchange = setTimeout(function (e) {
+                ReportSheet_Search(xoa_dau($('#searching_report').val().toLowerCase()).trim());
+            }, 500);
+        });
+        $("#ReportSheet_Sort").on('click', '.btn_clear', function (e) {
+            $('#searching_report').val('');
+            $(".btn_clear").addClass('opacity-1');
+            ReportSheet_Search('');
+        });
+
+    }
+    function ReportSheet_Search(text) {
+        if (text == "") {
+            ReportSheet_Render(DataSheet, "dtContentReportSheetBody");
+            let ele = $(".masterrow[data-id='" + currrentDetail + "']");
+            if (ele.length) {
+                ele.click();
+            }
+            else {
+                $('.masterrow')[0].click();
+            }
+
+        }
+        else {
+            let searchingValue = (xoa_dau($('#searching_report').val())).trim().toLowerCase();
+            let _detail = DataSheet.filter(s => (xoa_dau(s.Name).trim().toLowerCase().includes(searchingValue)));
+            ReportSheet_Render(_detail, "dtContentReportSheetBody");
+
+            if (searchingValue != '') {
+                ColorSearchFilterText(searchingValue, "masterrow");
+            }
+        }
+        $("#ReportSheet_Sort .fa-search").show();
+        $("#ReportSheet_Sort .spinner-border").hide();
+    }
+    function ReportSheet_Save() {
+        var data = new Object();
+        data.Name = $('#SheetDetail_Name').val() ? $('#SheetDetail_Name').val() : "";
+        data.Tag = $('#SheetDetail_Tag').dropdown('get value');
+        data.Type = $('#SheetDetail_Type').dropdown('get value');
+        data.Des = quilldes.getText();
+        data.DesCode = quillcode.getText();
+        $('#forsh_detail').form('validate form');
+        if ($('#forsh_detail').form('is valid')) {
+            AjaxLoad(url = "/Report/SheetList/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data)
+                    , CurrentID: currrentDetail
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        LoadSheetAjax(currrentDetail);
+
+                    }
+                    else $('#textShowMessage').html(result)
+
+                });
+        }
+
+    }
+
+
+
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+
+
+

@@ -1,0 +1,783 @@
+﻿@page
+@model SourceMain.Pages.Permission.SetupDashboardLayoutModel
+@{ Layout=null;
+}
+
+<div class="dash_layout_group">
+    <div class="ui vertical menu dash_layout_menu_group">
+        <div class="ui styled fluid accordion" style="border-radius: 10px;" id="groupPermission">
+        </div>
+    </div>
+    <div class="dash_layout_content">
+        <button id="btnEditDetail" style="display: none; background: #0288d1; color: white;" class="ui button" onclick="event.preventDefault(); return Begin_Edit_Layout();">@Local["Chỉnh sửa"]</button>
+        <div id="headerButton" style="display: none">
+            <div class="ui buttons">
+                <button id="btnRefreshDetail" style="width: 80px; background: #767676; color: white;" class="ui button" onclick="event.preventDefault(); return CancelDetail();">@Local["Đóng"]</button>
+                <div class="or"></div>
+                <button id="btnSaveDetail" style="width: 80px; background: #f2711c; color: white;" class="ui positive button" onclick="event.preventDefault(); return SaveDetail();">@Local["Lưu"]</button>
+            </div>
+            <div class="ui form">
+                <div class="inline fields">
+                    <div class="field">
+                        <div class="ui radio checkbox">
+                            <input type="radio" name="typeshow" class="btn_type_layout" id="ver" checked="checked">
+                            <label>@Local["Dọc"]</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui radio checkbox">
+                            <input type="radio" class="btn_type_layout" id="hoz" name="typeshow">
+                            <label>@Local["Ngan"]</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="detailGrid" style="display: flex">
+            <div class="ui grid" id="design_master_layout_dash">
+            <div class="ui vertical menu" style="width: 30%;" id="tab_dash_template">
+                <div class="side_bar_desk_master" style="border-bottom: 1px dashed rgba(33, 133, 208, 0.47);">
+                    <div class="side_bar_left_desk items_list_desk" id="design_row">
+                        <div class="ui grid"></div>
+                    </div>
+                </div>
+                <div class="side_bar_desk_master">
+                    <div class="design_master_page_dash items_list_desk" id="design_point"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/assests/library/jquery-ui.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<script type="text/javascript">
+    var data_page_dash_list = {};
+    var data_page_dash_list_temp = {};
+    var GroupCurrentID = 0;
+    var data_layout_master = {};
+    var dash_layout_type = 'hoz';
+    var data_dash_layout_row = { "100": { "title": "100", "column": "one", "value": "100" }, "3070": { "title": "30-70", "column": "two", "value": "30,70" }, "5050": { "title": "50-50", "column": "two", "value": "50,50" }, "25252525": { "title": "25-25-25-25", "column": "four", "value": "25,25,25,25" }, "333333": { "title": "33-33-33", "column": "three", "value": "33.333,33.333,33.333" }, "2020202020": { "title": "20-20-20-20-20", "column": "five", "value": "20,20,20,20,20" }, "403030": { "title": "40-30-30", "column": "three", "value": "40,30,30" }, "161616161616": { "title": "16-16-16-16-16-16", "column": "six", "value": "16.666,16.666,16.666,16.666,16.666,16.666"} };
+
+    $(document).ready(function () {
+        Load_Dash_Layout_Group_List();
+        $(".btn_type_layout").change(function (event) {
+            var id = this.id;
+            var ischeck = this.checked;
+            if (ischeck == true) {
+                dash_layout_type = id;
+                if (dash_layout_type == "ver") {
+                    $("#design_master_layout_dash").addClass("ver");
+                    $("#design_row").addClass("ver");
+                    $("#design_row > .horizontal").removeClass("horizontal").addClass("vertical")
+                }
+                else {
+                    $("#design_master_layout_dash").removeClass("ver");
+                    $("#design_row").removeClass("ver");
+                    $("#design_row > .vertical").removeClass("vertical").addClass("horizontal")
+                }
+            }
+        });
+    });
+
+    //#region //-- save data layout
+
+    function SaveDetail() {
+        if (data_layout_master) {
+            //data_layout_master.sort(function (a, b) { return a.index - b.index });
+            AjaxLoad(url = "/Permission/SetupDashboardLayout/?handler=ExecuteData"
+                , data = {
+                    dataLayout: JSON.stringify(data_layout_master)
+                    , CurrentID: GroupCurrentID
+                    , Type: dash_layout_type
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        CancelDetail();
+                    }
+                });
+        }
+        return false;
+    }
+
+    //#endregion
+
+    //#region //---- group user render, event---------
+    function Load_Dash_Layout_Group_List() {
+        AjaxLoad(url = "/Permission/SetupDashboardLayout/?handler=LoadData"
+            , data = {
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    dataPermissionGroup = data;
+                    Render_DashLayout_GroupList(dataPermissionGroup, 'groupPermission');
+                    Dash_EventClick_PermissionGroup();
+                }
+            });
+
+        return false;
+    }
+
+    function Render_DashLayout_GroupList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            stringContent = stringContent +
+                '<div class="title item active">'
+                + '<i class="dropdown icon"></i>Danh Sách Nhóm</div><div class="content active">'
+
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent + '<p class="transition visible"><a class="dash_link_group" '
+                        + ' data-id="' + item.ID
+                        + '">' + item.Name + '</a></p>'
+                }
+                stringContent = stringContent + "</div></div>";
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function Dash_EventClick_PermissionGroup() {
+        $(".dash_link_group").click(function (event) {
+            CancelDetail();
+            let ID = $(this).attr("data-id");
+
+            EditDetail(ID);
+            x = document.getElementsByClassName("dash_link_group");
+            for (i = 0; i < x.length; i++) {
+                if (ID == x[i].attributes["data-id"].value) {
+                    if (!x[i].className.includes('dash_link_group_click')) {
+                        x[i].className = x[i].className + ' dash_link_group_click';
+                    }
+                }
+                else {
+                    x[i].className = 'dash_link_group';
+                }
+            }
+
+        });
+        HoverGroupList();
+    }
+    function HoverGroupList() {
+        $(".dash_link_group").hover(function () {
+            if (!$(this).hasClass('dash_link_group_click')) {
+                $(this).addClass('dash_link_group_hover');
+            }
+        }, function () {
+            if (!$(this).hasClass('ldash_link_group_click') && $(this).hasClass('dash_link_group_hover')) {
+                $(this).removeClass('dash_link_group_hover');
+            }
+        });
+    }
+
+    //#endregion
+
+    //#region //--- event creat, edit layout-------
+    function Loa_Data_Layout_Dash_ByGroup(groupID) {
+        $('#design_master_layout_dash').html('');
+        AjaxLoad(url = "/Permission/SetupDashboardLayout/?handler=LoadLayoutByGroup"
+            , data = {
+                groupID: groupID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let data_page = data.Table;
+                    for (let i = 0; i < data_page.length; i++) {
+                        data_page_dash_list[data_page[i].ID] = data_page[i];
+                        data_page_dash_list_temp[data_page[i].ID] = data_page[i];
+                    }
+                    let dataLayout = data.Table1[0];
+                    if (dataLayout != undefined) {
+                        dash_layout_type = dataLayout.Type;
+                        data_layout_master = JSON.parse(dataLayout.Data);
+                        Render_Dash_Layout_By_Group(data_layout_master, 'design_master_layout_dash');
+                        if (dash_layout_type == "ver") {
+                            $("#design_master_layout_dash").addClass("ver");
+                            $("#design_row").addClass("ver");
+                            $("#design_row > .horizontal").removeClass("horizontal").addClass("vertical")
+                        }
+                        else {
+                            $("#design_master_layout_dash").removeClass("ver");
+                            $("#design_row").removeClass("ver");
+                            $("#design_row > .vertical").removeClass("vertical").addClass("horizontal")
+                        }
+                    }
+
+                }
+            });
+    }
+
+    function Render_Dash_Layout_By_Group(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            if (data) {
+                for ([key, value] of Object.entries(data)) {
+                    let Cells = value.rows;
+                    Render_Add_Row_Dash_Layout(key, value, id, Cells);
+                    for (var i = 0; i < Cells.length; i++) {
+                        Render_Add_Page_Dash_Layout(Cells[i].id, Cells[i].sheet);
+                        if (data_page_dash_list_temp[Cells[i].sheet]) {
+                            delete data_page_dash_list_temp[Cells[i].sheet];
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+    function Begin_Edit_Layout() {
+        event.preventDefault();
+        $("#headerButton").css("display", "block");
+        $("#btnEditDetail").css("display", "none");
+        $("#tab_dash_template").css("display", 'block');
+        $('#design_master_layout_dash').sortable({ disabled: false });
+        $('.remove_item_span').addClass('active');
+        Render_Dash_Page_List(data_page_dash_list_temp, 'design_point');
+        Render_Dash_Type_Rows(data_dash_layout_row, 'design_row');
+
+        $("#" + dash_layout_type).prop('checked', true);
+
+        if (dash_layout_type == "ver") {
+            $("#design_master_layout_dash").addClass("ver");
+            $("#design_row").addClass("ver");
+            $("#design_row > .horizontal").removeClass("horizontal").addClass("vertical")
+        }
+        else {
+            $("#design_master_layout_dash").removeClass("ver");
+            $("#design_row").removeClass("ver");
+            $("#design_row > .vertical").removeClass("vertical").addClass("horizontal")
+        }
+
+    }
+    function CancelDetail() {
+        Loa_Data_Layout_Dash_ByGroup(GroupCurrentID);
+        $("#headerButton").css("display", "none");
+        $("#btnEditDetail").css("display", "block");
+        $("#tab_dash_template").css("display", 'none');
+        $('#design_master_layout_dash').sortable({ disabled: true });
+        $('.remove_item_span').removeClass('active');
+        return false;
+    }
+    function EditDetail(CurrentID) {
+        event.preventDefault();
+        $('#design_master_layout_dash').html('');
+        GroupCurrentID = CurrentID;
+        $("#headerButton").css("display", "none");
+        $("#btnEditDetail").css("display", "block");
+        data_layout_master = {};
+        Loa_Data_Layout_Dash_ByGroup(CurrentID);
+        $('.remove_item_span').removeClass('active');
+    }
+    //#endregion
+
+    //#region //--------render data row, page template------------------------
+    function Render_Dash_Page_List(dataKey, id) {
+        let data = Object.values(dataKey);
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<div data-id="' + item.ID + '" class="ui segments page_dash_item" title="' + item.Name + '">'
+                        + '<div class="ui segment inverted inverted-header header_count_desk">'
+                        + '<h5 class="ui header headercounter">' + item.Name + '</h3>'
+                        + '</div>'
+                        + '</div>'
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        DragDropEvent_Pages_To_Rows();
+    }
+
+    function Render_Dash_Type_Rows(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data) {
+                for ([key, value] of Object.entries(data)) {
+                    let tr = '<a class="ui horizontal segments design_menu_desk_item" title="' + value.title + '" data-id="' + key + '">';
+                    let arrColumn = value.value.split(",");
+                    let columnString = '';
+                    if (arrColumn && arrColumn.length > 0) {
+                        for (var j = 0; j < arrColumn.length; j++) {
+                            columnString = columnString + '<div class="ui segment" style="width:' + arrColumn[j] + '%;height:' + arrColumn[j] + '%">' + '</div>';
+                        }
+                    }
+                    tr = tr + columnString + '</a>';
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        DragDropEvent_Item_Desk_Menu();
+    }
+    //#endregion
+
+
+    //#region //--------------------Event drag drop-------------------------
+    function DragDropEvent_Item_Desk_Menu() {
+        $(".design_menu_desk_item").draggable({
+            scroll: false,
+            //axis: "x",
+            containment: "#detailGrid",
+            revert: true,
+            helper:"clone",
+            disable: false,
+            start: function (event, ui) {
+            },
+            drag: function (event, ui) {
+            },
+            stop: function (event, ui) {
+            }
+        });
+        $("#design_master_layout_dash").droppable({
+            accept: ".design_menu_desk_item",
+            class: {
+                "ui-droppable-active": "ac",
+                "ui-droppable-hover": "hv"
+            },
+            acivate: function (event, ui) {
+            },
+            over: function (event, ui) {
+            },
+            out: function (event, ui) {
+            },
+            drop: function (event, ui) {
+                let idRow = Number(ui.helper.attr('data-id'));
+                Add_Item_Row_Dash(idRow);
+            },
+            deactivate: function (event, ui) {
+            },
+        });
+        $('#design_master_layout_dash').sortable({
+            containment: "#detailGrid",
+            start: function (event, ui) {
+            },
+            change: function (event, ui) {
+            },
+            update: function (event, ui) {
+                Change_Index_OF_Row_Dash_Layout();
+            }
+        });
+
+
+        $('#design_master_layout_dash').on('click', '.remove_menu_desk', function () {
+            let id = Number($(this).parent().attr('data-id'));
+            if (data_layout_master[id]) {
+                let columns = data_layout_master[id].rows;
+                for (var i = 0; i < columns.length; i++) {
+                    if (columns[i].sheet != 0 && !data_page_dash_list_temp[columns[i].sheet]) {
+                        data_page_dash_list_temp[columns[i].sheet] = data_page_dash_list[columns[i].sheet];
+                        Render_Dash_Page_List(data_page_dash_list_temp, 'design_point');
+                    }
+                }
+                delete data_layout_master[id];
+                $(this).parent().remove();
+                Change_Index_OF_Row_Dash_Layout();
+            }
+        });
+
+    }
+
+    function DragDropEvent_Pages_To_Rows() {
+        $(".page_dash_item").draggable({
+            scroll: false,
+            //axis: "x",
+            containment: "#detailGrid",
+            revert: true,
+            helper: "clone",
+            disable: false,
+            start: function (event, ui) {
+            },
+            drag: function (event, ui) {
+            },
+            stop: function (event, ui) {
+            }
+        });
+
+        $(".column_layout").droppable({
+            accept: ".page_dash_item",
+            class: {
+                "ui-droppable-active": "ac",
+                "ui-droppable-hover": "hv"
+            },
+            acivate: function (event, ui) {
+            },
+            over: function (event, ui) {
+            },
+            out: function (event, ui) {
+            },
+            drop: function (event, ui) {
+                let idAttribute = Number(ui.helper.attr('data-id'));
+                let idCell = Number($(this).attr('data-id'));
+                let idRow = Number($(this).attr('data-parent'));
+                let parentDiv = document.getElementById(idCell);
+                if (!parentDiv.hasChildNodes()) {
+                    Add_Page_To_Dash(idRow, idCell, idAttribute);
+                }
+
+            },
+            deactivate: function (event, ui) {
+            },
+        });
+        $('#design_master_layout_dash').on('click', '.remove_page_dash', function () {
+            let idPage = Number($(this).attr('data-id'));
+            let idCell = Number($(this).parent().attr('data-id'));
+            let idRow = Number($(this).parent().attr('data-parent'));
+            $("#" + idCell).empty();
+            Remove_Page_From_Dash(idRow, idCell, idPage);
+        });
+    }
+    //#endregion
+
+    //------------------render master-------------------------------------
+
+    function Remove_Page_From_Dash(idRow, idCell, idAttribute) {
+        if (data_layout_master[idRow]) {
+            let column = data_layout_master[idRow].rows;
+            if (column && column.length > 0) {
+                for (var i = 0; i < column.length; i++) {
+                    if (column[i].id == idCell) {
+                        column[i].sheet = 0;
+                        break;
+                    }
+                }
+                data_layout_master[idRow].rows = column;
+                if (!data_page_dash_list_temp[idAttribute]) {
+                    data_page_dash_list_temp[idAttribute] = data_page_dash_list[idAttribute];
+                    Render_Dash_Page_List(data_page_dash_list_temp, 'design_point');
+                }
+            }
+        }
+    }
+    function Add_Page_To_Dash(idRow, idCell, idAttribute) {
+        if (data_page_dash_list[idAttribute]) {
+            let column = data_layout_master[idRow].rows;
+            if (column && column.length > 0) {
+                for (var i = 0; i < column.length; i++) {
+                    if (column[i].id == idCell) {
+                        column[i].sheet = idAttribute;
+                        break;
+                    }
+                }
+                data_layout_master[idRow].rows = column;
+                if (data_page_dash_list_temp[idAttribute]) {
+                    delete data_page_dash_list_temp[idAttribute];
+                    Render_Dash_Page_List(data_page_dash_list_temp, 'design_point');
+                }
+                Render_Add_Page_Dash_Layout(idCell, idAttribute);
+            }
+        }
+
+    }
+    function Render_Add_Page_Dash_Layout(idCell, idPage) {
+        var myNode = document.getElementById(idCell);
+        if (myNode != null && idPage > 0) {
+            myNode.innerHTML = '';
+            let item = data_page_dash_list[idPage];
+            let tr = '<div class="ui segments page_dash_item" title="' + item.Name + '">'
+                + '<div class="ui segment inverted inverted-header header_count_desk">'
+                + '<h5 class="ui header headercounter">' + item.Name + '</h3>'
+                + '</div>'
+                + '</div>'
+                + '<span class="remove_item_span remove_page_dash active" data-id="' + item.ID + '"><i class="remove_item_img vtt-icon vttech-icon-delete"></i></span>';
+            ;
+
+            document.getElementById(idCell).innerHTML = tr;
+        }
+    }
+
+    function Change_Index_OF_Row_Dash_Layout() {
+        let node = $('#design_master_layout_dash .row_layout');
+        for (i = 0; i < node.length; i++) {
+            let id = $(node[i]).attr('data-id');
+            data_layout_master[id].index = i + 1;
+        }
+    }
+    function Add_Item_Row_Dash(id) {
+        if (data_dash_layout_row[id]) {
+            let idRow = getRandomInt(100) * (new Date()).getTime() + (new Date()).getTime();
+            let index = Object.entries(data_layout_master).length + 1;
+
+            let arrColumn = data_dash_layout_row[id].value.split(",");
+            let Cells = [];
+            for (var i = 1; i <= arrColumn.length; i++) {
+                let cell = {};
+                cell.width = arrColumn[i - 1];
+                cell.id = getRandomInt(100) * (new Date()).getTime() * i + (new Date()).getTime();
+                cell.sheet = 0;
+                Cells.push(cell);
+            }
+            let element = {};
+            element.index = index;
+            element.width = data_dash_layout_row[id].column;
+            element.value = data_dash_layout_row[id].value;
+            element.rows = Cells;
+            data_layout_master[idRow] = element;
+            Render_Add_Row_Dash_Layout(idRow, element, 'design_master_layout_dash', Cells);
+
+        }
+
+    }
+
+
+    function Render_Add_Row_Dash_Layout(key, item, id, Cells) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let stringRows = '<div data-id="' + key + '" class="' + item.width + ' column row row_layout" >'
+                + '<span class="remove_item_span remove_menu_desk active"><i class="remove_item_img vtt-icon vttech-icon-delete"></i></span>';
+
+            let columnString = '';
+            if (Cells && Cells.length > 0) {
+                for (var j = 0; j < Cells.length; j++) {
+                    columnString = columnString + '<div class="column_layout" id="' + Cells[j].id + '" data-parent="' + key + '" data-id="' + Cells[j].id + '" style="width:' + Cells[j].width + '%;"></div>';
+                }
+            }
+            stringRows = stringRows + columnString + '</div>';
+            $('#' + id).append(stringRows);
+        }
+        DragDropEvent_Pages_To_Rows();
+    }
+
+
+</script>
+<style>
+    .dash_layout_group * {
+        text-shadow: 0 0 0 #000000;
+        color: transparent;
+    }
+
+    .dash_layout_group {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+        .dash_layout_group .dash_layout_menu_group {
+            width: 200px !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding-right: 10px;
+        }
+
+        .dash_layout_group .dash_layout_content {
+            width: calc(100% - 200px);
+        }
+
+        .dash_layout_group .dash_link_group_click {
+            background: #0288d1 !important;
+            color: white !important;
+        }
+
+        .dash_layout_group .dash_link_group_hover {
+            background: #91d4f8;
+            color: white;
+        }
+
+        .dash_layout_group .dash_link_group {
+            padding: 2px 9px 2px 9px;
+            border-radius: 30px;
+        }
+
+        .dash_layout_group .design_menu_desk_item {
+            margin: 4px !important;
+            border-color: #9e9e9ead !important;
+            min-height: 30px;
+            z-index: 10;
+        }
+
+        .dash_layout_group .design_menu_desk_img {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+        }
+
+        .dash_layout_group #design_master_layout_dash {
+            width: 100%;
+            min-height: 500px;
+            padding: 3px 10px 3px 3px;
+            display: block;
+            margin: 0 5px 0 0;
+            border: 1px dashed rgba(33, 133, 208, 0.47);
+            background: rgb(247, 252, 255);
+        }
+
+    #design_master_layout_dash.ver {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .dash_layout_group #tab_dash_template {
+        box-shadow: none;
+        display: none;
+        width: 100%;
+        min-height: 500px;
+        border: 1px dashed rgba(33, 133, 208, 0.47);
+        background: rgb(247, 252, 255);
+    }
+
+
+    .dash_layout_group .menu_desk_img {
+        width: 40px;
+        height: 40px;
+        vertical-align: middle;
+    }
+
+    .dash_layout_group .side_bar_left_desk {
+        min-height: 200px;
+    }
+
+    .dash_layout_group .design_master_page_dash {
+        min-height: 300px;
+    }
+
+
+    .dash_layout_group .page_dash_item {
+        z-index: 9;
+        margin: 2px 4px !important;
+    }
+
+    .dash_layout_group .side_bar_desk_master {
+        padding: 2px;
+    }
+
+    .dash_layout_group .point_desk_col {
+        z-index: 3;
+        position: relative;
+        width: 105px;
+        height: 90px;
+        min-width: max-content;
+        min-height: 90px;
+        margin: 2px 4px !important;
+        margin-top: 2px !important;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        display: flex;
+    }
+
+    .dash_layout_group .design_items_group {
+        overflow-y: hidden;
+        overflow-x: auto;
+        height: 115px;
+        display: flex;
+    }
+
+    .dash_layout_group .remove_item_span {
+        display: none;
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        height: 15px;
+        width: 15px;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    .dash_layout_group .remove_page_dash {
+        left: 9px;
+        top: 7px;
+        z-index: 9;
+    }
+
+
+    .dash_layout_group .remove_item_span.active {
+        display: block !important;
+    }
+
+    .dash_layout_group .remove_item_img {
+        height: 15px;
+        width: 15px;
+    }
+
+    .header_count_desk {
+        background: #6198c7 !important;
+        padding: 8px !important;
+        cursor: pointer;
+    }
+
+    .items_list_desk {
+        width: 100% !important;
+    }
+
+    @@media only screen and (max-width: 992px) {
+        .dash_layout_group {
+            flex-wrap: wrap;
+        }
+
+            .dash_layout_group .dash_layout_menu_group {
+                margin-bottom: 10px;
+                padding-right: 0;
+            }
+
+            .dash_layout_group .dash_layout_menu_group,
+            .dash_layout_group .dash_layout_content {
+                width: 100% !important;
+            }
+    }
+
+    /*design*/
+
+    .div_row {
+        display: inline-block;
+        border-color: #0288d1;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 2px;
+        height: 30px;
+        background: #69bbf817;
+    }
+
+    .column_layout {
+        border: 1px solid #b86ced;
+        padding: 5px;
+        position: relative;
+    }
+
+    .row_layout {
+        min-height: 45px;
+        z-index: 3;
+        position: relative;
+        margin: 4px !important;
+        background: #fff !important;
+        padding: unset !important;
+        margin-bottom: 10px !important;
+    }
+
+    #design_master_layout_dash.ver .row_layout {
+        flex-direction: column !important;
+    }
+
+    #design_master_layout_dash.ver .column_layout {
+        width: 100% !important;
+        min-width: 100% !important;
+        min-height: 45px !important;
+        margin-bottom: 5px !important;
+    }
+
+    #design_row.ver {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+    #design_row.ver a .segment {
+        padding: 0 15px !important;
+    }
+
+</style>
+
