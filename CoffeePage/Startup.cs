@@ -1,40 +1,13 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
-using System.Text;
-using AspNetCoreRateLimit;
-using LazZiya.ExpressLocalization;
-using LibRCL;
+﻿using CoffeePage.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using Quartz;
-using Quartz.Impl;
-using Quartz.Spi;
-using MLunarCoffee.Comon;
-//using MLunarCoffee.Comon.ScheduledTask;
-//using MLunarCoffee.Comon.SignalR;
-//using MLunarCoffee.Comon.TokenJWT;
-//using MLunarCoffee.LocalizationResources;
-//using MLunarCoffee.Models;
-//using MLunarCoffee.Service.Quartz;
-using WebMarkupMin.AspNetCore5;
-using static System.Net.Mime.MediaTypeNames;
-using MLunarCoffee.Models;
-using static MLunarCoffee.Comon.GlobalUser;
-
-namespace MLunarCoffee
+using System.Text;
+using LibRCL;
+namespace CoffeePage
 {
     public class Startup
     {
-        public Startup(IWebHostEnvironment env ,IConfiguration configuration)
+        public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
             Configuration = configuration;
             CurrentEnvironment = env;
@@ -53,12 +26,12 @@ namespace MLunarCoffee
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true ,
-                    ValidateAudience = true ,
-                    ValidateLifetime = true ,
-                    ValidateIssuerSigningKey = true ,
-                    ValidIssuer = Configuration["Jwt:Issuer"] ,
-                    ValidAudience = Configuration["Jwt:Issuer"] ,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    ValidAudience = Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                 };
             });
@@ -70,6 +43,7 @@ namespace MLunarCoffee
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
             services.AddEditor();
             services.AddRazorPages().AddRazorPagesOptions(options => { }).AddNewtonsoftJson().AddMvcOptions(options =>
             {
@@ -81,7 +55,7 @@ namespace MLunarCoffee
             services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
 
         }
-        public void Configure(IApplicationBuilder app ,IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseSession();
             if (env.IsDevelopment()) { app.UseDeveloperExceptionPage(); }
@@ -91,7 +65,7 @@ namespace MLunarCoffee
             app.UseDefaultFiles();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-  
+
             app.UseRouting();
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
@@ -101,24 +75,21 @@ namespace MLunarCoffee
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
-                   name: "default" ,
-                   pattern: "{controller}/{action}/{id?}" ,
-                   defaults: new { controller = "Home" ,action = "Index" }
+                   name: "default",
+                   pattern: "{controller}/{action}/{id?}",
+                   defaults: new { controller = "Home", action = "Index" }
                  );
                 endpoints.MapControllerRoute(
-                  name: "api" ,
-                  pattern: "api/{controller}/{action}/{id?}" ,
-                  defaults: new { controller = "Home" ,action = "Index" }
+                  name: "api",
+                  pattern: "api/{controller}/{action}/{id?}",
+                  defaults: new { controller = "Home", action = "Index" }
                 );
                 endpoints.MapRazorPages();
                 //endpoints.MapHub<NotiHub>("/notiHub");
             });
 
-            InitApplication();
+
         }
-        private async void InitApplication()
-        {
-            await Global.System_Start(Configuration);
-        }
+
     }
 }
