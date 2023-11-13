@@ -108,7 +108,7 @@ function HubExecute_FromAapp (pram) {
 
 }
 function NoticeEntirePageApp (data) {
-    //If the account is authorized MLunarCoffee
+    //If the account is authorized CoffeePage
     InccomingApp(data);
     // if settings for notifications = true
     setTimeout(function () {

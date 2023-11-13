@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MLunarCoffee.Comon.Crypt
+namespace CoffeePage.Comon.Crypt
 {
     public static class Encrypt
     {

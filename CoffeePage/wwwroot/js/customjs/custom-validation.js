@@ -1076,8 +1076,8 @@ $('.form3').form({
                 }
             ]
         },
-        MLunarCoffeekey: {
-            identifier: 'MLunarCoffeekey',
+        CoffeePagekey: {
+            identifier: 'CoffeePagekey',
             rules: [
                 {
                     type: 'empty',

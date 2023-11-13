@@ -57,7 +57,7 @@
             let elm = document.getElementById("fileupload");
             let file = elm.files[0];
             let retu = false;
-            let temp = MLunarCoffees.filter(item => item.KeyPage == idPageSelected);
+            let temp = CoffeePages.filter(item => item.KeyPage == idPageSelected);
             if (file) {
                 SendFile();
             }
@@ -86,7 +86,7 @@
                     success: function (result) {
                         //ReloadMess(result.message_id, 'send');
                         UpdateListUI('listMember', 'itemsMenber', result.recipient_id, 'data-ret');
-                        UpdateListUI('listMLunarCoffee', 'itemMLunarCoffee', idPageSelected , 'data-id');
+                        UpdateListUI('listCoffeePage', 'itemCoffeePage', idPageSelected , 'data-id');
                         retu = true;
                     }
                 });

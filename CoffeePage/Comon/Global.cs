@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MLunarCoffee.Comon.Crypt;
-using MLunarCoffee.Models;
+using CoffeePage.Comon.Crypt;
+using CoffeePage.Models;
 
-namespace MLunarCoffee.Comon
+namespace CoffeePage.Comon
 {
 
     public class GlobalUser

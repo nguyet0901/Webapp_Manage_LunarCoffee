@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SkiaSharp;
 
-namespace MLunarCoffee.Comon
+namespace CoffeePage.Comon
 {
     public static class Comon
     {
