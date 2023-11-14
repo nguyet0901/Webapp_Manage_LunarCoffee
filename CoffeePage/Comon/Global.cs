@@ -12,52 +12,27 @@ using CoffeePage.Models;
 
 namespace CoffeePage.Comon
 {
-
-    public class GlobalUser
-    {
-
-        #region // General
-        public int sys_userid { get; set; }
-        public string sys_username { get; set; }
-        public string sys_BranchName { get; set; }
-        public int sys_branchID { get; set; }
-        public int sys_AllBranchID { get; set; }
-    }
-    #endregion
     public class Global
     {
 
         #region // Client
-        public static string SQLIP;
-        public static string SQLNAME;
-        public static string SQLUSER;
-        public static string SQLPASSWORD;
-        public static string ROOTCODE = "mlunarcofeeeefocranulmeefocranul";
+        public static string RootLink = "https://localhost:44303/";
+        public static string PrivateKey = "mlunarcofeeeefocranulmeefocranul";
 
         #endregion
 
-        public static async Task System_Start(IConfiguration _config)
-        {
-            try
-            {
-                SQLNAME = Encrypt.DecryptString(_config.GetValue<string>("CLIENT:SQLNAME").ToString() ,ROOTCODE);
-                SQLUSER = Encrypt.DecryptString(_config.GetValue<string>("CLIENT:SQLUSER").ToString() ,ROOTCODE);
-                SQLPASSWORD = Encrypt.DecryptString(_config.GetValue<string>("CLIENT:SQLPASSWORD").ToString() ,ROOTCODE);
+        //public static async Task InitSystem(IConfiguration _config)
+        //{
+        //    try
+        //    {
+        //        RootLink = "https://localhost:44303/";
+        //    }
+        //    catch
+        //    {
 
+        //    }
 
-                //var task_startclient = client.StartClient(keycode);
-
-
-                //await Task.WhenAll(task_startclient ,task_api
-                //    ,task_callcenter);
-
-            }
-            catch
-            {
-
-            }
-
-        }
+        //}
 
     }
 

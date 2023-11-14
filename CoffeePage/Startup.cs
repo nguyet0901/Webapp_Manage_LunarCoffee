@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using LibRCL;
+using CoffeePage.Comon;
+
 namespace CoffeePage
 {
     public class Startup
@@ -88,8 +90,11 @@ namespace CoffeePage
                 //endpoints.MapHub<NotiHub>("/notiHub");
             });
 
-
+            //InitApplication();
         }
-
+        //private async void InitApplication()
+        //{
+        //    //await Global.InitSystem(Configuration);
+        //}
     }
 }
