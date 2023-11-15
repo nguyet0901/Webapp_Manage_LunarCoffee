@@ -8,7 +8,7 @@ namespace MLunarCoffee.Comon.Crypt
 {
     public static class Encrypt
     {
-        public static string EncryptString(string key ,string plainText)
+        public static string EncryptString(string plainText, string key)
         {
             byte[] iv = new byte[16];
             byte[] array;
@@ -37,7 +37,7 @@ namespace MLunarCoffee.Comon.Crypt
             return Convert.ToBase64String(array);
         }
 
-        public static string DecryptString(string key ,string cipherText)
+        public static string DecryptString(string cipherText,string key)
         {
             byte[] iv = new byte[16];
             byte[] buffer = Convert.FromBase64String(cipherText);

@@ -7,6 +7,6 @@ namespace MLunarCoffee
 {
     public static class Settings
     {
-        public static string PrivateKey = "mlunarcofeemlunarcofeeP951b928eefocranul";
+        public static string PrivateKey = "mlunarcofeeeefocranulmeefocranul";
     }
 }

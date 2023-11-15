@@ -12,7 +12,7 @@ using MLunarCoffee.Models.Product;
 
 namespace MLunarCoffee.Controllers
 {
-    [Authorize]
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class ProductController : Controller
@@ -23,10 +23,10 @@ namespace MLunarCoffee.Controllers
         {
             try
             {
-                string ciphertext = Request.Headers["KeyCode"].Count() > 0 ? Request.Headers["KeyCode"] : "";
-                var KeyCode = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
+                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
-                if (KeyCode != shareKey)
+                if (AccessToken != shareKey)
                 {
                     return StatusCode(StatusCodes.Status403Forbidden);
                 }

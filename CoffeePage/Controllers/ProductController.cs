@@ -16,7 +16,7 @@ namespace CoffeePage.Controllers
     [Route("api/[controller]")]
     public class ProductController : Controller
     {
-        [Authorize]
+        [AllowAnonymous]
         [Route("GetList")]
         [HttpPost]
         public async Task<IActionResult> GetList(ProductPara para)

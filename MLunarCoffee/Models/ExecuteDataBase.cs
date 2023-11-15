@@ -40,7 +40,7 @@ namespace MLunarCoffee.Models
             try
             {
 
-                string connectionString = String.Format(@"Data Source=.; " + "Initial Catalog={1}; User ID={2};Password={3};Trusted_Connection=false; "
+                string connectionString = String.Format(@"Data Source=.; " + "Initial Catalog={0}; User ID={1};Password={2};Trusted_Connection=false; "
                     , Comon.Global.SQLNAME
                     , Comon.Global.SQLUSER
                     , Comon.Global.SQLPASSWORD);
