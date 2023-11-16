@@ -9,4 +9,12 @@
         public string TextSearch { get; set; } = "";
         public int Limit { get; set; } = 1000;
     }
+
+    public class ProductParaExec
+    {
+        public string data { get; set; } = "";
+        public string dataUnit { get; set; } = "";
+        public string dataPackage { get; set; } = "";
+        public int CurrentID { get; set; } = 0;
+    }
 }
