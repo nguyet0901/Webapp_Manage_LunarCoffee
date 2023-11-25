@@ -3,54 +3,8 @@
 @{
 	Layout = "_Layout";
 }
-<section class="home-slider owl-carousel">
-	<div class="slider-item" style="background-image: url(images/bg_1.jpg);">
-		<div class="overlay"></div>
-		<div class="container">
-			<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
+<section class="home-slider owl-carousel" id="pin_bannerContent">
 
-				<div class="col-md-8 col-sm-12 text-center ftco-animate">
-					<span class="subheading">Welcome</span>
-					<h1 class="mb-4">The Best Coffee Testing Experience</h1>
-					<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
-					<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
-				</div>
-
-			</div>
-		</div>
-	</div>
-
-	<div class="slider-item" style="background-image: url(images/bg_2.jpg);">
-		<div class="overlay"></div>
-		<div class="container">
-			<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
-
-				<div class="col-md-8 col-sm-12 text-center ftco-animate">
-					<span class="subheading">Welcome</span>
-					<h1 class="mb-4">Amazing Taste &amp; Beautiful Place</h1>
-					<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
-					<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
-				</div>
-
-			</div>
-		</div>
-	</div>
-
-	<div class="slider-item" style="background-image: url(images/bg_3.jpg);">
-		<div class="overlay"></div>
-		<div class="container">
-			<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
-
-				<div class="col-md-8 col-sm-12 text-center ftco-animate">
-					<span class="subheading">Welcome</span>
-					<h1 class="mb-4">Creamy Hot and Ready to Serve</h1>
-					<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
-					<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
-				</div>
-
-			</div>
-		</div>
-	</div>
 </section>
 
 <section class="ftco-intro">
@@ -695,10 +649,95 @@
 </section>
 <script type="text/javascript">
     $(document).ready(function () {
-        pin_loadData();
+        //pin_loadData();
 
     });
+	//#region //LOAD BANNER
+	async function pin_loadBanner() {
+		new Promise(resolve => {
+			let para = {
+				'BannerID': 0,
+				'PagingNumber': 1,
+				'Limit': 1000
+			};
+			debugger
+			apipro_getList(
+				para,
+				beforefunc = function () {
+					
+				}
+				, successfunc = function (_rr) {
+					if (_rr != "0" && _rr != "") {
+						let data = JSON.parse(_rr);
 
+
+					}
+				}
+				, failurefunc = function () {
+					
+					notiError_SW();
+				}
+				, completefunc = function (e) {
+					
+				}
+			);
+			resolve();
+		})
+	}
+
+	async function pin_renderBanner(data, id) {
+		new Promise(resolve => {
+			var myNode = document.getElementById(id);
+			if (myNode != null) {
+				myNode.innerHTML = '';
+				let totalOn = 0;
+				let stringContent = '';
+				if (data && data.length > 0) {
+					for (let i = 0; i < data.length; i++) {
+						let item = data[i];
+						let tr = `
+							<li class="nav-item" role="presentation">
+								<a data-id="${item.ID}" class="text-sm px-1 item-menu  rowGroupEmployee nav-link cursor-pointer " data-hover data-bs-toggle="tab">
+									<div class="px-1">
+										<div data-id="${item.ID}"  class="d-inline buttonEditClass ">
+											<span class="mt-0 cursor-pointer col-auto my-auto mb-0 text-dark ms-0 text-sm fw-bold">
+												${item.Name}
+											</span>
+										</div>
+										<div class="d-flex align-items-center mt-0">
+											<div class="ps-0">
+												<span class="fw-dark text-primary">${formatNumber(item.TotalEmpOn)}</span>
+												<span class="text-secondary text-lowercase ps-1">@Local["Nhân viên"]</span>
+											</div>
+										</div>
+									</div>
+								</a>
+							<hr class="horizontal dark my-1">
+							</li>
+							`
+						totalOn = totalOn + Number(item.TotalEmpOn);
+						stringContent = stringContent + tr;
+					}
+				}
+				stringContent = `
+							<li class="nav-item" role="presentation">
+								<a data-id="0" class="text-sm ps-2 item-menu rowGroupEmployee nav-link cursor-pointer" data-hover data-bs-toggle="tab">
+									<div class="text-bolder text-lowercase">
+										<span class="SL_total fw-bolder text-primary">${formatNumber(totalOn)}</span>
+										<span class="ps-2">@Local["Nhân viên"]</span>
+									</div>
+								</a>
+								<hr class="horizontal dark my-0 opacity-2">
+							</li>
+							`+ stringContent;
+				document.getElementById(id).innerHTML = stringContent;
+			}
+
+			EmpGroup_EventRow();
+			resolve();
+		})
+	}
+	//#endregion
 	async function pin_loadData() {
 		new Promise(resolve => {
 			let para = {
@@ -718,7 +757,7 @@
 				, successfunc = function (_rr) {
 					if (_rr != "0" && _rr != "") {
 						let data = JSON.parse(_rr);
-						debugger
+						
 
 					}
 				}

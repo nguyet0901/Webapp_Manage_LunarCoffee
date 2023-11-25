@@ -1,15 +1,12 @@
-﻿async function apipro_getList(para, beforefunc, successfunc, failurefunc, completefunc) {
+﻿async function apiban_getList(para, beforefunc, successfunc, failurefunc, completefunc) {
     if (typeof beforefunc == 'function') beforefunc();
     new Promise((resolve) => {
         setTimeout(() => {
-            AjaxJWT(url = "/api/Product/GetList"
+            AjaxJWT(url = "/api/Banner/GetList"
                 , data = JSON.stringify({
-                    'TypeID': para?.TypeID ?? 0,
-                    'ProductID': para?.ProductID ?? 0,
-                    'HasDisable': para?.HasDisable ?? 0,
+                    'BannerID': para?.BannerID ?? 0,
                     'PagingNumber': para?.PagingNumber ?? 1,
-                    'TextSearch': para?.TextSearch ?? "",
-                    'Limit': para?.Limit ?? 1000,
+                    'Limit': para?.Limit ?? 3,
                 })
                 , async = true
                 , success = function (result) {
@@ -27,11 +24,11 @@
     })
 }
 
-async function apipro_getDetail(id, beforefunc, successfunc, failurefunc, completefunc) {
+async function apiban_getDetail(id, beforefunc, successfunc, failurefunc, completefunc) {
     if (typeof beforefunc == 'function') beforefunc();
     new Promise((resolve) => {
         setTimeout(() => {
-            AjaxJWT(url = "/api/Product/GetDetail/" + id
+            AjaxJWT(url = "/api/Banner/GetDetail/" + id
                 , data = null
                 , async = true
                 , success = function (result) {

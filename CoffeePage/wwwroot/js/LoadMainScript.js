@@ -55,64 +55,16 @@ const MSV_Listcolor = {
 
 }
 
-//#region ICD
 
-const MSV_ICDArea = {
-    "diagnose": 0
-    ,"prescription" : 1
-}
-//#endregion
 async function MSV_InitiliazeExe () {
     new Promise(() => {
         setTimeout(() => {
-            MSVDarkmode_Set(MSVDarkmode_Get());
-            MSVDarkmode_Event();
             MSVColor_Set();
             MSV_FontSet();
             MSV_ColorRender(MSV_Listcolor, 'Master_Bagde_Color');
         })
     })
 }
-
-//#region // SETTING DARKMODE
-function MSVDarkmode_Event () {
-    $("#dark-version").unbind('click').on("click", function () {
-        if ($("#BodyMain").hasClass("dark-version"))
-            MSVDarkmode_Set('light');
-        else
-            MSVDarkmode_Set('dark');
-    })
-}
-function MSVDarkmode_Set (mode) {
-    if (mode == 'light') {
-        $("#BodyMain").removeClass('dark-version');
-        $("#dark-version").prop("checked", false);
-        $("#dark-versionarea .night").removeClass('d-none');
-        $("#dark-versionarea .morning").addClass('d-none');
-    }
-    else {
-        $("#BodyMain").addClass('dark-version');
-        $("#dark-version").prop("checked", true);
-        $("#dark-versionarea .night").addClass('d-none');
-        $("#dark-versionarea .morning").removeClass('d-none');
-    }
-    localstorage_set(MSV_Name.darkMode, mode);
-}
-function MSVDarkmode_Get () {
-    try {
-        let result = 'light';
-        let dataMode = localstorage_get(MSV_Name.darkMode);
-        if (dataMode != '') {
-            result = JSON.parse(dataMode).data;
-        }
-        return result;
-    }
-    catch (ex) {
-        return 'light';
-    }
-
-}
-//#endregion
 
 //#region // SETTING COLOR
 async function MSV_FontSet() {
@@ -231,85 +183,18 @@ function MSVColor_Set () {
 }
 //#endregion
 
-//#region // Pos
-function MSVMenuPos_Get () {
-    try {
-        let result = {};
-        let data = localstorage_get(MSV_Name.menuposition);
-        if (data && data != '') {
-            let dataSetting = JSON.parse(data);
-            result = dataSetting.data;
-        }
-        return result;
-    }
-    catch (ex) {
-        return {};
-    }
-}
-function MSVMenuPos_Set () {
-    try {
-        let mode = MSVMenuPos_Get();
-        if (mode == 'top') {
-             $("#BodyMain").addClass('menutop-version'); 
-        }
-        else {
-           $("#BodyMain").removeClass('menutop-version');
-        }
-    }
-    catch (ex) {
-        return false;
-    }
-}
-//#endregion
-
-//#region // show more 
-function Master_ToggleShowContent () {
-    $("#BodyMain").toggleClass('show_content_all');
-    Master_ClosePopupContent();
-}
-
-function Master_ClosePopupContent () {
-    $('#Master_ViewContent').removeClass('active');
-    $('#Master_Content').html('');
-}
-function Master_ReadContentCollapse () {
-    $('body').on('click', '.content_line_clamp', function () {
-        event.stopPropagation();
-        let isAll = $("#BodyMain").hasClass('show_content_all');
-        if (this.scrollHeight > this.clientHeight || isAll) {
-            let titleshowall = $('#Master_ShowAll');
-            if (isAll) titleshowall.html(Outlang["Thu_gon_tat_ca"]);
-            else titleshowall.html(Outlang["Hien_thi_tat_ca"]);
-            $('#Master_ViewContent').addClass("active");
- 
-             $("#Master_Content").html($(this).html());
-        
-        }
-    });
-
-}
-//#endregion
-//#region ICD Event
-function Master_ICDGetArea(key) {
-    if (MSV_ICDArea && MSV_ICDArea[key] != undefined)
-        return MSV_ICDArea[key]
-    else return ''
-}
-//#endregion
 //#region //  Version Load
 
-function Master_Load_JS (callback) {
+function LoadMainScript (callback) {
     try {
 
         ver_check();
         js_require('/assests/dist/SemanticUI/form.min.js');
         js_require('/assests/dist/plugins/sweetalert2/sweetalert2.min.js');
         js_require_notasync('/js/comon/noti_function.js', true);
-        js_require('/js/comon/Remove_title.js');
         js_require_notasync('/assests/js/Swipe.js');
         js_require_notasync('/assests/js/detect-mobile.js');
         js_require_notasync('/assests/dist/flatpickr/flatpickr.js');
-        js_require('/js/comon/render_teeth.js');
         js_require_notasync('/assests/dist/plugins/datatable/jquery.dataTables.js', true);
         js_require_notasync('/assests/dist/MultiColumnCombo/jquery.inputpicker.js');
         js_require_notasync('/assests/dist/NumberThousand/number-divider.js');
@@ -325,7 +210,6 @@ function Master_Load_JS (callback) {
         js_require_notasync('/js/signalR/notification_hub.js', true);
         js_require_notasync('/js/comon/mark.js', true);
         js_require_notasync('/js/comon/Datetime.js', true);
-        js_require_notasync('/js/comon/permission_tabcontrol.js', true);
         js_require_notasync('/js/comon/Popup.js', true);
         js_require_notasync('/js/comon/Export.js', true);
         js_require_notasync('/js/comon/Combo_v2.js', true);
@@ -342,15 +226,10 @@ function Master_Load_JS (callback) {
         js_require_notasync('/js/print/print.js', true);
         js_require_notasync('/assests/dist/ExportExcel/ExportELSX/xlsx.core.min.js', true);
         js_require_notasync('/assests/dist/ExportExcel/ExportELSX/FileSaver.js', true);
-        js_require_notasync('/js/comon/CheckConnection.js');
         js_require_notasync('/js/comon/AlarmSchedule.js');
         js_require_notasync('/assests/dist/Barcode/JsBarcode.code128.min.js', true);
-        js_require_notasync('/js/comon/Signation.js');
         js_require_notasync('/js/customjs/custom-tablefixer.js');
         js_require_notasync('/js/table_responsive.js');
-        js_require('/js/Todo/Todo_Detail.js');
-        js_require('/js/Labo/LaboPopup.js');
-        js_require_notasync('/js/main-sidebar.js');
         js_require('/js/main.js');
         js_require_notasync('/assests/dist/plugins/cookie/js.cookie.js');
         js_require_notasync('/assests/dist/ExportExcel/ExportELSX/tableexport.min.js', true);
@@ -374,14 +253,7 @@ function Master_Load_JS (callback) {
         js_require_notasync('/js/log.js', true);
         js_require_notasync('/Print/printThis.js', true);
  
-        if (sys_Minify !== undefined && Number(sys_Minify) === 0) {
-            js_require_notasync('/Protect/index.js', true);
-            js_require_notasync('/Protect/protect.js', true);
-            js_require_notasync('/Protect/protect_20220717.js', true);
-        }
         if (typeof callback == 'function') callback();
-        if (Master_heartbeat == 1) js_require_notasync('/js/comon/KeepAlive.js');
- 
         js_require_notasync('/assests/dist/lightGallery/lightgallery.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/thumbnail/lg-thumbnail.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/fullscreen/lg-fullscreen.min.js', true);

@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CoffeePage.Comon;
 using CoffeePage.Comon.Crypt;
-using CoffeePage.Models.Product;
+using CoffeePage.Models.Banner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -14,12 +14,12 @@ namespace CoffeePage.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController : Controller
+    public class BannerController : Controller
     {
         [AllowAnonymous]
         [Route("GetList")]
         [HttpPost]
-        public async Task<IActionResult> GetList(ProductPara para)
+        public async Task<IActionResult> GetList(BannerPara para)
         {
             try
             {
@@ -29,7 +29,7 @@ namespace CoffeePage.Controllers
                 using (HttpClient clientautho = new HttpClient() { BaseAddress = new Uri(Global.RootLink) })
                 {
                     clientautho.DefaultRequestHeaders.Add("AccessToken", AccessToken);
-                    var result = await clientautho.PostAsync("api/Product/GetList", content);
+                    var result = await clientautho.PostAsync("api/Banner/GetList", content);
                     string responseBody = await result.Content.ReadAsStringAsync();
                     if (responseBody != "0")
                     {
@@ -56,7 +56,7 @@ namespace CoffeePage.Controllers
                 using (HttpClient clientautho = new HttpClient() { BaseAddress = new Uri(Global.RootLink) })
                 {
                     clientautho.DefaultRequestHeaders.Add("AccessToken", AccessToken);
-                    var result = await clientautho.PostAsync($"api/Product/GetDetail/{id}", null);
+                    var result = await clientautho.PostAsync($"api/Banner/GetDetail/{id}", null);
                     string responseBody = await result.Content.ReadAsStringAsync();
                     if (responseBody != "0")
                     {

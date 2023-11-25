@@ -15,11 +15,11 @@ namespace MLunarCoffee.Controllers
     [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController : Controller
+    public class BannerController : Controller
     {
         [Route("GetList")]
         [HttpPost]
-        public async Task<IActionResult> GetList(ProductPara pros)
+        public async Task<IActionResult> GetList(BannerPara pros)
         {
             try
             {
@@ -36,9 +36,9 @@ namespace MLunarCoffee.Controllers
                     using (var confunc = new ExecuteDataBase())
                     {
                         var ds = new DataSet();
-                        ds = await confunc.ExecuteDataSet("[MLU_SP_Product_GetList]" ,CommandType.StoredProcedure
+                        ds = await confunc.ExecuteDataSet("[MLU_SP_Banner_GetList]" ,CommandType.StoredProcedure
                             ,"@TypeID", SqlDbType.Int,pros.TypeID
-                            ,"@ProductID" , SqlDbType.Int,pros.ProductID
+                            ,"@BannerID" , SqlDbType.Int,pros.BannerID
                             ,"@HasDisable" , SqlDbType.Int,pros.HasDisable
                             ,"@pagingNumber" , SqlDbType.Int,pros.PagingNumber
                             ,"@textSearch" , SqlDbType.NVarChar,pros.TextSearch
@@ -74,8 +74,8 @@ namespace MLunarCoffee.Controllers
                     using (var confunc = new ExecuteDataBase())
                     {
                         var dt = new DataTable();
-                        dt = await confunc.ExecuteDataTable("[MLU_SP_Product_Detail]" ,CommandType.StoredProcedure
-                            ,"@ProductID" ,SqlDbType.Int ,id
+                        dt = await confunc.ExecuteDataTable("[MLU_SP_Banner_Detail]" ,CommandType.StoredProcedure
+                            ,"@BannerID" ,SqlDbType.Int ,id
                             );
                         return JsonConvert.SerializeObject(dt);
                     }
@@ -90,7 +90,7 @@ namespace MLunarCoffee.Controllers
 
         [Route("ExcutedData")]
         [HttpPost]
-        public async Task<IActionResult> ExcutedData(ProductParaExec para)
+        public async Task<IActionResult> ExcutedData(BannerParaExec para)
         {
             try
             {
@@ -105,13 +105,13 @@ namespace MLunarCoffee.Controllers
                 var result = await Task.Factory.StartNew(async () =>
                 {
                     var dt = new DataTable();
-                    Product DataMain = JsonConvert.DeserializeObject<Product>(para.data);
+                    Banner DataMain = JsonConvert.DeserializeObject<Banner>(para.data);
                     Unit DataUnit = JsonConvert.DeserializeObject<Unit>(para.dataUnit);
                     if (para.CurrentID == 0)
                     {
                         using (Models.ExecuteDataBase connFunc = new Models.ExecuteDataBase())
                         {
-                            dt = await connFunc.ExecuteDataTable("YYY_sp_Product_Insert" ,CommandType.StoredProcedure
+                            dt = await connFunc.ExecuteDataTable("YYY_sp_Banner_Insert" ,CommandType.StoredProcedure
                                 ,"@Image", SqlDbType.NVarChar,DataMain.Image
                                 ,"@TypeID" , SqlDbType.Int,DataMain.TypeID
                                 ,"@Media" , SqlDbType.NVarChar,DataMain.Media
@@ -137,7 +137,7 @@ namespace MLunarCoffee.Controllers
                     {
                         using (Models.ExecuteDataBase connFunc = new Models.ExecuteDataBase())
                         {
-                            dt = await connFunc.ExecuteDataTable("YYY_sp_Product_Update" ,CommandType.StoredProcedure
+                            dt = await connFunc.ExecuteDataTable("YYY_sp_Banner_Update" ,CommandType.StoredProcedure
                                 ,"@Image" ,SqlDbType.NVarChar ,DataMain.Image
                                 ,"@TypeID" ,SqlDbType.Int ,DataMain.TypeID
                                 ,"@Media" ,SqlDbType.NVarChar ,DataMain.Media
@@ -189,8 +189,8 @@ namespace MLunarCoffee.Controllers
                     using (var confunc = new ExecuteDataBase())
                     {
                         var dt = new DataTable();
-                        dt = await confunc.ExecuteDataTable("[MLU_SP_Product_Delete]" ,CommandType.StoredProcedure
-                            ,"@ProductID" ,SqlDbType.Int ,id
+                        dt = await confunc.ExecuteDataTable("[MLU_SP_Banner_Delete]" ,CommandType.StoredProcedure
+                            ,"@BannerID" ,SqlDbType.Int ,id
                             );
                         return JsonConvert.SerializeObject(dt);
                     }
@@ -222,8 +222,8 @@ namespace MLunarCoffee.Controllers
                     using (var confunc = new ExecuteDataBase())
                     {
                         var dt = new DataTable();
-                        dt = await confunc.ExecuteDataTable("[MLU_SP_Product_Detail]" ,CommandType.StoredProcedure
-                            ,"@ProductID" ,SqlDbType.Int ,id
+                        dt = await confunc.ExecuteDataTable("[MLU_SP_Banner_Detail]" ,CommandType.StoredProcedure
+                            ,"@BannerID" ,SqlDbType.Int ,id
                             );
                         return JsonConvert.SerializeObject(dt);
                     }
