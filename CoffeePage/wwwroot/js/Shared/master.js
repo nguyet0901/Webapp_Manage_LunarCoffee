@@ -1,104 +1,16 @@
 ﻿//#region // Function Global
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-        typeof define === 'function' && define.amd ? define(['exports'], factory) :
-            (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.vtt = {}));
-}(this, (function (exports) {
-    'use strict';
-
-    var fp = typeof window !== "undefined" && window.flatpickr !== undefined
-        ? window.flatpickr
-        : {
-            l10ns: {},
-        };
-    var VTTLang = {
-        weekdays: {
-            shorthand: [
-                `${Outlang["Sys_sthu_8"]}`,
-                `${Outlang["Sys_sthu_2"]}`,
-                `${Outlang["Sys_sthu_3"]}`,
-                `${Outlang["Sys_sthu_4"]}`,
-                `${Outlang["Sys_sthu_5"]}`,
-                `${Outlang["Sys_sthu_6"]}`,
-                `${Outlang["Sys_sthu_7"]}`,
-
-            ],
-            longhand: [
-                `${Outlang["Sys_thu_8"]}`,
-                `${Outlang["Sys_thu_2"]}`,
-                `${Outlang["Sys_thu_3"]}`,
-                `${Outlang["Sys_thu_4"]}`,
-                `${Outlang["Sys_thu_5"]}`,
-                `${Outlang["Sys_thu_6"]}`,
-                `${Outlang["Sys_thu_7"]}`
-                ,
-            ],
-        },
-        months: {
-            shorthand: [
-                `${Outlang["Sys_sthang_1"]}`,
-                `${Outlang["Sys_sthang_2"]}`,
-                `${Outlang["Sys_sthang_3"]}`,
-                `${Outlang["Sys_sthang_4"]}`,
-                `${Outlang["Sys_sthang_5"]}`,
-                `${Outlang["Sys_sthang_6"]}`,
-                `${Outlang["Sys_sthang_7"]}`,
-                `${Outlang["Sys_sthang_8"]}`,
-                `${Outlang["Sys_sthang_9"]}`,
-                `${Outlang["Sys_sthang_10"]}`,
-                `${Outlang["Sys_sthang_11"]}`,
-                `${Outlang["Sys_sthang_12"]}`,
-
-            ],
-            longhand: [
-                `${Outlang["Sys_thang_1"]}`,
-                `${Outlang["Sys_thang_2"]}`,
-                `${Outlang["Sys_thang_3"]}`,
-                `${Outlang["Sys_thang_4"]}`,
-                `${Outlang["Sys_thang_5"]}`,
-                `${Outlang["Sys_thang_6"]}`,
-                `${Outlang["Sys_thang_7"]}`,
-                `${Outlang["Sys_thang_8"]}`,
-                `${Outlang["Sys_thang_9"]}`,
-                `${Outlang["Sys_thang_10"]}`,
-                `${Outlang["Sys_thang_11"]}`,
-                `${Outlang["Sys_thang_12"]}`,
-            ],
-        },
-        firstDayOfWeek: 1,
-        ordinal: function () {
-            return "";
-        },
-        rangeSeparator: " to ",
-        weekAbbreviation: `${Outlang["Sys_tuan"]}`,
-        scrollTitle: "Scrolling to view",
-        toggleTitle: "Click to change",
-        amPM: [`${Outlang["Sys_ssang"]}`, `${Outlang["Sys_schieu"]}`],
-        yearAriaLabel: `${Outlang["Sys_nam2"]}`,
-        time_24hr: true,
-    };
-    fp.l10ns.vtt = VTTLang;
-    var vtt = fp.l10ns;
-
-    exports.VTTLang = VTTLang;
-    exports.default = vtt;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
-
 
 (function ($) {
-    var VTT_CustomJQueryFPFunc = jQuery.fn.flatpickr;
-    var VTT_CustomerFPConstrutor = flatpickr;
+    var MLU_CustomJQueryFPFunc = jQuery.fn.flatpickr;
+    var MLU_CustomerFPConstrutor = flatpickr;
     jQuery.fn.flatpickr = function (e) {
-        e = { ...e, locale: "vtt" };
-        return VTT_CustomJQueryFPFunc.call(this,e);
+        e = { ...e, locale: "MLU" };
+        return MLU_CustomJQueryFPFunc.call(this,e);
     }
 
     flatpickr = function (e, t) {
-        t = { ...t, locale: "vtt" };
-        return VTT_CustomerFPConstrutor.call(this, e, t);
+        t = { ...t, locale: "MLU" };
+        return MLU_CustomerFPConstrutor.call(this, e, t);
     }
 
     $(window).click(function (e) {

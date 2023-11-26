@@ -498,8 +498,8 @@ function Render_Button_Grid (buttons) {
     if (buttons != undefined && buttons.length >= numbercollap) {
         let idrandom = 'col' + (new Date()).getTime() + RandomNumber();
         result = '<div class="text-center ">'
-            + '<i class="position-relative vtt-icon vttech-icon-dot" data-bs-toggle="collapse" href="#' + idrandom + '">'
-            + ' <div class="vttcollapse shadow-lg bg-body collapse-horizontal rounded position-absolute" id="' + idrandom + '">'
+            + '<i class="position-relative MLU-icon MLUech-icon-dot" data-bs-toggle="collapse" href="#' + idrandom + '">'
+            + ' <div class="MLUcollapse shadow-lg bg-body collapse-horizontal rounded position-absolute" id="' + idrandom + '">'
             ;
 
         $.each(buttons, function (index, value) {

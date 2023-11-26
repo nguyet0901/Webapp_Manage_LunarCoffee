@@ -216,7 +216,7 @@ function LoadMainScript (callback) {
         js_require_notasync('/js/comon/Formatnumber.js', true);
         js_require_notasync('/js/comon/Other.js', true);
         js_require_notasync('/js/comon/report.js', true);
-        js_require_notasync('/js/comon/Callcenter.js', true);
+
         js_require_notasync('/js/comon/Render.js', true);
         js_require_notasync('/js/comon/tablesort.js', true);
         js_require('/js/comon/Toast.js');
@@ -246,7 +246,7 @@ function LoadMainScript (callback) {
         js_require_notasync('/assests/dist/UploadJS/js/jquery.fileupload.js', true);
         js_require_notasync('/assests/dist/ColorPicker/spectrum.js', true);
         js_require_notasync('/assests/dist/Paginationjs/paginationjs.min.js', true);
-        js_require('/js/comon/customerimage2.js');
+        //js_require('/js/comon/customerimage2.js');
         js_require('/js/customjs/custom-dropdown.js');
         js_require('/assets/js/plugins/countup.min.js');
         js_require_notasync('/assests/dist/QRCode/qrcode.min.js', true);
@@ -261,7 +261,19 @@ function LoadMainScript (callback) {
         js_require_notasync('/assests/dist/lightGallery/plugins/autoplay/lg-autoplay.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/share/lg-share.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/rotate/lg-rotate.min.js', true);
-    
+        js_require_notasync('/js/jsTemplate/jquery-migrate-3.0.1.min.js', true);
+        js_require_notasync('/js/jsTemplate/popper.min.js', true);
+        js_require_notasync('/js/jsTemplate/bootstrap.min.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.easing.1.3.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.waypoints.min.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.stellar.min.js', true);
+        js_require_notasync('/js/jsTemplate/owl.carousel.min.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.magnific-popup.min.js', true);
+        js_require_notasync('/js/jsTemplate/aos.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.animateNumber.min.js', true);
+        js_require_notasync('/js/jsTemplate/bootstrap-datepicker.js', true);
+        js_require_notasync('/js/jsTemplate/jquery.timepicker.min.js', true);
+        js_require_notasync('/js/jsTemplate/scrollax.min.js', true);
     }
     catch (ex) {
 

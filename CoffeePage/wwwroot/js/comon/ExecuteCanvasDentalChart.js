@@ -634,7 +634,7 @@ function Render_Table_Desease_List(data, id) {
                     + '<td>' + AddCell_Note_Teeth(item.note,item.typecircle, item.type, item.diseaseid, item.teethid) + '</td>'
 
                     + ((item.DeleteButton === 1)
-                        ? ('<td><i data_typecircle="' + item.typecircle + '" data_type="' + item.type + '" data_disease="' + item.diseaseid + '" data_teethid="' + item.teethid + '" class="deleteDisease vtt-icon vttech-icon-delete"></i> </td>')
+                        ? ('<td><i data_typecircle="' + item.typecircle + '" data_type="' + item.type + '" data_disease="' + item.diseaseid + '" data_teethid="' + item.teethid + '" class="deleteDisease MLU-icon MLUech-icon-delete"></i> </td>')
                         : '<td></td>')
 
                 stringContent = stringContent + '<tr role="row" class="vt-number">' + tr + '</tr>';

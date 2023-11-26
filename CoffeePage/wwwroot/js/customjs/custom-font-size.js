@@ -32,7 +32,7 @@ function Check_Change_Font_Size() {
         }
         let elementChange = $('.dropdown, span, input, a, textarea, [data-languagedyn], [data-fontchanged]');
         let elementUnchange = "font-unchanged";
-        let nameCookie = "VTTECH_Font_Size_Browser";
+        let nameCookie = "MLUECH_Font_Size_Browser";
         Change_Font_Size_Element(elementChange, listclassfont, elementUnchange, nameCookie);
     }
 }

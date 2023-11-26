@@ -210,7 +210,7 @@
     //            result = '<button class="' + str + ' ui blue label" ' + Table_Responsive_Get_All_Attributes_Element(ele) + ' >Not Yet Customer Care</button>';
     //            break;
     //        case "buttonHavingCC":
-    //            result = '<i style="width: 30px;height: 30px;margin: 0;" class="vtt-icon vttech-icon-cctreat"></i>';
+    //            result = '<i style="width: 30px;height: 30px;margin: 0;" class="MLU-icon MLUech-icon-cctreat"></i>';
     //            break;
     //        default:
     //            break;
@@ -253,11 +253,11 @@
     async function TableStickyColumn(container) {
         new Promise(resolve => {
             try {
-                let $tables = container != undefined ? container : $('.vttech-fixedcol').closest('table');
+                let $tables = container != undefined ? container : $('.MLUech-fixedcol').closest('table');
                 if ($tables && $tables.length > 0) {
                     $tables.each(function () {
                         if ($(this)[0] != undefined) {
-                            let $ele = $(this).find(".vttech-fixedcol");
+                            let $ele = $(this).find(".MLUech-fixedcol");
                             let rectTable = $(this)[0].getBoundingClientRect();
                             let posLeft = rectTable?.left ?? 0;
                             if ($ele && $ele.length > 0) {

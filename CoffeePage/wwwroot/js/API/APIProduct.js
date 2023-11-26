@@ -8,6 +8,8 @@
                     'ProductID': para?.ProductID ?? 0,
                     'HasDisable': para?.HasDisable ?? 0,
                     'PagingNumber': para?.PagingNumber ?? 1,
+                    'IsBestSeller': para?.IsBestSeller ?? 0,
+                    'IsMaterial': para?.IsMaterial ?? -1,
                     'TextSearch': para?.TextSearch ?? "",
                     'Limit': para?.Limit ?? 1000,
                 })

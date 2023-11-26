@@ -209,7 +209,7 @@ function exportJsonToExcel (filename, dataExp, dataKeyExport = {}) {
                         }
                     }
                     else dtResult = dataExp;
-                    let myFile = (filename ? decodeHtml(filename) : 'VTtech-Excel') + ".xlsx";
+                    let myFile = (filename ? decodeHtml(filename) : 'MLUech-Excel') + ".xlsx";
                     let myWorkSheet = XLSX.utils.json_to_sheet(dtResult);
                     let myWorkBook = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(myWorkBook, myWorkSheet, "Sheet");
@@ -604,7 +604,7 @@ function exportJsonToExcel_CheckPer (key) {
                 var src = $(this)[0].src;
                 var l = window.location;
                 //var t = l.protocol + '//' + l.host + '/';
-                var t = l.protocol + '//' + 'demo.vttechsolution.com' + '/';
+                var t = l.protocol + '//' + 'demo.MLUechsolution.com' + '/';
                 if (proto.test(src)) {
                 } else if (ab.test(src)) {
                     src = t + src;
@@ -780,7 +780,7 @@ function exportJsonToExcel_CheckPer (key) {
         //            if (tags[i] == 'style') html += ('\n' + $(this)[0].outerHTML + '\n');
         //            if (tags[i] == 'link') {
         //                let itemLink = $(this).clone();
-        //                itemLink.attr('href', 'https://demo.vttechsolution.com' + itemLink.attr('href'));
+        //                itemLink.attr('href', 'https://demo.MLUechsolution.com' + itemLink.attr('href'));
         //                html += ('\n' + itemLink[0].outerHTML + '\n');
         //            }
         //        });
@@ -901,18 +901,6 @@ function exportJsonToExcel_CheckPer (key) {
 
     };
 }(jQuery));
-
-
-
-let val = $(table.rows[i].cells[j]).html().toString().replace(/[^a-zA-Z0-9\.\-]/gm, "");
-if (/^(\d+\.?\d*|\.\d+)$/.test(val)) {
-    $(table.rows[i].cells[j]).html(Number(val));
-
-    let NumCharCode = 'A'.charCodeAt(0);
-    let CellName = String.fromCharCode(NumCharCode + j);
-    CellNameTypeNumber.push(CellName + (i + 1));
-
-}
 
 function GetTemplateXLSX (id, filename) {
     var elt = document.getElementById(id);

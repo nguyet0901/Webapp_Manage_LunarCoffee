@@ -6,7 +6,7 @@
         content: 'Loading...',
         maxWidth: 350,
         hideOnClick: true,
-        theme: 'vttech',
+        theme: 'MLUech',
         onShow(instance) {
             let _obj = instance.reference;
             if (_obj != undefined) {

@@ -16,8 +16,7 @@ var Chart_EmptyCText = '#9e9e9e';
 var Chart_EmptyText = 'No data available';
 var Chart_EmptyFont = '13px sans-serif';
 var Chart_Blockwidth = 100;
-
-var Charts_mode = MSVDarkmode_Get();
+var Charts_mode = "light";
 var Charts_MainColor = (Charts_mode == 'light' ? Chart_ModeColor[0].color : Chart_ModeColor[1].color);
 var Charts_SemiColor = (Charts_mode == 'light' ? Chart_ModeColor[0].semicolor : Chart_ModeColor[1].semicolor);
 var Charts_Temp = [];
@@ -27,7 +26,14 @@ var colorChart = ['#5899DA', '#E8743B'
     , '#6C8893', '#EE6868', '#2F6497'
     , '#ff7f0e', '#2ca02c', '#ffbb78', '#d62728', '#f7b6d2', '#ff9896', '#9467bd', '#dbdb8d', '#c5b0d5'
     , '#8c564b', '#c49c94', '#98df8a', '#e377c2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#17becf', '#a8b8d8'];
-var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
+var canvas = document.createElement('canvas');
+canvas.width = 500;
+canvas.height = 400;
+
+// Get the drawing context
+var ctx1 = canvas.getContext('2d');
+var ctx2 = ctx2 ?? ctx1;
+var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50); ctx2
 
 gradientStroke1.addColorStop(1, 'rgba(203,12,159,0.2)');
 gradientStroke1.addColorStop(0.2, 'rgba(72,72,176,0.0)');
@@ -40,47 +46,6 @@ gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
 gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
 
 
-
-function Return_Type_SER_PRO_MED_CARD_DEP(type, isProduct = 0) {
-    switch (Number(type)) {
-        case 0:
-
-            return '<span class="badge bg-gradient-warning">' + Outlang["Tien_coc"] + '</span>';
-            break;
-        case 1:
-            return (isProduct != 1)
-                ?
-                ('<span class="badge bg-gradient-primary">' + Outlang["Dich_vu"] + '</span>')
-                :
-                ('<span class="badge bg-gradient-success">' + Outlang["San_pham"] + '</span>');
-            break;
-        case 2:
-            return '<span class="badge bg-gradient-dark">' + Outlang["The"] + '</span>  ';
-            break;
-        case 3:
-            return '<span class="badge bg-gradient-info">' + Outlang["Thuoc"] + '</span>';
-            break;
-        default: return ''; break;
-    }
-}
-function Return_Name_SER_PRO_MED_CARD_DEP(type, ServiceName, CardName, MedicineName) {
-    switch (Number(type)) {
-        case 0:
-
-            return '<span class="text-sm text-gradient text-warning">' + Outlang["Tien_coc"] + '</span>';
-            break;
-        case 1:
-            return '<span class="text-sm text-gradient text-primary">' + ServiceName + '</span>';
-            break;
-        case 2:
-            return '<span class="text-sm text-gradient text-dark">' + CardName + '</span>  ';
-            break;
-        case 3:
-            return '<span class="text-sm text-gradient text-info">' + MedicineName + '</span>';
-            break;
-        default: return ''; break;
-    }
-}
 async function rp_doughnut(id, data, textName, valueName) {
     new Promise((resolve, reject) => {
         

@@ -401,7 +401,7 @@ function GetDataComboBranch(link, fn) {
     return x;
 }
 
-function GetDataComboUnitVTTH(link,productID, fn) {
+function GetDataComboUnitMLUH(link,productID, fn) {
     var x = "";
     $.ajax({
         url: link,
