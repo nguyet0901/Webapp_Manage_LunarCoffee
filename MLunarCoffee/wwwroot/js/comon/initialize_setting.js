@@ -3,8 +3,8 @@
 
 (function ($) {
     //init Language page
-    //if (typeof LanguageVTT !== 'undefined') {
-    //    LanguageVTT.Refresh();
+    //if (typeof LanguageMLU !== 'undefined') {
+    //    LanguageMLU.Refresh();
     //}
     //init table responsive
     if (typeof TableReponsive !== 'undefined' && sys_isMobile == 1) {
@@ -28,17 +28,17 @@
                 window.onbeforeunload = null;
                 return false;
             });
-            $(".vttech-checkform").delegate("input", "change", function () {
+            $(".MLUech-checkform").delegate("input", "change", function () {
                 let val = $(this).val();
                 if (val) {
-                    $(this).addClass('vttech-checkedform');
+                    $(this).addClass('MLUech-checkedform');
                     $(window).bind("beforeunload", function (event) {
                         event.preventDefault();
                         return event.returnValue = '';
                     });
                 }
                 else {
-                    $(this).removeClass('vttech-checkedform');
+                    $(this).removeClass('MLUech-checkedform');
                     window.onbeforeunload = null;
                 }
             });

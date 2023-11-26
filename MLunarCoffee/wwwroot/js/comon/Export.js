@@ -1,6 +1,6 @@
 ﻿
 //#region Export
-async function exportToExcel (id, filename) {
+async function exportToExcel(id, filename) {
     new Promise((resolve, reject) => {
         if (typeof toastExportExcel === 'object') toastExportExcel.begin();
         setTimeout(() => {
@@ -44,18 +44,6 @@ async function exportToExcel (id, filename) {
                         if ($(table.rows[i].cells[j]).hasClass("vt-number-order")) {
                             $(table.rows[i].cells[j]).html(i - rowsThead);
                         }
-
-                        //let val = $(table.rows[i].cells[j]).html().toString().replace(/[^a-zA-Z0-9\.\-]/gm, "");
-                        //if (/^(\d+\.?\d*|\.\d+)$/.test(val)) {
-                        //    $(table.rows[i].cells[j]).html(Number(val));
-                        //    let NumCharCode = 'A'.charCodeAt(0);
-                        //    let NumFirst = (Math.floor(j / 25) > 0 ? Number(Math.floor(j / 25)) : 0);
-                        //    while (j > 25) {
-                        //        j = j - 25;
-                        //    }
-                        //    let CellName = (NumFirst > 0 ? String.fromCharCode(NumCharCode + (NumFirst - 1)) : "")  + String.fromCharCode(NumCharCode + j);
-                        //    CellNameTypeNumber.push(CellName + (i + 1));
-                        //}
                     }
                 }
                 // Change class td
@@ -80,7 +68,7 @@ var divHeightGlobalPDF;
 var divWidthGlobalPDF;
 var ratioGlobalPDF;
 
-function ExportPDFContainer (id, filename) {
+function ExportPDFContainer(id, filename) {
     id = "dtContentReport";
     let element = $("#" + id);
     divHeightGlobalPDF = element.height();
@@ -106,22 +94,7 @@ function ExportPDFContainer (id, filename) {
         }
     });
 }
-//#region function duplicate
-//function GetTemplateXLSX (id, filename, DataTypeNumber) {
-
-//    var elt = document.getElementById(id);
-//    var wb = XLSX.utils.table_to_book(elt, {sheet: "data", raw: true});
-//    //var ws = wb.Sheets["data"];
-//    //if (DataTypeNumber && DataTypeNumber.length > 0) {
-//    //    for (let i = 0; i < DataTypeNumber.length; i++) {
-//    //        let CellName = DataTypeNumber[i].toString();
-//    //        ws[CellName].t = "n";
-//    //    }
-//    //}
-//    XLSX.writeFile(wb, (filename + '.xlsx'));
-//}
-//#endregion
-function GetTemplateXLSX_RemoveLocalStorage () {
+function GetTemplateXLSX_RemoveLocalStorage() {
     if (Object.values(localStorage).length != 0) {
         for ([key, value] of Object.entries(localStorage)) {
             if (key.indexOf('te-') == 0 &&
@@ -134,7 +107,7 @@ function GetTemplateXLSX_RemoveLocalStorage () {
 
 //#endregion
 
-function exportToExcel_Xls (id, filename) {
+function exportToExcel_Xls(id, filename) {
     $("#tablePrintForAll").empty();
     var idbody = document.getElementById(id).tBodies[0].id;
     var table = $("#" + id).clone();
@@ -182,7 +155,7 @@ function exportToExcel_Xls (id, filename) {
 }
 
 //#region //Export Json to excel
-function exportJsonToExcel (filename, dataExp, dataKeyExport = {}) {
+function exportJsonToExcel(filename, dataExp, dataKeyExport = {}) {
     return new Promise(resolve => {
         if (typeof toastExportExcel === 'object') toastExportExcel.begin();
         setTimeout(() => {
@@ -209,7 +182,7 @@ function exportJsonToExcel (filename, dataExp, dataKeyExport = {}) {
                         }
                     }
                     else dtResult = dataExp;
-                    let myFile = (filename ? decodeHtml(filename) : 'VTtech-Excel') + ".xlsx";
+                    let myFile = (filename ? decodeHtml(filename) : 'MLUech-Excel') + ".xlsx";
                     let myWorkSheet = XLSX.utils.json_to_sheet(dtResult);
                     let myWorkBook = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(myWorkBook, myWorkSheet, "Sheet");
@@ -229,7 +202,7 @@ function exportJsonToExcel (filename, dataExp, dataKeyExport = {}) {
 }
 
 
-function exportJsonToExcel_CheckPer (key) {
+function exportJsonToExcel_CheckPer(key) {
     if (typeof key !== 'string') return true;
     if (key.trim() != "" && PermissionTable_TabControl && PermissionTable_TabControl[key.trim()] == undefined) return false;
     return true;
@@ -359,7 +332,7 @@ function exportJsonToExcel_CheckPer (key) {
 
     };
 
-    async function get_all_css (html = '') {
+    async function get_all_css(html = '') {
         return new Promise((reslove) => {
             var tags = ['style', 'link'];
             var promisesCss = [];
@@ -407,7 +380,7 @@ function exportJsonToExcel_CheckPer (key) {
 
 
 
-    async function wordExportGetFile (url) {
+    async function wordExportGetFile(url) {
         return new Promise((reslove) => {
             if (url && url != '')
                 $.get(url, function (result) {
@@ -499,7 +472,7 @@ function exportJsonToExcel_CheckPer (key) {
                 var downloadLink = document.createElement("a");
                 downloadLink.download = fileNameToSaveAs;
                 downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-                downloadLink.onclick = function (e) {document.body.removeChild(e.target);};
+                downloadLink.onclick = function (e) { document.body.removeChild(e.target); };
                 downloadLink.style.display = "none";
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
@@ -604,7 +577,7 @@ function exportJsonToExcel_CheckPer (key) {
                 var src = $(this)[0].src;
                 var l = window.location;
                 //var t = l.protocol + '//' + l.host + '/';
-                var t = l.protocol + '//' + 'demo.vttechsolution.com' + '/';
+                var t = l.protocol + '//' + 'demo.MLUechsolution.com' + '/';
                 if (proto.test(src)) {
                 } else if (ab.test(src)) {
                     src = t + src;
@@ -780,7 +753,7 @@ function exportJsonToExcel_CheckPer (key) {
         //            if (tags[i] == 'style') html += ('\n' + $(this)[0].outerHTML + '\n');
         //            if (tags[i] == 'link') {
         //                let itemLink = $(this).clone();
-        //                itemLink.attr('href', 'https://demo.vttechsolution.com' + itemLink.attr('href'));
+        //                itemLink.attr('href', 'https://demo.MLUechsolution.com' + itemLink.attr('href'));
         //                html += ('\n' + itemLink[0].outerHTML + '\n');
         //            }
         //        });
@@ -902,21 +875,9 @@ function exportJsonToExcel_CheckPer (key) {
     };
 }(jQuery));
 
-
-
-let val = $(table.rows[i].cells[j]).html().toString().replace(/[^a-zA-Z0-9\.\-]/gm, "");
-if (/^(\d+\.?\d*|\.\d+)$/.test(val)) {
-    $(table.rows[i].cells[j]).html(Number(val));
-
-    let NumCharCode = 'A'.charCodeAt(0);
-    let CellName = String.fromCharCode(NumCharCode + j);
-    CellNameTypeNumber.push(CellName + (i + 1));
-
-}
-
-function GetTemplateXLSX (id, filename) {
+function GetTemplateXLSX(id, filename) {
     var elt = document.getElementById(id);
-    var wb = XLSX.utils.table_to_book(elt, {sheet: "data", raw: true});
+    var wb = XLSX.utils.table_to_book(elt, { sheet: "data", raw: true });
     var ws = wb.Sheets["data"];
     for (const [key, value] of Object.entries(ws)) {
         if (value.v != undefined) {

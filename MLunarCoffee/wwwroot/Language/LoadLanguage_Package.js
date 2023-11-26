@@ -1,4 +1,4 @@
-
+﻿
 
 var LanguageVTT;
 var language_global_noti_text = [];

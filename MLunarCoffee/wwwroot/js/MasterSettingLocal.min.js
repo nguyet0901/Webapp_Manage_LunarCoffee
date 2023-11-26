@@ -65,8 +65,6 @@ const MSV_ICDArea = {
 async function MSV_InitiliazeExe () {
     new Promise(() => {
         setTimeout(() => {
-            MSVDarkmode_Set(MSVDarkmode_Get());
-            MSVDarkmode_Event();
             MSVColor_Set();
             MSV_FontSet();
             MSV_ColorRender(MSV_Listcolor, 'Master_Bagde_Color');

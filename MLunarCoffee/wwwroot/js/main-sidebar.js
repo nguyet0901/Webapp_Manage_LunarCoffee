@@ -10,7 +10,7 @@ $(window).resize(function () {
                 sideBarIsHide = true;
                 $(".colhidden").addClass("displaynone");
                 $('.ui-cal-resourceline').addClass("fixed-left");
-                Cookies.set("VTTECH_Menu_SideBarIsHide", true);
+                Cookies.set("MLUECH_Menu_SideBarIsHide", true);
             }
             else {
                 $('.ui-cal-resourceline').removeClass("fixed-left");
@@ -21,7 +21,7 @@ $(window).resize(function () {
             sideBarIsHide = false;
             $(".colhidden").removeClass("displaynone");
             $('.ui-cal-resourceline').removeClass("fixed-left");
-            Cookies.set("VTTECH_Menu_SideBarIsHide", false);
+            Cookies.set("MLUECH_Menu_SideBarIsHide", false);
         }
     }
 });
@@ -76,7 +76,7 @@ function Change_SideBarLeft_ShowHide(NameCookie) {
 
 
 $("#Master_Menu_Top").on("click", ".button-toggle-sidebar", function () {   
-    let NameCookie = "VTTECH_Menu_SideBarIsHide";
+    let NameCookie = "MLUECH_Menu_SideBarIsHide";
     if (Cookies.get(NameCookie) != undefined) {
         let IsHideMenu = Cookies.get(NameCookie);
         if (IsHideMenu == "true") {

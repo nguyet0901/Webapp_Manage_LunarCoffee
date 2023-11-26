@@ -17,8 +17,8 @@
                 if (_tablesortclassname.includes('nosortwholetable'))
                     return false;
                 else {
-                    //if (LanguageVTT)
-                    //    LanguageVTT.Terminate();
+                    //if (LanguageMLU)
+                    //    LanguageMLU.Terminate();
                     self.sort($(this));
                 }
             }
@@ -124,8 +124,8 @@
                 }
                 th.addClass(self.settings[self.direction]);
                 self.$table.css("display");
-                //if (LanguageVTT)
-                //    LanguageVTT.Initialize();
+                //if (LanguageMLU)
+                //    LanguageMLU.Initialize();
                 table.removeClass("sort-pending")
             }, unsortedValues.length > 2000 ? 300 : 100);
         },
@@ -182,7 +182,7 @@
         this.$table = $table;
         this.$thead = this.$table.find('thead');
         this.settings = $.extend({}, $.tablecontrol.defaults, settings);
-        this.$sortCells = this.$thead.length > 0 ? this.$thead.find('th.vtt-filter') : null;
+        this.$sortCells = this.$thead.length > 0 ? this.$thead.find('th.MLU-filter') : null;
         this.$sortCells.on('click.tablecontrol', function (e) {
             let _cell = $(this);
             let _index = _cell.index();
@@ -556,7 +556,7 @@
         },
         popup: {},
         class: {
-            popup: 'vtt-filter-popup'
+            popup: 'MLU-filter-popup'
         },
         thindexcurr: 0,
         thindex: {},

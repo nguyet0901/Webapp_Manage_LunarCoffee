@@ -53,8 +53,8 @@ connection.on("Send_MonitorRoom", function (jsonString) {
 
 connection.on("Send_Message_To_Scheduler", function (jsonString) {
 
-    if (typeof cal_vtt_Manage_Executing == 'function' && $.isFunction(cal_vtt_Manage_Executing)) {
-        cal_vtt_Manage_Executing(jsonString);
+    if (typeof cal_MLU_Manage_Executing == 'function' && $.isFunction(cal_MLU_Manage_Executing)) {
+        cal_MLU_Manage_Executing(jsonString);
     }
 });
 

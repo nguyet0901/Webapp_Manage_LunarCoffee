@@ -1,6 +1,6 @@
 ﻿//#region  Popup Main
 function CloseModal() {
-    if ($(".vttech-checkform") && $(".vttech-checkform").length > 0 && $('.vttech-checkform .vttech-checkedform').length > 0) {
+    if ($(".MLUech-checkform") && $(".MLUech-checkform").length > 0 && $('.MLUech-checkform .MLUech-checkedform').length > 0) {
         let msg = Outlang["Nhung_thay_doi_ban_da_thuc_hien_co_the_khong_duoc_luu"] ?? 'Những thay đổi bạn đã thực hiện có thể không được lưu';
         const promise = notiConfirm(msg);
         promise.then(function () {

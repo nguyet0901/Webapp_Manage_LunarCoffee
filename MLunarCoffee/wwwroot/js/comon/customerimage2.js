@@ -970,7 +970,7 @@ function RenderImgByForm(dtTemplate, id) {
                             let link_img = sys_HTTPImageRoot + ImgCurrent.CustomerID + '/' + ImgCurrent.FolderName + '/' + ImgCurrent.RealName;
                             img =
                                 '<img class="imgform" src="' + link_img + '">'
-                                + '<i data-id="' + ImgCurrent.ID + '" data-x="' + item.x + '" data-y="' + item.y + '" class="text-xs text-gradient text-danger button-delete-img-form vtt-icon vttech-icon-cancel-01"></i>'
+                                + '<i data-id="' + ImgCurrent.ID + '" data-x="' + item.x + '" data-y="' + item.y + '" class="text-xs text-gradient text-danger button-delete-img-form MLU-icon MLUech-icon-cancel-01"></i>'
 
                         } else {
                             img = '<div class="text-dark m-auto text_img text-center">' + item.placehoder + '</div>'

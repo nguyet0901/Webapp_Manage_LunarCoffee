@@ -1,734 +1,734 @@
 var data_Icon_List = [
     {
-        "ClassName": "vtt-icon vttech-icon-export-warehouse",
+        "ClassName": "MLU-icon MLUech-icon-export-warehouse",
         "Name": "export warehouse"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-input-warehouse",
+        "ClassName": "MLU-icon MLUech-icon-input-warehouse",
         "Name": "input warehouse"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-warehouse-transfer",
+        "ClassName": "MLU-icon MLUech-icon-warehouse-transfer",
         "Name": "warehouse transfer"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-flag-vi",
+        "ClassName": "MLU-icon MLUech-icon-flag-vi",
         "Name": "flag vi"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-flag-vn",
+        "ClassName": "MLU-icon MLUech-icon-flag-vn",
         "Name": "flag vn"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-progressing",
+        "ClassName": "MLU-icon MLUech-icon-progressing",
         "Name": "progressing"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-undisable",
+        "ClassName": "MLU-icon MLUech-icon-undisable",
         "Name": "undisable"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uncheck",
+        "ClassName": "MLU-icon MLUech-icon-uncheck",
         "Name": "uncheck"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-commitment",
+        "ClassName": "MLU-icon MLUech-icon-commitment",
         "Name": "commitment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-add",
+        "ClassName": "MLU-icon MLUech-icon-add",
         "Name": "add"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uncomplete",
+        "ClassName": "MLU-icon MLUech-icon-uncomplete",
         "Name": "uncomplete"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-devide",
+        "ClassName": "MLU-icon MLUech-icon-devide",
         "Name": "devide"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-detail",
+        "ClassName": "MLU-icon MLUech-icon-detail",
         "Name": "detail"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-medicine_grid",
+        "ClassName": "MLU-icon MLUech-icon-medicine_grid",
         "Name": "medicine_grid"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-merge",
+        "ClassName": "MLU-icon MLUech-icon-merge",
         "Name": "merge"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-recover",
+        "ClassName": "MLU-icon MLUech-icon-recover",
         "Name": "recover"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-support-technical",
+        "ClassName": "MLU-icon MLUech-icon-support-technical",
         "Name": "support technical"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-folder_40",
+        "ClassName": "MLU-icon MLUech-icon-folder_40",
         "Name": "folder_40"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-pen",
+        "ClassName": "MLU-icon MLUech-icon-pen",
         "Name": "pen"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-media",
+        "ClassName": "MLU-icon MLUech-icon-media",
         "Name": "media"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-student",
+        "ClassName": "MLU-icon MLUech-icon-student",
         "Name": "student"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-flag-en",
+        "ClassName": "MLU-icon MLUech-icon-flag-en",
         "Name": "flag en"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-endcall",
+        "ClassName": "MLU-icon MLUech-icon-endcall",
         "Name": "endcall"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-unmutecall",
+        "ClassName": "MLU-icon MLUech-icon-unmutecall",
         "Name": "unmutecall"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-reset",
+        "ClassName": "MLU-icon MLUech-icon-reset",
         "Name": "reset"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-google-map",
+        "ClassName": "MLU-icon MLUech-icon-google-map",
         "Name": "google map"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-all",
+        "ClassName": "MLU-icon MLUech-icon-all",
         "Name": "all"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-change",
+        "ClassName": "MLU-icon MLUech-icon-change",
         "Name": "change"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-account",
+        "ClassName": "MLU-icon MLUech-icon-account",
         "Name": "account"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-done-takecare",
+        "ClassName": "MLU-icon MLUech-icon-done-takecare",
         "Name": "done takecare"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-booking",
+        "ClassName": "MLU-icon MLUech-icon-booking",
         "Name": "booking"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-star",
+        "ClassName": "MLU-icon MLUech-icon-star",
         "Name": "star"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-call01",
+        "ClassName": "MLU-icon MLUech-icon-call01",
         "Name": "call01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel-01",
+        "ClassName": "MLU-icon MLUech-icon-cancel-01",
         "Name": "cancel 01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel-app",
+        "ClassName": "MLU-icon MLUech-icon-cancel-app",
         "Name": "cancel app"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-check",
+        "ClassName": "MLU-icon MLUech-icon-check",
         "Name": "check"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-creat-app",
+        "ClassName": "MLU-icon MLUech-icon-creat-app",
         "Name": "creat app"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-installment",
+        "ClassName": "MLU-icon MLUech-icon-installment",
         "Name": "installment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel",
+        "ClassName": "MLU-icon MLUech-icon-cancel",
         "Name": "cancel"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-delete01",
+        "ClassName": "MLU-icon MLUech-icon-delete01",
         "Name": "delete01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-restore",
+        "ClassName": "MLU-icon MLUech-icon-restore",
         "Name": "restore"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-disable",
+        "ClassName": "MLU-icon MLUech-icon-disable",
         "Name": "disable"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-import-file",
+        "ClassName": "MLU-icon MLUech-icon-import-file",
         "Name": "import file"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-labo",
+        "ClassName": "MLU-icon MLUech-icon-labo",
         "Name": "labo"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-info-modified",
+        "ClassName": "MLU-icon MLUech-icon-info-modified",
         "Name": "info modified"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-list-ticket-file",
+        "ClassName": "MLU-icon MLUech-icon-list-ticket-file",
         "Name": "list ticket file"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-sms-history",
+        "ClassName": "MLU-icon MLUech-icon-sms-history",
         "Name": "sms history"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-lock-01",
+        "ClassName": "MLU-icon MLUech-icon-lock-01",
         "Name": "lock 01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-print",
+        "ClassName": "MLU-icon MLUech-icon-print",
         "Name": "print"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-delete",
+        "ClassName": "MLU-icon MLUech-icon-delete",
         "Name": "delete"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-refesh",
+        "ClassName": "MLU-icon MLUech-icon-refesh",
         "Name": "refesh"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-send-sms",
+        "ClassName": "MLU-icon MLUech-icon-send-sms",
         "Name": "send sms"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-history",
+        "ClassName": "MLU-icon MLUech-icon-history",
         "Name": "history"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE919",
+        "ClassName": "MLU-icon MLUech-icon-uniE919",
         "Name": "uniE919"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE91A",
+        "ClassName": "MLU-icon MLUech-icon-uniE91A",
         "Name": "uniE91A"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-ticket",
+        "ClassName": "MLU-icon MLUech-icon-ticket",
         "Name": "ticket"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE91C",
+        "ClassName": "MLU-icon MLUech-icon-uniE91C",
         "Name": "uniE91C"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE91D",
+        "ClassName": "MLU-icon MLUech-icon-uniE91D",
         "Name": "uniE91D"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-unlock-01",
+        "ClassName": "MLU-icon MLUech-icon-unlock-01",
         "Name": "unlock 01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-call1",
+        "ClassName": "MLU-icon MLUech-icon-call1",
         "Name": "call1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE920",
+        "ClassName": "MLU-icon MLUech-icon-uniE920",
         "Name": "uniE920"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-mute-call-center",
+        "ClassName": "MLU-icon MLUech-icon-mute-call-center",
         "Name": "mute call center"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-tag-note",
+        "ClassName": "MLU-icon MLUech-icon-tag-note",
         "Name": "tag note"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel-app1",
+        "ClassName": "MLU-icon MLUech-icon-cancel-app1",
         "Name": "cancel app1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-creat-profile",
+        "ClassName": "MLU-icon MLUech-icon-creat-profile",
         "Name": "creat profile"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-desk",
+        "ClassName": "MLU-icon MLUech-icon-desk",
         "Name": "desk"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-export-ex",
+        "ClassName": "MLU-icon MLUech-icon-export-ex",
         "Name": "export ex"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-icon-bacsi",
+        "ClassName": "MLU-icon MLUech-icon-icon-bacsi",
         "Name": "icon bacsi"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cust-code",
+        "ClassName": "MLU-icon MLUech-icon-cust-code",
         "Name": "cust code"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-wifi-speed",
+        "ClassName": "MLU-icon MLUech-icon-wifi-speed",
         "Name": "wifi speed"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-mute-volume",
+        "ClassName": "MLU-icon MLUech-icon-mute-volume",
         "Name": "mute volume"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-dash",
+        "ClassName": "MLU-icon MLUech-icon-dash",
         "Name": "dash"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-notifaction",
+        "ClassName": "MLU-icon MLUech-icon-notifaction",
         "Name": "notifaction"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-phong",
+        "ClassName": "MLU-icon MLUech-icon-phong",
         "Name": "phong"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-print1",
+        "ClassName": "MLU-icon MLUech-icon-print1",
         "Name": "print1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-mic-voice",
+        "ClassName": "MLU-icon MLUech-icon-mic-voice",
         "Name": "mic voice"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-trongngay",
+        "ClassName": "MLU-icon MLUech-icon-trongngay",
         "Name": "trongngay"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-volum-noti",
+        "ClassName": "MLU-icon MLUech-icon-volum-noti",
         "Name": "volum noti"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-x-ray",
+        "ClassName": "MLU-icon MLUech-icon-x-ray",
         "Name": "x ray"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-attach",
+        "ClassName": "MLU-icon MLUech-icon-attach",
         "Name": "attach"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-nohide",
+        "ClassName": "MLU-icon MLUech-icon-nohide",
         "Name": "nohide"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-birth-day",
+        "ClassName": "MLU-icon MLUech-icon-birth-day",
         "Name": "birth day"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel1",
+        "ClassName": "MLU-icon MLUech-icon-cancel1",
         "Name": "cancel1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-clear",
+        "ClassName": "MLU-icon MLUech-icon-clear",
         "Name": "clear"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-client_send",
+        "ClassName": "MLU-icon MLUech-icon-client_send",
         "Name": "client_send"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-comment",
+        "ClassName": "MLU-icon MLUech-icon-comment",
         "Name": "comment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-dot",
+        "ClassName": "MLU-icon MLUech-icon-dot",
         "Name": "dot"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-face_icon",
+        "ClassName": "MLU-icon MLUech-icon-face_icon",
         "Name": "face_icon"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-name",
+        "ClassName": "MLU-icon MLUech-icon-name",
         "Name": "name"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-facelink",
+        "ClassName": "MLU-icon MLUech-icon-facelink",
         "Name": "facelink"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-fillter",
+        "ClassName": "MLU-icon MLUech-icon-fillter",
         "Name": "fillter"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-gotomess",
+        "ClassName": "MLU-icon MLUech-icon-gotomess",
         "Name": "gotomess"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-hide",
+        "ClassName": "MLU-icon MLUech-icon-hide",
         "Name": "hide"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-like",
+        "ClassName": "MLU-icon MLUech-icon-like",
         "Name": "like"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-messenger",
+        "ClassName": "MLU-icon MLUech-icon-messenger",
         "Name": "messenger"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-nodelete_b",
+        "ClassName": "MLU-icon MLUech-icon-nodelete_b",
         "Name": "nodelete_b"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-call",
+        "ClassName": "MLU-icon MLUech-icon-call",
         "Name": "call"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-no-reply",
+        "ClassName": "MLU-icon MLUech-icon-no-reply",
         "Name": "no reply"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-no-see",
+        "ClassName": "MLU-icon MLUech-icon-no-see",
         "Name": "no see"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-ok",
+        "ClassName": "MLU-icon MLUech-icon-ok",
         "Name": "ok"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-phone2",
+        "ClassName": "MLU-icon MLUech-icon-phone2",
         "Name": "phone2"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-profile",
+        "ClassName": "MLU-icon MLUech-icon-profile",
         "Name": "profile"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-sex",
+        "ClassName": "MLU-icon MLUech-icon-sex",
         "Name": "sex"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-brocker",
+        "ClassName": "MLU-icon MLUech-icon-brocker",
         "Name": "brocker"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-start",
+        "ClassName": "MLU-icon MLUech-icon-start",
         "Name": "start"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-tag",
+        "ClassName": "MLU-icon MLUech-icon-tag",
         "Name": "tag"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-teamplate",
+        "ClassName": "MLU-icon MLUech-icon-teamplate",
         "Name": "teamplate"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-appoment",
+        "ClassName": "MLU-icon MLUech-icon-appoment",
         "Name": "appoment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-tranfer-user",
+        "ClassName": "MLU-icon MLUech-icon-tranfer-user",
         "Name": "tranfer user"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel-apps",
+        "ClassName": "MLU-icon MLUech-icon-cancel-apps",
         "Name": "cancel apps"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cashier",
+        "ClassName": "MLU-icon MLUech-icon-cashier",
         "Name": "cashier"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-chamsoc",
+        "ClassName": "MLU-icon MLUech-icon-chamsoc",
         "Name": "chamsoc"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cus",
+        "ClassName": "MLU-icon MLUech-icon-cus",
         "Name": "cus"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-edit-content",
+        "ClassName": "MLU-icon MLUech-icon-edit-content",
         "Name": "edit content"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-facebook",
+        "ClassName": "MLU-icon MLUech-icon-facebook",
         "Name": "facebook"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-labo1",
+        "ClassName": "MLU-icon MLUech-icon-labo1",
         "Name": "labo1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-marketing",
+        "ClassName": "MLU-icon MLUech-icon-marketing",
         "Name": "marketing"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-mobile",
+        "ClassName": "MLU-icon MLUech-icon-mobile",
         "Name": "mobile"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-noti",
+        "ClassName": "MLU-icon MLUech-icon-noti",
         "Name": "noti"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-repport",
+        "ClassName": "MLU-icon MLUech-icon-repport",
         "Name": "repport"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-serv",
+        "ClassName": "MLU-icon MLUech-icon-serv",
         "Name": "serv"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-setting",
+        "ClassName": "MLU-icon MLUech-icon-setting",
         "Name": "setting"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-show-more",
+        "ClassName": "MLU-icon MLUech-icon-show-more",
         "Name": "show more"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-sms01",
+        "ClassName": "MLU-icon MLUech-icon-sms01",
         "Name": "sms01"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-task",
+        "ClassName": "MLU-icon MLUech-icon-task",
         "Name": "task"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-task-todo",
+        "ClassName": "MLU-icon MLUech-icon-task-todo",
         "Name": "task todo"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-todo",
+        "ClassName": "MLU-icon MLUech-icon-todo",
         "Name": "todo"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-user-setting",
+        "ClassName": "MLU-icon MLUech-icon-user-setting",
         "Name": "user setting"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-warehouse",
+        "ClassName": "MLU-icon MLUech-icon-warehouse",
         "Name": "warehouse"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-wifi",
+        "ClassName": "MLU-icon MLUech-icon-wifi",
         "Name": "wifi"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_app",
+        "ClassName": "MLU-icon MLUech-icon-i_app",
         "Name": "i_app"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_cancel",
+        "ClassName": "MLU-icon MLUech-icon-i_cancel",
         "Name": "i_cancel"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_check",
+        "ClassName": "MLU-icon MLUech-icon-i_check",
         "Name": "i_check"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_creat",
+        "ClassName": "MLU-icon MLUech-icon-i_creat",
         "Name": "i_creat"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_cus",
+        "ClassName": "MLU-icon MLUech-icon-i_cus",
         "Name": "i_cus"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-i_visitor",
+        "ClassName": "MLU-icon MLUech-icon-i_visitor",
         "Name": "i_visitor"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-uniE96C",
+        "ClassName": "MLU-icon MLUech-icon-uniE96C",
         "Name": "uniE96C"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-show",
+        "ClassName": "MLU-icon MLUech-icon-show",
         "Name": "show"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-edit",
+        "ClassName": "MLU-icon MLUech-icon-edit",
         "Name": "edit"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-call-action",
+        "ClassName": "MLU-icon MLUech-icon-call-action",
         "Name": "call action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cancel_action",
+        "ClassName": "MLU-icon MLUech-icon-cancel_action",
         "Name": "cancel_action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-change-color",
+        "ClassName": "MLU-icon MLUech-icon-change-color",
         "Name": "change color"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-action",
+        "ClassName": "MLU-icon MLUech-icon-action",
         "Name": "action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-pakage",
+        "ClassName": "MLU-icon MLUech-icon-pakage",
         "Name": "pakage"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-down",
+        "ClassName": "MLU-icon MLUech-icon-down",
         "Name": "down"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-edit-action",
+        "ClassName": "MLU-icon MLUech-icon-edit-action",
         "Name": "edit action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-icon-doctor",
+        "ClassName": "MLU-icon MLUech-icon-icon-doctor",
         "Name": "icon doctor"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-print-action",
+        "ClassName": "MLU-icon MLUech-icon-print-action",
         "Name": "print action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-room-action",
+        "ClassName": "MLU-icon MLUech-icon-room-action",
         "Name": "room action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-setup",
+        "ClassName": "MLU-icon MLUech-icon-setup",
         "Name": "setup"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-sms_action",
+        "ClassName": "MLU-icon MLUech-icon-sms_action",
         "Name": "sms_action"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-face",
+        "ClassName": "MLU-icon MLUech-icon-face",
         "Name": "face"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-up",
+        "ClassName": "MLU-icon MLUech-icon-up",
         "Name": "up"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-filter-calendar",
+        "ClassName": "MLU-icon MLUech-icon-filter-calendar",
         "Name": "filter calendar"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-comission",
+        "ClassName": "MLU-icon MLUech-icon-comission",
         "Name": "comission"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-deposit",
+        "ClassName": "MLU-icon MLUech-icon-deposit",
         "Name": "deposit"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-instagram",
+        "ClassName": "MLU-icon MLUech-icon-instagram",
         "Name": "instagram"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-viber",
+        "ClassName": "MLU-icon MLUech-icon-viber",
         "Name": "viber"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-introduce",
+        "ClassName": "MLU-icon MLUech-icon-introduce",
         "Name": "introduce"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-mess",
+        "ClassName": "MLU-icon MLUech-icon-mess",
         "Name": "mess"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-booking1",
+        "ClassName": "MLU-icon MLUech-icon-booking1",
         "Name": "booking1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-cctreat",
+        "ClassName": "MLU-icon MLUech-icon-cctreat",
         "Name": "cctreat"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-creat-app1",
+        "ClassName": "MLU-icon MLUech-icon-creat-app1",
         "Name": "creat app1"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-dieutri",
+        "ClassName": "MLU-icon MLUech-icon-dieutri",
         "Name": "dieutri"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-nonecctreat",
+        "ClassName": "MLU-icon MLUech-icon-nonecctreat",
         "Name": "nonecctreat"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-print2",
+        "ClassName": "MLU-icon MLUech-icon-print2",
         "Name": "print2"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-signature",
+        "ClassName": "MLU-icon MLUech-icon-signature",
         "Name": "signature"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-treatment",
+        "ClassName": "MLU-icon MLUech-icon-treatment",
         "Name": "treatment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-treatment-work",
+        "ClassName": "MLU-icon MLUech-icon-treatment-work",
         "Name": "treatment work"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-Prepaid-cards",
+        "ClassName": "MLU-icon MLUech-icon-Prepaid-cards",
         "Name": "Prepaid cards"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-prescription",
+        "ClassName": "MLU-icon MLUech-icon-prescription",
         "Name": "prescription"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-service-payment",
+        "ClassName": "MLU-icon MLUech-icon-service-payment",
         "Name": "service payment"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-logo",
+        "ClassName": "MLU-icon MLUech-icon-logo",
         "Name": "logo"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-zalo",
+        "ClassName": "MLU-icon MLUech-icon-zalo",
         "Name": "zalo"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-pay",
+        "ClassName": "MLU-icon MLUech-icon-pay",
         "Name": "pay"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-Arrow-lefts",
+        "ClassName": "MLU-icon MLUech-icon-Arrow-lefts",
         "Name": "Arrow lefts"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-Arrow-rights",
+        "ClassName": "MLU-icon MLUech-icon-Arrow-rights",
         "Name": "Arrow rights"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-Arrow-right",
+        "ClassName": "MLU-icon MLUech-icon-Arrow-right",
         "Name": "Arrow right"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-Arrow-left",
+        "ClassName": "MLU-icon MLUech-icon-Arrow-left",
         "Name": "Arrow left"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-camera",
+        "ClassName": "MLU-icon MLUech-icon-camera",
         "Name": "camera"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-pdf",
+        "ClassName": "MLU-icon MLUech-icon-pdf",
         "Name": "pdf"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-male",
+        "ClassName": "MLU-icon MLUech-icon-male",
         "Name": "male"
     },
     {
-        "ClassName": "vtt-icon vttech-icon-female",
+        "ClassName": "MLU-icon MLUech-icon-female",
         "Name": "female"
     }
 ]

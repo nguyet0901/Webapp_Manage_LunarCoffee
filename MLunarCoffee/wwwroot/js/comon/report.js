@@ -17,7 +17,6 @@ var Chart_EmptyText = 'No data available';
 var Chart_EmptyFont = '13px sans-serif';
 var Chart_Blockwidth = 100;
 
-var Charts_mode = MSVDarkmode_Get();
 var Charts_MainColor = (Charts_mode == 'light' ? Chart_ModeColor[0].color : Chart_ModeColor[1].color);
 var Charts_SemiColor = (Charts_mode == 'light' ? Chart_ModeColor[0].semicolor : Chart_ModeColor[1].semicolor);
 var Charts_Temp = [];

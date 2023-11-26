@@ -1,4 +1,4 @@
-﻿const fcmfaceicon = 'ttps://vttechsolution.com/faceicon.svg';
+﻿const fcmfaceicon = 'ttps://MLUechsolution.com/faceicon.svg';
 const fcmicon = (typeof _SoftwareSmallLogo !== 'undefined' && _SoftwareSmallLogo != '')
     ? _SoftwareSmallLogo
     : '/default.png';

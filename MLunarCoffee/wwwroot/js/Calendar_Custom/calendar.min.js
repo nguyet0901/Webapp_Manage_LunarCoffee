@@ -56,7 +56,7 @@
                     _doctortemp = obj.dataset.doctortemp;
                     _doctormain = obj.dataset.doctormain;
 
-                    _max_height = callvtt_cellincolumn * block_height;
+                    _max_height = callMLU_cellincolumn * block_height;
                     _old_height = ((_timeTo - _timeFrom) * block_height) / block_time_range;
                     _current_top = (_timeFrom - begin_range_int) * block_height / block_time_range
                     _bottom = _current_top + obj.clientHeight;
@@ -1365,13 +1365,13 @@
                     cal_time_column.style.position = "relative";
                     cal_time_column.style.width = ((1 / length_resouce) * 100) + "%";
                     let index = 0;
-                    callvtt_cellincolumn = 0;
+                    callMLU_cellincolumn = 0;
                     for (let _time = hour_from; _time <= hour_to; _time += time_range) {
                         let time_data = _time;
                         let time = document.createElement("div");
                         time.id = 'cal_cell_' + ccid + '_' + _date + '_' + index;
                         index = index + 1;
-                        callvtt_cellincolumn = callvtt_cellincolumn + 1;
+                        callMLU_cellincolumn = callMLU_cellincolumn + 1;
                         time.className = "cal-time cal_time_" + index;
                         if (_time % 60 == 0) {
                             time.style.width = "100%";
@@ -1402,15 +1402,15 @@
                 })
             });
         }
-        async function callvtt_setworkview (_work, _dataWS) {
+        async function callMLU_setworkview (_work, _dataWS) {
 
-            var proallcell = callvtt_worksetall(_work, _dataWS);
+            var proallcell = callMLU_worksetall(_work, _dataWS);
             Promise.all([proallcell]).then(() => {
                 var promiseseach = [];
                 if (_work != undefined && _work.length != 0) {
                     for (let ii = 0; ii < _work.length; ii++) {
                         var ele = _work[ii];
-                        promiseseach.push(callvtt_workseteach(ele));
+                        promiseseach.push(callMLU_workseteach(ele));
                     }
                     Promise.all(promiseseach).then((values) => {
 
@@ -1418,19 +1418,19 @@
                 }
             });
         }
-        async function callvtt_worksetall (_work, _dataWS) {
+        async function callMLU_worksetall (_work, _dataWS) {
             return new Promise(resolve => {
                 let _x = document.getElementsByClassName("cal-time");
                 if ((_work != undefined && _work.length != 0) || (_dataWS != undefined && _dataWS.length != 0)) {
                     for (let i = 0; i < _x.length; i++) {
-                        _x[i].style.backgroundColor = callvtt_cellnowork;
+                        _x[i].style.backgroundColor = callMLU_cellnowork;
                         _x[i].dataset.aval = 0;
                     }
                 }
                 resolve(true);
             });
         }
-        async function callvtt_workseteach (e) {
+        async function callMLU_workseteach (e) {
             return new Promise(resolve => {
                 let _df = e.Date_From;
                 let _dt = e.Date_To;
@@ -1442,7 +1442,7 @@
                         if (__index >= 0) {
                             __id = 'cal_cell_' + e.EmpID + '_' + e.Date + '_' + __index;
                             $("#" + __id).attr("data-aval", 1);
-                            $("#" + __id).css("background-color", callvtt_cellwork);
+                            $("#" + __id).css("background-color", callMLU_cellwork);
                         }
                         _dfh = _dfh + block_time_range
                     }

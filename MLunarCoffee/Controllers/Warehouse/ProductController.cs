@@ -40,6 +40,8 @@ namespace MLunarCoffee.Controllers
                             ,"@TypeID", SqlDbType.Int,pros.TypeID
                             ,"@ProductID" , SqlDbType.Int,pros.ProductID
                             ,"@HasDisable" , SqlDbType.Int,pros.HasDisable
+                            ,"@IsBestSeller" , SqlDbType.Int,pros.IsBestSeller
+                            ,"@IsMaterial" , SqlDbType.Int,pros.IsMaterial
                             ,"@pagingNumber" , SqlDbType.Int,pros.PagingNumber
                             ,"@textSearch" , SqlDbType.NVarChar,pros.TextSearch
                             ,"@limit" , SqlDbType.Int,pros.Limit

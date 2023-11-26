@@ -443,7 +443,7 @@ function MS_NotiRender_GetAction (_todo, _type) {
             case 2:
                 {
                     result = '<span class="badge badge-sm badge-circle badge-floating bg-gradient-info position-absolute border-white" style="bottom: -3px;right: -4px;border: 2px solid white;">'
-                        + '<i class="vtt-icon vttech-icon-list-ticket-file text-white" style="font-size: 10px;"></i>'
+                        + '<i class="MLU-icon MLUech-icon-list-ticket-file text-white" style="font-size: 10px;"></i>'
                         + '</span>';
                 }
                 break;
@@ -461,7 +461,7 @@ function MS_NotiRender_GetAction (_todo, _type) {
     }
     else {
         result = '<span class="badge badge-sm badge-circle badge-floating bg-gradient-success position-absolute border-white" style="bottom: -3px;right: -4px;border: 2px solid white;">'
-            + '<i class="vtt-icon vttech-icon-task  text-white" style="font-size: 10px;"></i>'
+            + '<i class="MLU-icon MLUech-icon-task  text-white" style="font-size: 10px;"></i>'
             + '</span>';
 
     }
