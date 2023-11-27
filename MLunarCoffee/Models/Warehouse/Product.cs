@@ -9,6 +9,7 @@
         public int IsBestSeller { get; set; } = 0;
         public int IsMaterial { get; set; } = -1;
         public string TextSearch { get; set; } = "";
+        public string TokenID { get; set; } = "";
         public int Limit { get; set; } = 1000;
     }
 

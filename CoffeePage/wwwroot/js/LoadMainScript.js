@@ -261,7 +261,6 @@ function LoadMainScript (callback) {
         js_require_notasync('/assests/dist/lightGallery/plugins/autoplay/lg-autoplay.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/share/lg-share.min.js', true);
         js_require_notasync('/assests/dist/lightGallery/plugins/rotate/lg-rotate.min.js', true);
-        js_require_notasync('/js/jsTemplate/jquery-migrate-3.0.1.min.js', true);
         js_require_notasync('/js/jsTemplate/popper.min.js', true);
         js_require_notasync('/js/jsTemplate/bootstrap.min.js', true);
         js_require_notasync('/js/jsTemplate/jquery.easing.1.3.js', true);

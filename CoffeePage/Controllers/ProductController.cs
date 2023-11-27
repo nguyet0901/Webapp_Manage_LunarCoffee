@@ -70,5 +70,32 @@ namespace CoffeePage.Controllers
                 return Content("0");
             }
         }
-    }
+
+		[AllowAnonymous]
+		[Route("GetType/{id}")]
+		[HttpPost]
+		public async Task<IActionResult> GetType(int id)
+		{
+			try
+			{
+				string shareKey = DateTime.Now.ToString("yyyyMMdd");
+				string AccessToken = Encrypt.EncryptString(shareKey, Global.PrivateKey);
+				using (HttpClient clientautho = new HttpClient() { BaseAddress = new Uri(Global.RootLink) })
+				{
+					clientautho.DefaultRequestHeaders.Add("AccessToken", AccessToken);
+					var result = await clientautho.PostAsync($"api/Product/GetType/{id}", null);
+					string responseBody = await result.Content.ReadAsStringAsync();
+					if (responseBody != "0")
+					{
+						return Content(responseBody);
+					}
+					return Content("[]");
+				}
+			}
+			catch (Exception ex)
+			{
+				return Content("0");
+			}
+		}
+	}
 }

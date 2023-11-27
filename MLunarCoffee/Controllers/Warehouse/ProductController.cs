@@ -44,6 +44,7 @@ namespace MLunarCoffee.Controllers
                             ,"@IsMaterial" , SqlDbType.Int,pros.IsMaterial
                             ,"@pagingNumber" , SqlDbType.Int,pros.PagingNumber
                             ,"@textSearch" , SqlDbType.NVarChar,pros.TextSearch
+                            ,"@TokenID" , SqlDbType.NVarChar,pros.TokenID
                             ,"@limit" , SqlDbType.Int,pros.Limit
                             );
                         return JsonConvert.SerializeObject(ds);
@@ -89,6 +90,39 @@ namespace MLunarCoffee.Controllers
                 return Content("0");
             }
         }
+        [Route("GetType/{id}")]
+        [HttpPost]
+        public async Task<IActionResult> GetType(int id)
+        {
+            try
+            {
+                string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
+                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                string shareKey = DateTime.Now.ToString("yyyyMMdd");
+                if (AccessToken != shareKey)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden);
+                }
+
+                var result = await Task.Factory.StartNew(async () =>
+                {
+                    using (var confunc = new ExecuteDataBase())
+                    {
+                        var dt = new DataTable();
+                        dt = await confunc.ExecuteDataTable("[MLU_SP_ProductType_GetList]" ,CommandType.StoredProcedure
+                            ,"@ID" ,SqlDbType.Int ,id
+                            );
+                        return JsonConvert.SerializeObject(dt);
+                    }
+                });
+                return Content(await result);
+            }
+            catch (Exception ex)
+            {
+                return Content("0");
+            }
+        }
+
 
         [Route("ExcutedData")]
         [HttpPost]

@@ -33,52 +33,12 @@
                                 <th>&nbsp;</th>
                                 <th>Product</th>
                                 <th>Price</th>
+                                <th>Discount</th>
                                 <th>Quantity</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr class="text-center">
-                                <td class="product-remove"><a href="#"><span class="icon-close"></span></a></td>
-
-                                <td class="image-prod"><div class="img" style="background-image:url(images/menu-2.jpg);"></div></td>
-
-                                <td class="product-name">
-                                    <h3>Creamy Latte Coffee</h3>
-                                    <p>Far far away, behind the word mountains, far from the countries</p>
-                                </td>
-
-                                <td class="price">$4.90</td>
-
-                                <td class="quantity">
-                                    <div class="input-group mb-3">
-                                        <input type="text" name="quantity" class="quantity form-control input-number" value="1" min="1" max="100">
-                                    </div>
-                                </td>
-
-                                <td class="total">$4.90</td>
-                            </tr><!-- END TR-->
-
-                            <tr class="text-center">
-                                <td class="product-remove"><a href="#"><span class="icon-close"></span></a></td>
-
-                                <td class="image-prod"><div class="img" style="background-image:url(images/dish-2.jpg);"></div></td>
-
-                                <td class="product-name">
-                                    <h3>Grilled Ribs Beef</h3>
-                                    <p>Far far away, behind the word mountains, far from the countries</p>
-                                </td>
-
-                                <td class="price">$15.70</td>
-
-                                <td class="quantity">
-                                    <div class="input-group mb-3">
-                                        <input type="text" name="quantity" class="quantity form-control input-number" value="1" min="1" max="100">
-                                    </div>
-                                </td>
-
-                                <td class="total">$15.70</td>
-                            </tr><!-- END TR-->
+                        <tbody id="crt_dtContentBody">
                         </tbody>
                     </table>
                 </div>
@@ -169,3 +129,136 @@
         </div>
     </div>
 </section>
+<script type="text/javascript">
+	//#region //INIT
+    crt_DataCart = {};
+    crt_DataPro = {};
+    $(document).ready(function () {
+        crt_DataCart = cart_getCartList();
+        crt_loadPro();
+    });
+
+    async function crt_loadPro() {
+        let para = {
+            'TypeID': 0,
+            'ProductID': 0,
+            'HasDisable': 0,
+            'PagingNumber': 1,
+            'IsBestSeller': 1,
+            'IsMaterial': 0,
+            'TextSearch': "",
+            'TokenID': Object.keys(crt_DataCart).join(','),
+            'Limit': 1000
+        };
+
+        apipro_getList(
+            para,
+            beforefunc = function () {
+
+            }
+            , successfunc = function (_rr) {
+                if (_rr != "0" && _rr != "") {
+                    let datas = JSON.parse(_rr);
+                    let dataMain = datas.Table1;
+                    crt_DataPro = dataMain.reduce((pre, arr) => {
+                        pre[arr.ID] = arr; return pre;
+                    }, {});
+                    crt_render(Object.values(crt_DataCart), 'crt_dtContentBody')
+                }
+            }
+            , failurefunc = function () {
+
+                notiError_SW();
+            }
+            , completefunc = function (e) {
+
+            }
+        );
+    }
+
+    async function crt_render(data, id) {
+        new Promise(resolve => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let objPro = crt_DataPro[item.ID];
+                        let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+                        let discount = `<spa>(- formatNumber(item.DiscountAmount) <span class="fw-bold text-secondary">${item.DiscountPercent > 0 ? item.DiscountPercent + '%' : ''}</span>)<span>`
+                        let total = Number(priceDiscounted)*Number(item.Quantity);
+                        let tr = `                            <tr id="crt_row${item.ID}" class="text-center" data-id="${item.ID}">
+                                    <td class="product-remove"><a class="crt_btnDel"><span class="icon-close"></span></a></td>
+
+                                                <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
+
+                                    <td class="product-name">
+                                        <h3>${item.Name}</h3>
+                                            <p class="text-secondary">${item.Description}</p>
+                                    </td>
+
+                                        <td class="price">${formatNumber(item.Price)}</td>
+                                                        <td class="price">${formatNumber(priceDiscounted)}</td>
+
+                                    <td class="quantity">
+                                        <div class="input-group mb-3">
+                                                <span class="input-group-text crt_btnPlus" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
+                                            <input type="text" name="quantity" id="crt_txtQuantity${item.ID}" class="quantity crt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
+                                                <span class="input-group-text crt_btnMinus" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
+                                        </div>
+                                    </td>
+
+                                        <td class="total">${total}</td>
+                                </tr><!-- END TR-->`
+                        stringContent = stringContent + tr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+
+            crt_productEvent();
+            resolve();
+        })
+    }
+
+
+    function crt_productEvent() {
+        $('.crt_btnDel').on('click', function (e) {
+
+            let id = Number($(this).closest('tr').attr("data-id"));
+            crt_deleteCart(id);
+
+        });       
+        
+        $('.crt_btnPlus').on('click', function (e) {
+
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`crt_txtQuantity${id}`).val()) ;
+
+        });        
+        
+        $('.crt_btnMinus').on('click', function (e) {
+
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`crt_txtQuantity${id}`).val()) ;
+
+        });
+        $('.crt_txtQuantity').on('change', function (e) {
+
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`crt_txtQuantity${id}`).val());
+
+        });
+    }
+
+    function crt_deleteCart(id) {
+        const promise = notiConfirm();
+        promise.then(function () { crt_excDeleteCart(id); }, function () { });
+    }
+    function crt_excDeleteCart(id) {
+        cart_deleteCart(id);
+        $(`crt_row${id}`).remove()
+    }
+</script>

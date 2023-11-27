@@ -11,6 +11,7 @@
                     'IsBestSeller': para?.IsBestSeller ?? 0,
                     'IsMaterial': para?.IsMaterial ?? -1,
                     'TextSearch': para?.TextSearch ?? "",
+                    'TokenID': para?.TokenID ?? "",
                     'Limit': para?.Limit ?? 1000,
                 })
                 , async = true
@@ -34,6 +35,29 @@ async function apipro_getDetail(id, beforefunc, successfunc, failurefunc, comple
     new Promise((resolve) => {
         setTimeout(() => {
             AjaxJWT(url = "/api/Product/GetDetail/" + id
+                , data = null
+                , async = true
+                , success = function (result) {
+                    if (result != "0") {
+                        if (typeof successfunc == 'function') successfunc(result);
+                    }
+                    else {
+                        if (typeof failurefunc == 'function') failurefunc(result);
+                    }
+                    resolve();
+                    if (typeof completefunc == 'function') completefunc();
+                }
+            );
+        }, 100)
+    })
+}
+
+
+async function apipro_getType(id, beforefunc, successfunc, failurefunc, completefunc) {
+    if (typeof beforefunc == 'function') beforefunc();
+    new Promise((resolve) => {
+        setTimeout(() => {
+            AjaxJWT(url = "/api/Product/GetType/" + id
                 , data = null
                 , async = true
                 , success = function (result) {
