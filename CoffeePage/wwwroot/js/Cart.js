@@ -7,6 +7,7 @@
         else {
             cart[item.ID] = {
                 ID : item.ID,
+                TypeID: item.TypeID,
                 Quantity: 1,
                 Price: item.Price,
                 DiscountAmount: item?.DiscountAmount ?? 0,

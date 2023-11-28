@@ -137,11 +137,11 @@ function notiAlertinfo (title, mes, time) {
     notif_initialize('message', mes, avatar = '', title = title, time);
 }
 //#region //Confirmation
-function confirmf_initialize (title, text, isconfirm, iscancel, icon = 'warning', textconfirm = '<i class="fas fa-check pe-2 text-success"></i>Yes', textcancel = '<i class="fas fa-times text-danger pe-2"></i>Cancel') {
+function confirmf_initialize (title, text, isconfirm, iscancel, icon = 'warning', textconfirm = '<i class="fas fa-check pe-2"></i>Yes', textcancel = '<i class="fas fa-times text-danger pe-2"></i>Cancel') {
     return new Promise(resolve => {
         let swalWithBootstrapButtons = Swal.mixin({
             customClass: {
-                confirmButton: 'btn bg-gradient-primary mx-2',
+                confirmButton: 'btn bg-gradient-primary btn-outline-success mx-2',
                 cancelButton: 'btn bg-gradient-light mx-2'
             },
             buttonsStyling: false

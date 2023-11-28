@@ -45,6 +45,7 @@ namespace MLunarCoffee.Controllers
                             ,"@pagingNumber" , SqlDbType.Int,pros.PagingNumber
                             ,"@textSearch" , SqlDbType.NVarChar,pros.TextSearch
                             ,"@TokenID" , SqlDbType.NVarChar,pros.TokenID
+                            ,"@TokenTypeID" , SqlDbType.NVarChar,pros.TokenTypeID
                             ,"@limit" , SqlDbType.Int,pros.Limit
                             );
                         return JsonConvert.SerializeObject(ds);

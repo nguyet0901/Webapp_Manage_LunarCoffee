@@ -25,17 +25,17 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12 ftco-animate">
-                <div class="cart-list">
+                <div class="cart-list overflow-hidden">
                     <table class="table">
                         <thead class="thead-primary">
                             <tr class="text-center">
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>Product</th>
-                                <th>Price</th>
-                                <th>Discount</th>
-                                <th>Quantity</th>
-                                <th>Total</th>
+                                <th>Unit Price</th>
+                                <th>Price Discounted (A)</th>
+                                <th>Quantity (B)</th>
+                                <th>Total (C=AxB)</th>
                             </tr>
                         </thead>
                         <tbody id="crt_dtContentBody">
@@ -50,20 +50,20 @@
                     <h3>Cart Totals</h3>
                     <p class="d-flex">
                         <span>Subtotal</span>
-                        <span>$20.60</span>
+                        <span id="crt_subTotal">0</span>
                     </p>
-                    <p class="d-flex">
+@*                    <p class="d-flex">
                         <span>Delivery</span>
                         <span>$0.00</span>
-                    </p>
+                    </p>*@
                     <p class="d-flex">
                         <span>Discount</span>
-                        <span>$3.00</span>
+                        <span id="crt_discount">0</span>
                     </p>
                     <hr>
                     <p class="d-flex total-price">
                         <span>Total</span>
-                        <span>$17.60</span>
+                        <span id="crt_total">0</span>
                     </p>
                 </div>
                 <p class="text-center"><a href="/Checkout" class="btn btn-primary py-3 px-4">Proceed to Checkout</a></p>
@@ -81,67 +81,25 @@
                 <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="menu-entry">
-                    <a href="#" class="img" style="background-image: url(images/menu-1.jpg);"></a>
-                    <div class="text text-center pt-4">
-                        <h3><a href="#">Coffee Capuccino</a></h3>
-                        <p>A small river named Duden flows by their place and supplies</p>
-                        <p class="price"><span>$5.90</span></p>
-                        <p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="menu-entry">
-                    <a href="#" class="img" style="background-image: url(images/menu-2.jpg);"></a>
-                    <div class="text text-center pt-4">
-                        <h3><a href="#">Coffee Capuccino</a></h3>
-                        <p>A small river named Duden flows by their place and supplies</p>
-                        <p class="price"><span>$5.90</span></p>
-                        <p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="menu-entry">
-                    <a href="#" class="img" style="background-image: url(images/menu-3.jpg);"></a>
-                    <div class="text text-center pt-4">
-                        <h3><a href="#">Coffee Capuccino</a></h3>
-                        <p>A small river named Duden flows by their place and supplies</p>
-                        <p class="price"><span>$5.90</span></p>
-                        <p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="menu-entry">
-                    <a href="#" class="img" style="background-image: url(images/menu-4.jpg);"></a>
-                    <div class="text text-center pt-4">
-                        <h3><a href="#">Coffee Capuccino</a></h3>
-                        <p>A small river named Duden flows by their place and supplies</p>
-                        <p class="price"><span>$5.90</span></p>
-                        <p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
-                    </div>
-                </div>
-            </div>
+        <div class="row" id="crt_dtProduct">
         </div>
     </div>
 </section>
 <script type="text/javascript">
 	//#region //INIT
-    crt_DataCart = {};
-    crt_DataPro = {};
+    var crt_DataCart = {};
+    var crt_DataPro = {};
     $(document).ready(function () {
+        
         crt_DataCart = cart_getCartList();
+        crt_loadDataSale();
         crt_loadPro();
     });
 
-    async function crt_loadPro() {
+    async function crt_loadPro(id = 0) {
         let para = {
             'TypeID': 0,
-            'ProductID': 0,
+            'ProductID': id,
             'HasDisable': 0,
             'PagingNumber': 1,
             'IsBestSeller': 1,
@@ -160,10 +118,33 @@
                 if (_rr != "0" && _rr != "") {
                     let datas = JSON.parse(_rr);
                     let dataMain = datas.Table1;
-                    crt_DataPro = dataMain.reduce((pre, arr) => {
-                        pre[arr.ID] = arr; return pre;
-                    }, {});
-                    crt_render(Object.values(crt_DataCart), 'crt_dtContentBody')
+                    let data = Object.values(crt_DataCart);
+                    if(id == 0) {
+                        $('#crt_dtContentBody').empty();
+                        crt_DataPro = dataMain.reduce((pre, arr) => {
+                            pre[arr.ID] = arr; return pre;
+                        }, {});
+                        
+                        crt_render(data, 'crt_dtContentBody')
+                    }
+                    else {
+                        let dtFilt = data.filter(e => e.ID == id);
+                        let item = dtFilt[0];
+                        crt_DataPro[item.ID] = dataMain[0];
+                        let tr = crt_renderEach(item);
+                        let ele = $(`#crt_row${item.ID}`);
+                        if (ele.length > 0) {
+                           
+                            ele.replaceWith(tr);
+                        }
+                        else {
+                            $('#crt_dtContentBody').prepend(tr);
+                        }
+                        $('.crt_txtQuantity').divide()
+                        crt_cartEvent();
+                    }
+                    crt_calTotal();
+                   
                 }
             }
             , failurefunc = function () {
@@ -180,38 +161,195 @@
         new Promise(resolve => {
             var myNode = document.getElementById(id);
             if (myNode != null) {
+               
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = crt_renderEach(item);
+                        myNode.insertAdjacentHTML("beforeend", tr);
+                    }
+                }
+            }
+            $('.crt_txtQuantity').divide()
+            crt_cartEvent();
+            resolve();
+        })
+    }
+
+    function crt_renderEach(item) {
+        let objPro = crt_DataPro[item.ID];
+        let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+        let discount = `<spa>(- formatNumber(item.DiscountAmount) <span class="fw-bold text-secondary">${item.DiscountPercent > 0 ? item.DiscountPercent + '%' : ''}</span>)<span>`
+        let total = Number(priceDiscounted) * Number(item.Quantity);
+        return ` <tr id="crt_row${item.ID}" class="text-center" data-id="${item.ID}">
+                    <td class="product-remove"><a class="crt_btnDel"><span class="icon-close"></span></a></td>
+
+                                <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
+
+                    <td class="product-name">
+                            <h3>${objPro.Name}</h3>
+                                <p class="text-secondary">${objPro.Description}</p>
+                    </td>
+
+                        <td class="price">${formatNumber(item.Price)}/${objPro.Unit}</td>
+                    <td class="price">${formatNumber(priceDiscounted)}</td>
+
+                    <td class="quantity">
+                        <div class="input-group mb-3">
+                                <span class="input-group-text crt_btnPlus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
+                            <input type="text" name="quantity" id="crt_txtQuantity${item.ID}" class="quantity crt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
+                                    <span class="input-group-text crt_btnMinus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
+                        </div>
+                    </td>
+
+                            <td id="crt_lbTotal${item.ID}" class="total">${formatNumber(total)}</td>
+                </tr><!-- END TR-->`
+    }
+
+    function crt_cartEvent() {
+        $('.crt_btnDel').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            crt_deleteCart(id);
+
+        });       
+        
+        $('.crt_btnPlus').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#crt_txtQuantity${id}`)[0].value.replace(',', ''));
+            $(`#crt_txtQuantity${id}`).attr('value', quant);
+            quant += 1;
+            $(`#crt_txtQuantity${id}`).val(formatNumber(quant));
+            $(`#crt_txtQuantity${id}`).attr('value', quant);
+            $(`#crt_txtQuantity${id}`).change();
+        });        
+        
+        $('.crt_btnMinus').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#crt_txtQuantity${id}`)[0].value.replace(',', ''));
+            if (quant == 1) return
+            quant -= 1;
+            $(`#crt_txtQuantity${id}`).val(formatNumber(quant));
+            $(`#crt_txtQuantity${id}`).attr('value', quant);
+            $(`#crt_txtQuantity${id}`).change();
+        });
+        $('.crt_txtQuantity').unbind('change').on('change', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#crt_txtQuantity${id}`)[0].value.replace(',', ''));
+            cart_editCart({
+                ID: id
+                ,Quantity: quant
+            });
+            let item = crt_DataCart[id];
+            item.Quantity = quant;
+            let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+            let total = Number(priceDiscounted) * Number(item.Quantity);
+            $(`#crt_lbTotal${item.ID}`).html(formatNumber(total));
+            crt_calTotal();
+        });
+    }
+
+    function crt_deleteCart(id) {
+        const promise = notiConfirm();
+        promise.then(function () { crt_excDeleteCart(id); }, function () { });
+    }
+    function crt_excDeleteCart(id) {
+        cart_deleteCart(id);
+        $(`#crt_row${id}`).remove();
+        delete crt_DataCart[id];
+        crt_calTotal();
+    }
+
+    async function crt_calTotal() {
+        new Promise(resolve => {
+            let data = Object.values(crt_DataCart);
+            let totalPrice = 0, totalDis = 0, total = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let objPro = crt_DataPro[item.ID];
+                    totalPrice += Number(item.Price) * Number(item.Quantity);
+                    totalDis += Number(item.DiscountAmount) * Number(item.Quantity);
+                    let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+                    total += Number(priceDiscounted) * Number(item.Quantity);
+                }
+
+            }
+            $('#crt_subTotal').html(formatNumber(totalPrice));
+            $('#crt_discount').html(formatNumber(totalDis));
+            $('#crt_total').html(formatNumber(total));
+            resolve();
+        })
+    }
+
+    async function crt_loadDataSale() {
+        new Promise(resolve => {
+            if (!crt_DataCart || Object.keys(crt_DataCart).length <=0){
+                resolve();
+                return;
+            }
+            let objGBType = Object.groupBy(Object.values(crt_DataCart), ({ TypeID }) => TypeID);
+            let type = Object.keys(objGBType).join(',');
+            let para = {
+                'TypeID': 0,
+                'ProductID': 0,
+                'HasDisable': 0,
+                'PagingNumber': 1,
+                'IsBestSeller': 1,
+                'IsMaterial': 0,
+                'TokenTypeID': type,
+                'TextSearch': "",
+                'Limit': 4
+            };
+
+            apipro_getList(
+                para,
+                beforefunc = function () {
+
+                }
+                , successfunc = function (_rr) {
+                    if (_rr != "0" && _rr != "") {
+                        let datas = JSON.parse(_rr);
+                        let dataMain = datas.Table1;
+                        crt_renderPro(dataMain, "crt_dtProduct");
+                    }
+                }
+                , failurefunc = function () {
+
+                    notiError_SW();
+                }
+                , completefunc = function (e) {
+
+                }
+            );
+            resolve();
+        })
+    }
+
+    async function crt_renderPro(data, id) {
+        new Promise(resolve => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
                 myNode.innerHTML = '';
                 let stringContent = '';
                 if (data && data.length > 0) {
                     for (let i = 0; i < data.length; i++) {
                         let item = data[i];
-                        let objPro = crt_DataPro[item.ID];
-                        let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
-                        let discount = `<spa>(- formatNumber(item.DiscountAmount) <span class="fw-bold text-secondary">${item.DiscountPercent > 0 ? item.DiscountPercent + '%' : ''}</span>)<span>`
-                        let total = Number(priceDiscounted)*Number(item.Quantity);
-                        let tr = `                            <tr id="crt_row${item.ID}" class="text-center" data-id="${item.ID}">
-                                    <td class="product-remove"><a class="crt_btnDel"><span class="icon-close"></span></a></td>
-
-                                                <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
-
-                                    <td class="product-name">
-                                        <h3>${item.Name}</h3>
-                                            <p class="text-secondary">${item.Description}</p>
-                                    </td>
-
-                                        <td class="price">${formatNumber(item.Price)}</td>
-                                                        <td class="price">${formatNumber(priceDiscounted)}</td>
-
-                                    <td class="quantity">
-                                        <div class="input-group mb-3">
-                                                <span class="input-group-text crt_btnPlus" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
-                                            <input type="text" name="quantity" id="crt_txtQuantity${item.ID}" class="quantity crt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
-                                                <span class="input-group-text crt_btnMinus" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
+                        let tr = `<div class="col-md-3">
+                                        <div class="menu-entry">
+                                                <a href="/ProductDetail/${item.ID}" class="img" style="background-image: url(${item.Image || '/default.png'});"></a>
+                                            <div class="text text-center pt-4">
+                                                    <h3><a href="/ProductDetail/${item.ID}">${item.Name}</a></h3>
+                                                    <p>${item.Description}</p>
+                                                <p class="price"><span>${formatNumber(item.PriceToSale)}</span></p>
+                                                        <p><a class="btn btn-primary btn-outline-primary crt_btnAddCart" data-id="${item.ID}" data-typeid="${item.TypeID}" data-price="${item.PriceToSale}">Add to Cart</a></p>
+                                            </div>
                                         </div>
-                                    </td>
-
-                                        <td class="total">${total}</td>
-                                </tr><!-- END TR-->`
+                                    </div>`
                         stringContent = stringContent + tr;
                     }
                 }
@@ -223,42 +361,24 @@
         })
     }
 
-
     function crt_productEvent() {
-        $('.crt_btnDel').on('click', function (e) {
-
-            let id = Number($(this).closest('tr').attr("data-id"));
-            crt_deleteCart(id);
-
-        });       
-        
-        $('.crt_btnPlus').on('click', function (e) {
-
-            let id = Number($(this).closest('tr').attr("data-id"));
-            let quant = Number($(`crt_txtQuantity${id}`).val()) ;
-
-        });        
-        
-        $('.crt_btnMinus').on('click', function (e) {
-
-            let id = Number($(this).closest('tr').attr("data-id"));
-            let quant = Number($(`crt_txtQuantity${id}`).val()) ;
-
+        $('.crt_btnAddCart').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let productID = Number($(this).attr("data-id"));
+            let typeid = Number($(this).attr("data-typeid"));
+            let PriceToSale = Number($(this).attr("data-price"));
+            let item = {
+                ID: productID,
+                TypeID: typeid,
+                Quantity: 1,
+                Price: PriceToSale
+            }
+            cart_addToCart(item);
+            crt_DataCart = cart_getCartList();debugger
+            crt_loadPro(productID);
+            crt_calTotal();
         });
-        $('.crt_txtQuantity').on('change', function (e) {
 
-            let id = Number($(this).closest('tr').attr("data-id"));
-            let quant = Number($(`crt_txtQuantity${id}`).val());
-
-        });
     }
 
-    function crt_deleteCart(id) {
-        const promise = notiConfirm();
-        promise.then(function () { crt_excDeleteCart(id); }, function () { });
-    }
-    function crt_excDeleteCart(id) {
-        cart_deleteCart(id);
-        $(`crt_row${id}`).remove()
-    }
 </script>

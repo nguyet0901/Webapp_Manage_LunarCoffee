@@ -12,6 +12,7 @@
                     'IsMaterial': para?.IsMaterial ?? -1,
                     'TextSearch': para?.TextSearch ?? "",
                     'TokenID': para?.TokenID ?? "",
+                    'TokenTypeID': para?.TokenTypeID ?? "",
                     'Limit': para?.Limit ?? 1000,
                 })
                 , async = true

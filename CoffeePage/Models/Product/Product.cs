@@ -10,6 +10,7 @@
 		public int IsMaterial { get; set; } = -1;
 		public string TextSearch { get; set; } = "";
 		public string TokenID { get; set; } = "";
+        public string TokenTypeID { get; set; } = "";
         public int Limit { get; set; } = 1000;
     }
 }
