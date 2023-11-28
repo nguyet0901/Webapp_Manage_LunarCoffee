@@ -149,8 +149,9 @@ var master_contentWayPoint = function () {
 
 	}, { offset: '95%' });
 };
-	var master_carousel = function(id) {
-		$(`#${id}`).owlCarousel({
+var master_carousel = function (id) {
+	let selec = id ? `#${id}` : '.home-slider';
+	$(selec).owlCarousel({
 	    loop:true,
 	    autoplay: true,
 	    margin:0,
