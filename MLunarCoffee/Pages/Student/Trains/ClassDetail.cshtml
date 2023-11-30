@@ -1,0 +1,787 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Trains.ClassDetail
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="m-2 mt-3 ms-n1 arrow-steps d-flex clearfix cdstep">
+    <a id="cdstep_scheduler" class="step d-none text-primary text-sm">
+        @Local["Lịch đào tạo"]
+    </a>
+
+    <a id="cdstep_detail" class="step d-none text-primary text-sm">
+
+    </a>
+    <a id="cdstep_file" class="step d-none text-primary text-sm">
+
+    </a>
+</div>
+<div id="Classdetail_Master" class="card-body mt-0 mt-lg-n5 pt-0 px-1">
+    <div class="row ">
+        <div class="d-lg-flex">
+            <div class="ms-auto my-auto mt-lg-0 mt-3">
+                <div class="ms-2">
+                    <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist" id="cd_function">
+                        <li class="nav-item" role="presentation">
+                            <a class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" data-bs-target="#cd_attend" role="tab" aria-selected="true">
+                                <i class="text-gradient text-primary fas fa-fist-raised"></i>
+                               @Local["Điểm danh"]
+                            </a>
+                        </li>
+                        @*<li class="nav-item " role="presentation">
+                                <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#cd_file" role="tab" aria-selected="true">
+                                    <i class="text-gradient text-primary fas fa-file-word"></i>
+                                    Tài liệu
+                                </a>
+                            </li>*@
+                        <li class="nav-item" role="presentation">
+                            <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#cd_library" role="tab" aria-selected="true">
+                                <i class="text-gradient text-primary fas fa-folder"></i>
+                                @Local["Thư viện"]
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-1">
+            <div class="nav-wrapper position-relative end-0 px-2">
+                <div class="tab-content">
+                    <div class="tab-pane fade active show" id="cd_attend" role="tabpanel">
+                        <div class="row mt-3">
+                            <div class="col-sm-12 col-md-5 col-lg-3">
+                                <div class="input-group flex-nowrap" id="cdstudent_div">
+                                    <div class="input-group-text input-group-text px-2">
+                                        <div class="form-check ">
+                                            <input id="cdstudent_all" class="bg-gray-300 form-check-input" type="checkbox">
+                                        </div>
+                                        <div class="spinner-border spinner-border-sm d-none"></div>
+                                    </div>
+                                    <input id="cdstudent_input" type="text" class="form-control" placeholder="eg .search">
+                                    <div class="input-group-text">
+                                        <span id="cdstudent_totalst" class="px-2 pe-3 text-dark fw-bold"></span>
+                                        <i class="btn_clear fas fa-minus-circle opacity-1"></i>
+                                    </div>
+                                </div>
+                                <div id="cdstucontainer" class="dataTable-container position-relative">
+                                    <table class="table table-flush dataTable-table">
+                                        <tbody id="cdstudentlist">
+                                        </tbody>
+                                    </table>
+                                    <div id="cdstu_popupaction" class="position-absolute collapse collapsesticky" style="z-index: 2000;">
+                                        <div class="col-w-300 rounded-3 shadow-lg">
+                                           <div class="card rounded-3">
+                                               <div class="card-body py-2 px-3">
+                                                    <div class="form3" id="formTrainNote">
+                                                        <div class="col-12">
+                                                            <div class="field">
+                                                                <label>Ghi chú</label>
+                                                                <textarea id="cdstu_notecontent" name="name" class="form-control" rows="3"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="action_Save mt-3">
+                                                            <div class="action_Save-Content">
+                                                                <button class="btn btn-secondary" form="fd_form" onclick="event.preventDefault(); CDStudent_ClosePopup()">@Local["Đóng"]</button>
+                                                                <button id="StuEnroll_BtnSave" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault(); CDStudent_ExecNote()">@Local["Lưu"]</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                               </div>
+                                           </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-7 col-lg-9">
+
+                                <div class="text-dark card mb-3">
+                                    <div class="card-header pb-0 ps-2">
+                                        <div class="d-flex ps-2 align-items-center pe-0">
+                                            <div>
+                                                <img id="cd_infoavatar" src="#" class="avatar avatar-sm me-2" alt="avatar image">
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 id="cd_infocode" class="text-primary mb-0 text-sm"></h6>
+                                                <p id="cd_infoname" class="text-sm mb-0"></p>
+                                            </div>
+                                            <div class="ms-auto my-auto d-flex align-items-center">
+                                                <div>
+                                                    <div class="d-flex justify-content-center multisteps-form__progress ">
+                                                        <div>
+                                                            <i id="cd_infobackstatus" onclick="CDInfo_ReCheckInout()" class="d-none text-gradient fs-3 cursor-pointer opacity-2 me-2 text-danger fas fa-chevron-left"></i>
+                                                        </div>
+                                                        <div id="cd_statusarea" class="text-nowrap overflow-auto px-2 text-center w-100">
+
+                                                        </div>
+                                                        <div>
+                                                            <i id="cd_infostatus" onclick="CDInfo_CheckInout()" class="d-none text-gradient fs-3 cursor-pointer opacity-2 me-2 text-danger fas fa-chevron-right"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body m-3 mt-2 p-3 bg-gray-100 border-radius-lg">
+                                        <div class="my-auto">
+                                            <div class="h-100">
+                                                <h6 id="cd_infosubject" class="ps-1 text-primary mb-0"></h6>
+                                            </div>
+                                        </div>
+                                        <div class="ps-1 pt-0 text-dark text-sm">
+                                            <div class="d-flex align-items-center pe-0">
+                                                <div class="justify-content-center">
+                                                    <p class="mb-0 opacity-5 text-sm mt-3">@Local["Phòng"]</p>
+                                                    <p id="cd_inforoom" class="text-sm my-auto"></p>
+                                                </div>
+                                                <div class="ps-5 justify-content-center">
+                                                    <p class="mb-0 opacity-5 text-sm mt-3">@Local["Chi nhánh"]</p>
+                                                    <p id="cd_infobranch" class="text-sm my-auto"></p>
+                                                </div>
+                                                <div class="ps-5 justify-content-center">
+                                                    <p class="mb-0 opacity-5 text-sm mt-3">@Local["Ngày"]</p>
+                                                    <p id="cd_infodate" class="text-sm my-auto"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card p-3 text-dark">
+                                    <div class="mt-0 ps-0">
+                                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist" id="cd_attendance">
+                                            <li class="nav-item" role="presentation">
+                                                <a class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" data-bs-target="#cd_attendArea" role="tab" aria-selected="true">
+                                                    <i class="text-gradient text-success fas fa-fist-raised"></i>
+                                                    @Local["Điểm danh"]
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#cd_ratingArea" role="tab" aria-selected="true">
+                                                    <i class="text-gradient text-warning fas fa-star"></i>
+                                                    @Local["Đánh giá"]
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="row px-2">
+                                        <div class="nav-wrapper position-relative end-0 mt-2 px-1">
+                                            <div class="tab-content">
+                                                <div class="tab-pane fade active show" id="cd_attendArea" role="tabpanel">
+                                                    <div class="border-1 row p-2 mb-2   border-radius-lg" id="cd_attendContent">
+
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane fade" id="cd_ratingArea" role="tabpanel">
+                                                    <div class="border-1 row p-2 mb-2   border-radius-lg" id="cd_ratingContent">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3 px-2 d-none">
+                                    <div class="mt-0 ps-0 pe-0">
+                                        <ul class="nav nav-pills p-1 bg-transparent" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <a class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" aria-selected="true">
+                                                    <i class="text-gradient text-success fas fa-file-word"></i>
+                                                    @Local["Tài liệu"]
+                                                </a>
+                                            </li>
+
+                                        </ul>
+                                        <div class="border-1 mt-3 px-3 py-4 bg-gray-100 border-radius-lg" id="cd_slidecontent">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="tab-pane fade" id="cd_file" role="tabpanel">
+
+                    </div>
+                    <div class="tab-pane fade" id="cd_library" role="tabpanel">
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="d-none" id="Classdetail_Detail">
+</div>
+<script type="text/javascript">
+    var cdstudent_timer;
+    var CD_ClassTimeID = '@Model._ClassTimeID'
+    var CD_ClassID = '@Model._ClassID'
+    var CD_DataStudent = [];
+    var Cd_Status = 0;
+    let CD_StutCurrentID = 0;
+
+    $(document).ready(function () {
+        CDInfo_Load();
+        CDStudent_Load();
+        CDAttend_Render(TrainData_Attend, "cd_attendContent");
+        CDRating_Render(TrainData_Rating, "cd_ratingContent");
+        CDMain_Event();
+        CDMain_LoadAdding();
+    })
+    async function CDMain_LoadAdding () {
+        return new Promise((resolve, reject) => {
+            $("#cd_file").load("/Student/Trains/Detail/ClassFile?ver=" + versionofWebApplication);
+            $("#cd_library").load("/Student/Library/ClassLibrary?Class=" + CD_ClassTimeID +"&ver=" + versionofWebApplication);
+            resolve();
+        })
+    }
+    //#region // Event
+    function CDInfo_Load () {
+        AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=LoadInfo"
+            , data = {"ClassTimeID": CD_ClassTimeID}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas.Table;
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        $('#cd_infoname').html(item.TeacherName != '' ? (item.TeacherName) : '@Local["Chưa có giáo viên"]');
+                        $('#cd_infocode').html(item.TeacherCode);
+                        $('#cd_infodate').html(BigIntToDate(item.Dayint)  );
+                        $('#cd_infoavatar').attr('src', item.TeacherAvatar != '' ? item.TeacherAvatar : Master_Default_Pic);
+                        $('#cd_infobranch').html(item.BranchName);
+                        $('#cd_inforoom').html(item.ClassName);
+                        $('#cd_infosubject').html(item.SubjectName);
+
+
+                        CDInfo_LoadStatus(item.Status, item.IsSameDay,item.TimeinClass, item.TimeoutClass);
+                        CDStep_Action(2, item.SubjectName,item.ClassName);
+
+
+                    }
+                    let dataslide = datas.Table1;
+                    CDSlide_Render(dataslide,'cd_slidecontent');
+
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+    function CDInfo_CheckInout () {
+        if (Cd_Status == 0 || Cd_Status == 1) {
+            const promise = notiConfirm(Cd_Status == 0 ? '@Local["Bắt đầu đào tạo"]' : '@Local["Kết thúc đào tạo"]');
+            promise.then(function () {CDInfo_CheckInoutExe();}, function () { });
+        }
+    }
+    function CDInfo_CheckInoutExe () {
+        AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=CheckInout"
+            , data = {
+                "ClassTimeID": CD_ClassTimeID
+                , "Status": Cd_Status
+}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    CDInfo_Load();
+                }
+                else {
+                    notiWarning('@Local["Chỉ được bắt đầu kết thúc lớp của mình và trong ngày hiện tại"]');
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+    function CDInfo_ReCheckInout () {
+        if (Cd_Status == 2 || Cd_Status == 1) {
+            const promise = notiConfirm(Cd_Status == 2 ? '@Local["Quay lại trạng thái đang đào tạo"] ?' : '@Local["Hủy trạng thái"] ? ');
+            promise.then(function () {CDInfo_ReCheckInoutExe();}, function () { });
+        }
+    }
+    function CDInfo_ReCheckInoutExe () {
+        AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=RevertCheckInout"
+            , data = {
+                "ClassTimeID": CD_ClassTimeID
+                , "Status": Cd_Status
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    CDInfo_Load();
+                }
+                else {
+                    notiWarning('@Local["Chỉ được thao tác trên lớp của mình và trong ngày hiện tại"]');
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+    function CDInfo_LoadStatus (Status, IsSameDay, TimeinClass, TimeoutClass) {
+        Cd_Status = Status;
+        let result = ``;
+        result = `<button class="prstatusclass  multisteps-form__progress-btn text-dark px-3 my-2" type="button" data-bs-toggle="tooltip" >
+                    <div>
+                        <span class="text-dark text-sm d-block mb-0">@Local["Chưa dạy"]</span>
+                        <span class="text-sm text-primary d-block">-</span><div></div>
+                    </div>
+                </button> `;
+        if (Status >= 1) {
+            let timein = BigIntYMDHMToHHMM(TimeinClass);
+            result = result + `<button class="prstatusclass multisteps-form__progress-btn text-dark px-3 my-2" type="button" >
+                    <div>
+                        <span class="text-dark text-sm d-block mb-0">@Local["Bắt đầu"]</span>
+                        <span class="text-sm text-primary d-block">${timein}</span><div></div>
+                    </div>
+                </button> `;
+        }
+        if (Status >= 2) {
+            let timeout = BigIntYMDHMToHHMM(TimeoutClass);
+            result = result + `<button class="prstatusclass multisteps-form__progress-btn text-dark px-3 my-2" type="button" >
+                    <div>
+                        <span class="text-dark text-sm d-block mb-0">@Local["Kết thúc"]</span>
+                        <span class="text-sm text-primary d-block">${timeout}</span><div></div>
+                    </div>
+                </button> `;
+        }
+        if (IsSameDay==1)
+        switch (Status) {
+            case 0:
+                {
+                    $('#cd_infobackstatus').addClass('d-none');
+                    $('#cd_infostatus').removeClass('d-none');
+                } break;
+            case 1:
+                {
+                    $('#cd_infobackstatus').removeClass('d-none');
+                    $('#cd_infostatus').removeClass('d-none');
+                } break;
+            case 2:
+                {
+                    $('#cd_infobackstatus').removeClass('d-none');
+                    $('#cd_infostatus').addClass('d-none');
+                } break;
+        }
+        $('#cd_statusarea').html(result);
+
+    }
+    function CDStep_Action (step, name,room) {
+        $('.cdstep .step').addClass('d-none');
+        $('.cdstep .step').removeClass('current');
+        switch (step) {
+            case 1:
+                {
+                    $('#cdstep_scheduler').removeClass('d-none');
+                    $('#cdstep_scheduler').addClass('current');
+                }
+                break;
+            case 2:
+                {
+                    $('#cdstep_detail').removeClass('d-none');
+                    $('#cdstep_detail').addClass('current');
+                    $('#cdstep_scheduler').removeClass('d-none');
+                    if (name != '') $('#cdstep_detail').html(name + ' - ' + room);
+                }
+                break;
+            case 3:
+                {
+                    $('#cdstep_file').removeClass('d-none');
+                    $('#cdstep_file').addClass('current');
+                    $('#cdstep_scheduler').removeClass('d-none');
+                    $('#cdstep_detail').removeClass('d-none');
+                    if (name != '') $('#cdstep_file').html(name);
+                }
+                break;
+        }
+    }
+    function CDMain_Event () {
+        $("#cdstep_scheduler").unbind('click').click(function (event) {
+            Classtime_CloseDetail();
+        });
+        $("#cdstep_detail").unbind('click').click(function (event) {
+            CD_CloseDetail();
+        });
+        $("#cd_slidecontent .slidetail").unbind('click').click(function (event) {
+            let id = $(this).attr('data-id');
+            $("#Classdetail_Detail").load("/Student/Slide/ClassSlideView?CurrentID=" + id + "&ver=" + versionofWebApplication);
+            $("#Classdetail_Detail").removeClass('d-none');
+            $("#Classdetail_Master").addClass('d-none');
+        });
+        $('#cdstudent_input').keyup(function () {
+            if ($(this).val().length > 0) $("#cdstudent_div .btn_clear").removeClass('opacity-1');
+            else $("#cdstudent_div .btn_clear").addClass('opacity-1');
+            $("#cdstudent_div .form-check").hide();
+            $("#cdstudent_div .spinner-border").removeClass('d-none');
+            clearTimeout(cdstudent_timer);
+            cdstudent_timer = setTimeout(function (e) {
+                CDStudent_Filter();
+            }, 500);
+        });
+        $("#cdstudent_div").on('click', '.btn_clear', function (e) {
+            $('#cdstudent_input').val('');
+            $("#cdstudent_div .btn_clear").addClass('opacity-1');
+            CDStudent_Filter();
+        });
+        $("#cdstudent_all").unbind().change(function (e) {
+            $('#cdstudentlist .stucheck').prop('checked', $(this).is(":checked"));
+
+        });
+
+
+    }
+
+    //#endregion
+    //#region // Student
+    function CDStudent_Load () {
+        AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=LoadStudent"
+            , data = {"ClassID": CD_ClassID, "ClassTimeID": CD_ClassTimeID}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    CD_DataStudent = JSON.parse(result);
+                    CDStudent_Render(CD_DataStudent,"cdstudentlist")
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+
+    function CDStudent_HandleEvent(){
+        $("#cdstudentlist .btnStudentMore").unbind('click').on('click', function () {
+            event.preventDefault();
+            event.stopPropagation();
+            let id = Number($(this).attr('data-id'));
+            let _parent = $(this).closest('tr');
+            if (!isNaN(id) && id != 0) {
+                CD_StutCurrentID = id;
+                let width = _parent.outerWidth();
+                let widthPopup = 300;
+                let widthContainer = $("#cdstucontainer").width();
+                if (_parent && _parent.length != 0) {
+                    debugger
+                    let { top, left } = _parent.position();
+                    let Popup_Left = left + width + widthPopup < widthContainer
+                        ? left + width - widthPopup
+                        : left + width
+
+                    $("#cdstu_popupaction").css({
+                        "top": top + 20,
+                        "left": Popup_Left - 20
+                    }).animate({
+                        "left": Popup_Left
+                    }).addClass('show');
+                }
+            }
+        });
+    }
+
+   
+    async function CDStudent_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let tr = '';
+                        if (data[i] != undefined) {
+                            tr = CDStudent_RenderEach(data[i])
+                        }
+                        document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+                        $("#cdstudent_totalst").html(data.length);
+                    }
+                }
+                ToolPopper();
+                CDStudent_HandleEvent();
+            }
+            resolve();
+        })
+    }
+
+    async function CDStudent_Filter () {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let textsearch = $('#cdstudent_input').val().trim();
+                    if (textsearch == "") {
+                        CDStudent_Render(CD_DataStudent, "cdstudentlist");
+
+
+                    }
+                    else {
+                        let search = xoa_dau(textsearch.toLowerCase());
+                        if (search == "") {
+                            CDStudent_Render(CD_DataStudent, "cdstudentlist")
+                        }
+                        else {
+                            let data = CD_DataStudent.filter(word => {
+                                return (word["NameNosign"].toLowerCase().includes(search));
+                            });
+                            CDStudent_Render(data, "cdstudentlist")
+                        }
+                    }
+                    $("#cdstudent_div .form-check").show();
+                    $("#cdstudent_div .spinner-border").addClass('d-none');
+                    resolve()
+                }
+            )
+        })
+    }
+    function CDStudent_RenderEach (item) {
+
+        let tr =
+           `<tr>
+                <td class="ps-0">
+                    <div class="d-flex">
+                        <div class="icon icon-shape icon-sm me-2 text-center">
+                            <div class="form-check ">
+                                <input data-id="${item.ID}" class="stucheck form-check-input" type="checkbox">
+                            </div>
+                        </div>
+                        <div class="d-flex flex-grow-1 rowTrainStu">
+                            <div class="f-flex flex-column">
+                                <h6 class="mb-0 text-dark text-sm">
+                                    <a data-id="108" href="/Student/student/studentmain?studentid=${item.ID}" target="_blank" class="mb-0 detail border-bottom border-primary text-sm fw-bold">${item.Name}</a>
+                                </h6>
+                                <span class="text-sm">
+                                    <span style="color:${item.AttendColor}" class="font-weight-bold">${item.AttendAlias}</span>
+                                    <span style="color:${item.RatingColor}" class="font-weight-bold">${item.RatingAlias}</span>
+                                    ${item.Code}
+                                        ${item.Note != '' ? `<i class="fas fa-info-circle text-primary"  data-bs-toggle="tooltip" title="${item.Note}" aria-hidden="true"></i>` : ``}
+                                </span>
+                            </div>
+                            <div class="p-2 ms-auto btnStudentMore text-secondary z-index-2 cursor-pointer" data-id="${item.ID}">
+                                <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+           `
+        return tr;
+    }
+    function CDStudent_Event () {
+        $("#cd_attendContent .attend").unbind('click').click(function (event) {
+            let id = $(this).attr('data-id');
+            CDStudent_Function(id, 'attend');
+        });
+        $("#cd_ratingContent .rating").unbind('click').click(function (event) {
+            let id = $(this).attr('data-id');
+            CDStudent_Function(id,'rating');
+        });
+
+    }
+    function CDStudent_Function (id,type) {
+        let stu = $('#cdstudentlist .stucheck:checked');
+        let obj = [];
+        if (stu != undefined && stu.length != 0) {
+            for (let i = 0; i < stu.length; i++) {
+                let e = {}; e.id = stu[i].dataset.id;
+                obj.push(e);
+            }
+            CDStudent_FunctionExe(id, type, obj);
+        }
+    }
+    function CDStudent_FunctionExe (statusid,type,obj) {
+        AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=Raattend"
+            , data = {
+                "ClassTimeID": CD_ClassTimeID
+                , "statusid": statusid
+                , "type": type
+                , "obj": JSON.stringify(obj)
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    CDStudent_Load();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+    //#endregion
+
+    //#region // EXECUTE NOTE
+
+    function CDStudent_ExecNote(){
+        let note = $("#cdstu_notecontent").val() ? $("#cdstu_notecontent").val() : "";
+        $('#formTrainNote').form('validate form');
+        if ($('#formTrainNote').form('is valid')) {
+            AjaxLoad(url = "/Student/Trains/ClassDetail/?handler=AttenNote"
+                , data = {
+                    "ClassTimeID": CD_ClassTimeID
+                    , "StudentID": CD_StutCurrentID
+                    , "Note": note
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        CDStudent_ClosePopup();
+                        CDStudent_Load();
+                    }
+                }
+            );
+        }
+    }
+    function CDStudent_ClosePopup(){
+        $("#cdstu_notecontent").val(""); 
+        $("#cdstu_popupaction").removeClass("show");
+    }
+
+    //#endregion
+
+
+    //#region  // Render Other
+    async function CDRating_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let tr = '';
+                        tr = `<a data-id=${data[i].ID} class="rating col-auto aligns-item-center text-dark border border-1 text-sm rounded-2 px-2 py-1  bg-gray-200 m-2">
+                                    <span class="badge badge-dot  py-0 ">
+                                    <i class="attstatus" style="margin-top: -3px;background-color:${data[i].Color}"></i>
+                                    </span>
+                                    ${data[i].Name}
+                                  </a>   `
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                }
+            }
+            CDStudent_Event();
+            resolve();
+        })
+    }
+    async function CDAttend_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let tr = '';
+                        tr = `<a data-id=${data[i].ID} class="attend col-auto aligns-item-center text-dark border border-1 text-sm rounded-2 px-2 py-1 bg-gray-200 m-2">
+                                    <span class="badge badge-dot  py-0 ">
+                                    <i class="attstatus" style="margin-top: -3px;background-color:${data[i].Color}"></i>
+                                    </span>
+                                    ${data[i].Name}
+                                  </a>   `
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                }
+            }
+            CDStudent_Event();
+            resolve();
+        })
+    }
+    async function CDSlide_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        tr = `  <div class="d-flex align-items-center">
+                                    <div class="my-auto ms-3">
+                                        <div class="h-100">
+                                            <p class=" text-dark  mb-0">
+                                               ${item.Code + ' ' + item.Name}
+                                            </p>
+
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-sm my-auto ms-auto me-3" style="background-color:${item.Color}">${item.Tag}</span>
+                                    <a data-id=${item.ID} class="slidetail text-primary text-sm icon-move-right my-auto">
+                                        @Local["Chi tiết"]
+                                        <i class="fas fa-arrow-right text-xs ms-1" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                                ${(i == data.length - 1) ? `` : `<hr class="horizontal dark">`}
+                        `
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                }
+            }
+            resolve();
+            CDMain_Event();
+        })
+    }
+     //#endregion
+
+    //#region  //  Other
+    function CD_CloseDetail () {
+        $("#Classdetail_Detail").empty();
+        $("#Classdetail_Detail").addClass('d-none');
+        $("#Classdetail_Master").removeClass('d-none');
+        CDStep_Action(2, '','');
+    }
+    //#endregion
+
+</script>
+<style>
+    .prstatusclass.multisteps-form__progress-btn:before {
+        width: 27px;
+        height: 27px;
+        top: -8px;
+        background-image: linear-gradient(310deg, rgb(var(--bs-primary-from)) 0%, rgb(var(--bs-primary-to)) 100%);
+        border: 3px solid white;
+    }
+    .btnStudentMore{
+        opacity: 0.3;
+        min-width: 35px;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #888 !important;
+        background: transparent;
+        transition: background 0.3s ease, opacity 0.2s linear;
+    }
+
+    .btnStudentMore:hover {
+        background: #6f6f6fc9;
+        color: #fff !important;
+    }
+</style>
+<script>js_require('/js/customjs/custom-validation.js');</script>

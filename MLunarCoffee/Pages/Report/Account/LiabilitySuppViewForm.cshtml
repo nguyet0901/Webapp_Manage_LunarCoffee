@@ -1,0 +1,201 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Account.LiabilitySuppViewFormModel
+@{
+    Layout = null;
+}
+<div id="LSVF_ViewForm">
+    <div id="ticketwa_nameproduct" class="text-md text-primary font-weight-bold text-center">@Local["Phiếu nhập kho"]</div>
+    <div class="text-md text-dark text-center">
+        <span class="text-sm text-secondary">@Local["Ngày"]:</span>
+        <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_Title"></span>
+    </div>    
+    <div class="text-md text-dark text-center">
+        <span class="text-sm text-secondary">@Local["Mã phiếu"]:</span>
+        <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_ImportCode"></span>
+    </div>
+    <div class="d-flex">
+        <div class="col-auto my-auto">
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Kho"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_Ware"></span>
+            </div>
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Người lập phiếu"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_CreatedBy"></span>
+            </div>
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Nhà cung cấp"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_Supp"></span>
+            </div>
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Ngày lập phiếu"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_Created"></span>
+            </div>
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Ngày nhập kho"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_DateImport"></span>
+            </div>
+            <div class="text-md text-dark">
+                <span class="text-sm text-secondary">@Local["Nội dung"]:</span>
+                <span class="text-sm text-dark font-weight-bold ms-2" id="LSVF_Note"></span>
+            </div>
+        </div>
+        <div class="w-35 ms-auto my-auto mt-1"></div>
+    </div>
+    <div class="card-header py-3 px-0">
+        <div class="d-lg-flex">
+            <div class="col-auto my-auto">
+                <p id="LSVF_DetailHeader" class="text-md text-dark font-weight-bold mb-1">@Local["Danh sách sản phẩm"]</p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return LSVF_Export()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="m-0 mb-3 mobile-responsive">
+        <table class="table vt-table my-3" id="LSVF_dtContent">
+            <thead>
+                <tr>
+                    <th style="width:40px;">#</th>
+                    <th>@Local["Mã"]</th>
+                    <th>@Local["Tên"]</th>
+                    <th>@Local["Đơn giá"]</th>
+                    <th>@Local["Sl"]</th>
+                    <th>@Local["Đơn vị"]</th>
+                    <th>@Local["Sl kiểm kê"]</th>
+                    <th>@Local["Đơn vị kiểm kê"]</th>
+                    <th>@Local["Thành tiền"]</th>
+                </tr>
+            </thead>
+            <tbody id="LSVF_dtContentBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="action_Save mt-3">
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); LSVF_Close()" data-fontchanged="true">@Local["Đóng"]</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let LSVF_Code = decodeURIComponent('@Model.code');
+    $(document).ready(function ()
+    {
+        ViewForm_LoadDetail();
+    });
+
+    //#region // Viewform
+
+    function ViewForm_LoadDetail()
+    {
+        AjaxLoad(url = "/Report/Account/LiabilitySuppViewForm/?handler=ViewForm"
+            , data = { 'code': LSVF_Code }, async = true, error = null
+            , success = function (result)
+            {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    $('#LSVF_dtContentBody').empty();
+                    LSVF_RenderView(data, 'LSVF_dtContentBody');
+                }
+            }
+            , sender = null
+            , before = function (e)
+            { }
+            , complete = function (e)
+            { }
+        );
+    }
+
+
+    function LSVF_LoadInfo(item)
+    {
+        if (item && Object.keys(item).length > 0) {
+            $('#LSVF_ImportCode').html(item?.ReceiptCode ?? '');
+            $('#LSVF_Title').html(ConvertDateTimeUTC_DMY(item?.ReceiptDate ?? ''));
+            $('#LSVF_Ware').html(LSVF_GetName_ByID(RP_DataWarehouse, item?.WareID ?? 0));
+            $('#LSVF_CreatedBy').html(Fun_GetName_ByID(RP_DataEmployee, item?.CreatedBy ?? 0));
+            $('#LSVF_Supp').html(item?.SupName ?? '');
+            $('#LSVF_Created').html(GetDateTime_String_DMYHM(item?.Created ?? ''));
+            $('#LSVF_DateImport').html(GetDateTime_String_DMYHM(item?.ReceiptDate ?? ''));
+            $('#LSVF_Note').html(item?.ReceiptNote ?? '');
+        }
+    }
+
+    async function LSVF_RenderView(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr =
+                                '<td class="vt-number-order"></td>'
+                                + '<td>'
+                                + '<a class="text-primary d-block fw-bold">' + item.ProductCode + '</a>'
+                                + '</td>'
+                                + '<td>'
+                                + item.ProductName
+                                + ((item.PackageNumber == '')
+                                    ? ''
+                                    : ('<span class="d-block text-sm opacity-5">' + item.PackageNumber + '</span>')
+                                )
+                                + '</td>'
+                                + '<td>' + formatNumber(item.UnitPrice) + '</td>'
+
+                                + '<td>' + formatNumber(Math.round(item.Number * 100) / 100) + '</td>'
+                                + '<td>' + item.UnitName + '</td>'
+                                + '<td>' + formatNumber(Math.round(item.NumberStandard * 100) / 100) + '</td>'
+                                + '<td>' + item.UnitStandardName + '</td>'
+                                + '<td>' + formatNumber(item.Amount) + '</td>'
+                                ;
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+            }, 100);
+        })
+    }
+
+    function LSVF_GetName_ByID(data, id)
+    {
+        try {
+            let index = data.findIndex(e => e.ID == id);
+            let name = data[index]?.Name ?? '';
+            return name;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function LSVF_Close()
+    {
+        $("#RLS_ViewFormContainer").hide();
+        $("#RLS_ViewFormContainer").empty();
+        $("#RLS_MainContainer").fadeIn(200);
+    }
+
+    function LSVF_Export()
+    {
+        try {
+            exportToExcel("LSVF_dtContent", Outlang['Chi_tiet_phieu_nhap_kho'] + '_' + $('#LSVF_ImportCode').html());
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được tệp"]!');
+        }
+    }
+            //#endregion
+</script>

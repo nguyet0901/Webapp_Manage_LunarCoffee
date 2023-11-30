@@ -1,0 +1,308 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Supplier.SupplierListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="row mt-n2" id="ListLabo_Container">
+    <div class="col-12 p-0">
+        <div class="card card-plain" id="list_labo">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Nhà cung cấp"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách nhà cung cấp"]</p>
+                </div>
+                <div class="right">
+                    <button id="ListLabo_Add" class="btn bg-gradient-primary btn-sm mt-1 me-2" onclick="ListLabo_Add()">@Local["Thêm mới"]</button>
+                    <button id="ButtonLaboRefresh" class="btn bg-gradient-dark btn-sm mt-1" onclick="ListLabo_Load()">@Local["Tải lại"]</button>
+                </div>               
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 pt-0 pb-2 mobile-responsive vt-header-sticky">
+                    <div id="waitingSupplier" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table class="table vt-table mb-0" id="dtContent_ListLabo">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th class="d-none">CusID</th>
+                                <th style="width: 50px;">#</th>
+                                <th data-name="code">@Local["Tên"]</th>
+                                <th data-name="">@Local["Số điện thoại"]</th>
+                                <th data-name="">@Local["Người đại diện"]</th>
+                                <th data-name="">Mail</th>
+                                <th data-name="">@Local["Ký quỹ"]</th>
+                                <th data-name="">@Local["Chữ ký"]</th>
+                                <th class="ListLabo_thHanlde" data-name="">@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContent_ListLaboBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="detail_labo" style="display:none;">
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    //#region // Declare & Initialize
+    var CurrentID_Supplier = 0;
+    let DataEmployee;
+    let LaboList_Data;
+    let DataUser;
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee, _Session_User]
+            , function (data) {
+                DataEmployee = data[0];
+                DataUser = data[1];
+                ListLabo_Load();
+            })
+        Checking_TabControl_Permission();
+        ListLabo_Event();
+    });
+
+    //#endregion
+
+
+    //#region // LOAD DATA
+
+    async function ListLabo_Load(_iddetail) {
+        return new Promise((resolve, reject) => {
+            let iddetail = (_iddetail != undefined) ? Number(_iddetail) : 0;
+            AjaxLoad(url = "/Labo/Supplier/SupplierList/?handler=LaboSupplier"
+                , data = { 'SupDetail': iddetail }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+
+                        if (iddetail != 0) {
+                            let el = ListLabo_RenderEach(data[0]);
+                            let obj = createElementFromHTML(el);
+                            LaboList_Data[data[0].ID] = data[0];
+                            let currentnode = document.getElementById('LaboList_' + iddetail);
+                            currentnode.parentNode.replaceChild(obj, currentnode);
+                            CurrentID_Supplier = iddetail;
+                        }
+                        else {
+                            LaboList_Data = {};
+                            for (i = 0; i < data.length; i++) {
+                                LaboList_Data[data[i].ID] = data[i];
+                            }
+                            ListLabo_Render(data, 'dtContent_ListLaboBody');
+
+                        }
+                        $("#LaboList_" + iddetail).trigger("click");
+
+                    } else {
+                        notiError_SW();
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#waitingSupplier").show();
+                }
+                , complete = function (e) {
+                    $("#waitingSupplier").hide();
+                }
+            );
+            resolve();
+        });
+    }
+
+    //#endregion
+
+
+
+    //#region // EVENT
+
+    function ListLabo_Event() {
+        $('#dtContent_ListLabo').on('click', '.buttonEditClass', function () {
+            event.preventDefault();
+            let ID = Number($(this).closest('.laboListItem').attr("data-id"));
+            ListLabo_Edit(ID);
+        });
+        $('#dtContent_ListLabo').on('click', '.buttonDeleteClass', function () {
+            event.preventDefault();
+            let ID = Number($(this).closest('.laboListItem').attr("data-id"));
+            ListLabo_Delete(ID)
+        });
+
+        $('#dtContent_ListLabo').on('click', '.buttonSignClass', function () {
+            event.preventDefault();debugger
+            let ID = Number($(this).closest('.laboListItem').attr("data-id"));
+            LaboList_Signature(ID)
+        });
+    }
+
+    //#endregion
+
+
+    //#region // RENDER DATA
+
+    async function ListLabo_Render(data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let tr = '';
+                        if (data[i] != undefined) {
+                            tr = ListLabo_RenderEach(data[i])
+                        }
+                        document.getElementById(id).insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    function ListLabo_RenderEach(item) {
+
+        let name = `
+            <div class="d-flex ms-2">
+                <div class="icon icon-shape icon-sm me-3 mt-0 text-center">
+                    <img class="avatar avatar-sm m-0" src="${(item.Avatar != '') ? item.Avatar : Master_Default_Pic}" onerror="Master_OnLoad_Error_Image(this)" alt="avatar" />
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="text-xs"> ${item.Code}</span>
+                    <h6 class="text-primary text-sm mb-0 buttonEditClass cursor-pointer">${item.Name}</h6>
+                </div>
+            </div>
+        `
+        let button = ListLabo_RenderEach_Button(item);
+        let sign = item.SignValue != ""
+            ? ` <img class="avatar avatar-sm m-0" src="${(item.SignValue != '') ? item.SignValue : Master_Default_Pic}" alt="avatar" />`
+            : ``
+
+        let tr = `
+            <tr id="LaboList_${item.ID}" class="vt-number laboListItem" data-id="${item.ID}">
+                <td class="d-none">${item.ID}</td>
+                <td class="vt-number-order"></td>
+                <td >${name}</td>
+                <td >${item.Phone}</td>
+                <td >${item.Person}</td>
+                <td >${item.Mail}</td>
+                <td class="text-center">${formatNumber(item.AmountFund)}</td>
+                <td class="text-center">${sign}</td>
+                <td class="ListLabo_rowBtnHandle"><div class="text-nowrap">${button}</div></td>
+            </tr>
+        `
+        return tr;
+    }
+
+    function ListLabo_RenderEach_Button(item) {
+        let buttons = [];
+        if (item.DeleteButton == 1) {
+            buttons.push(`<button class="buttonGrid" ><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>`)
+        }
+        buttons.push(`<button class="buttonGrid" ><i class="buttonSignClass vtt-icon vttech-icon-signature"></i></button>`)
+        return Render_Button_Grid(buttons);
+    }
+
+    //#endregion
+
+    //#region // HANDLE
+
+    function ListLabo_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ListLabo_Delete_Execute(id); }, function () { });
+    }
+
+    function ListLabo_Delete_Execute(id) {
+        AjaxLoad(url = "/Labo/Supplier/SupplierList/?handler=DeleteItem"
+            , data = { 'id': id }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    ListLabo_Load();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function LaboList_Signature(id) {
+        if (id != 0) {
+            ListLabo_Signature(id);
+        }
+    }
+
+    async function ListLabo_Signature(id) {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/Labo/Supplier/SupplierList/?handler=UpdateSignLaboSupplier"
+                , data = { 'id': id, 'sign': Signature_ResultSignation }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result == "1") {
+                        ListLabo_Load(CurrentID_Supplier);
+                    }
+                }
+            );
+
+        }
+
+    }
+
+    //#endregion
+
+
+    //#region // Event
+
+    function ListLabo_OpenDetail() {
+        $('#list_labo').hide();
+        $('#detail_labo').show();
+    }
+
+    function ListLabo_CloseDetail() {
+        $('#list_labo').show();
+        $('#detail_labo').html('');
+        $('#detail_labo').hide('');
+    }
+
+    function ListLabo_Add() {
+        $("#detail_labo").load("/Labo/Supplier/SupplierDetail" + "?ver=" + versionofWebApplication);
+        ListLabo_OpenDetail();
+        return false;
+    }
+
+    function ListLabo_Edit(CurrentID) {
+        $('#NameNCC').html("Nhà cung cấp labo");
+        $("#detail_labo").load("/Labo/Supplier/SupplierDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        ListLabo_OpenDetail();
+        return false;
+    }
+
+    //#endregion
+
+
+</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js');</script>
+<style>
+    .laboListItem:hover .buttonEditClass, .buttonDeleteClass {
+        opacity: 1 !important;
+    }
+</style>

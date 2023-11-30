@@ -29,13 +29,19 @@
                     <table class="table">
                         <thead class="thead-primary">
                             <tr class="text-center">
-                                <th>&nbsp;</th>
+                                <th>
+                                    <div class="form-check text-lg d-inline-flex p-2">
+                                        <input id="IPT_ckbChooseAll" class="form-check-input m-0 text-sm IPT_ckbRowItem" name="ticketAll" type="checkbox" checked="" onchange="event.preventDefault();return IPT_SelectAll();">
+                                        <label class="form-check-label text-sm font-weight-bold"></label>
+                                    </div>
+                                </th>
                                 <th>&nbsp;</th>
                                 <th>Product</th>
                                 <th>Unit Price</th>
                                 <th>Price Discounted (A)</th>
                                 <th>Quantity (B)</th>
                                 <th>Total (C=AxB)</th>
+                                <th>&nbsp;</th>
                             </tr>
                         </thead>
                         <tbody id="crt_dtContentBody">
@@ -52,9 +58,9 @@
                         <span>Subtotal</span>
                         <span id="crt_subTotal">0</span>
                     </p>
-@*                    <p class="d-flex">
-                        <span>Delivery</span>
-                        <span>$0.00</span>
+                    @*                    <p class="d-flex">
+                    <span>Delivery</span>
+                    <span>$0.00</span>
                     </p>*@
                     <p class="d-flex">
                         <span>Discount</span>
@@ -86,11 +92,11 @@
     </div>
 </section>
 <script type="text/javascript">
-	//#region //INIT
+    //#region //INIT
     var crt_DataCart = {};
     var crt_DataPro = {};
     $(document).ready(function () {
-        
+
         crt_DataCart = cart_getCartList();
         crt_loadDataSale();
         crt_loadPro();
@@ -119,12 +125,12 @@
                     let datas = JSON.parse(_rr);
                     let dataMain = datas.Table1;
                     let data = Object.values(crt_DataCart);
-                    if(id == 0) {
+                    if (id == 0) {
                         $('#crt_dtContentBody').empty();
                         crt_DataPro = dataMain.reduce((pre, arr) => {
                             pre[arr.ID] = arr; return pre;
                         }, {});
-                        
+
                         crt_render(data, 'crt_dtContentBody')
                     }
                     else {
@@ -134,7 +140,7 @@
                         let tr = crt_renderEach(item);
                         let ele = $(`#crt_row${item.ID}`);
                         if (ele.length > 0) {
-                           
+
                             ele.replaceWith(tr);
                         }
                         else {
@@ -144,7 +150,7 @@
                         crt_cartEvent();
                     }
                     crt_calTotal();
-                   
+
                 }
             }
             , failurefunc = function () {
@@ -161,7 +167,7 @@
         new Promise(resolve => {
             var myNode = document.getElementById(id);
             if (myNode != null) {
-               
+
                 let stringContent = '';
                 if (data && data.length > 0) {
                     for (let i = 0; i < data.length; i++) {
@@ -183,28 +189,37 @@
         let discount = `<spa>(- formatNumber(item.DiscountAmount) <span class="fw-bold text-secondary">${item.DiscountPercent > 0 ? item.DiscountPercent + '%' : ''}</span>)<span>`
         let total = Number(priceDiscounted) * Number(item.Quantity);
         return ` <tr id="crt_row${item.ID}" class="text-center" data-id="${item.ID}">
-                    <td class="product-remove"><a class="crt_btnDel"><span class="icon-close"></span></a></td>
+                        <td class="product-remove">
+                            <div class="form-check text-lg d-inline-flex p-2">
+                                <input id="IPT_ckbChooseAll" class="form-check-input m-0 text-sm IPT_ckbRowItem" name="ticketAll" type="checkbox" checked="" onchange="event.preventDefault();return IPT_SelectAll();">
+                                <label class="form-check-label text-sm font-weight-bold"></label>
+                            </div>
 
-                                <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
+                       
 
-                    <td class="product-name">
-                            <h3>${objPro.Name}</h3>
-                                <p class="text-secondary">${objPro.Description}</p>
-                    </td>
+                        </td>
 
-                        <td class="price">${formatNumber(item.Price)}/${objPro.Unit}</td>
-                    <td class="price">${formatNumber(priceDiscounted)}</td>
+                                    <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
 
-                    <td class="quantity">
-                        <div class="input-group mb-3">
-                                <span class="input-group-text crt_btnPlus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
-                            <input type="text" name="quantity" id="crt_txtQuantity${item.ID}" class="quantity crt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
-                                    <span class="input-group-text crt_btnMinus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
-                        </div>
-                    </td>
+                        <td class="product-name">
+                                <h3>${objPro.Name}</h3>
+                                    <p class="text-secondary">${objPro.Description}</p>
+                        </td>
 
-                            <td id="crt_lbTotal${item.ID}" class="total">${formatNumber(total)}</td>
-                </tr><!-- END TR-->`
+                            <td class="price">${formatNumber(item.Price)}/${objPro.Unit}</td>
+                        <td class="price">${formatNumber(priceDiscounted)}</td>
+
+                        <td class="quantity">
+                            <div class="input-group mb-3">
+                                    <span class="input-group-text crt_btnPlus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
+                                <input type="text" name="quantity" id="crt_txtQuantity${item.ID}" class="quantity crt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
+                                        <span class="input-group-text crt_btnMinus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
+                            </div>
+                        </td>
+
+                                <td id="crt_lbTotal${item.ID}" class="total">${formatNumber(total)}</td>
+                                    <td> <a class="crt_btnDel"><span class="icon-close"></span></a></td>
+                    </tr><!-- END TR-->`
     }
 
     function crt_cartEvent() {
@@ -213,8 +228,8 @@
             let id = Number($(this).closest('tr').attr("data-id"));
             crt_deleteCart(id);
 
-        });       
-        
+        });
+
         $('.crt_btnPlus').unbind('click').on('click', function (e) {
             e.preventDefault();
             let id = Number($(this).closest('tr').attr("data-id"));
@@ -224,8 +239,8 @@
             $(`#crt_txtQuantity${id}`).val(formatNumber(quant));
             $(`#crt_txtQuantity${id}`).attr('value', quant);
             $(`#crt_txtQuantity${id}`).change();
-        });        
-        
+        });
+
         $('.crt_btnMinus').unbind('click').on('click', function (e) {
             e.preventDefault();
             let id = Number($(this).closest('tr').attr("data-id"));
@@ -242,7 +257,7 @@
             let quant = Number($(`#crt_txtQuantity${id}`)[0].value.replace(',', ''));
             cart_editCart({
                 ID: id
-                ,Quantity: quant
+                , Quantity: quant
             });
             let item = crt_DataCart[id];
             item.Quantity = quant;
@@ -336,16 +351,16 @@
                     for (let i = 0; i < data.length; i++) {
                         let item = data[i];
                         let tr = `<div class="col-md-3">
-                                        <div class="menu-entry">
-                                                <a href="/ProductDetail/${item.ID}" class="img" style="background-image: url(${item.Image || '/default.png'});"></a>
-                                            <div class="text text-center pt-4">
-                                                    <h3><a href="/ProductDetail/${item.ID}">${item.Name}</a></h3>
-                                                    <p>${item.Description}</p>
-                                                <p class="price"><span>${formatNumber(item.PriceToSale)}</span></p>
-                                                        <p><a class="btn btn-primary btn-outline-primary crt_btnAddCart" data-id="${item.ID}" data-typeid="${item.TypeID}" data-price="${item.PriceToSale}">Add to Cart</a></p>
+                                            <div class="menu-entry">
+                                                    <a href="/ProductDetail/${item.ID}" class="img" style="background-image: url(${item.Image || '/default.png'});"></a>
+                                                <div class="text text-center pt-4">
+                                                        <h3><a href="/ProductDetail/${item.ID}">${item.Name}</a></h3>
+                                                        <p>${item.Description}</p>
+                                                    <p class="price"><span>${formatNumber(item.PriceToSale)}</span></p>
+                                                            <p><a class="btn btn-primary btn-outline-primary crt_btnAddCart" data-id="${item.ID}" data-typeid="${item.TypeID}" data-price="${item.PriceToSale}">Add to Cart</a></p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>`
+                                        </div>`
                         stringContent = stringContent + tr;
                     }
                 }
@@ -370,7 +385,7 @@
                 Price: PriceToSale
             }
             cart_addToCart(item);
-            crt_DataCart = cart_getCartList();debugger
+            crt_DataCart = cart_getCartList(); debugger
             crt_loadPro(productID);
             crt_calTotal();
         });

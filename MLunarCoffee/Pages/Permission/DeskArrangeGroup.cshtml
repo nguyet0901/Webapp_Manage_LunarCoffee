@@ -1,0 +1,329 @@
+﻿@page
+@model MLunarCoffee.Pages.Permission.DeskArrangeGroupModel
+@{ Layout = null;
+}
+
+<div class="desk_arrange_group row my-3">
+    <div class="col-lg-3">
+        <div class="position-sticky top-1 z-index-3 mb-2">
+            <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column bg-white border-radius-lg" id="Permis_Group">
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-9 mt-lg-0 mt-0">
+        <div class="pt-0">
+            <div class="d-flex mb-2">
+                <div class="col-auto my-auto py-1">
+                    <span id="Permis_HeaderName" class="badge badge-md bg-gradient-warning"></span>
+                </div>
+                <div class="ms-auto my-auto py-1">
+                    <button id="btnPermis_Edit" class="btn bg-gradient-dark btn-sm m-0 Permission_btnEdit badge badge-md" onclick="Permis_EditBegin()">@Local["Chỉnh sửa"]</button>
+                    <div id="Permis_EditArea" class="d-none">
+                        <button class="btn bg-gradient-dark btn-sm m-0 badge badge-md" onclick="Permis_Cancel()">@Local["Hủy"]</button>
+                        <button id="btnPermis_Save" class="btn bg-gradient-primary btn-sm m-0 badge badge-md" onclick="Permis_SaveExecute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+            <div id="loaderList" class="waitingdiv text-center w-100 mt-2" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="border-dashed border-radius-md  border-1 border-secondary px-2 py-4" id="TabDeskDesign">
+                <div>
+                    <h6 class="fw-bold text-md m-2 text-gradient text-primary">Menu</h6>
+                    <div class="row flex-grow-1 mb-4 text-center">
+                        <ul class="nav nav-pills p-2 bg-transparent" id="item_menu_desk"></ul>
+                    </div>
+                </div>
+                <hr class="horizontal dark mt-2 mb-5">
+                <div>
+                    <h6 class="fw-bold text-md m-2 text-gradient text-primary">Point</h6>
+                    <div class="row flex-grow-1 mb-4 text-center">
+                        <ul class="nav nav-pills p-2 bg-transparent" id="item_point_desk"></ul>
+                    </div>
+                </div>
+                <hr class="horizontal dark mt-2 mb-5">
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/assests/library/jquery-ui.js"></script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+    var PermisCurrentGroup;
+    var Permis_DeskData;
+    var data_Menu_Desk_Item = [];
+    var data_Item_Render = {};
+    var data_Menu_Desk_Item_Temp = {};
+    var data_Point_Desk_Item = [];
+    var data_Point_Render = {};
+    var data_Point_Desk_Item_Temp = {};
+
+    $(document).ready(function () {
+        Permis_LoadDeskGroup();
+        Permis_LoadFullDataDesk();
+    });
+    function Permis_LoadDeskGroup() {
+        AjaxLoad(url = "/Permission/DeskArrangeGroup/?handler=LoadData"
+            , data = {
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    Permis_DeskData = data;
+                    Permis_DeskGroupRender(Permis_DeskData, 'Permis_Group');
+                    Permis_DeskGroupEvent();
+                    $('#Permis_Group a:first').tab('show');
+                }
+            });
+        return false;
+    }
+
+    function Permis_DeskGroupRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent + '<li class="nav-item" role="presentation">'
+                        + '<a data-id="' + item.ID + '" class="permission_group nav-link item-menu cursor-pointer" data-bs-toggle="tab">'
+                        + item.Name
+                        + '</a>'
+                        + '</li>'
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function Permis_DeskGroupEvent() {
+        $(".permission_group").on('shown.bs.tab', function (e) {
+            $('.permission_group').removeClass('active');
+            $(this).addClass('active');
+            let ID = $(this).attr("data-id");
+            let x = Permis_DeskData.filter(word => word["ID"] == ID)[0];
+            if (x != undefined) {
+                let Name = x.Name;
+                $('#Permis_HeaderName').html(Name)
+                PermisCurrentGroup = ID;
+                Permis_Cancel();
+            }
+        });
+    }
+
+    function Permis_DeskItemEvent() {
+        if (!$('#Permis_EditArea').hasClass('d-none')) {
+            $(".menu_item").click(function (event) {
+                event.preventDefault();
+                if (!$(this).hasClass('active')) {
+                    $(this).addClass('active  text-primary');
+                    $(this).removeClass('opacity-5');
+                } else {
+                    $(this).removeClass('active  text-primary');
+                    $(this).addClass('opacity-5');
+                }
+            });
+            $(".point_item").click(function (event) {
+                event.preventDefault();
+                if (!$(this).hasClass('active')) {
+                    $(this).addClass('active  text-primary');
+                    $(this).removeClass('opacity-5');
+                } else {
+                    $(this).removeClass('active  text-primary');
+                    $(this).addClass('opacity-5');
+                }
+            });
+        }
+    }
+
+
+    function Permis_EditBegin() {
+        event.preventDefault();
+        if (!$('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').addClass('d-none');
+        if ($('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').removeClass('d-none');
+        $('#item_menu_desk').sortable({ disabled: false });
+        $('#item_point_desk').sortable({ disabled: false });
+        Permis_DeskItemEvent();
+    }
+
+    function Permis_Cancel() {
+        if (!$('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').addClass('d-none');
+        if ($('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').removeClass('d-none');
+        $('#item_menu_desk').sortable({ disabled: true });
+        $('#item_point_desk').sortable({ disabled: true });
+        Permis_LoadDeskItemGroup(PermisCurrentGroup);
+        $(".menu_item").off('click');
+        $(".point_item").off('click');
+        return false;
+    }
+
+    function Permis_SaveExecute() {
+        let node_item = $('#item_menu_desk .menu_item');
+        for (i = 0; i < node_item.length; i++) {
+            let id = $(node_item[i]).attr('data-id');
+            data_Menu_Desk_Item[id].Index = i + 1;
+        }
+        data_Item_Render = Object.values(data_Menu_Desk_Item);
+        data_Item_Render.sort(function (a, b) { return a.Index - b.Index });
+        let tokenFunction = '';
+        data_Item_Render.forEach(element => {
+            if ($('#menu_' + element.ID).hasClass('active')) {
+                tokenFunction += element.ID + ','
+            }
+        });
+
+        let node_point = $('#item_point_desk .point_item');
+        for (i = 0; i < node_point.length; i++) {
+            let id = $(node_point[i]).attr('data-id');
+            data_Point_Desk_Item[id].Index = i + 1;
+        }
+        data_Point_Render = Object.values(data_Point_Desk_Item);
+        data_Point_Render.sort(function (a, b) { return a.Index - b.Index });
+        let tokenPoint = '';
+        data_Point_Render.forEach(element => {
+            if ($('#point_' + element.ID).hasClass('active')) {
+                tokenPoint += element.ID + ','
+            }
+        });
+        AjaxLoad(url = "/Permission/DeskArrangeGroup/?handler=ExecuteData"
+            , data = {
+                tokenFunction: tokenFunction,
+                tokenPoint: tokenPoint,
+                CurrentID: PermisCurrentGroup
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    Permis_LoadDeskItemGroup(PermisCurrentGroup);
+                }
+            });
+        $(".menu_item").off('click');
+        $(".point_item").off('click');
+        if (!$('#Permis_EditArea').hasClass('d-none')) $('#Permis_EditArea').addClass('d-none');
+        if ($('#btnPermis_Edit').hasClass('d-none')) $('#btnPermis_Edit').removeClass('d-none');
+        $('#item_menu_desk').sortable({ disabled: true });
+        $('#item_point_desk').sortable({ disabled: true });
+
+        return false;
+    }
+
+    function Permis_LoadFullDataDesk() {
+        AjaxLoad(url = "/Permission/DeskArrangeGroup/?handler=LoadDeskFunctionItem"
+            , data = {
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    data_Menu_Desk_Item_Temp = data.Table;
+                    data_Point_Desk_Item_Temp = data.Table1;
+                }
+            });
+
+    }
+    function Permis_LoadDeskItemGroup(groupID) {
+        AjaxLoad(url = "/Permission/DeskArrangeGroup/?handler=LoadataDeskItemByGroup"
+            , data = {
+                groupID: groupID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+
+
+
+                    let data = JSON.parse(result);
+                    let data_Item_ = data.Table;
+                    let data_Point_ = data.Table1;
+                    data_Item_Render = data_Item_.concat(data_Menu_Desk_Item_Temp);
+                    for (var i = 0; i < data_Item_Render.length; ++i) {
+                        for (var j = i + 1; j < data_Item_Render.length; ++j) {
+                            if (data_Item_Render[i].ID === data_Item_Render[j].ID)
+                                data_Item_Render.splice(j--, 1);
+                        }
+                        key = data_Item_Render[i].ID;
+                        data_Menu_Desk_Item[key] = data_Item_Render[i];
+                    }
+
+                    let data_Text_Point=[]
+                    for (i = 0; i < data_Point_Desk_Item_Temp.length; i++) {
+                        key = data_Point_Desk_Item_Temp[i].ID;
+                        data_Text_Point[key] = data_Point_Desk_Item_Temp[i];
+                    }
+                    data_Point_Render = data_Point_.concat(data_Point_Desk_Item_Temp);
+                    for (var i = 0; i < data_Point_Render.length; ++i) {
+                        for (var j = i + 1; j < data_Point_Render.length; ++j) {
+                            if (data_Point_Render[i].ID === data_Point_Render[j].ID)
+                                data_Point_Render.splice(j--, 1);
+                        }
+                        key = data_Point_Render[i].ID;
+                        data_Point_Desk_Item[key] = data_Point_Render[i];
+                        data_Point_Desk_Item[key].Note = data_Text_Point[key].Note;
+                    }
+                    Permis_DeskRenderMenuItem(data_Item_Render, 'item_menu_desk');
+                    Permis_DeskRenderPointItem(data_Point_Render, 'item_point_desk');
+                    $('.menu_item').removeClass('active  text-primary');
+                    $('.menu_item').addClass('opacity-5');
+                    $('.point_item').removeClass('active  text-primary');
+                    $('.point_item').addClass('opacity-5');
+                    data_Item_.forEach((element) => {
+                        $('#menu_' + element.ID).addClass('active text-primary');
+                        $('#menu_' + element.ID).removeClass('opacity-5');
+                    });
+                    data_Point_.forEach((element) => {
+                        $('#point_' + element.ID).addClass('active text-primary');
+                        $('#point_' + element.ID).removeClass('opacity-5');
+                    });
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#TabDeskDesign").hide();
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#TabDeskDesign").show();
+                $("#loaderList").hide();
+            });
+    }
+    function Permis_DeskRenderMenuItem(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let name = Outlang[item.NameLangKey] != undefined ? Outlang[item.NameLangKey] : item.Name;
+                    let tr = '<li class="nav-item mx-2 w-15">'
+                        +'<div class="text-center"> <a id = "menu_' + item.ID + '" data-id="' + item.ID + '" class="menu_item opacity-5 item nav-link cursor-pointer bg-white m-1"> '
+                        + '<i class="' + item.Avatar + ' text-md fs-3 pe-1" ></i>'
+                        + '</a></div><p class="text-sm">' + Outlang[item.NameLangKey] + '</p></li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            ToolPopper();
+        }
+    }
+    function Permis_DeskRenderPointItem(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<li class="nav-item mx-2 w-15">'
+                        + '<div class="text-center pe-2"> <a id="point_' + item.Type + '"  data-id="' + item.Type + '" class="point_item opacity-5 px-2 mx-1 item nav-link cursor-pointer bg-white d-inline-block fs-6 w-100"> '
+                        + item.Description
+                        + '</a></div><p class="text-sm">' + Outlang[item.NoteLangKey] + '</p></li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            ToolPopper();
+        }
+    }
+</script>

@@ -1,0 +1,116 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Manufacture.ChairDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-0 px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Giường/ghế"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết giường/ghế"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formChairDetail">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên giường ghế"]</label>
+                            <input id="chairName" name="name" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button id="btnDeleteChair" class="btn bg-gradient-danger mt-2 me-2 d-none" form="formChairDetail" onclick="event.preventDefault(); return ChairDeleteData()">@Local["Xóa"]</button>
+                        <button class="btn btn-secondary" form="formChairDetail" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button form="formChairDetail" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault();return ChairExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+        var ser_CurrentID = "@Model._CurrentID";
+        var ser_RoomID = "@Model._RoomID";
+        var ser_LevelIDOfCurrent = "@Model._LevelID";
+        $(document).ready(function () {
+            if (ser_CurrentID != "0")
+                ChairLoadDataUpdate();
+        });
+        function ChairExcuteData() {
+            let data = new Object();
+            data.Name = $('#chairName').val() ? $('#chairName').val() : "";
+            data.IdRoom = ser_RoomID;
+            $('#formChairDetail').form('validate form');
+            if ($('#formChairDetail').form('is valid')) {
+                AjaxLoad(url = "/Setting/Manufacture/ChairDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_CurrentID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "1") {
+                            let data = JSON.parse(result);
+                            if (data[0].RESULT != '0') {
+                                notiSuccess();
+                                $('#DetailModal').modal('hide');
+                                $("#DetailModal_Content").html('');
+                                Manu_UpdateElement(data, 'bed');
+                            }
+                            else {
+                                $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                            }
+                            //if (typeof Manufecture_LoadDetail_Item !== 'undefined' && $.isFunction(Manufecture_LoadDetail_Item)) Manufecture_LoadDetail_Item(ser_LevelIDOfCurrent);
+                        }
+                        
+                    });
+            }
+            return false;
+        }
+        function ChairLoadDataUpdate() {
+            AjaxLoad(url = "/Setting/Manufacture/ChairDetail/?handler=Loadata"
+                , data = { id: ser_CurrentID }, async = true, error = null
+                , success = function (result) {
+                    let dataChairDetail = JSON.parse(result);
+                    $('#chairName').val((dataChairDetail[0].BedName));
+                    if (dataChairDetail[0].DeleteButton == 0) {
+                        $("#btnDeleteChair").removeClass('d-none');
+                    }
+                });
+        }
+
+        function ChairDeleteData() {
+            const promise = notiConfirm();
+            promise.then(function () { ChairExcute_DeleteData(); }, function () { });
+        }
+        function ChairExcute_DeleteData() {
+            AjaxLoad(url = "/Setting/Manufacture/ChairDetail/?handler=DeleteItem"
+                , data = { CurrentID: ser_CurrentID }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        Manu_UpdateElement(JSON.parse(result),'bed');
+                    } else {
+                        notiError_SW();
+                    }
+                });
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+        }
+</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+

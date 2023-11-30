@@ -1,0 +1,182 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Icon.SettingIconDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require_notasync('/js/AppCustomer/FileUpload.js', true);</script>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Cài đặt"] icon</h6>
+                            <p class="text-sm mb-0">@Local["Chỉnh sửa"] icon</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <div class="dropdown dropdown-small dropdown-categories dropdown-hover" data-turbolinks="false">
+                            <a href="#" data-turbolinks="false" data-toggle="dropdown">
+                                <i class="text-lg m-2 mt-0 fas fa-info-circle" aria-hidden="true"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end pt-2 pb-0 px-2 ms-n4 col-w-300">
+                                <li class="mb-2">
+                                    <div class="d-flex py-1">
+                                        <div class="justify-content-center text-dark">
+                                            <p class="text-sm my-0 py-0">- @Local["Định dạng hình"]: jpg, png</p>
+                                            <p class="text-sm my-0 py-0">- @Local["Tối đa"]: 5Mb</p>
+                                            <p class="text-sm my-0 py-0">- @Local["Hình không nền"]</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3 bg-gray-200 rounded-2 pt-2 pb-4">
+                    <div class="field col-12 col-lg-6 p-1">
+                        <div class="field col-12">
+                            <div>
+                                <span class="text-sm text-gradient text-warning mb-0" id="">40 x 40 px</span>
+                                <span class="text-dark text-sm mb-0 ps-2">@Local["Hình ảnh"] icon (@Local["Nền sáng"])</span>
+                                <hr class="horizontal dark mt-0 mb-2">
+                            </div>
+                            <div class="avatar avatar-xxl position-relative d-inline-block">
+                                <img id="ID_ImgDark" class="border-radius-md border border-1 border-gray" alt="team-2" src="#" onerror="Master_OnLoad_Error_Image(this)">
+                                <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="ID_InputDark" accept="image/*" type="file" name="files[]" />
+                                <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0 " id="ID_BtnDark">
+                                    <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2">
+                                        <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-lg-6 d-flex justify-content-center p-1">
+                        <div class="field col-12">
+                            <div>
+                                <span class="text-sm text-gradient text-warning mb-0">40 x 40 px</span>
+                                <span class="text-dark text-sm mb-0 ps-2">@Local["Hình ảnh"] icon (@Local["Chế độ nền tối"])</span>
+                                <hr class="horizontal dark mt-0 mb-2">
+                            </div>
+                            <div class="avatar avatar-xxl position-relative d-inline-block">
+                                <img id="ID_ImgLight" class="border border-radius-md border border-1 border-gray" src="#" alt="team-2" onerror="Master_OnLoad_Error_Image(this)">
+                                <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="ID_InputLight" accept="image/*" type="file" name="files[]" />
+                                <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0" id="ID_BtnLight">
+                                    <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2">
+                                        <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="IDetail_Executed();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let Ser_IconID = "@Model._CurrentID"
+    let Ser_SysRule = {
+            size: 51200,
+            width: 40,
+            height: 40,
+            format: ['jpg', 'png']
+    }
+    let ID_ImgDark = '', ID_ImgLight = '';
+    let ID_UrlImg = "/Api/Upload/Upload?Type=ClientApp";
+    //#region //Init
+    $(document).ready(function () {
+        IDetail_Load();
+        IDetail_Event();
+    })
+
+    function IDetail_Load () {
+        AjaxLoad(url = "/Setting/AppCustomer/Icon/SettingIconDetail/?handler=LoadData"
+            , data = {
+                "CurrentID": Ser_IconID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        ID_ImgDark = data[0].ImageLink, ID_ImgLight = data[0].ImageLinkR;
+                        $("#ID_ImgDark").attr("src", data[0].ImageLink);
+                        $("#ID_ImgLight").attr("src", data[0].ImageLinkR);
+                    }
+                } else notiError_SW()
+            }
+        )
+    }
+    function IDetail_Event () {
+        UploadImage({
+            inputFile: 'ID_InputDark'
+            , btnInput: 'ID_BtnDark'
+            , avatar: 'ID_ImgDark'
+            , condition: Ser_SysRule
+            , success: (data) => {
+            }
+            , error: (err) => {
+            }
+        })
+        UploadImage({
+            inputFile: 'ID_InputLight'
+            , btnInput: 'ID_BtnLight'
+            , avatar: 'ID_ImgLight'
+            , condition: Ser_SysRule
+            , success: (data) => {
+            }
+            , error: (err) => {
+            }
+        })
+    }
+
+    //#endregion
+
+    //#region //Executed
+
+    async function IDetail_Executed () {
+        let ImgDark = $("#ID_InputDark")[0].files.length != 0 ? await AjaxUpload_Image(ID_UrlImg, 'ID_InputDark') : ID_ImgDark;
+        let ImgLight = $("#ID_InputLight")[0].files.length != 0 ? await AjaxUpload_Image(ID_UrlImg, 'ID_InputLight') : ID_ImgLight;
+
+        if (ImgDark != '' && ImgLight != '') {
+            AjaxLoad(url = "/Setting/AppCustomer/Icon/SettingIconDetail/?handler=Executed"
+                , data = {
+                    "CurrentID": Ser_IconID
+                    , "ImageLink": ImgDark
+                    , "ImageLinkR": ImgLight
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        CloseModal();
+                        notiSuccess();
+                        IList_Load();
+                    } else notiError_SW()
+                }
+            )
+        } else {
+            notiWarning("@Local["Kiểm tra dữ liệu"]");
+        }
+    }
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

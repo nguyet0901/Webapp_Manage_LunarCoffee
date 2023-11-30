@@ -1,0 +1,665 @@
+﻿@page
+@model MLunarCoffee.Pages.Print.print
+@{
+    Layout = null;
+}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script>js_require_notasync('/js/TableToExcel/TableToExcel.js', true);</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <div class="ps-0 p-3 pb-1">
+                <div class="d-lg-flex mb-2 mb-lg-0" id="printf_event">
+                    <div class="w-lg-30 col-auto my-auto">
+                        <div class="h-100">
+                            <div class="field col-12 mb-2">
+                                <div class="ui fluid search selection dropdown form-control" id="printf_From" onchange="Printf_Onchange()">
+                                    <input type="hidden" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .@Local["Mẫu"]</div>
+                                    <div id="ccbprintf_From" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row m-0 gap-2">
+                            <div class="col-12 col-lg col-sm flex-grow-1 px-0 d-none" id="wrapper-exchangerate">
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text w-auto p-0 ps-2">1</span>
+                                    <input id="currency" type="text" value="USD" class="form-control" placeholder="eg .@Local["Tiền tệ"]">
+                                    <span class="input-group-text w-auto p-0"> = </span>
+                                    <input id="exchange-rate" type="text" class="form-control" placeholder="eg .@Local["Tỷ giá"]">
+                                    <span id="btn_exChangeRate" onclick="enterExchangeRate();" class="input-group-text cursor-pointer w-auto px-2">
+                                        <i class="fa-angle-double-right fas"></i>
+                                        <div class="spinner-border spinner-border-sm" style="width: 0.7rem; height: 0.7rem; display: none;"></div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg col-sm flex-grow-1 px-0 d-none" id="printf_copydiv">
+                                <div class="field input-group mb-2 d-flex flex-grow-1">
+                                    <span class="input-group-text w-40">@Local["Bản sao"]</span>
+                                    <input id="printf_copy" type="number" class="form-control" value="1" step="1" min="0">                            
+                                </div>  
+                            </div>
+                        </div> 
+                    </div>
+                    <div class="ms-auto my-auto mt-1 me-n2">
+                        <button type="button" class="btn btn-sm btn-secondary mb-0" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="per_getLinkAPIForm" type="button" class="btn btn-sm bg-gradient-primary mb-0" onclick="event.preventDefault();Printf_GetLink()">@Local["Xuất liên kết"]</button>
+                        <button type="button" class="btn btn-sm bg-gradient-primary mb-0" onclick="event.preventDefault();Printf_PrintConfirm(1)">@Local["In"]</button>
+                        <button type="button" class="btn btn-sm bg-gradient-primary mb-0" onclick="event.preventDefault();Printf_PrintConfirm(2)">@Local["In và đóng"]</button>
+                        <button id="per_exportPrintToXlsx" type="button" class="btn btn-sm bg-gradient-primary  mb-0"
+                                onclick="event.preventDefault();Printf_Printexcel()">
+                            xlsx
+                        </button>
+                        <button id="per_exportPrintToXls" type="button" class="btn btn-sm bg-gradient-primary mb-0 "
+                                onclick="event.preventDefault();Printf_Printxls()">
+                            xls
+                        </button>
+
+                    </div>
+                </div>
+                <div class="mt-n1">
+                    <span id="printf_paging" class="text-sm text-info fw-bold "></span>
+                    <span id="printf_dimen" class="text-sm text-danger fw-bold "></span>
+                    <span id="printf_stogerule" class="text-sm text-dark fw-bold ps-1"></span>
+                </div>
+            </div>
+            <div id="PrintfContainer" class="p-3 overflow-auto vttech-checkform  bg-white position-relative  border-dashed border-1 border-secondary border-radius-md d-flex justify-content-center" style=" min-height: 300px;">
+                <div id="PrintfWaiting" class="position-absolute top-0 start-50 translate-middle waitingdiv text-center w-100 mt-5 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                    </div>
+                </div>
+                <div>
+                    <form id="PrintfArea" tabindex="-1" class="w-100 bg-white vttech-checkform">
+                    </form>
+                    <div id="PrintfAreaArrange" tabindex="-1" class="w-100 bg-white">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="/table2excel.js"></script>
+@*<script type="text/javascript" src="/js/Sheetjs/shim.js"></script>
+    <script type="text/javascript" src="/js/Sheetjs/xlsx.js"></script>*@
+
+<script type="text/javascript">
+    let printfd_type = "@Model.Type";
+    let printfd_dfromInt = "@Model.DateFrom";
+    let printfd_dtoInt = "@Model.DateTo";
+    let printfd_id = "@Model.DetailID";
+    let printfd_list = [];
+    let printfd_name = '';
+    let printfd_SignName = '';
+    let printfd_SignCode = 0;
+    let printfd_form = {};
+    let printfd_command = 0;
+    let printfd_heightpx = 0;
+    let printfd_widthpx = 0;
+    let printfd_paging = 0;
+    let printfg_coefficient = 0;
+    let printfd_changesize = 0;
+    var printfd_textAreaHeightBegin = 0;
+    $(document).ready(function () {
+        Printf_LoadForm(printfd_type);
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+        if (printfd_dfromInt != "0" && printfd_dtoInt != "0") {
+            printfd_id = printfd_id + `;${printfd_dfromInt},${printfd_dtoInt}`;
+        }
+        Printf_validation();
+    });
+    function Printf_validation(){
+        $("#printf_event #printf_copy").unbind('change').change(function (){
+            let value = $(this).val() != '' ? Number($(this).val()) : "1";            
+            if(value < 1 || value > 100) {
+                $(this).parent().addClass('error');
+                $("#printf_event .btn").addClass('disabled');
+                $("#printf_From").addClass('disabled');
+            }
+            else {
+                $(this).parent().removeClass('error');
+                $("#printf_event .btn").removeClass('disabled');
+                $("#printf_From").removeClass('disabled');
+            }
+        });
+    }
+    function Printf_LoadForm(type) {
+        AjaxLoad(url = "/Print/print/?handler=LoadInitialize"
+            , data = {
+                'type': type
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    printfd_list = data.Form;
+                    if (printfd_list != undefined && printfd_list.length != 0) {
+                        Load_Combo(printfd_list, "ccbprintf_From", true);
+                        $("#printf_From ").dropdown("refresh");
+                        $("#printf_From ").dropdown("set selected", printfd_list[0].ID);
+
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function Printf_Onchange() {
+        $('#PrintfArea').html('');
+        $("#PrintfArea").attr("tabindex", -1).focus();
+        $('#PrintfArea').removeClass('d-none');
+        let formid = $('#printf_From').dropdown('get value') ? $('#printf_From').dropdown('get value') : 0;
+        let form = printfd_list.filter((word) => { return word.ID == formid });
+        if (form != undefined && form.length == 1) {
+            printfd_command = form[0].CommandID;
+            printfd_form = JSON.parse(form[0].Form);
+            printfd_name = form[0].Name;
+            printfd_SignName = form[0].SignName;
+            printfd_SignCode = form[0].SignCode;
+            Printf_SetDimension(isden = form[0].IssetDimension, isPaging = form[0].IsPaging, wi = form[0].Widthmm, he = form[0].Heightmm, form[0].Watermark, id = 'PrintfArea');
+            Printf_SetDimension(isden = form[0].IssetDimension, isPaging = form[0].IsPaging, wi = form[0].Widthmm, he = form[0].Heightmm, form[0].Watermark, id = 'PrintfAreaArrange');            
+            if(form[0].Heightmm == 0) $("#printf_copydiv").removeClass('d-none');
+            else $("#printf_copydiv").addClass('d-none');
+            let isEnterExchangeRate = form[0].IsEnterExchangeRate;
+            if (isEnterExchangeRate && isEnterExchangeRate == 1) {
+                $("#wrapper-exchangerate").removeClass('d-none');
+            } else $("#wrapper-exchangerate").addClass('d-none');
+            Printf_LoadValue(printfd_command, printfd_id);
+
+            if (Number(form[0].IsPaging) == 1) $('#printf_paging').html('paging');
+            else $('#printf_paging').html('');
+
+            if (Number(form[0].IssetDimension) == 1) $('#printf_dimen').html(form[0].Heightmm + ' mm ' + ' x ' + form[0].Widthmm + ' mm ');
+            else $('#printf_dimen').html('');
+
+            if (form[0].SignName != '') $('#printf_stogerule').html("@Local["Ký hiệu"]: " + form[0].SignName);
+            else $('#printf_stogerule').html('');
+        }
+    }
+    function enterExchangeRate() {
+        let exchangeRate = $("#exchange-rate").val();
+        let valInput1 = $("#currency").val();
+        if (exchangeRate != '' && Number(exchangeRate)) {
+            const dtManual = {
+                exchangeRate: exchangeRate,
+                valExchangeRate: exchangeRate,
+                valCurrency: valInput1
+            };
+            Printf_LoadValue(printfd_command, printfd_id);
+            $("#btn_exChangeRate .fas").hide();
+            $("#btn_exChangeRate").prop("disabled", true);
+            $("#btn_exChangeRate .spinner-border").show();
+            const Timeout = setTimeout(() => {
+                fn_FillManual("PrintfArea", dtManual);
+                $("#btn_exChangeRate .fas").show();
+                $("#btn_exChangeRate").prop("disabled", false);
+                $("#btn_exChangeRate .spinner-border").hide();
+                clearTimeout(Timeout);
+            }, 500);
+        }
+    }
+    function Printf_LoadValue(command, id) {
+        let idint = Number(0), idstring = '';
+        if (!isNaN(id)) idint = Number(id);
+        else idstring = id;
+        AjaxLoad(url = "/Print/print/?handler=LoadData"
+            , data = { 'commandid': command, 'idint': idint, 'idstring': idstring }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let datafield, dtTables = {};
+                if (result != "") {
+                    if (result == "{}") Printf_Render(printfd_form, datafield, dtTables, "PrintfArea");
+                    else {
+
+                        let data = JSON.parse(result);
+                        for (const [key, value] of Object.entries(data)) {
+                            if (key == 'Table') datafield = value;
+                            else {
+                                dtTables[key] = value;
+                            }
+                        }
+                        if (datafield != undefined && datafield.length != 0) {
+                            Printf_Render(printfd_form, datafield, dtTables, "PrintfArea");
+                        }
+                    }
+                }
+            }
+        );
+    }
+    async function Printf_Render(data, datafield, dtTables, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                printfd_changesize = 0;
+                $('#PrintfAreaArrange').html('');
+                if (printfd_paging == 1) {
+                    $('#PrintfArea').addClass('opacity-0');
+                    $('#PrintfWaiting').removeClass('d-none');
+                }
+                else {
+                    $('#PrintfArea').removeClass('opacity-0');
+                    $('#PrintfAreaArrange').addClass('d-none');
+                }
+                fn_RenderForm(myNode, data);
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id, dtManual = '');
+                }
+                if (dtTables != undefined && Object.keys(dtTables).length > 0) {
+                    fn_FillTables(dtTables, item = datafield[0], id = id, dtManual = '');
+                }
+                if (printfd_paging == 1) {
+                    Printf_Paging();
+                }
+                $('.exchange').html('VNĐ');
+                Printf_RenderFormInForm();
+                printf_SetEventSpecial();
+                Printf_SetEventTextarea();
+                Printf_setCheckboxChecked();
+                TableReponsive.Refresh();
+            }
+        })
+    }
+    async function Printf_RenderFormInForm() {
+        if($('#PrintfArea').children().hasClass('row-forminform')){
+            let Data = $('#PrintfArea .row-forminform').children().html() != '' ? JSON.parse($('#PrintfArea .row-forminform').children().html()) : [];
+            if (Data && Data.length != 0){
+                $('.row-forminform').html('');
+                let id = $('.row-forminform').attr('id', 'forminformdiv');
+                let MyNode = document.getElementById('forminformdiv');
+                fn_RenderForm(MyNode, Data);
+            }
+        }
+    }
+    async function Printf_Paging(callback) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                let range = 0;
+
+                $('#PrintfAreaArrange').html('');
+                let rows = $('#PrintfArea').children();
+                let hpx = 0;
+                let totalhpx = 0;
+                let firstheader_el = undefined;
+                let firstheaderhepx = 0;
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].attributes.header != undefined && rows[i].attributes.header.value == 'true') {
+                        firstheader_el = rows[i];
+                        firstheaderhepx = rows[i].offsetHeight;
+                        i = rows.length;
+                    }
+                }
+                for (let i = 0; i < rows.length; i++) {
+                    hpx = rows[i].offsetHeight;
+                    let type = rows[i].attributes.datatype.value;
+                    if (type == "table") {
+                        totalhpx = totalhpx + hpx;
+                        let pagestable = Math.floor(hpx / printfd_heightpx);
+                        pagestable = pagestable != 0 ? (pagestable - 1) : 0
+                        if (totalhpx >= printfd_heightpx) {
+                            if (pagestable == 0) pagestable = 1;
+                        }
+                        totalhpx = ((totalhpx + pagestable * 50) % printfd_heightpx);
+                    }
+                    else {
+
+                        if ((totalhpx + hpx + range) >= printfd_heightpx) {
+
+                            $('#PrintfAreaArrange').append(`<div class="pagebreak breakadded" datatype="pagebreak"></div>`);
+                            if (firstheader_el != undefined) {
+                                var clone = firstheader_el.cloneNode(true);
+                                clone.setAttribute("copy", 1);
+
+                                $('#PrintfAreaArrange').append(clone);
+                                totalhpx = firstheaderhepx + hpx;
+                            }
+                            else {
+                                totalhpx = hpx;
+                            }
+                        }
+                        else {
+                            totalhpx = totalhpx + hpx;
+                        }
+                    }
+                    $('#PrintfAreaArrange').append(rows[i]);
+                }
+                $('#PrintfAreaArrange').removeClass('opacity-0');
+                $('#PrintfAreaArrange').removeClass('d-none');
+
+                $('#PrintfWaiting').addClass('d-none');
+                $('#PrintfArea').addClass('d-none');
+                if (callback != undefined) callback();
+            }, 300);
+            resolve();
+        })
+    }
+    function Printf_SetEventTextarea() {
+        $('.vt-area').each(function () {
+            let value = $(this).val();
+            let newvalue = '';            
+            let objs = value.split(`\\r\\n`);
+            let count = 0;
+            objs.forEach((obj) => {
+                count+=1;
+                if (obj.trim() != "") {
+                    if (count === objs.length) newvalue = newvalue + obj;
+                    else newvalue = newvalue + obj + '\r\n';
+                }
+            });
+            this.value = newvalue;              
+            this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden; resize:none;');
+            printfd_changesize = 1;
+            printfd_textAreaHeightBegin = this.scrollHeight;
+        }).on('input', function () {
+            if(this.value != undefined && this.value == "") this.style.height = printfd_textAreaHeightBegin.toString() + 'px';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+    function printf_SetEventSpecial(){
+        let Check_Table = $('#PrintfArea .hide_table_empty tbody tr');
+        let Check_ColLable = $('#PrintfArea .hide_collable_empty');
+        if (Check_Table.length == 0) {
+            $('#PrintfArea .hide_table_empty').addClass('d-none');
+        }
+        if (Check_ColLable.html() == '') {
+            Check_ColLable.parent().addClass('d-none');
+        }
+    }
+    function Printf_setCheckboxChecked() {
+        let CheckClass = document.getElementsByClassName('vt-checkbox-checked')[0]
+        if (CheckClass != null) {
+            CheckClass.checked = true;
+        }
+    }
+    function Printf_SetDimension (isden, isPaging, wi, he, watermark, id) {
+        if (isden == 1) {
+            printfd_paging = isPaging;
+            if (wi > 0) {
+
+                $('#' + id).css({ "width": wi + "mm", "min-width": wi + "mm", "max-width": wi + "mm" });
+                $('#' + id).removeClass('w-100');
+                printfd_widthpx = $('#' + id).width();
+
+            }
+            else {
+                printfd_widthpx = 0;
+                $('#' + id).addClass('w-100');
+                $('#' + id).removeProp('width');
+            }
+            if (he > 0) {
+                $('#' + id).css({ "height": he + "mm" });
+                $('#' + id).removeClass('h-100');
+                printfd_heightpx = $('#' + id).height();
+                printfg_coefficient = printfd_heightpx / $('#' + id).height();
+            }
+            else {
+                printfd_heightpx = 0;
+                $('#' + id).addClass('h-100');
+                $('#' + id).removeProp('height');
+            }
+
+            if (printfd_widthpx != 0 && printfd_heightpx != 0 && watermark != '') {
+                $('#' + id).css({
+                    "background-image": "url('" + watermark + "')"
+                    , "background-repeat": "repeat"
+                    , "background-position": "center"
+                    , "background-size": `100%`
+                   // , "background-size": `${printfd_widthpx}px ${printfd_heightpx}px`
+                });
+
+                //$('#' + id).attr('style', `background:url('${watermark}') no-repeat center !important ;`);
+            }
+            else {
+                let style = $('#' + id).attr('style') + `background-image:none !important ;`;
+                $('#' + id).attr('style', style);
+            }
+        }
+        else {
+            printfd_paging = 0;
+            printfd_widthpx = 0;
+            printfd_heightpx = 0;
+            $('#' + id).css({
+                'height': '',
+                'min-width': '',
+                'width': '',
+            }).addClass('w-100');
+        }
+    }
+    function Printf_PrintConfirm (Type) {//Type = 1: Print //Type = 2: PrintClose
+        if (typeof ser_MainCustomerID != 'undefined' && ser_MainCustomerID != 0 && printfd_SignCode != 0) {
+            AjaxLoad(url = "/Print/print/?handler=CheckStogeSign"
+                , data = {
+                    "CustomerID": ser_MainCustomerID
+                    , "StogeRule": printfd_SignCode
+                }
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != '0') {
+
+                        const promise = notiConfirm("@Local["Xác nhận"] @Local["In"]: " + printfd_SignName);
+                        promise.then(function () {
+                            if (Type == 1) Printf_Print();
+                            else Printf_PrintClose();
+
+                            Printf_SaveSign(printfd_SignCode);
+                        }, function () { });
+
+                    } else {
+                        if (Type == 1) Printf_Print();
+                        else Printf_PrintClose();
+                    }
+                }
+            );
+        } else {
+            if (Type == 1) Printf_Print();
+            else Printf_PrintClose();
+        }
+    }
+
+    function Printf_Print() {
+        if (printfd_paging == 1) {
+            if (printfd_changesize == 1) {
+                $('#PrintfArea').removeClass('d-none');
+                $('#PrintfArea').addClass('opacity-0');
+                $('#PrintfWaiting').removeClass('d-none');
+                let rows = $('#PrintfAreaArrange').children();
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].attributes.copy == undefined) {
+                        $('#PrintfArea').append(rows[i]);
+                    }
+                }
+                $('#PrintfArea .breakadded').remove();
+                Printf_Paging(function () {
+                    fn_Print(printedid = "PrintfAreaArrange"
+                        , beforefun = function () {
+                            $('#PrintfWaiting').removeClass('d-none');
+                        }
+                        , afterfun = function () {
+                            $('#PrintfWaiting').addClass('d-none');
+                        }
+                    );
+                });
+            }
+            else {
+                fn_Print(printedid = "PrintfAreaArrange"
+                    , beforefun = function () {
+                        $('#PrintfWaiting').removeClass('d-none');
+                    }
+                    , afterfun = function () {
+                        $('#PrintfWaiting').addClass('d-none');
+                    }
+                );
+            }
+        }
+        else {
+            fn_Print(printedid = "PrintfArea"
+                , beforefun = function () {
+                    $('#PrintfWaiting').removeClass('d-none');
+                }
+                , afterfun = function () {
+                    $('#PrintfWaiting').addClass('d-none');
+                }
+            );
+        }
+
+    }
+    function Printf_PrintClose() {
+        if (printfd_paging == 1) {
+            if (printfd_changesize == 1) {
+                $('#PrintfArea').removeClass('d-none');
+                $('#PrintfArea').addClass('opacity-0');
+                $('#PrintfWaiting').removeClass('d-none');
+                let rows = $('#PrintfAreaArrange').children();
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].attributes.copy == undefined) {
+                        $('#PrintfArea').append(rows[i]);
+                    }
+
+                }
+                $('#PrintfArea .breakadded').remove();
+
+                Printf_Paging(function () {
+                    fn_Print(printedid = "PrintfAreaArrange"
+                        , beforefun = function () {
+                            $('#PrintfWaiting').removeClass('d-none');
+                        }
+                        , afterfun = function () {
+                            $('#PrintfWaiting').addClass('d-none');
+                            CloseModal();
+                        }
+                    );
+                });
+            }
+            else {
+                fn_Print(printedid = "PrintfAreaArrange"
+                    , beforefun = function () {
+                        $('#PrintfWaiting').removeClass('d-none');
+                    }
+                    , afterfun = function () {
+                        $('#PrintfWaiting').addClass('d-none');
+                        CloseModal();
+                    }
+                );
+            }
+
+        }
+        else {
+            fn_Print(printedid = "PrintfArea"
+                , beforefun = function () {
+                    $('#PrintfWaiting').removeClass('d-none');
+                }
+                , afterfun = function () {
+                    $('#PrintfWaiting').addClass('d-none');
+                    CloseModal();
+                }
+            );
+        }
+
+    }
+
+    function Printf_SaveSign (StogeSign) {
+        AjaxLoad(url = "/Print/print/?handler=SaveStogeSign"
+            , data = {
+                "CustomerID": ser_MainCustomerID
+                , "StogeSign": StogeSign
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {}
+        );
+    }
+    function Printf_Printxls(){
+        let printElement = $("#PrintfArea").clone();
+        printElement.children(".table.hide-header").find('thead').remove();
+        printElement.find(".tb-border-bottom").find('tr, th').css({
+            'border-bottom': '1px dotted #000'
+        });        
+        printElement.find('input').replaceWith(function () {
+            return $('<div>' + $(this).val() + '</div>');
+        });
+        printElement.find('textarea').replaceWith(function () {
+            return $('<div>' + $(this).val() + '</div>');
+        });
+        let excelTemplate = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">' +
+            '<meta http-equiv=\"content-type\" content=\"application/vnd.ms-excel; charset=UTF-8\">' +
+            '<head>' +
+            '<xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
+            '<x:Name>Sheet1</x:Name>' +
+            '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>' +
+            '</x:ExcelWorksheets></x:ExcelWorkbook></xml>' +
+            '</head>' +
+            '<body>' +
+            printElement.html() +
+            '</body> ' +
+            '</html>';
+        let file = new Blob([excelTemplate], { type: "application/vnd.ms-excel;base64" });
+        window.URL = window.URL || window.webkitURL;
+        let link = window.URL.createObjectURL(file);
+        let a = document.createElement("a");
+        a.download = `${$("#printf_From .text").text()}.xls`
+        a.href = link;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    function Printf_Printexcel() {
+       let table = document.querySelector("#PrintfArea");
+       VTT_TableToExcel.convert(table, { name: `${$("#printf_From .text").text()}.xlsx` });
+    }
+
+    function Printf_GetLink() {
+        let exchangeRate = 0;
+        let valInput1 = 'USD';
+
+        let TemplateID = $('#printf_From').dropdown('get value') ? $('#printf_From').dropdown('get value') : 0;
+        let ID = 0, IDString = '';
+        if (!isNaN(printfd_id)) ID = Number(printfd_id);
+        else IDString = printfd_id;
+        if ($("#wrapper-exchangerate").hasClass("d-none") == false) {
+            exchangeRate = $("#exchange-rate").val();
+            valInput1 = $("#currency").val();
+        }
+
+        AjaxLoad(url = "/Print/print/?handler=EncryptApi"
+            , data = {
+                "TemplateID": TemplateID
+                , "CommanID": printfd_command
+                , "ID": ID
+                , "IDString": IDString
+                , "ExchangeRate": exchangeRate
+                , "Value": valInput1
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    window.open(result, '_blank');
+                }
+                else notiError_SW();
+            }
+        );
+    }
+
+
+</script>
+
+<style>
+    @@media print {
+        .pagebreak {
+            page-break-before: always;
+        }
+    }
+
+    .pagebreak {
+        border: 1px solid red;
+        border-style: dotted;
+    }
+</style>

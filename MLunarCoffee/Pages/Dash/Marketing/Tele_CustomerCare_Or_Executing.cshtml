@@ -1,0 +1,162 @@
+﻿@page
+@model MLunarCoffee.Pages.Dash.Marketing.Tele_CustomerCare_Or_ExecutingModel
+@{
+    Layout = null;
+}
+
+<div class="row" style="background-color: white">
+    <div class="ui segments">
+
+        <div class="ui segment Executed_Main">
+            <div class="" id="Area_Progress" style="width: 40%; background: white;">
+                <div class="example title_dash">
+                    <h2 class="ui header">TELESALE</h2>
+                    <p>Customer Care / Executing</p>
+                </div>
+
+                <div class="ui very relaxed list" id="Area_Progress_List">
+                </div>
+
+            </div>
+            <div id="Area_Bar" style="width: 60%; background: white; padding: 10px">
+                <div class="ui segment _loading_report">
+                    <div class="ui active inverted dimmer">
+                        <div class="ui medium text loader">Loading</div>
+                    </div>
+                    <img class="ui wireframe image" src="/assests/img/Loader/centered.png">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        Dasboard_CustomerCare_Or_Executing_Load();
+    });
+
+    function Dasboard_CustomerCare_Or_Executing_Load() {
+        let _dateFrom = '26-04-2020'//Date.now(); <%--"<%=_dateFrom%>"--%>;
+        let _dateTo='28-04-2021'//Date.now(); <%--"<%=_dateTo%>"--%>;
+        AjaxLoad(url="/Dash/Marketing/Tele_CustomerCare_Or_Executing/?handler=Loadata"
+            , data={'dateFrom': _dateFrom, 'dateTo': _dateTo }
+            , async=true
+            , error=function () {notiError_SW()}
+            , success=function (result) {
+                if (result!="") {
+                    let data=JSON.parse(result)["Table"];
+                    RenderData_ExecuteBar(data, '#Area_Bar');
+                    RenderData_ExecuteProgress(data, 'Area_Progress_List');
+                }
+            }
+ 
+        );
+        return false;
+    }
+
+    function RenderData_ExecuteProgress(data, id) {
+        let data_bar = [];
+        let i = 1;
+        let e = {};
+        for ([key, value] of Object.entries(data[0])) {
+            if (i % 2 == 0) {
+                e['Value2'] = value;
+                data_bar.push(e);
+                e = {};
+            } else {
+
+                e['Key'] = key;
+                e['Value1'] = value;
+            }
+            i++;
+        }
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            var strokeDasharray = 12 * 2 * Math.PI;
+            var offset = strokeDasharray;
+            var percent = 0;
+            var link = '';
+            if (data_bar && data_bar.length > 0) {
+                for (var j = 0; j < data_bar.length; j++) {
+                    let item = data_bar[j];
+                    offset = (item.Value1 == 0) ? (strokeDasharray) : (strokeDasharray - (item.Value2 / item.Value1) * strokeDasharray);
+                    percent = (item.Value1 == 0) ? (0) : (Math.ceil((item.Value2 / item.Value1) * 100));
+                    if (item.Key == 'App') {
+                        link = "/CustomerCare/CustomerCare_RemindAppointment?ver=" + versionofWebApplication;
+                    }
+                    else {
+                        link = "/Marketing/TicketList?ver=" + versionofWebApplication;
+                    }
+                    let tr = ''
+                        + '<div class="item_cercle">'
+                        + '<svg width="40" height="40">'
+                        + '<circle stroke="#03a9f4" stroke-width="3" fill="#8299d859" r="12" cx="20" cy="20"'
+                        + 'style="stroke-dasharray: ' + strokeDasharray + '; stroke-dashoffset: ' + offset + ';" />'
+                        + '<text font-size="9" x="50%" y="50%" text-anchor="middle" stroke="#51c5cf" stroke-width="0" dy="4">' + percent + '%</text>'
+                        + '</svg>'
+                        + '</div>'
+
+                        + '<div class="item_content">'
+                        + '<span class="" style="font-size:11px">' + item.Value2 + '/' + item.Value1 + '</span>'
+                        + '<div class="item_name"><a target="_blank"  href="' + link +'">' + item.Key + '</a></div>'
+                        + '</div>'
+
+                    stringContent = stringContent + '<div class="item">' + tr + '</div>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function RenderData_ExecuteBar(data, id) {
+        let data_bar = [];
+        let i = 1;
+        let e = {};
+        for ([key, value] of Object.entries(data[0])) {
+            if (i % 2 == 0) {
+                e['Value2'] = value;
+                data_bar.push(e);
+                e = {};
+            } else {
+
+                e['Key'] = key;
+                e['Value1'] = value;
+            }
+            i++;
+        }
+        RenderReport_BranchBar_2Column(data_bar, "Key", "Value1", "Value2", 'TOTAL', 'EXECUTED', id)
+    }
+
+</script>
+<style type="text/css">
+    .Executed_Main {
+        display: flex;
+        width: 100%;
+    }
+
+    .item_cercle {
+        width: 40px;
+        height: 40px;
+        display: inline-block;
+    }
+
+    .item_content {
+        display: inline-block;
+        vertical-align: super;
+    }
+
+    .item_name {
+        margin-top: 5px;
+        color: #2196f3;
+    }
+
+        .item_name a {
+            text-decoration: none;
+        }
+</style>

@@ -1,0 +1,362 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Dash.ProductStatus
+@{
+    Layout=null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class=" position-relative">
+            <div id="divsmload" class="waitingdiv text-center" style="display: none; position: absolute; left: 50%;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="card-body px-lg-2 pt-0 pb-2">
+                <ul id="MinStatus_Area" class="nav nav-pills ps-1 bg-transparent" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="proitem nav-link cursor-pointer active" data-fun="nor" role="tab">@Local["Tình trạng tồn"]</a>
+                    </li>
+                    <li id="MinStatus_packtab"  class="d-none nav-item" role="presentation">
+                        <a class="proitem nav-link cursor-pointer" data-fun="pack" role="tab">@Local["Hết hạn"]</a>
+                    </li>
+                </ul>
+                <div id="MinStatus_normArea" class="row mt-3 ps-1 ">
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="input-group flex-nowrap" id="divSearchprostatus">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                </div>
+                                <input id="txtprostatus_Filter" type="text" class="form-control" placeholder="eg .@Local["Lọc dữ liệu"]">
+                                <div class="input-group-text">
+                                    <i class="btn_clear fas fa-minus-circle opacity-1"></i>
+                                </div>
+                                <div class="input-group-text">                                    
+                                    <i class="ni fas fa-redo ext-dark cursor-pointer text-xs" onclick="return StockStatusMin_Load()"></i>
+                                </div>
+                                <div class="input-group-text">
+                                    <span data-search="N1" class="prolisttype  me-0 fw-bold text-sm text-secondary opacity-5 " aria-hidden="true">N1</span>
+                                </div>
+                                <div class="input-group-text">
+                                    <span data-search="N2" class="prolisttype  me-0 fw-bold text-sm text-secondary opacity-5 " aria-hidden="true">N2</span>
+                                </div>
+                                <div class="input-group-text" style="border-right: 1px solid #e6e6e6 !important;">
+                                    <span data-search="N3" class="prolisttype me-0 fw-bold text-secondary opacity-5" aria-hidden="true">N3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="MinStatus_Norm" class="overflow-auto mt-2" style="height:500px">
+                    </div>
+                </div>
+                <div id="MinStatus_packArea" class="d-none row form3 m-1">
+                    <div class=" p-2 ms-2 h-100">
+                        <p class="text-sm fst-italic text-dark mb-0">@Local["Ngày hết hạn lô hàng"]</p>
+                        <p class="text-xs mb-3"><span id="MinStatus_ExpiredTime" class="text-sm pt-1 text-dark"></span></p>
+                        <div id="MinStatus_Expired" class="overflow-auto" style="height: 420px; ">
+                        </div>
+                    </div>
+ 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let prolist_type = 0;
+    let productstatus_timer;
+    let productStatusData = {};
+
+    $(document).ready(function () {
+        StockStatusMin_Load();
+        ProductStatusEvent();
+
+    });
+
+    function StockStatusMin_Load () {
+        AjaxLoad(url = "/WareHouse/Dash/ProductStatus/?handler=LoadData"
+            , data = {
+                'WareID': MasterWareID
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+
+                    let data = JSON.parse(result);
+                    productStatusData = {}
+                    for (let i = 0; i < data.Norm.length; i++) {
+                        productStatusData[data.Norm[i].ProductID] = data.Norm[i];
+                    }
+                    StockStatusMin_NormExe(data.Norm);
+                    if (data.ExpiredData != undefined) {
+ 
+                        StockStatusMin_ExpiredExe(data.ExpiredData);
+                        let datatime = data.ExpiredTime;
+                        $("#MinStatus_packtab").removeClass('d-none');
+                        $("#MinStatus_ExpiredTime").html(
+                            GetDateTime_String_DMY(datatime[0].DateFrom)
+                            +' @Local["Đến"] '
+                            + GetDateTime_String_DMY(datatime[0].DateTo));
+                    }
+                    else {
+                        $("#MinStatus_packtab").addClass('d-none');
+                    }
+                    ProductStatus_FilterType();
+                }
+            },
+            sender = null,
+            before = function (e) {
+                $("#divsmload").show();
+            },
+            complete = function (e) {
+                $("#divsmload").hide();
+            }
+        );
+    }
+    async function StockStatusMin_NormExe (data) {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i].Num_Left <= data[i].N3) data[i].Norm = 3;
+                        else if (data[i].Num_Left <= data[i].N2) data[i].Norm = 2;
+                        else if (data[i].Num_Left <= data[i].N1) data[i].Norm = 1;
+                        else data[i].Norm = 0;
+                        productStatusData[data[i].ProductID].Norm = data[i].Norm;
+                    }
+                    if (data != undefined && data.length != 0) {
+                        data.sort(function (a, b) {
+                            return b.Norm - a.Norm;
+                        });
+                        let item;
+                        let myNode = document.getElementById('MinStatus_Norm');
+                        myNode.innerHTML = '';
+                        for (let i = 0; i < data.length; i++) {
+                            item = data[i];
+                            let tr = '';
+                            let type = '', typetext = '';
+                            if (item.Norm == 0) {type = "text-success"; typetext = "OK"}
+                            else {
+                                type = (item.Norm == 3) ? 'text-danger' : ((item.Norm == 2) ? 'text-warning' : 'text-info')
+                                typetext = (item.Norm == 3) ? 'N3' : ((item.Norm == 2) ? 'N2' : 'N1')
+                            }
+
+                            tr = '<div class="productstatus" id="prstatus_' + item.ProductID + '"><div class="align-items-center text-dark d-flex px-2 py-0">'
+                                + '<span class="align-middle text-center fw-bold text-sm  ' + type + ' me-3">' + typetext + '</span>'
+                                + '<div>'
+                                + '<div>'
+                                + '<span class="text-sm text-primary fst-italic">'
+                                + item.ProductCode
+                                + '<span class="ms-2 text-dark text-sm">' + formatNumber(item.Num_Left) + " " + item.UnitName + '</span>'
+                                + '</div>'
+                                + '</span>'
+                                + '<span class="text-sm d-block">' + item.ProductName + '</span>'
+                                + '</div>'
+                                + '</div>'
+                                + '<hr class="horizontal dark my-2">'
+                                + '</div>';
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                    }
+                }
+            )
+        })
+
+
+    }
+    async function StockStatusMin_ExpiredExe (data) {
+
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+
+                    for (let i = 0; i < data.length; i++) {
+                        if (!data[i].DateExpired.includes('1900')) {
+                            data[i].State = 1;
+
+                        }
+                        else data[i].State = 0;
+                    }
+
+                    data = data.filter(word => word["State"] == 1);
+
+                    if (data != undefined && data.length != 0) {
+
+                        data.sort(function (a, b) {
+                            return new Date(a.DateExpired) - new Date(b.DateExpired);
+                        });
+                        $("#MinStatus_Expired").html("");
+                        let stringContent = '';
+                        let item;
+                        for (let i = 0; i < data.length; i++) {
+                            item = data[i];
+                            let tr = '';
+                            let type = '';
+
+                            type = (new Date(item.DateExpired) > new Date()) ? 'bg-success' : 'bg-danger';
+                            tr = '<div class="d-block mb-2">'
+                                + '<div class="d-block">'
+                                + '<span class="badge badge-md badge-dot me-2 text-start">'
+                                + '<i class="bg ' + type + '"></i>'
+                                + '<span class="text-primary text-sm">' + GetDateTime_String_DMY(item.DateExpired)
+                                + '<span class="text-dark ps-2">' + item.PackageNumber + '</span>'
+                                + '</span>'
+                                + '</span>'
+
+
+                                + '</div>'
+                                + '<div class="d-block mt-n2">'
+                                + '<span class="text-dark text-sm">' + item.ProductName
+                                + " " + item.Num_Left + " " + item.UnitName
+                                + '</span>'
+
+
+
+
+                                + '</div>'
+                                + '<hr class="horizontal dark my-2">'
+                                + '</div>'
+                                ;
+
+                            stringContent = stringContent + tr;
+                        }
+                        $("#MinStatus_Expired").html(stringContent);
+                    }
+
+
+
+                }
+            )
+        })
+
+    }
+    function ProductStatusEvent () {
+        $("#MinStatus_Area .proitem").click(function (event) {
+            let fun = $(this).attr("data-fun");
+            $('#MinStatus_Area .proitem').removeClass('active');
+            $(this).addClass('active');
+            switch (fun) {
+                case "nor":
+                    $("#MinStatus_packArea").addClass('d-none');
+                    $("#MinStatus_normArea").removeClass('d-none');
+                    break;
+                case "pack":
+                    $("#MinStatus_packArea").removeClass('d-none');
+                    $("#MinStatus_normArea").addClass('d-none');
+                    break;
+
+
+                default: break;
+            }
+
+        });
+
+        $('#txtprostatus_Filter').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#divSearchprostatus .fa-search").hide();
+            $("#divSearchprostatus .spinner-border").show();
+            clearTimeout(productstatus_timer);
+            productstatus_timer = setTimeout(function (e) {
+                ProductStatus_FilterText();
+            }, 500);
+        });
+        $("#divSearchprostatus").on('click', '.btn_clear', function (e) {
+            $('#txtprostatus_Filter').val('');
+            $(".btn_clear").addClass('opacity-1');
+            $('.productstatus').removeClass("d-none");
+        });
+        $(".prolisttype").unbind("click").bind('click', function () {
+            let field = $(this).attr("data-search");
+            if (field == "N1") {
+                if ($(this).hasClass("text-secondary opacity-5")) {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    $(this).removeClass("text-secondary opacity-5").addClass("text-gradient text-info");
+                    prolist_type = 1;
+                }
+                else {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    prolist_type = 0;
+                }
+
+            }
+            else if (field == "N2") {
+                if ($(this).hasClass("text-secondary opacity-5")) {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    $(this).removeClass("text-secondary opacity-5").addClass("text-gradient text-warning");
+                    prolist_type = 2;
+                }
+                else {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    prolist_type = 0;
+                }
+            }
+            else {
+                if ($(this).hasClass("text-secondary opacity-5")) {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    $(this).removeClass("text-secondary opacity-5").addClass("text-gradient text-danger");
+                    prolist_type = 3;
+                }
+                else {
+                    $(".prolisttype").removeClass("text-gradient text-danger text-info text-warning").addClass("text-secondary opacity-5");
+                    prolist_type = 0;
+                }
+            }
+
+            ProductStatus_FilterType();
+        });
+    }
+    async function ProductStatus_FilterType () {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let ishideex = 0;
+                    for ([key, value] of Object.entries(productStatusData)) {
+                        ishideex = 0;
+                        if (prolist_type == 1 && value.Norm != 1) ishideex = 1;
+                        if (prolist_type == 2 && value.Norm != 2) ishideex = 1;
+                        if (prolist_type == 3 && value.Norm != 3) ishideex = 1;
+                        if (ishideex == 0) $('#prstatus_' + key).removeClass("d-none");
+                        else $('#prstatus_' + key).addClass("d-none");
+
+                    }
+                }
+            )
+        })
+    }
+    async function ProductStatus_FilterText () {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let search = xoa_dau($('#txtprostatus_Filter').val().toLowerCase()).trim();
+                    for ([key, value] of Object.entries(productStatusData)) {
+                        if (xoa_dau(value.ProductCode).toLowerCase().includes(search)
+                            || xoa_dau(value.ProductName).toLowerCase().includes(search)) {
+                            $('#prstatus_' + key).removeClass("d-none");
+                        }
+                        else {
+                            $('#prstatus_' + key).addClass("d-none");
+                        }
+                    }
+                    $("#divSearchprostatus .fa-search").show();
+                    $("#divSearchprostatus .spinner-border").hide();
+                    resolve()
+                }
+            )
+        })
+    }
+</script>
+<style>
+
+
+    .prolisttype {
+        font-size: 15px;
+        margin-right: 11px;
+        cursor: pointer;
+    }
+</style>

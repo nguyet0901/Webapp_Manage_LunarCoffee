@@ -1,0 +1,291 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Service.ServiceDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require_notasync('/js/AppCustomer/FileUpload.js', true);</script>
+
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="mb-3">
+                <div class="p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chi tiết dịch vụ"]</h6>
+                                <p class="text-sm mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 pt-2">
+                    <div id="formAppServiceDetail" class="row px-1 form3">
+                        <div class="row ms-2" id="divLogoAppService">
+                            <div class="field col-12 col-sm-6 p-1">
+                                <div class="field col-12">
+                                    <div>
+                                        <span class="text-sm text-gradient text-warning mb-0" id="AppService_ImageFeatNote">110 x 110 px</span>
+                                        <span class="text-dark text-sm mb-0 ps-2">@Local["Hình ảnh gốc"]</span>
+                                        <hr class="horizontal dark mt-0 mb-2">
+                                    </div>
+                                    <div class="avatar avatar-xxl position-relative d-inline-block">
+                                        <img id="avatarAppService" class="border-radius-md border border-1 border-gray" alt="team-2" src="#" onerror="Master_OnLoad_Error_Image(this)">
+                                        <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="AppServiceFileuploadAvatar" accept="image/*" type="file" name="files[]" />
+                                        <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0 " id="btnAppServiceUploadLogo">
+                                            <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2">
+                                                <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field col-12 col-sm-6 d-flex justify-content-center p-1">
+                                <div class="field col-12">
+                                    <div>
+                                        <span class="text-sm text-gradient text-warning mb-0" id="AppService_ImageNote">700 x 300 px</span>
+                                        <span class="text-dark text-sm mb-0 ps-2">@Local["Hình ảnh chi tiết"]</span>
+                                        <hr class="horizontal dark mt-0 mb-2">
+                                    </div>
+                                    <div class="position-relative d-inline-block" style="width:220px">
+                                        <img id="AppServicebigAvatar" class="border border-radius-md ImgBigAvartar" src="#" alt="team-2" onerror="Master_OnLoad_Error_Image(this)">
+                                        <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="AppServiceFileuploadBigAvatar" accept="image/*" type="file" name="files[]" />
+                                        <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0" id="btnAppServiceUploadLogoBig">
+                                            <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2">
+                                                <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>@Local["Tiêu đề"]</label>
+                            <input id="AppService_Header" name="name" type="text" placeholder="eg. Title" class="form-control" />
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>Sub</label>
+                            <input id="AppService_SubHeader" type="text" class="form-control"  placeholder="eg. Sub Title"/>
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>@Local["Giá"]</label>
+                            <input id="AppService_Price" name="" type="text" class="form-control"   placeholder="eg. Price"/>
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1">
+                            <label>Link</label>
+                            <input id="AppService_Source" name="" type="text" class="form-control" placeholder="eg. Source (link)"/>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea id="AppService_Content" name="" rows="3" type="text" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formAppService" onclick="event.preventDefault();return AppServiceClose()">@Local["Đóng"]</button>
+                        <button id="AppServiceBtnDetail" form="formAppService" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault();AppSD_Execute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    let Sys_App_Image = (ser_AcceptSettingApp['service'] != undefined && ser_AcceptSettingApp['service']['image'] != undefined)
+            ? ser_AcceptSettingApp['service']['image']
+            : {
+                size: 50000,
+                width: 110,
+                height: 110,
+                format: ['jpg', 'png']
+            }
+    let Sys_App_FeatureImage = (ser_AcceptSettingApp['service'] != undefined && ser_AcceptSettingApp['service']['imagefeature'] != undefined)
+            ? ser_AcceptSettingApp['service']['imagefeature']
+            : {
+                size: 5000,
+                width: 110,
+                height: 110,
+                format: ['jpg', 'png']
+            }
+
+    var urlImage = "/Api/Upload/Upload?Type=ClientApp";
+    let AppSD_CurrentID = @Model._CurrentID;
+    let AppSD_Image = '';
+    let AppSD_FeatureImage = '';
+
+    $(document).ready(function () {
+        let extImage = (Sys_App_Image.format).reduce((previous, current) => {
+            return "." + previous + ",." + current
+        })
+        let extImageFeat = (Sys_App_FeatureImage.format).reduce((previous, current) => {
+            return "." + previous + ",." + current
+        })
+        $('#AppService_ImageFeatNote').html(`(${extImageFeat}) ${Sys_App_FeatureImage.width} x ${Sys_App_FeatureImage.height} px`);
+        $('#AppService_ImageNote').html(`(${extImage}) ${Sys_App_Image.width} x ${Sys_App_Image.height} px`);
+        AppSD_Event();
+        AppSD_LoadDetail();
+    })
+
+
+    function AppSD_Event() {
+        $("#AppService_Price").divide();
+        UploadImage({
+            inputFile: 'AppServiceFileuploadAvatar'
+            , btnInput: 'btnAppServiceUploadLogo'
+            , avatar: 'avatarAppService'
+            , condition: Sys_App_FeatureImage
+            , success: (data) => {
+
+            }
+            , error: (err) => {
+
+            }
+        })
+        UploadImage({
+            inputFile: 'AppServiceFileuploadBigAvatar'
+            , btnInput: 'btnAppServiceUploadLogoBig'
+            , avatar: 'AppServicebigAvatar'
+            , condition: Sys_App_Image
+            , success: (data) => {
+
+            }
+            , error: (err) => {
+
+            }
+        })
+    }
+
+    //#region // LOAD DETAIL
+
+    function AppSD_LoadDetail() {
+        if (AppSD_CurrentID != 0) {
+            AjaxLoad(url = "/Setting/AppCustomer/Service/ServiceDetail/?handler=Loadata"
+                , data = {
+                    id: AppSD_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        AppSD_LoadDetail_FillData(data);
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) {
+                }
+                , complete = function (e) {
+                }
+            );
+        }
+    }
+
+
+    function AppSD_LoadDetail_FillData(data) {
+        if (data && data.length != 0) {
+            let item = data[0];
+            $("#AppService_Header").val(item.Header);
+            $("#AppService_SubHeader").val(item.Sub);
+            $("#AppService_Price").val(item.Price);
+            $("#AppService_Source").val(item.Source);
+            $("#AppService_Content").val(item.Content);
+
+            $("#avatarAppService").attr('src', item.Image);
+
+            $("#AppServicebigAvatar").attr('src', item.FeatureImage);
+            AppSD_Image = item.Image
+            AppSD_FeatureImage = item.FeatureImage
+        }
+    }
+
+    //#endregion
+
+    //#region // EXECUTE DATA
+
+    async function AppSD_Execute() {
+
+        let obj = new Object();
+        obj.Header = $("#AppService_Header").val() ? $("#AppService_Header").val() : "";
+        obj.Sub = $("#AppService_SubHeader").val() ? $("#AppService_SubHeader").val() : "";
+        obj.Price = $("#AppService_Price").val() ? formatNumber($("#AppService_Price").val()) : "0";
+        obj.Source = $("#AppService_Source").val() ? $("#AppService_Source").val() : "";
+        obj.Content = $("#AppService_Content").val() ? $("#AppService_Content").val() : "";
+        $('#formAppServiceDetail').form('validate form');
+        if ($('#formAppServiceDetail').form('is valid')) {
+            AppSD_Execute_Next(obj)
+        }
+    }
+
+    async function AppSD_Execute_Next(data){
+        let Image = $("#AppServiceFileuploadAvatar")[0].files.length != 0 ? await AjaxUpload_Image(urlImage, 'AppServiceFileuploadAvatar') : AppSD_FeatureImage;
+        let ImageFuture = $("#AppServiceFileuploadBigAvatar")[0].files.length != 0 ? await AjaxUpload_Image(urlImage, 'AppServiceFileuploadBigAvatar') : AppSD_Image ;
+        data.Image = Image;
+        data.FeatureImage = ImageFuture;
+        AjaxLoad(url = "/Setting/AppCustomer/Service/ServiceDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: AppSD_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        notiSuccess();
+                        AppServiceClose();
+                        if (typeof AppService_Load === 'function') AppService_Load();
+                        syslog_mob(AppSD_CurrentID == 0 ? "i" : "u", "@Local["Dịch vụ"]");
+                    }
+                    else notiError_SW();
+                }
+                , sender = $("#AppServiceBtnDetail")
+                , before = function (e) {
+
+                }
+                , complete = function (e) {
+
+                }
+            );
+    }
+
+    //#endregion
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+
+    .addimgNew {
+        max-height: 200px;
+        width: 200px;
+        height: 200px
+    }
+
+    .imputaddImgNew {
+        margin-left: -23px;
+        margin-top: 70px;
+    }
+
+    .ImgBigAvartar {
+        width: 220px;
+        height: 110px;
+    }
+
+    .inputImgBigAvartar {
+        width: 220px;
+        height: 110px;
+        margin-top: -96px;
+        margin-left: -218px
+    }
+</style>
+

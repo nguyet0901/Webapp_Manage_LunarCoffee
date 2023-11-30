@@ -1,0 +1,627 @@
+﻿@page
+@model MLunarCoffee.Pages.Card.Setting.ServiceCardListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+
+<div class="row" id="divServiceCardList">
+    <div class="col-12 px-0">
+        <div class="card card-plain mb-3">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Thẻ trả trước"]</h6>
+                    <p class="text-sm mb-0">@Local["Thông tin chi tiết của một thẻ trả trước"]</p>
+                </div>
+                <div class="right">
+                    <div class="wrap">
+                        <div class="wrapblock pb-0 mb-0">
+                            <div class="form-check me-3">
+                                <input id="SC_CheckDis" class="form-check-input pr-2" type="checkbox">
+                                <label>@Local["Thẻ ẩn"]</label>
+                            </div>
+                            <button id="SCD_btnAdd" class="btn bg-gradient-primary btn-sm mt-1 me-2" onclick="return SCD_New()">@Local["Thêm mới"]</button>
+                            <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colcardLists">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colcardLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="isissue" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Phát hành"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="issuedate" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ngày phát hành"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="issuecode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã phát hành"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="vtcondition mt-n2 mt-lg-0">
+                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row m-0">
+                            <div class="col-12 col-lg-4 p-0">
+                                <div class="input-group mt-2" id="SC_divfilter">
+                                    <span class="input-group-text  px-2">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                        <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                    </span>
+                                    <input id="SC_inputfilter" type="text" class="form-control " placeholder="eg .@Local["Tìm kiếm"]">
+                                    <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                                </div>
+                            </div>                    
+                        </div>
+                    </div>
+                </div>
+                <div class="d-lg-flex mt-3">
+                    <div class="flex-grow-1">
+                        <div class="card-body p-0">
+                            <div class="m-0  mobile-responsive" style="max-height: calc(100vh - 280px);">
+                                <table data-name="SC_ContentList" id="SC_Content" class="table vt-table mb-0">
+                                    <thead class="hiddenCollapse">
+                                        <tr role="row">
+                                            <th class="fixed-side d-none">ID</th>
+                                            <th style="width: 50px;">#</th>
+                                            <th>@Local["Mã"]</th>
+
+                                            <th>@Local["Tên"]</th>
+                                            <th>@Local["Giá bán"]</th>
+                                            <th>@Local["Giá trị sử dụng"]</th>
+                                            <th data-name="issuecode">@Local["Mã phát hành"]</th>
+                                            <th data-name="isissue">@Local["Phát hành"]</th>
+                                            <th data-name="issuedate">@Local["Ngày phát hành"]</th>
+                                            <th class="SC_thHandle">@Local["Xử lý"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="SC_ContentBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button id="SC_btnloadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return SC_Load(0, 1);">
+                                @Local["Xem thêm"]
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-w-400 m-2 mt-n2 mt-0 pt-0 bg-transparent">
+                        <div class="card px-2 mt-n2">
+                            <div class="position-relative card-header mt-7 card-header-image">
+
+                                <div id="carddetail_area" class="mt-lg-n8 mt-n6 overflow-hidden position-relative border-radius-xl">
+                                    <span class="mask bg-gradient-primary"></span>
+                                    <div class="card-body position-relative z-index-1 p-3">
+                                        <img id="logoCompanyCard" src="/default.png" class="avatar avatar-xs me-2 rounded-0" alt="logo image">
+                                        <div class="d-none position-absolute top-0 end-0 me-2 mt-2" id="card_issuecode"></div>
+                                        <h6 id="card_codegenre" class="fw-bold text-white mt-4 mb-1 letter-spacing-1 pb-2">@Local["Mã thẻ"]</h6>
+                                        <div class="d-flex">
+                                            <div class="d-flex">
+                                                <div class="me-4">
+                                                    <p class="text-white text-sm opacity-8 mb-0">@Local["Mệnh giá"]</p>
+                                                    <h6 class="text-white mb-0" id="card_amount_sales">-</h6>
+                                                </div>
+                                                <div class="me-4">
+                                                    <p class="text-white text-sm opacity-8 mb-0">@Local["Giá trị"]</p>
+                                                    <h6 id="card_amount_use" class="text-white mb-0">-</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="card-body pt-0">
+                                <h6 id="SCCardName" class="text-primary fs-5 mb-2"></h6>
+                                <div class="text-start ms-n2 mb-2">
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCExpired" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCExpiredLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCRange" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCRangeLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCTime" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCTimeLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCFinishPay" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCFinishPayLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCFamilyUsing" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCFamilyUsingLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-start p-2">
+                                        <div id="SCIssuse" class="icon icon-shape icon-xs rounded-circle bg-gradient-success pt-2 shadow text-center">
+                                            <i class="fas fa-check opacity-10 mb-2" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <span id="SCIssuseLabel" class="text-sm ps-3"></span>
+                                        </div>
+                                    </div>
+                                    <a id="SCIssusePrint" class=" mt-1 ms-2 border-bottom border-primary" onclick="return SCIssuse_Print()">@Local["In thẻ"]</a>
+                                </div>
+                                <div id="SCNote" class="text-sm card-description"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="divServiceCardDetail"></div>
+<script type="text/javascript">
+    let SC_Data;
+    let SC_TimerOnChnage;
+    let shtable;
+    let QR_CODECard;
+    var SC_CurrentCard = 0;
+    let CardCode = '';
+    let SC_Limit = 200, SC_beginID = 0;
+    let SC_isDoneLoadMore = false;
+    $(document).ready(function ()
+    {
+        SC_Load(id = 0);
+        shtable = $("#SC_Content").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        QR_CODECard = new QRCode("card_issuecode", {
+            width: 50,
+            height: 50,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H,
+        });
+        let filter = document.getElementById("SC_inputfilter");
+        filter.addEventListener("keyup", function (event)
+        {
+            if ($(this).val().length > 0) $("#SC_inputfilter .btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#SC_divfilter .fa-search").hide();
+            $("#SC_divfilter .spinner-border").show();
+            clearTimeout(SC_TimerOnChnage)
+            SC_TimerOnChnage = setTimeout(function (e)
+            {
+                SC_Filter();
+            }, 300)
+        });
+        $("#SC_divfilter .btn_clear").unbind().click(function (e)
+        {
+            $('#SC_inputfilter').val('');
+            $("#SC_inputfilter .btn_clear").addClass('opacity-1');
+            SC_Filter();
+        });
+        $('#SC_CheckDis').unbind().change(function (event)
+        {
+            if ($('#SC_CheckDis').is(':checked'))
+                $('#SC_ContentBody').addClass('showdis');
+            else $('#SC_ContentBody').removeClass('showdis');
+        });
+
+    })
+
+    function SC_EventDetail()
+    {
+        $('#SC_ContentBody .buttonEditClass').unbind().on('click', function (event)
+        {
+            let id = Number($(this).attr('data-value'));
+            SCD_Edit(id);
+        });
+        $('#SC_ContentBody .rowService').unbind().on('click', function (event)
+        {
+            $('#SC_ContentBody .rowService').removeClass('active');
+            $(this).addClass('active');
+            let id = Number($(this).attr('data-value'));
+            let data = SC_Data.filter(word => { return (word["ID"] == id); });
+            if (data && data.length > 0) SC_FillData(data[0]);
+        });
+        $('#SC_ContentBody .buttonDisabledClass').unbind().click(function ()
+        {
+            let ID = Number($(this).attr('data-id'));
+            SC_ConfirmDisabled(ID);
+        });
+        $('#SC_ContentBody .buttonEditPercentClass').unbind().click(function ()
+        {
+            let ID = Number($(this).attr('data-id'));
+            SCD_EditDiscount(ID);
+        });
+        $('#SC_ContentBody .buttonEditCashbackClass').unbind().click(function ()
+        {
+            let ID = Number($(this).attr('data-id'));
+            SCD_EditCashback(ID);
+        });
+        ToolPopper();
+    }
+
+
+
+    async function SC_FillData(item)
+    {
+        new Promise((resolve) =>
+        {
+            SC_CurrentCard = item.ID;
+            CardCode = item.Card_Code;
+            if (_SoftwareLogo != '') ($('#logoCompanyCard').attr('src', _SoftwareLogo))
+            else ($('#logoCompanyCard').attr('src', Master_Default_Pic));
+
+            $('#card_amount_use').html(formatNumber(item.Price_Use));
+            $('#card_amount_sales').html(formatNumber(item.Price_Sale));
+            $('#SCCardName').html(item.Name);
+            $('#SCCardSale').html(formatNumber(item.Price_Sale));
+            $('#SCCardUse').html(formatNumber(item.Price_Use));
+            if (Number(item.ExpiredDate) == 0) {
+                $('#SCExpired').addClass('bg-gradient-success').removeClass('bg-gradient-secondary');
+                $('#SCExpiredLabel').html('@Local["Không giới hạn ngày"]');
+            }
+            else {
+                $('#SCExpired').removeClass('bg-gradient-success').addClass('bg-gradient-secondary');
+                $('#SCExpiredLabel').html('@Local["Giới hạn"] ' + item.ExpiredDate + ' @Local["Ngày"]');
+            }
+            if (Number(item.IsRange) == 0) {
+                $('#SCRange').addClass('bg-gradient-success').removeClass('bg-gradient-secondary');
+                $('#SCRangeLabel').html('@Local["Không giới hạn dịch vụ"]');
+            }
+            else {
+                $('#SCRange').removeClass('bg-gradient-success').addClass('bg-gradient-secondary');
+                $('#SCRangeLabel').html('@Local["Giới hạn sử dụng dịch vụ"]');
+            }
+            if (Number(item.TimesUsed) == 0) {
+                $('#SCTime').addClass('bg-gradient-success').removeClass('bg-gradient-secondary');
+                $('#SCTimeLabel').html('@Local["Không giới hạn lần sử dụng"]');
+            }
+            else {
+                $('#SCTime').removeClass('bg-gradient-success').addClass('bg-gradient-secondary');
+                $('#SCTimeLabel').html('@Local["Giới hạn"] ' + item.TimesUsed + ' @Local["Lần sử dụng"]');
+            }
+            if (Number(item.IsFinishPayment) == 0) {
+                $('#SCFinishPay').addClass('bg-gradient-success').removeClass('bg-gradient-secondary');
+                $('#SCFinishPayLabel').html('@Local["Không yêu cầu thanh toán để sử dụng"]');
+            }
+            else {
+                $('#SCFinishPay').removeClass('bg-gradient-success').addClass('bg-gradient-secondary');
+                $('#SCFinishPayLabel').html('@Local["Yêu cầu thanh toán để sử dụng"]');
+            }
+            if (Number(item.FamilyUsing) == 1) {
+                $('#SCFamilyUsing').addClass('bg-gradient-success').removeClass('bg-gradient-secondary');
+                $('#SCFamilyUsingLabel').html('@Local["Thẻ gia đình"]');
+            }
+            else {
+                $('#SCFamilyUsing').removeClass('bg-gradient-success').addClass('bg-gradient-secondary');
+                $('#SCFamilyUsingLabel').html('@Local["Thẻ gia đình"]');
+            }
+
+            $('#SCNote').html(item.Note);
+            if (item.IsIssue == 1) {
+                $('#carddetail_area').addClass('cardissue');
+                $('#card_issuecode').removeClass('d-none');
+                QR_CODECard.makeCode(item.IssueCode);
+                $('#SCIssuse').removeClass('d-none');
+                $('#SCIssuseLabel').removeClass('d-none');
+                $('#SCIssuseLabel').html('@Local["Phát hành"] ' + ConvertDateTimeUTC_DMY(item.IssueDate));
+                $('#card_codegenre').html(item.IssueCode);
+            }
+            else {
+                $('#card_issuecode').addClass('d-none');
+                $('#carddetail_area').removeClass('cardissue');
+                $('#SCIssuse').addClass('d-none');
+                $('#SCIssuseLabel').addClass('d-none');
+                $('#card_codegenre').html(item.Card_Code);
+            }
+            resolve();
+        })
+    }
+    function SC_Filter()
+    {
+        let search = xoa_dau($('#SC_inputfilter').val().toLowerCase()).trim();
+        let data = [...SC_Data];
+        if (search != "") {
+            data = SC_Data.filter(function (item)
+            {
+                if (xoa_dau(item["Name"]).toLowerCase().includes(search)
+                    || xoa_dau(item["Card_Code"]).toLowerCase().includes(search))
+                    return true;
+                return false;
+            });
+        }
+        $("#SC_ContentBody").empty();
+        fnRenderBlock(data, "SC_ContentBody"
+            , blocknum = 100
+            , fnrender = SC_RenderCard
+            , fnsuccess = function (e) { }
+            , fnbegin = function (e) { }
+        );
+
+        $("#SC_divfilter .fa-search").show();
+        $("#SC_divfilter .spinner-border").hide();
+    }
+    function SC_Load(id, isLoadMore = 0)
+    {
+        if (id == 0 && isLoadMore == 0) {
+            SC_Data = [];
+            SC_beginID = 0;
+            SC_isDoneLoadMore = false;
+            $('#SC_ContentBody').html('');
+        }
+
+        AjaxLoad(url = "/Card/Setting/ServiceCardList/?handler=LoadData"
+            , data =
+            {
+                'id': id
+                , 'limit': SC_Limit
+                , 'beginID': SC_beginID
+            }
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    let dataFillInfo;
+                    if (id == 0) {
+                        SC_Data = SC_Data.concat(data);
+                        SC_beginID = data[data.length - 1].ID;
+                        dataFillInfo = [...SC_Data];
+                        fnRenderBlock(data, "SC_ContentBody"
+                            , blocknum = 100
+                            , fnrender = SC_RenderCard
+                            , fnsuccess = function (e) { }
+                            , fnbegin = function (e) { }
+                        );
+
+                        if (id == 0 && isLoadMore == 0) {
+                            let dataFill = dataFillInfo.filter(word =>
+                            {
+                                return word.IsDisable == 0;
+                            });
+                            SC_FillData(dataFill[0]);
+                        }
+                    }
+                    else {
+                        if (data && data.length != 0) {
+                            if ($('#ServiceCard_' + id).length) {
+                                SC_Data = SC_Data.reduce((pre, arr) =>
+                                {
+                                    if (arr.ID == data[0].ID) arr = data[0];
+                                    pre.push(arr);
+                                    return pre;
+                                }, []);
+                                $('#ServiceCard_' + id).replaceWith(SC_RenderEach(data[0]));
+                                SC_EventDetail();
+                                $('#ServiceCard_' + id).trigger('click');
+                            }
+                            else {
+                                if (SC_isDoneLoadMore) {
+                                    SC_Data.push(data[0]);
+                                    $('#SC_ContentBody').append(SC_RenderEach(data[0]));
+                                    SC_EventDetail();
+                                }
+                                else {
+                                    SC_Load(0, 0);
+                                }
+                            }
+                        }
+                        else {
+                            SC_Data = SC_Data.filter(word =>
+                            {
+                                return word.ID != id
+                            })
+                        }
+                    }
+                }
+                else if (result == "[]") {
+                    if (isLoadMore == 1) {
+                        $("#SC_btnloadMore").hide();
+                        SC_isDoneLoadMore = true;
+                    }
+                    else {
+                        //notiWarning('@Local["Không có dữ liệu"]!');
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+                shtable.Refresh();
+            });
+    }
+    async function SC_RenderCard(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let ii = 0; ii < data.length; ii++) {
+                            let item = data[ii];
+                            let tr = SC_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        SC_EventDetail();
+                        shtable.Refresh();
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+    function SC_RenderEach(item)
+    {
+        try {
+            let tr = `
+                        <td class="vt-number-order text-center"></td>
+                        <td>
+                            ${((item.IsDisable != 1)
+                    ? (`<a data-value="${item.ID}" class="text-dark fw-bold border-bottom border-dark buttonEditClass" data-id="${item.ID}" href="#"> ${item.Card_Code}</a>`)
+                    : (item.Card_Code))}
+                        </td>
+                        <td>${item.Name}</td>
+                        <td>${formatNumber(item.Price_Sale)}</td>
+                        <td>${formatNumber(item.Price_Use)}</td>
+                        <td data-name="issuecode" class="text-primary fw-bold">${(item.IsIssue == 1) ? item.IssueCode : ``}</td>
+                        <td data-name="isissue" class="text-center">${(item.IsIssue == 1)
+                    ? (`<i class="fas fa-check text-primary pe-1"></i>` + (item.IssueQuantity != 0 ? item.IssueQuantity : ``))
+                    : ``}
+                        </td>
+                        <td data-name="issuedate">${(item.IsIssue == 1) ? ConvertDateTimeUTC_DMY(item.IssueDate) : ``}</td>
+
+                        <td class="text-center SC_rowBtnHandle text-nowrap">
+                            ${SC_RenderEach_Button(item.ID, item.IsDisable)}
+                        </td>
+                        `;
+            tr = `<tr id="ServiceCard_${item.ID}" data-value="${item.ID}" class="rowService cursor-pointer vt-number  ${((item.IsDisable === 1) ? (' table-active') : (""))}"  data-value="${item.ID}">
+                                ${tr}
+                            </tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function SC_RenderEach_Button(ID, IsDisabled)
+    {
+        let buttons = [];
+        if (IsDisabled == 0) {
+            buttons.push(`<button class="buttonGrid" value="${ID}"><i data-id="${ID}" class="buttonDisabledClass vtt-icon vttech-icon-hide"></i></button>`);
+        }
+        else {
+            buttons.push(`<button class="buttonGrid" value="${ID}"><i data-id="${ID}" class="buttonDisabledClass vtt-icon vttech-icon-nohide"></i></button>`);
+        }
+        buttons.push(`<button class="buttonGrid" value="${ID}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Cấu hình giảm giá"]"><i class="fas fa-percentage buttonEditPercentClass" data-id="${ID}"></i></button>`)
+        buttons.push(`<button class="buttonGrid" value="${ID}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Cấu hình hoàn tiền"]"><i class="fas fa-money-check buttonEditCashbackClass" data-id="${ID}"></i></button>`)
+        return Render_Button_Grid(buttons)
+    }
+
+
+    function SCD_Edit(CurrentID)
+    {
+        SCD_OpenDetail();
+        $("#divServiceCardDetail").load("/Card/Setting/ServiceCardDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#divServiceCardDetail').show();
+        return false;
+    }
+    function SCD_New()
+    {
+        SCD_OpenDetail();
+        $("#divServiceCardDetail").load("/Card/Setting/ServiceCardDetail" + "?ver=" + versionofWebApplication);
+        $('#divServiceCardDetail').show();
+        return false;
+    }
+
+    function SCD_EditDiscount(CurrentID)
+    {
+        SCD_OpenDetail();
+        $("#divServiceCardDetail").load("/Card/Setting/ServiceCardDiscount?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#divServiceCardDetail').show();
+        return false;
+    }
+    function SCD_EditCashback(CurrentID)
+    {
+        SCD_OpenDetail();
+        $("#divServiceCardDetail").load("/Card/Setting/ServiceCardCashback?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#divServiceCardDetail').show();
+        return false;
+    }
+
+
+    function SCD_OpenDetail()
+    {
+        $("#divServiceCardDetail").empty();
+        $("#divServiceCardList").hide();
+        document.getElementById("divServiceCardDetail").innerHTML = '';
+    }
+    function SCD_CloseDetail()
+    {
+        document.getElementById("divServiceCardDetail").innerHTML = '';
+        $("#divServiceCardList").show();
+        $("#divServiceCardDetail").hide();
+    }
+    function SCIssuse_Print()
+    {
+        syslog_ser('p', CardCode);
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load('/Print/print?Type=service_card&DetailID=' + SC_CurrentCard);
+        $('#DetailModal').modal('show');
+    }
+    function SC_ConfirmDisabled(id)
+    {
+        const promise = notiConfirm();
+        promise.then(function () { SCD_Disabled(id); }, function () { });
+    }
+
+    function SCD_Disabled(id)
+    {
+        AjaxLoad(url = "/Card/Setting/ServiceCardList/?handler=DisableItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result)
+            {
+                if (result != "0") {
+                    notiSuccess();
+                    SC_Load(id, 0);
+                    syslog_ser('u', result);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+</script>
+
+<script>js_require('/js/main.js')</script>
+<style>
+
+
+    .table-active {
+        display: none;
+    }
+
+    .showdis .table-active {
+        display: table-row;
+    }
+
+    .cardissue {
+        box-shadow: #f5f5f5 0px 0px 0px 2px inset, rgb(var(--bs-primary)) 10px -10px 0px -3px, #9e9e9e 10px -10px, rgb(var(--bs-primary)) 20px -20px 0px -3px;
+    }
+</style>

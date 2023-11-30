@@ -1,0 +1,213 @@
+﻿@page
+@model MLunarCoffee.Pages.Signature.SignatureModel
+@{ 
+    Layout=null;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card rounded-2 bg-white mb-3">
+            <div class="card-header p-3 pb-0">
+                <div class="d-flex">
+                    <div class="w-sm-30 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Ký tên"]</h6>
+                            <p class="text-sm mb-0">@Local["Cập nhật chữ ký"]</p>
+                        </div>
+                    </div>
+                    <div class=" ms-auto my-auto mt-1">
+                        <a onclick="Sign_signatureundo()" id="signatureundo" class="cursor-pointer text-danger" style="display:none;">@Local["Hoàn tác"]</a>
+                        <a onclick="Sign_signaturemyself()" id="signaturemyself" class="cursor-pointer text-primary px-2 rounded-2" style="display:none;">@Local["Chữ ký của tôi"]</a>
+                    </div>
+                </div>
+            </div>
+            <div id="Signature_Container" class="card-body p-3 mx-lg-3 mx-5 px-0 pt-2 position-relative">
+                <div class="js-signature overflow-hidden rounded-2" data-line-width="4" data-height="400" data-auto-fit="true"></div>
+                <img id="Signature_View" class="position-absolute top-0 start-0 w-100 h-100" onerror="Master_OnLoad_Error_Image(this)" src="/default.png" style="display:none;" />
+                <div class="orienportrait position-absolute top-0 start-0 h-100 w-100 bg-white">
+                    <div class="d-flex justify-content-center align-items-center h-100 w-100 flex-column">
+                        <div class="phone">
+                        </div>
+                        <div class="message">
+                            @Local["Xin vui lòng xoay thiết bị của bạn"]!
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="action_Save mb-2 px-4">
+        <div class="action_Save-Content">
+            <button class="btn bg-gradient-warning btn-orienportrait " form="form3" onclick="event.preventDefault();clearCanvas()">@Local["Đặt lại"]</button>
+            <button class="btn btn-secondary " form="form3" onclick="event.preventDefault();cancelSignature()">@Local["Đóng"]</button>
+            <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 btn-orienportrait" onclick="return saveSignature()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>js_require_notasync('/assests/dist/Signation/jq-signature.js', true);</script>
+
+<script>
+    let getcanvascontent = 1;
+    let signjqSignature;
+    $(document).ready(function () {
+        Sign_jqSignature();
+        if (Signature_ImageView != '') {
+            getcanvascontent = 0;
+            $("#Signature_View").show();
+            $("#Signature_View").attr("src", Signature_ImageView);
+
+            $("#signatureundo").show();
+            Signature_HideImageView();
+        }
+        else {
+            $("#Signature_View").hide();
+            $("#signatureundo").hide();
+        }
+        if (Signature_MySelf == 1) {
+            $("#signaturemyself").show();
+        }
+        else {
+            $("#signaturemyself").hide();
+        }
+
+    });
+
+    function Sign_jqSignature() {
+        if ($('.js-signature').length) {
+            signjqSignature = $('.js-signature').jqSignature({
+                border: "none",
+                background: "#e9ecef",
+                autoFit: true,
+                class: 'rounded-2'
+            });
+        }
+    }
+
+
+    function Sign_signatureundo () {
+        $('.js-signature').jqSignature('clearCanvas');
+        Signature_ResultSignation = Signature_ImageView;
+        $("#Signature_View").show();
+        $("#Signature_View").attr("src", Signature_ImageView);
+        getcanvascontent = 0;
+    }
+    function Sign_signaturemyself () {
+        try {
+            AjaxLoad(url = "/Signature/Signature/?handler=GetSignData"
+                , data = {}, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data.length > 0) {
+                            let mysign = data[0].SignData;
+                            if (mysign != undefined && mysign != '') {  
+                                Signature_ResultSignation = mysign;
+                                $("#Signature_View").show();
+                                $("#Signature_View").attr("src", mysign);
+                                getcanvascontent = 0;
+                            }
+                            else {
+                                notiWarning("@Local["Chưa có chữ ký (cài đặt trong quản lý tài khoản)"]");
+                            } 
+                        } 
+                    }
+                }
+            ); 
+
+        } catch (e) {
+
+        }
+
+    }
+    function Signature_HideImageView () {
+        $("#Signature_View").on("mousedown", function () {
+            getcanvascontent = 1;
+            $(this).hide();
+        })
+    }
+
+    function clearCanvas () {
+        $('.js-signature').jqSignature('clearCanvas');
+        $("#Signature_View").hide();
+        Signature_ImageView = '';
+        getcanvascontent = 1;
+    }
+
+    function saveSignature () {
+        if (getcanvascontent == 1) {
+            Signature_ResultSignation = $('.js-signature').jqSignature('getDataURL');
+        }
+        Signature_Stop_Timeout();
+        $('#DetailModalSign').modal('hide');
+        $("#DetailModalSign_Content").html('');
+        Signature_ImageView = '';
+    }
+    function cancelSignature () {
+        Signature_ResultSignation = "";
+        Signature_Stop_Timeout();
+        $('#DetailModalSign').modal('hide');
+        $("#DetailModalSign_Content").html('');
+        Signature_ImageView = '';
+    }
+    $('.js-signature').on('jq.signature.changed', function () {
+
+    });
+</script>
+<style>
+    .js-signature {
+        cursor: url('/assests/img/ButtonImg/pen.png'), auto;
+    }
+
+    .orienportrait {
+        display: none;
+    }
+
+        .orienportrait .phone {
+            height: 50px;
+            width: 100px;
+            border: 3px solid black;
+            border-radius: 10px;
+            animation: rotate 1.5s ease-in-out infinite alternate;
+        }
+
+        .orienportrait .message {
+            color: black;
+            font-size: 1em;
+            margin-top: 40px;
+        }
+
+    @@keyframes rotate {
+        0% {
+            transform: rotate(0deg)
+        }
+
+        50% {
+            transform: rotate(-90deg)
+        }
+
+        100% {
+            transform: rotate(-90deg)
+        }
+    }
+
+    @@media only screen and (max-device-width: 768px) and (orientation: portrait) {
+        #Signature_Container {
+            height: 80vh
+        }
+
+        .orienportrait {
+            display: block !important;
+        }
+
+        .btn-orienportrait {
+            display: none !important;
+        }
+    }
+
+</style>
+

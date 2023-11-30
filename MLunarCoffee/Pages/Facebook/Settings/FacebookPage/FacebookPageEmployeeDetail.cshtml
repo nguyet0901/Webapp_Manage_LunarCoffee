@@ -1,0 +1,136 @@
+﻿@page
+@model MLunarCoffee.Pages.Facebook.Settings.FacebookPage.FacebookPageEmpDetail
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Nhân viên phụ trách"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3">
+                    <div class="col-12 col-sm-6 p-1">
+                        <label>@Local["Fanpage"]</label>
+                        <input id="fbpageEmp_Page" name="fillCode" type="text" class="form-control" disabled />
+                    </div>
+                    <div class="col-12 col-sm-6 p-1">
+                        <label>@Local["Nhân viên phụ trách"]</label>
+                        <div class="ui fluid search selection dropdown multiple form-control" id="fbpageEmp_EmpID">
+                            <input type="hidden" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="fbpageEmp_CbbEmp" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault(); return CloseModal()">Cancel</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="fbpageEmpD_Executed();">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //#region //Load && Init
+    let fbpageEmp_FanpageID = Number(@Model._SerFanpageID);
+    $(document).ready(function () {
+        fbpageEmpD_LoadInit();
+    })
+
+    function fbpageEmpD_LoadInit () {
+        AjaxLoad(url = "/Facebook/Settings/FacebookPage/FacebookPageEmployeeDetail/?handler=LoadInit"
+            , data = {}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != '') {
+                    let data = JSON.parse(result);
+                    
+                    Load_Combo(data.DataEmpUser, "fbpageEmp_CbbEmp", true);                                      
+
+                    if (fbpageEmp_FanpageID != 0) {
+                        fbpageEmpD_LoadDetail();
+                    }
+                }
+            }
+        );
+    }
+
+    function fbpageEmpD_LoadDetail() {
+        AjaxLoad(url = "/Facebook/Settings/FacebookPage/FacebookPageEmployeeDetail/?handler=LoadDetail"
+            , data = { "ID": fbpageEmp_FanpageID }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != '') {
+                    let data = JSON.parse(result);
+                    $("#fbpageEmp_Page").val(data[0].FanpageName);
+                    let strEmp = '';
+                    if(data && data.length != 1){
+                        for(let i = 0 ; i < data.length;i++){
+                            let item = data[i];
+                            strEmp += item.UserID + ',';
+                        }
+                    }
+
+                    $("#fbpageEmp_EmpID").dropdown("refresh");
+                    $('#fbpageEmp_EmpID').dropdown('set selected', strEmp.split(","));
+
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //Executed
+
+    function fbpageEmpD_Executed () {
+        let data = {};
+        let arrEmpValue = [];
+        let Empvalue = $('#fbpageEmp_EmpID').dropdown('get value') ? $('#fbpageEmp_EmpID').dropdown('get value') : '';        
+        for ([key, value] of Object.entries(Empvalue.split(','))) {
+            let e = {};
+            e.ID = Number(key)+1;
+            e.value = value;
+            arrEmpValue.push(e);
+        }
+        data.DataDetail = JSON.stringify(arrEmpValue);
+        data.FanpageID = fbpageEmp_FanpageID;
+        if (Empvalue == '') $("#textShowMessage").html('@Local["Kiểm tra dữ liệu"]');
+        else $("#textShowMessage").html('');        
+        if($("#textShowMessage").html() == ''){
+            AjaxLoad(url = "/Facebook/Settings/FacebookPage/FacebookPageEmployeeDetail/?handler=Executed"
+                , data = {
+                    "data": JSON.stringify(data)
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != '') {
+                        notiSuccess();
+                        fbpage_Load();
+                        CloseModal();
+                    }
+                }
+        );
+        }
+        
+    }
+
+    //#endregion
+</script>

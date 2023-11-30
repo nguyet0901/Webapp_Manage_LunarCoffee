@@ -1,0 +1,183 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Treatment.TreatmentPercent.TreatmentPercentListModel
+@{
+    Layout = null;
+}
+<div class="row m-0">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Phần trăm điều trị"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách phần trăm điều trị"]</p>
+                </div>
+                <div class="right">
+                    <button class="btn bg-gradient-primary btn-sm mt-1" onclick="event.preventDefault();return TPercent_New();">@Local["Cấu hình"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="TP_DivLoading" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table data-name="TP_DivTable" class="table vt-table mb-0" id="TP_DivTable">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width:40px;">#</th>
+                                <th>@Local["Tên"]</th>
+                                <th>@Local["Phần trăm"]</th>
+                                <th>@Local["Chỉnh sửa gần nhất"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="TP_BodyPercentTreat">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="TP_DivDetail">
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let TP_DataUser;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                TP_DataUser = data[0];
+                TPercent_Load()
+            }
+        );
+    })
+
+    //#region //LOAD
+    function TPercent_Load () {
+        AjaxLoad(url = "/Setting/Treatment/TreatmentPercent/TreatmentPercentList/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        TPercent_Render(data, "TP_BodyPercentTreat");
+                    } else $('#TP_BodyPercentTreat').html('');
+                } else {
+                    notiError();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#TP_DivTable").hide();
+                $("#TP_DivLoading").show();
+            }
+            , complete = function (e) {
+                $("#TP_DivTable").show();
+                $("#TP_DivLoading").hide();
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //RENDER
+
+    async function TPercent_Render (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                myNode.innerHTML = '';
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = '';
+                            tr = `
+                                <td class="d-none">${item.ID}</td>
+                                <td class="vt-number-order"></td>
+                                <td>${item.Name}</td>
+                                <td>${TPercent_RenderProcess(item.Value)}</td>
+                                <td>${TPercent_RenderModify(item.Modified, item.ModifiedBy)}</td>
+                            `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`
+
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                resolve();
+            }, 30)
+        })
+    }
+    function TPercent_RenderProcess (Value) {
+        try {
+            let result = '';
+            result = `
+            <div class="progress-wrapper">
+                <div class="progress-info">
+                    <div class="progress-percentage">
+                        <span class="text-sm font-weight-bold">${Value}%</span>
+                    </div>
+                </div>
+                <div class="progress" style="width: 100% !important;">
+                    <div class="progress-bar bg-primary" style="width: ${Value}%;"></div>
+                </div>
+            </div>
+            `
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function TPercent_RenderModify (Day, Person) {
+        try {
+            let result = '';
+            let objUser = Fun_GetObject_ByID(TP_DataUser, Person);
+            let NameUser = (objUser != null) ? objUser.Name : '';
+            let ImgUser = (objUser != null) ? objUser.Avatar : Master_Default_Pic;
+
+            result = `
+                <div class="d-flex">
+                    <div class="icon icon-shape icon-sm me-2 text-center">
+                        <img class="avatar avatar-xs mt-2" src="${ImgUser}" alt="PersonEdit">
+                    </div>
+                    <div class="d-flex flex-column">
+                        <h6 class="text-dark text-sm mb-0">${NameUser}</h6>
+                        <span class="text-xs">${GetDateTime_String_DMY(Day)}</span>
+                    </div>
+                </div>
+            `
+            return result;
+        }
+        catch (ex) {
+            return "";
+        }
+    }
+    //#endregion
+
+    //#region //DETAIL
+
+    function TPercent_New () {
+        TPercent_OpenDetail();
+        $("#TP_DivDetail").load("/Setting/Treatment/TreatmentPercent/TreatmentPercentDetail?ver=" + versionofWebApplication);
+        $("#TP_DivDetail").show();
+        return false;
+    }
+    function TPercent_OpenDetail () {
+        $("#TP_DivDetail").empty();
+        $("#TP_DivMaster").hide();
+    }
+    function TPercent_CloseDetail () {
+        $("#TP_DivDetail").empty();
+        $("#TP_DivMaster").show();
+        $("#TP_DivDetail").hide();
+    }
+
+    //#endregion
+</script>

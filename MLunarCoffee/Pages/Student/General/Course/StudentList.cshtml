@@ -1,0 +1,245 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.General.Course.StudentListModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 fw-bold">
+                                   @Local["Chi tiết lớp học"]
+                                </h6>
+                                <p class="text-sm mb-0">@Local["Danh sách học viên được liệt kê theo lớp"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2">
+
+                        <div class="col-12 p-1 mt-2">
+                            <ul class="list-group text-dark rounded-0">
+                                <li class="list-group-item border-0 text-sm py-1 ps-0">
+                                    <p class="text-sm fw-bold d-inline-block col-w-100 mb-0">@Local["Khóa"]:</p>
+                                    <div class="text-dark d-inline" id="StuList_Course"></div>
+                                </li>
+                                <li class="list-group-item border-0 text-sm py-1 ps-0">
+                                    <p class="fw-bold text-sm d-inline-block col-w-100 mb-0">@Local["Môn học"]:</p>
+                                    <div class="text-dark d-inline" id="StuList_Subject"></div>
+                                </li>
+                                <li class="list-group-item border-0 text-sm py-1 ps-0">
+                                    <p class="fw-bold text-sm d-inline-block col-w-100 mb-0">@Local["Giảng viên"]:</p>
+                                    <div class="text-dark d-inline" id="StuList_Teacher"></div>
+                                </li>
+                                <li class="list-group-item border-0 text-sm py-1 ps-0">
+                                    <p class="fw-bold text-sm d-inline-block col-w-100 mb-0">@Local["Thời gian"]:</p>
+                                    <div class="text-dark d-inline" id="StuList_Time"></div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="StuList_Waiting" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table id="dtTableCourseStatus" class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-1" colspan="2">
+                                        <p class="mb-0 text-sm text-dark fw-bold">@Local["Học viên"]</p>
+                                    </th>
+                                    <th class="ps-1">
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Ngày tham gia"]</span>
+                                    </th>
+                                    <th class="ps-1">
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Đã thanh toán"]</span>
+                                    </th>
+                                    <th class="ps-1">
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Quá trình"]</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="StuList_TBodyContent">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton">
+            <div class="action_Save">
+                <div class="action_Save-Content">
+                    <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/main.js');</script>
+<script>
+
+    //#region // INIT & LOAD DETAIL
+
+    let StuList_CurrentID = '@Model._ClassID';
+
+    $(document).ready(function () {
+        StuList_Load();
+    })
+
+    function StuList_Load() {
+        if (StuList_CurrentID && StuList_CurrentID != '0') {
+            AjaxLoad(url = "/Student/General/Course/StudentList/?handler=LoadData"
+                , data = {
+                    'classID': StuList_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        let dataInfo = data.Table;
+                        let dataStudent = data.Table1;
+                        StuList_FillData(dataInfo)
+                        StuList_Render(dataStudent, 'StuList_TBodyContent');
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#StuList_Waiting").show();
+                }
+                , complete = function (e) {
+                    $("#StuList_Waiting").hide();
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // FILL DATA
+
+    async function StuList_FillData(data) {
+        if (data && data.length == 1) {
+            let item = data[0]
+            $("#StuList_Course").html(item.CourseCode);
+            $("#StuList_Subject").html(item.Subject);
+            $("#StuList_Teacher").html(item.Teacher);
+            $("#StuList_Time").html(ConvertBetweenYMDInt_ToDate(item.TimeBegin, item.TimeEnd));
+        }
+    }
+
+    //#endregion
+
+    //#region // RENDER DATA
+
+    async function StuList_Render(data, id) {
+        return new Promise(() => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = StuList_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+            }, 100)
+        })
+    }
+
+    function StuList_RenderEach(item) {
+        try {
+            let tr = `
+                <td class="ps-1" colspan="2">
+                    <div class="my-auto">
+                        <h6 class="text-dark text-sm mb-0 fw-bold">
+                            <span class="text-primary" >${item.Code}</span>
+                            <span> - </span>
+                            <span>${item.Name}</span>
+                        </h6>
+                        <span class="text-xs">${item.Phone}</span>
+                    </div>
+                </td>
+                <td class="text-sm"> ${ConvertYMDInt_ToDate(item.Created)} </td>
+                <td class="text-sm"> ${formatNumber(item.Paid)} </td>
+                <td class="text-sm"> ${item.TimeAttend} / ${item.TimeTeach} @Local["Buổi"]" </td>
+            `
+            return `<tr id="rowStudent_${item.ID}" data-id="${item.ID}" >${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    async function StuList_ClassTime_Render(data, id) {
+        return new Promise(() => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = StuList_ClassTime_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+            }, 100)
+        })
+    }
+
+    function StuList_ClassTime_RenderEach(item) {
+        try {
+            let tr = `
+            <li class="list-group-item px-0 border-0 py-0">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="text-sm mb-0"> ${ConvertDOWToTimeWeek(item.DOW)} - ${ConvertYMDInt_ToDate(item.Dayint)}</h6>
+                    </div>
+                    <div class="col">
+                        <p class="mb-0 text-sm">@Local["Điểm danh"]</p>
+                        <h6 class="text-sm mb-0">${ item.IsAttend == 1 ? `<span class="text-success">@Local["Đã học"]</span>` : `<span class="text-secondary">@Local["Chưa học"]</span>`}</h6>
+                    </div>
+                    <div class="col">
+
+                    </div>
+                </div>
+                <hr class="horizontal dark my-0">
+            </li>
+            `
+            return `<tr id="rowStudent_${item.ID}" data-id="${item.ID}" >${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+
+    //#endregion
+
+    function ConvertDOWToTimeWeek(x) {
+        try {
+            var dayofweek = ["@Local["Chủ nhật"]", "@Local["Thứ hai"]", "@Local["Thứ ba"]", "@Local["Thứ tư"]", "@Local["Thứ năm"]", "@Local["Thứ sáu"]", "@Local["Thứ bảy"]"];
+            return dayofweek[x]
+        }
+        catch {
+            return "";
+        }
+
+    }
+
+
+</script>

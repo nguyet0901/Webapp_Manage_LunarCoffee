@@ -1,0 +1,614 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Commission.Manual.GeneralModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/js/Commission/Manual.js');</script>
+<div class="row m-0 form3" id="dataDetail">
+    <div class="col-12 col-lg-3 px-0 pe-lg-3 mt-3" id="MasterDiv">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-0 pt-2">
+                <div class="right">
+                    <button id="exportList_Master" class="btn btn-primary btn-sm ml-2 mb-2  " type="button" disabled style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="text-normal fw-bold ps-2">@Local["Đang tải"]...</span>
+                    </button>
+                    <div class="icon-hover mx-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Xuất excel"]">
+                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                           onclick="event.preventDefault(); return exportData_RevenueMaster()"></i>
+                    </div>
+                    <p id="error_max_dates_show" style="display:none;" class="text-sm text-danger mb-0">
+                        <span>@Local["Số ngày được xem tối đa"]</span>
+                        <span class="ps-2" id="report_max_dates_show"></span>
+                    </p>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="m-0 my-3 mobile-responsive position-relative" style="max-height: 66vh;">
+                    <div id="loaderList_master" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+
+                    </div>
+
+                    <table class="table vt-table mb-0" id="dtContentReportMaster">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>@Local["Tên"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentReportMasterBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="field col-12 col-lg-9 px-0" id="Detail_Div">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-0 pt-2">
+                <div class="left">
+                    <h6 id="RevenueNameDetail" class="text-md text-primary fw-bold mb-0 d-none">@Local["Tên nhân viên"]</h6>
+                </div>
+                <div class="right overflow-x">
+                    <button id="loaderList_Detail" class="btn btn-primary btn-sm ml-2 mb-2  " type="button" disabled style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="text-normal fw-bold ps-2">@Local["Đang tải dữ liệu. vui lòng chờ"] ...</span>
+                    </button>
+                    <div id="RevenueNumber" class="text-primary fw-bold d-flex">
+                        <span id="Reve_currentdata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="Reve_totaldata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Xuất excel"]">
+                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                           onclick="event.preventDefault(); return exportData_RevenueDetail()"></i>
+                    </div>
+                    <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="Source" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nguồn"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="DocCode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustPhone" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Số điện thoại"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CusCodeOld" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustAge" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Tuổi"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustGender" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Giới tính"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustAddress" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Địa chỉ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustCommu" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Phường xã"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustDistrict" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Quận huyện"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="CustCity" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Thành phố"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="ServiceCode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã dịch vụ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="SaleCode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã lên đơn"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="EmpCode" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mã nhân viên"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="RePercent" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Phần trăm doanh thu"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="ServiceCat" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nhóm dịch vụ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="DateService" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ngày tạo dịch vụ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="DatePay" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ngày thanh toán"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="Branch" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Chi nhánh"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="note" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ghi chú"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="Manual_Revenue" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Chi thủ công"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="m-0 mobile-responsive mb-0 " style="max-height: 66vh;">
+                    <table class="table vt-table vt-header-sticky mb-0" id="dtContentReport">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 25px;">#</th>
+                                <th style="min-width: 100px;">@Local["Mã khách hàng"]</th>
+                                <th style="min-width: 150px;">@Local["Khách hàng"]</th>
+                                <th style="min-width: 150px;" data-name="Source">@Local["Nguồn"]</th>
+                                <th style="min-width: 100px;" data-name="DocCode">@Local["Mã hồ sơ"]</th>
+                                <th style="min-width: 150px;" data-name="CustPhone">@Local["Số điện thoại"]</th>
+                                <th style="min-width: 100px;" data-name="CusCodeOld">@Local["Mã khách hàng cũ"]</th>
+                                <th style="min-width: 150px;" data-name="CustAge">@Local["Tuổi"]</th>
+                                <th style="min-width: 150px;" data-name="CustGender">@Local["Giới tính"]</th>
+                                <th style="min-width: 100px;" data-name="CustAddress">@Local["Địa chỉ"]</th>
+                                <th style="min-width: 100px;" data-name="CustCommu">@Local["Phường xã"]</th>
+                                <th style="min-width: 100px;" data-name="CustDistrict">@Local["Quận huyện"]</th>
+                                <th style="min-width: 100px;" data-name="CustCity">@Local["Thành phố"]</th>
+                                <th style="min-width: 100px;" data-name="ServiceCode">@Local["Mã dịch vụ"]</th>
+                                <th style="min-width: 120px;">@Local["Dịch vụ"]</th>
+                                <th style="min-width: 100px;" data-name="SaleCode">@Local["Mã lên đơn"]</th>
+                                <th style="min-width: 120px;">@Local["Số lượng"]</th>
+                                <th style="min-width: 120px;">@Local["Giá tiền"]</th>
+
+                                <th style="min-width: 120px;">@Local["Nhân viên"]</th>
+                                <th style="min-width: 120px;" data-name="EmpCode">@Local["Mã nhân viên"]</th>
+                                <th style="min-width: 120px;">@Local["Hoa hồng"]</th>
+                                <th style="min-width: 120px;" data-name="RePercent">@Local["Phần trăm doanh thu"]</th>
+                                <th style="min-width: 120px;">@Local["Doanh thu"]</th>
+                                
+                                <th style="min-width: 100px;" data-name="ServiceCat">@Local["Nhóm dịch vụ"]</th>
+                                <th style="min-width: 120px;">@Local["Tiền thanh toán"]</th>
+                                <th style="min-width: 120px;" data-name="DateService">@Local["Ngày tạo dịch vụ"]</th>
+                                <th style="min-width: 120px;" data-name="DatePay">@Local["Ngày thanh toán"]</th>
+                                <th data-name="Branch">@Local["Chi nhánh"]</th>
+                                <th style="min-width: 120px;">@Local["Loại"]</th>
+                                <th style="min-width: 70px;" data-name="note">@Local["Ghi chú"]</th>
+                                <th style="min-width: 70px;" data-name="Manual_Revenue">@Local["Chi thủ công"]</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentReportBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button id="btndetailmore" class="btn btn-secondary w-100 p-1 mt-2 position-relative mb-0" onclick="RevenueDetail_ViewMore()">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    //#region  // Var, contructor and Initialize
+    let CurrentNameMaster = '';
+    let CurrentMaster;
+
+    let Redata_loaded_master = [];
+    let Redata_loaded = [];
+    let Redata_spilited;
+    let ReblockIndex = 0;
+    let Renum_rendered = 0;
+
+    let RevDataObject;
+    let myLoad = 0;
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let _branchID = "@Model._branchID";
+
+    let shtable;
+
+    $(document).ready(function ()
+    {
+        shtable = $("#dtContentReport").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        RevDataObject = new RevenueManual({
+            DateFrom: _dateFrom,
+            DateTo: _dateTo,
+            BranchID: _branchID,
+            MyLoad: 0,
+
+            fnSetting_Before: function ()
+            {
+                $("#dataDetail").hide();
+                $("#loaderList").show();
+            },
+            fnSetting_Complete: function (result)
+            {
+                $("#dataDetail").show();
+                $("#loaderList").hide();
+            },
+
+            fnMaster_Before: function ()
+            {
+                $("#loaderList_master").show();
+            },
+            fnMaster_Complete: function (result)
+            {
+                $("#loaderList_master").hide();
+                if (result == "0") {
+                    $("#error_max_dates_show").show();
+                    document.getElementById("report_max_dates_show").innerHTML = ":" + ser_maxDates;
+                }
+                else {
+                    $("#error_max_dates_show").hide();
+                }
+            },
+            fnMaster_CountComplete: function (result)
+            {
+                let eto = {};
+                eto.emp = 0;
+                eto.realamount = result.reduce((pre, arr) =>
+                {
+                    if (arr.realamount)
+                        pre += arr.realamount;
+                    return pre;
+                }, 0);
+                result.unshift(eto);
+                fnRenderBlock(result, "dtContentReportMasterBody"
+                    , blocknum = 100
+                    , fnrender = RevenueMaster_Render
+                    , fnsuccess = function () { });
+                $("tr.masterRow").first().click();
+            },
+
+            fnDetail_Before: function ()
+            {
+                $("#RevenueNumber").hide();
+            },
+            fnDetail_Complete: function (result)
+            {
+                $("#RevenueNumber").show();
+                if (result == "0") {
+                    $("#error_max_dates_show").show();
+                    document.getElementById("report_max_dates_show").innerHTML = ":" + ser_maxDates;
+                }
+                else {
+                    $("#error_max_dates_show").hide();
+                }
+            },
+            fnDetail_CountComplete: function (result)
+            {
+                console.log(result)
+                Renum_rendered = 0;
+                ReblockIndex = 0;
+                Redata_loaded = JSON.parse(JSON.stringify(result));
+
+                $('#Reve_totaldata').html(formatNumber(Redata_loaded.length));
+                Redata_spilited = sliceIntoChunks(JSON.parse(JSON.stringify(Redata_loaded)), 500);
+                RevenueDetail_ViewMore();
+            }
+        });
+        RevDataObject.Init();
+        Checking_TabControl_Permission();
+    });
+
+    //#endregion
+
+    //#region // MASTER RENDER
+
+    async function RevenueMaster_Render(data, id)
+    {
+        new Promise((resolve, reject) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let tr = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        tr = RevenueMaster_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            RevenueMaster_Event();
+            resolve();
+        });
+    }
+
+    function RevenueMaster_RenderEach(item)
+    {
+        let obj = Fun_GetObject_ByID(RP_DataEmployee, item.emp);
+        let tr =
+
+            '<td class="vt-number-order"></td>'
+            + '<td>'
+            + '<div class="d-flex">'
+
+            + '<div class="d-flex flex-column">'
+            + '<h6 class="text-dark text-sm mb-0">' + (item.emp == 0 ? '@Local["Tổng"]' : obj.Name) + '</h6>'
+            + '<span class="text-sm text-primary fw-bold">'
+            + formatNumber((item.realamount))
+            + '</span> '
+            + '</div>'
+            + '</div>'
+            + '</td>'
+
+
+        return '<tr class="vt-number cursor-pointer masterRow" data-amount="' + item.realamount + '" data-name="' + obj.Name + '" data-id="' + item.emp + '">' + tr + '</tr>';
+    }
+
+    //#endregion
+
+    //#region // MASTER EVENT
+
+    function RevenueMaster_Event()
+    {
+        $("#dtContentReportMaster .masterRow").unbind('click').click(function (event)
+        {
+            CurrentMaster = Number($(this).attr("data-id"));
+            if (CurrentMaster == 0) CurrentNameMaster = '@Local["Tất cả nhân viên"]';
+            else CurrentNameMaster = $(this).attr("data-name");
+            $('#RevenueNameDetail').html(CurrentNameMaster);
+            $('#dtContentReportMaster .masterRow').removeClass('active');
+            $(this).addClass('active');
+            $('#dtContentReportBody').html('');
+            $('#dtContentReport').removeClass('showall');
+            RevDataObject.RevenueDetail_Load(CurrentMaster);
+        });
+    }
+
+    //#endregion
+
+    //#region // DETAIL VIEW MORE
+
+    function RevenueDetail_ViewMore()
+    {
+        var p = fnRenderArray(data = Redata_spilited
+            , id = "dtContentReportBody"
+            , index = ReblockIndex
+            , fnrender = RevenueDetail_Render
+            , fnsuccess = function () { }
+            , fnbegin = function () { });
+
+        p.then(function (v)
+        {
+            ReblockIndex = v;
+            if (ReblockIndex <= Redata_spilited.length) {
+                $('#btndetailmore').show();
+                Renum_rendered = Renum_rendered + Redata_spilited[ReblockIndex - 1].length;
+                Renum_rendered = Renum_rendered > Redata_loaded.length ? Redata_loaded.length : Renum_rendered;
+                $('#Reve_currentdata').html(formatNumber(Renum_rendered));
+            }
+            else $('#btndetailmore').hide();
+        });
+    }
+
+    function RevenueDetail_Render(data, id)
+    {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let tr = '';
+            let RevenueTotal = 0;
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    tr = tr + RevenueDetail_RenderEach(item);
+                    RevenueTotal += item.RealAmount;
+                }
+                myNode.innerHTML = myNode.innerHTML + tr;
+                Checking_TabControl_Permission();
+                shtable.Refresh();
+            }
+            if ($('#RevenueTotal').length != 0) {
+                $('#RevenueTotal').html(formatNumber(RevenueTotal));
+            }
+        }
+    }
+
+    function RevenueDetail_RenderEach(item)
+    {
+        let tr =
+			'<td class="vt-number-order"></td>'
+            + '<td><a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + '">' + item.CustCode + '</a></td>'
+            + '<td>' + item.CustName + '</td>'
+			+ '<td data-name="Source">' + Fun_GetName_ByID(RP_DataCustomerSource, item.SourceID) + '</td>'
+			+ '<td data-name="DocCode">' + item.DocCode + '</td>'
+            + '<td data-name="CustPhone" class="_tab_control_" data-tab="phone_customer">' + item.CustPhone + '</td>'
+            + '<td data-name="CusCodeOld">' + item.CustCodeOld + '</td>'
+            + '<td data-name="CustAge">' + item.CustAge + '</td>'
+            + '<td data-name="CustGender">' + `${item.CustGender == "60" ? "@Local["Nam"]" : "@Local["Nữ"]"}` + '</td>'
+            + '<td data-name="CustAddress" class="_tab_control_" data-tab="address_customer"><span class="content_line_clamp">' + `${item.CustAddress}` + '</span></td>'
+            + '<td data-name="CustCommu" class="_tab_control_" data-tab="address_customer">' + `${Fun_GetName_ByID(RP_DataCommune, item.CustCommuneID)}` + '</td>'
+            + '<td data-name="CustDistrict" class="_tab_control_" data-tab="address_customer">' + `${Fun_GetName_ByID(RP_DataDistrict, item.CustDistrictID)}` + '</td>'
+            + '<td data-name="CustCity" class="_tab_control_" data-tab="address_customer">' + `${Fun_GetName_ByID(RP_DataCity, item.CustCityID)}` + '</td>'
+            + '<td data-name="ServiceCode">' + item.SerCode + '</td>'
+			+ '<td>'
+            + RevenueDetail_ServiceName(item.Card, item.ServiceID)
+            + '</td>'
+			+ '<td data-name="SaleCode">'
+            + item.SaleCode
+            + '</td>'
+            + '<td>' + item.Quantity + '</td>'
+            + '<td>' + formatNumber(item.Price) + '</td>'
+			+ '<td>'
+            + item.Empname
+            + '</td>'
+			+ '<td data-name="EmpCode">'
+            + item.Empcode
+            + '</td>'
+			+ '<td>'
+            + (item.Commission != 0 ? formatNumber((item.Commission)) : '')
+            + '</td>'
+			+ '<td data-name="RePercent">'
+            + (item.RePercent != 0 ? item.RePercent : 100)
+            + '</td>'
+			+ '<td>'
+            + (item.RealAmount != 0 ? formatNumber((item.RealAmount)) : '')
+            + '</td>'
+            + '<td data-name="ServiceCat">'
+            + item.ServiceType
+            + '</td>'
+			+ '<td>' + formatNumber(item.PaymentService) + '</td>'
+            + '<td data-name="DateService">' + ConvertDateTimeUTC_DMY(item.Date) + '</td>'
+            + '<td data-name="DatePay">' + ConvertDateTimeUTC_DMY(item.DatePaid) + '</td>'
+			+ '<td data-name="Branch">' + item.BranchName + '</td>'
+            + '<td >' + RevenueDetail_TypeCommission(item.TypeCom) + '</td>'
+            + '<td data-name="Manual_Revenue">'
+            + (item.Manual_Revenue == 1 ? '<i class="imgGrid vtt-icon vttech-icon-check"></i>' : '')
+            + '</td>'
+            + '<td data-name="note">' + item.Note + '</td>'
+        return `<tr class="vt-number border-5 border-bottom-0 border-top-0 border-end-0 border-3" role="row">${tr}</tr>`;
+
+    }
+
+    function RevenueDetail_ServiceName(card, service)
+    {
+        try {
+            if (card != 0) return RP_DataCard[card].Name;
+            else return RP_DataService[service].Name;
+        }
+        catch (ex) {
+            return "";
+        }
+    }
+    function RevenueDetail_TypeCommission(type) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1 :
+                    result = "@Local["Tư vấn"]";
+                    break
+                case 2:
+                    result = "@Local["Telesale"]";
+                    break
+                case 3:
+                    result = "@Local["Thẻ"]";
+                    break
+                case 4:
+                    result = "@Local["Bác sĩ"]";
+                    break
+                case 5:
+                    result = "@Local["Kỹ thuật viên"]";
+                    break
+                default:
+                    result = '';
+            }
+            return result;
+        }
+        catch (ex) {
+            return "";
+        }
+    }
+
+    //#endregion
+
+    //#region // EXPORT EXCEL
+
+    async function exportData_RevenueMaster()
+    {
+        let fileName = Outlang['Doanh_thu_tong']
+        syslog_ExpExcel('e', fileName);
+        if (typeof RevDataObject.ExportMaster === 'function')
+            RevDataObject.ExportMaster(fileName);
+        else
+            exportToExcel('dtContentReportMaster', fileName);
+    }
+
+    async function exportData_RevenueDetail()
+    {
+        let fileName = Outlang["Doanh_thu"] + '(' + CurrentNameMaster + ')';
+        syslog_ExpExcel('e', fileName);
+        if (typeof RevDataObject.ExportDetail === 'function')
+            RevDataObject.ExportDetail(fileName);
+        else
+            exportToExcel('dtContentReport', fileName);
+    }
+
+            //#endregion
+
+</script>
+
+<style>
+    #dtContentReport.showall .exact {
+        display: none !important;
+    }
+
+    #dtContentReport.showall .all {
+        display: table-cell !important;
+    }
+
+    #dtContentReport .all {
+        display: none;
+    }
+</style>
+

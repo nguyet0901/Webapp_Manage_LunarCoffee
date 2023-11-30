@@ -1,0 +1,560 @@
+﻿@page
+@model MLunarCoffee.Pages.Library.LibraryAttach.LibraryAttachDetailModel
+@{
+    Layout = null;
+}
+ 
+ 
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-100 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Tải tệp lên"]<span class="letter-spacing-1 my-auto text-sm fw-bold" data-bs-toggle="tooltip" title="" id="LAD_txtCode" data-bs-original-title="Mã"></span></h6>
+                                <span class="text-sm mb-0">@Local["Tải tối đa 5 tệp trong 1 lần, dung lượng tối đa 10mb/tệp"].</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div id="LAD_UploadContainer">
+                        <label>@Local["Tải tệp lên"]</label>
+                        <div class="form-control dropzone dz-clickable" id="LAD_dropzone">
+                            <div class="dz-default dz-message">
+                                <button class="dz-button" type="button">@Local["Thả tệp vào đây để tải lên"]</button>
+                                <input class="h-25 mt-n5 opacity-0 position-absolute start-0 w-100" id="LAD_input"
+                                 type="file" name="files[]" multiple="">
+                            </div>
+                        </div>
+                        <div class="my-3" id="LAD_uploadstatus">
+               @*             <div class="position-absolute end-3">
+                                <i class="text-sm fas fa-times "></i>
+                            </div>*@
+                            <div id="LAD_uploadstatusContent">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div id="LAD_AttachmentContainer">
+                        <ul class="nav nav-pills p-1 ps-0 bg-transparent" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a onclick="LAD_displaylist()" class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" aria-selected="true">
+                                    <i class="text-gradient text-primary fas fa-list-ul"></i>
+
+                                </a>
+                            </li>
+                            <li class="nav-item " role="presentation">
+                                <a onclick="LAD_displaygrid()" class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab" aria-selected="false">
+                                    <i class="text-gradient text-primary fas fa-th"></i>
+
+                                </a>
+                            </li>
+                        </ul>
+                        <div id="LAD_lightGallery" class="align-items-center bg-gray-100 bg-white border-1 border-radius-lg d-block mt-3 nav nav-pills ps-3 px-2 px-3 py-3">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="fd_form" onclick="LAD_Close()">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //#region //INIT - DEFINE
+    let LAD_OriginCode = decodeURIComponent('@Model._OriginCode');
+    let LAD_CreatedCode = decodeURIComponent('@Model._CreatedCode') || '1900-01-01';
+    let LAD_OriginID = '@Model._OriginID';
+    let LAD_IsView = '@Model._IsView';
+    let LAD_displayType = 'list';
+    let LAD_ReRender;
+    var LAD_dynamicGallery;
+    $(document).ready(function ()
+    {
+        if(LAD_IsView == 1) {
+            $('#LAD_UploadContainer').remove();
+            delete LAD_Eventupload;
+        }
+        if (LAD_OriginCode != "") {
+            $('#LAD_txtCode').html(`[${LAD_OriginCode}]`)
+            if(typeof LAD_Eventupload == "function") LAD_Eventupload();
+        }
+        LAD_dynamicGallery = lightGallery(document.getElementById('LAD_lightGallery'), {
+            speed: 300,
+            showZoomInOutIcons: true,
+            actualSize: false,
+            selector: '.LAD_Image',
+            thumbnail: true,
+            plugins: [lgZoom, lgAutoplay, lgFullscreen, lgRotate, lgShare, lgThumbnail],
+            mode: 'lg-fade',
+            dynamic: true,
+            dynamicEl: []
+        });
+
+        LAD_LoadData();
+    });
+    async function LAD_Init(cbReRender){
+        return new Promise((resolve) =>
+        {
+            LAD_ReRender = cbReRender;
+            resolve();
+        })
+    }
+
+    //#endregion
+
+    //#region //LOADDATA
+
+    function LAD_LoadData(id = 0)
+    {
+        if(LAD_OriginCode != "") {
+            AjaxLoad(url = "/Library/LibraryAttach/LibraryAttachDetail/?handler=LoadFile"
+                , data = {
+                    'code': LAD_OriginCode,
+                    'createdcode': LAD_CreatedCode,
+                    'id': id
+                }
+                , async = true
+                , error = function ()
+                {
+                    notiError_SW();
+                }
+                , success = function (result)
+                {
+                    $('#LAD_lightGallery').empty();
+                    if (result != "[]") {
+                        let data = JSON.parse(result);
+                        LAD_DataFile = JSON.parse(result);
+                        LAD_RenderData(data, 'LAD_lightGallery')
+                    }
+                    else if (result == "[]") {
+
+                    }
+                    else {
+                        notiError_SW();
+                    }
+
+                }
+            );
+        }
+    }
+
+    async function LAD_RenderData(data, id)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let dataGal = [];
+                if (data && data.length > 0) {
+                    let NameLength = 200;
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        item.DelButton = (LAD_IsView == 1) ? 0 : item.DelButton
+                        let tr = '';
+                        let contentLib = LAD_RenderContentFile(item);
+                        let name = item.FileName ?? '';
+                        if (LAD_displayType == 'grid') {
+                            NameLength = 6;
+                            let fileName = ` ${name?.length < NameLength ? name : '...' + name?.substring(name?.length - NameLength, name?.length)}`
+                            let fileStyle = ['png', 'jpg', 'jpeg'].includes(item.FileType) ? `py-2 my-1` : '';
+                            tr = `<div id="LAD_item${item.LibraryID}" class="LAD_libraryItem position-relative" data-id="${item.LibraryID}" data-name="${item.RealName}.${item.FileType}">
+                                  <div title="${item.FileName}.${item.FileType}" class="d-flex w-100 text-sm detail nav-link cursor-pointer">
+                                  <div class="card shadow-none">
+                                  <div class="position-absolute end-8 top-1 ${item.DelButton == 1 ? 'LAD_deleteFile' : ''}">
+                                  <a class="remove LAD_action opacity-1 ">
+                                  <i class="text-sm fas fa-times"></i>
+                                  </a>
+                                  </div>
+                                  <div class="${fileStyle} mx-4 p-3 text-center">
+                                  ${contentLib}
+                                  </div>                                    
+                                  <div class="card-body pt-0 p-3 text-center">
+                                  <h6 data-type='${item.FileType}' data-link="${item.UrlLink}"
+                                  class="LAD_linkfilesh text-dark text-sm mb-0 text-primary cursor-pointer">
+                                  ${fileName + '.' + item.FileType}
+                                  </h6>
+                                  <h6 class="text-center text-sm mb-0 text-secondary">${item.CreatedName}</h6>
+                                  <span class="mb-0 text-secondary">${GetDateTime_String_DMYHM(item.Created)}</span>
+                                  </div>
+                                  </div>
+                                  </div>
+                                  </div>`
+                        }
+                        else {
+                            NameLength = 60;
+                            let fileName = ` ${name?.length < NameLength ? name : '...' + name?.substring(name?.length - NameLength, name?.length)}`
+                            let fileStyle = !['png', 'jpg', 'jpeg'].includes(item.FileType) ? `ms-5` : '';
+                            let trFirst = i == 0 ?
+                                          `<div class="nav-item my-0 py-2 position-relative d-flex align-items-center text-secondary">
+                                           <div class="ms-3 d-flex w-100 text-sm detail nav-link cursor-pointer">
+                                           <div class="w-100 d-lg-flex d-md-flex text-secondary">
+                                           <div class="w-50 col-auto my-auto align-items-center d-flex LAD_clsItemContainer">
+                                           @Local["Tên"]
+                                           </div>
+                                           <div class="w-50 ps-2 ps-lg-0 ps-md-0 my-auto mt-1">
+                                           <div class="row align-items-center">
+                                           <div class="col-12 col-md-4 col-xl-4 p-1">
+                                           @Local["Loại"]
+                                           </div>
+                                           <div class="col-12 col-md-4 col-xl-4 p-1">
+                                           @Local["Người tạo"]
+                                           </div>
+                                           <div class="col-12 col-md-4 col-xl-4 p-1">
+                                           @Local["Ngày tạo"]
+                                           </div>
+                                           </div>
+                                           </div>
+                                           </div>
+                                           </div>
+                                           </div>`
+                                          : '';
+                            tr = `${trFirst}
+                                  <div id="LAD_item${item.LibraryID}" class="LAD_libraryItem nav-item my-0 position-relative d-flex align-items-center" data-id="${item.LibraryID}" data-name="${item.RealName}.${item.FileType}">
+                                  <div class="${item.DelButton == 1 ? 'LAD_deleteFile' : ''}">
+                                  <a class="remove LAD_action opacity-1">
+                                  <i class="text-sm fas fa-times"></i>
+                                  </a>
+                                  </div>
+                                  <div class="ms-2 d-flex w-100 text-sm detail nav-link cursor-pointer">
+                                  <div class="w-100 d-lg-flex d-md-flex">
+                                  <div class="w-50 col-auto my-auto align-items-center d-flex">
+                                  ${contentLib}
+                                  <span data-type='${item.FileType}' data-link="${item.UrlLink}"
+                                  class="${fileStyle} LAD_linkfilesh text-dark cursor-pointer ms-3">
+                                  ${fileName}
+                                  </span>
+                                  </div>
+                                  <div class="w-50 ps-2 ps-lg-0 ps-md-0 my-auto mt-1">
+                                  <div class="row align-items-center">
+                                  <div class="col-12 col-md-4 col-xl-4 p-1">
+                                  ${item.FileType}
+                                  </div>
+                                  <div class="col-12 col-md-4 col-xl-4 p-1">
+                                  ${item.CreatedName}
+                                  </div>
+                                  <div class="col-12 col-md-4 col-xl-4 p-1">
+                                  ${GetDateTime_String_DMYHM(item.Created)}
+                                  </div>
+                                  </div>
+                                  </div>
+                                  </div>
+                                  </div>
+                                  </div>`;
+                        }
+      
+                        //galery
+                        let sub = '<div>' + item.CreatedName + '</div>'
+                            + '<div>' + GetDateTime_String_DMYHMSS(ConvertToDateRemove1900(item.Created)) + '</div>';
+                        let e = {};
+                        e["src"] = item?.UrlLink ?? "/default.png";
+                        e["thumb"] = item?.UrlLink ?? "/default.png";
+                        e["subHtml"] = sub;
+                        dataGal.push(e);
+
+                        myNode.innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+                    LAD_Event();
+                }
+                LAD_dynamicGallery.refresh(dataGal)
+            }
+            resolve();
+        })
+    }
+
+    function LAD_RenderContentFile(item)
+    {
+        let result = '';
+        let fs = LAD_displayType == 'list' ? 'fs-3' : 'fs-2';
+        switch (item.FileType) {
+            case "pdf":
+                result = `<i class="${fs} text-gradient text-info fas fa-file-pdf"></i>`;
+                break;
+            case "docx":
+            case "doc":
+                result = `<i class="${fs} text-gradient text-info fas fa-file-word"></i>`;
+                break;
+            case "xlsx":
+            case "xls":
+                result = `<i class="${fs} text-gradient text-success fas fa-file-excel"></i>`;
+                break;
+            case "mp3":
+            case "wma":
+            case "wav":
+            case "flac":
+            case "aac":
+            case "ogg":
+                result = `<i class="${fs} text-gradient text-info fas fa-file-audio"></i>`;
+                break;
+            case "mp4":
+            case "wmv":
+            case "mkv":
+            case "flv":
+            case "mpg":
+            case "mov":
+                result = `<i class="${fs} text-gradient text-info fas fa-file-video"></i>`;
+                break;
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "heif":
+            case "svg":
+                result = '<a data-id="' + item.LibraryID + '" class="description-rp design_img_item LAD_Image ms-0" data-name="' + item.FileName
+                    + '" data-realname="' + item.RealName
+                    + '" data-created="' + item.Created
+                    + '" data-variation="inverted blueli"'
+                    + '  data-createdby="' + item.CreatedName
+                    + '" style="background-image: url(\'' + item.UrlLink + '\')">'
+                    + '<img class="imgload" style="width: 0px;height: 0px;object-fit: cover;opacity: 0;"  src="'
+                    + item.UrlLink
+                    + '"/> '
+                    + '</a>';
+                break;
+            default:
+                result = `<i class="${fs} text-gradient text-info fas fa-file"></i>`;
+                break;
+        }
+        return result;
+    }
+    //#endregion
+
+    //#region //INSERT FILE
+    function LAD_Eventupload()
+    {
+        let link_Upload = '/Api/Upload/Upload?Type=Library';
+        AjaxUpload_Multi(url = link_Upload, inputid = 'LAD_input'
+            , success = function (result, e)
+            {
+                if (result != "0") {
+                    let _r = result.split("@@");
+                    ATDFile_Insert(_r[2], _r[0], _r[1]);
+                    LAD_FinishUpload(_r[2]);
+                }
+                else LAD_ErrorUpload(e);
+            }
+            , error = function (e)
+            {
+                LAD_ErrorUpload(e);
+            }
+            , before = function (e)
+            {
+                LAD_BeginUpload(e);
+            }
+            , complete = null
+            , funmaxrange = function ()
+            {
+                notiWarning('Tối đa 5 file')
+            }
+        );
+    }
+    function ATDFile_Insert(name, realname, filetype, link)
+    {
+        //string code, string name, string realname, string filetype, string link
+        AjaxLoad(url = "/Library/LibraryAttach/LibraryAttachDetail/?handler=Insert"
+            , data = {
+                'code': LAD_OriginCode,
+                'createdcode': LAD_CreatedCode,
+                'name': name,
+                'realname': realname,
+                'filetype': filetype
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                LAD_LoadData();
+            }
+        );
+    }
+
+    function LAD_Close()
+    {
+        CloseModal();
+        if (typeof LAD_ReRender === 'function') {
+            if (LAD_OriginCode != "") {
+                AjaxLoad(url = "/Library/LibraryAttach/LibraryAttachDetail/?handler=LoadTotal"
+                    , data = {
+                        'code': LAD_OriginCode,
+                        'createdcode': LAD_CreatedCode
+                    }
+                    , async = true
+                    , error = function ()
+                    {
+                        notiError_SW();
+                    }
+                    , success = function (result)
+                    {
+                        $('#LAD_lightGallery').empty();
+                        if (result != "[]") {
+                            let data = JSON.parse(result);
+                            LAD_ReRender(LAD_OriginCode, LAD_CreatedCode, data[0].Total);
+                        }
+                        else if (result == "[]") {
+
+                        }
+                        else {
+                            notiError_SW();
+                        }
+
+                    }
+                );
+            }
+        }
+    }
+
+    async function LAD_ErrorUpload(name)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            $("#LAD_uploadstatusContent .LAD_Status[data-name='" + name + "']").html('failed');
+            $("#LAD_uploadstatusContent .LAD_Status[data-name='" + name + "']").addClass('text-danger').removeClass('text-info');
+            resolve();
+        })
+    }
+    async function LAD_BeginUpload(name)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            let tr = `<div class="statusarea" data-name="${name}"> <div class="d-flex align-items-center">
+                           <div class="text-sm text-dark me-3">${name}</div>
+                           <span data-name="${name}" class="LAD_Status ms-2 fw-bold text-sm  text-info">uploading ...</span>
+                       </div>
+                       <hr class="horizontal dark mt-3 mb-2">
+                     <div>  `
+
+
+            $('#LAD_uploadstatusContent').prepend(tr);
+            resolve();
+        })
+    }
+    async function LAD_FinishUpload (name) {
+
+        return new Promise((resolve, reject) => {
+            $("#LAD_uploadstatusContent .LAD_Status[data-name='" + name + "']").html('finish');
+            $("#LAD_uploadstatusContent .LAD_Status[data-name='" + name + "']").addClass('text-success').removeClass('text-info');
+            resolve();
+        })
+    }
+    //#endregion
+
+    //#region //DELETE FILE
+    function LAD_Delete(id, filename) {
+        const promise = notiConfirm();
+        promise.then(function () { LAD_ExecuteDelete(id, filename); }, function () { });
+    }
+
+    function LAD_ExecuteDelete(id, filename)
+    {
+        AjaxLoad(url = "/Library/LibraryAttach/LibraryAttachDetail/?handler=DeleteItem"
+            , data = { id: id, filename: filename }, async = false, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LAD_LoadData();
+                }
+                else {
+                    notiError_SW();
+                }
+            });
+    }
+    //#endregion
+
+    //#region //EVENT
+    //#region //Display
+    function LAD_Event()
+    {
+        let galleryElement = document.getElementById('LAD_lightGallery');
+        galleryElement.addEventListener('lgBeforeOpen', (event) =>
+        {
+            $('#DetailModal').modal('hide');
+        });
+        galleryElement.addEventListener('lgBeforeClose', (event) =>
+        {
+            $('#DetailModal').modal('show');
+        });
+
+        $("#LAD_lightGallery .LAD_linkfilesh").unbind().click(function (event)
+        {
+            let link = $(this).attr('data-link');
+            let type = $(this).attr('data-type');
+            if (!['png', 'jpg', 'jpeg'].includes(type)) {
+                window.open(link, '_blank').focus();
+            }
+        });
+        $("#LAD_lightGallery .LAD_deleteFile").unbind().click(function (event)
+        {
+            let id = Number($(this).closest('.LAD_libraryItem').attr('data-id'));
+            let filename= $(this).closest('.LAD_libraryItem').attr('data-name');
+            LAD_Delete(id, filename);
+        });
+        $("#LAD_lightGallery .LAD_Image").unbind().click(function (event) {
+            let id = !isNaN(Number($(this).attr('data-id'))) ? Number($(this).attr('data-id')) : 0;
+            LAD_dynamicGallery.openGallery($(`#LAD_item${id}`).index() - 1);
+        });
+    }
+    function LAD_displaylist()
+    {
+        LAD_displayType = 'list';
+        $('#LAD_lightGallery').html('');
+        $('#LAD_lightGallery').removeClass('d-flex');
+        LAD_RenderData(LAD_DataFile, 'LAD_lightGallery');
+    }
+    function LAD_displaygrid()
+    {
+        LAD_displayType = 'grid';
+        $('#LAD_lightGallery').html('');
+        $('#LAD_lightGallery').addClass('d-flex');
+        LAD_RenderData(LAD_DataFile, 'LAD_lightGallery');
+    }
+
+    //#endregion
+    //#endregion
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    #LAD_lightGallery .LAD_Image {
+        margin: 3px;
+        border: 1px solid #d6d2d2;
+        display: inline-block;
+        background-position: center;
+        width: 50px;
+        height: 37px;
+        background-size: cover;
+    }
+
+    .LAD_libraryGrid {
+        width: 180px;
+    }
+
+    .LAD_deleteFile .LAD_action:hover {
+        opacity: 1 !important;
+        font-weight: 600;
+    }
+
+    .LAD_deleteFile:hover {
+        color: rgb(var(--bs-primary)) !important;
+        font-weight: 600;
+    }
+
+    .LAD_linkfilesh:hover {
+        color: rgb(var(--bs-primary)) !important;
+        font-weight: 600;
+    }
+
+    #LAD_list.showmineonly .itemnotmine {
+        display: none !important;
+    }
+</style>

@@ -1,0 +1,775 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Employee.PayrollModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <div class="flex-fill flex-grow-1 overflow-auto">
+                        <ul id="payrollheader" class="bg-transparent nav nav-horizontal nav-pills p-1 bg-transparent permissionlist px-0" role="tablist">
+                            <li class="nav-item ms-0" role="presentation">
+                                <a class="payrollheader nav-link nav-item-text cursor-pointer active" data-bs-toggle="pill" role="tab" data-bs-target="#PR_tabpayroll">
+                                    @Local["Bảng lương nhân viên"]
+                                </a>
+                            </li>
+                            <li id="Per_historytimekeep" class="nav-item" role="presentation">
+                                <a class="payrollheader nav-link nav-item-text cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#PR_timekeeping">@Local["Lịch sử chấm công"]</a>
+                            </li>
+                            <li id="Per_worksche" class="nav-item" role="presentation">
+                                <a class="payrollheader nav-link nav-item-text cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#PR_tabworksche">@Local["Lịch làm việc"]</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="tab-content">
+                    <div class="tab-pane fade active show" id="PR_tabpayroll" role="tabpanel">
+                        <div class="card card-plain">
+                            <div class="vtcardheader card-header p-0">
+                                <div class="vtcondition w-100">
+                                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                                    <div class="fulllap collapse collapsesticky show">
+                                        <div class="row m-0 d-lg-flex">
+                                            <div class="col-12 col-sm-3 p-0 pe-sm-1 py-1">
+                                                <div class="ui fluid search selection dropdown form-control" id="PRBranchID">
+                                                    <input type="hidden" name="branch" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Chọn chi nhánh"]</div>
+                                                    <div id="PRcbbBranch" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-3 p-0 pe-sm-1 py-1">
+                                                <div class="ui fluid search selection dropdown form-control" id="PREmployeeGroupID">
+                                                    <input type="hidden" name="Emp" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Chọn nhân viên"]</div>
+                                                    <div id="PRcbbEmployeeGroup" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-6 p-0 pe-sm-1 py-1">
+                                                <input class="flatpickr form-control input-group-text text-start" id="PR_DateSearch" type="text" placeholder="@Local["Chọn ngày"].." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button class="btn bg-gradient-primary m-0" onclick="event.preventDefault();LoadPayroll();">@Local["OK"]</button>
+                                    <button class="btn bg-gradient-primary m-0 _tab_control_" data-tab="export_excel" title="@Local["Xuất"]" data-value="fade up" onclick="event.preventDefault();return PRPayroll_Export();">@Local["Xuất"]</button>
+                                    <button class="btn btn-dark m-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colListpay">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                </div>                        
+                                <div class="toggle">                                        
+                                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-3" id="colListpay" style="min-width:250px;">
+                                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="code" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Mã nhân viên"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="birthday" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Sinh nhật"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_begin_working" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Ngày nhận việc"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_level" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chức vụ"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_depart" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Bộ phận"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_constract_type" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Tình trạng hợp đồng"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_commission_detail" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chi tiết hoa hồng"]</p>
+                                            </li>
+                                            <li class="d-flex">
+                                                <div class="form-check form-switch">
+                                                    <input class="shtoogle form-check-input" data-name="hr_allowance_detail" type="checkbox">
+                                                </div>
+                                                <p class="text-sm">@Local["Chi tiết phụ cấp"]</p>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                            <div class="card-body p-0 pt-2">
+                                <div class="m-0 pb-3 pt-0 pb-0 mobile-responsive vt-header-sticky">
+                                    <div id="PRloaderList" class="waitingdiv text-center w-100 mt-2 position-absolute translate-middle-x start-50" style="display: none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <table id="dtContentPayrollFiler" class="table vt-table mb-0">
+                                        <thead class="hiddenCollapse">
+                                            <tr role="row">
+                                                <th rowspan="2" class="d-none">ID</th>
+                                                <th rowspan="2" style="width: 25px;">#</th>
+                                                <th rowspan="2" data-name="code">@Local["Mã nhân viên"]</th>
+                                                <th rowspan="2">@Local["Nhân viên"]</th>
+                                                <th rowspan="2" data-name="birthday">@Local["Sinh nhật"]</th>
+                                                <th rowspan="2" data-name="hr_begin_working">@Local["Ngày nhận việc"]</th>
+                                                <th rowspan="2" data-name="hr_level">@Local["Chức vụ"]</th>
+                                                <th rowspan="2" data-name="hr_depart">@Local["Bộ phận"]</th>
+                                                <th rowspan="2" data-name="hr_constract_type">@Local["Tình trạng hợp đồng"]</th>
+                                                <th rowspan="2">@Local["Lương thỏa thuận"]</th>
+                                                <th rowspan="2">@Local["Hoa hồng"]</th>
+                                                <th id="hr_commission_group" data-name="hr_commission_detail" rowspan="1">@Local["Chi tiết hoa hồng"]</th>
+                                                <th rowspan="2">@Local["Tổng phụ cấp"]</th>
+                                                <th id="hr_allowance_group" data-name="hr_allowance_detail" rowspan="1">@Local["Chi tiết phụ cấp"]</th>
+                                                <th rowspan="2">@Local["Chế tài"]</th>
+                                                <th rowspan="2">@Local["Tổng thu nhập tháng"]</th>
+                                            </tr>
+                                            <tr role="row">
+                                                <th id="hr_commission_detail" class="d-none"></th>
+                                                <th id="hr_allowance_detail" class="d-none"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dtContentPayrollFilterBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="PR_timekeeping" role="tabpanel"></div>
+                    <div class="tab-pane" id="PR_tabworksche" role="tabpanel"></div>
+                </div>
+            </div>
+        </div>       
+    </div>
+</div>
+
+<script type="text/javascript">
+    //#region //INIT - DEFINE
+    let IdComboMaxBranch = 0;
+    let IdComboMaxGroup = 0;
+    let dataPayroll = [];
+    let dataAllowanceType = [];
+    let dataAllowance = [];
+    var shtablepay;
+    let dataRevPayroll = {};
+    let dataRevCommission = {};
+    var PR_serDataEmpGroup = [], PR_serDataBranch = [];
+    let dataRevFile = {
+        'assistant': '/js/Commission/Assistant.js',
+        'assistant_treat': '/js/Commission/AssistantByTreat.js',
+        'consult': '/js/Commission/Consult.js',
+        'cskh': '/js/Commission/CSKH.js',
+        'doctor': '/js/Commission/Doctor.js',
+        'doctor_treat': '/js/Commission/DoctorByTreat.js',
+        'support': '/js/Commission/Support.js',
+        'telesale': '/js/Commission/TeleSale.js'
+    }
+
+    $(document).ready(function ()
+    {
+        $('#payrollheader a:first').trigger('click');
+        $("#PR_DateSearch").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance)
+            {
+                if (selectedDates.length == 1)
+                {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#PR_DateSearch").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        shtablepay = $("#dtContentPayrollFiler").TableExpandColumn({
+            shtoogle: $('#colListpay .shtoogle')
+        });
+        Load_Initiliaze_Payroll_Employee();
+        PRPayroll_Event();
+        CheckPermissionControlInPage(sys_PerControl, '@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+        Checking_TabControl_Permission();
+    });
+
+    function Load_Initiliaze_Payroll_Employee()
+    {
+        PR_serDataEmpGroup = []; PR_serDataBranch=[];
+        AjaxLoad(url = "/HR/Employee/Payroll/?handler=LoadComboMain"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != "0")
+                {
+                    let data = JSON.parse(result);
+                    PR_serDataBranch = data.dataBranch;
+                    PR_serDataEmpGroup = data.dataEmployeeGroup;
+                    let dataRevenuePayroll = data.dataRevenuePayroll;
+                    dataAllowanceType = data.dataAllowanceType;
+
+                    PRPayroll_Render_HeaderDynamic(dataAllowanceType, key = "hr_allowance");
+                    Load_Combo(PR_serDataBranch, "PRcbbBranch", true, "@Local["Tất cả chi nhánh"]");
+                    Load_Combo(PR_serDataEmpGroup, "PRcbbEmployeeGroup", true, "@Local["Tất cả bộ phận"]");
+                    $("#PRBranchID").dropdown("refresh");
+                    $("#PRBranchID").dropdown("set selected", "0");
+                    $("#PREmployeeGroupID").dropdown("refresh");
+                    $("#PREmployeeGroupID").dropdown("set selected", "0");
+
+                    dataRevPayroll = dataRevenuePayroll.reduce((pre, arr) =>
+                    {
+                        if (arr.GroupOption)
+                        {
+                            let option = arr.GroupOption;
+                            arr.Name = PRPayroll_Commission_GetHeaderName(option);
+                            pre[option] = arr;
+                            if (dataRevFile[option] != undefined && dataRevFile[option] != '')
+                            {
+                                js_require_notasync(dataRevFile[option], true);
+                            }
+                        }
+                        return pre;
+                    }, {})
+
+                    PRPayroll_Render_HeaderDynamic(data = Object.values(dataRevPayroll), key = "hr_commission");
+
+                    LoadPayroll();
+
+                } else
+                {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //LOADDATA PAYROLL
+    async function LoadPayroll()
+    {
+        dataRevCommission = {};
+        let dateFrom, dateTo;
+        let date = $('#PR_DateSearch').val() ? $('#PR_DateSearch').val() : new Date()
+        let Branch = Number($('#PRBranchID').dropdown('get value')) ? Number($('#PRBranchID').dropdown('get value')) : 0;
+        let group = Number($('#PREmployeeGroupID').dropdown('get value')) ? Number($('#PREmployeeGroupID').dropdown('get value')) : 0;
+
+        if (date.search(" to ") > 0)
+        {
+            date = date.replace(" to ", "x");
+            dateFrom = date.split('x')[0];
+            dateTo = date.split('x')[1];
+        }
+        else
+        {
+            dateFrom = date;
+            dateTo = date;
+        }
+        var promises = [];
+        promises.push(Payroll_LoadData(dateFrom, dateTo, Branch, group));
+        promises.push(Payroll_Commission(dateFrom, dateTo, Branch));
+        Promise.all(promises).then((values) =>
+        {
+            if (values && values.length != 0)
+            {
+                dataPayroll = values[0];
+                dataRevCommission = values[1];
+                PRPayroll_Render(dataPayroll, "dtContentPayrollFilterBody");
+            }
+        });
+    }
+
+    async function Payroll_LoadData(_dateFrom, _dateTo, _branch, _group)
+    {
+        return new Promise((resolve) =>
+        {
+
+            AjaxLoad(url = "/HR/Employee/Payroll/?handler=LoadDataPayroll"
+                , data = {
+                    dateFrom: _dateFrom,
+                    dateTo: _dateTo,
+                    branch: _branch,
+                    group: _group
+                }
+                , async = true
+                , error = null
+                , success = function (result)
+                {
+                    if (result != "0")
+                    {
+                        let datapr = JSON.parse(result)?.Table ?? [];
+                        let dataal = JSON.parse(result)?.Table1 ?? [];
+                        dataAllowance = dataal.reduce((pre, arr) =>
+                        {
+                            if (arr["EmpID"] != undefined)
+                            {
+                                let empID = arr["EmpID"];
+                                let type = arr["AllowanceType"];
+                                if (pre[empID] != undefined)
+                                {
+                                    pre[empID][type] = arr;
+                                }
+
+                                else
+                                {
+                                    pre[empID] = { [type]: arr };
+                                }
+                            }
+                            return pre;
+                        }, {});
+                        resolve(datapr);
+                    }
+                    else
+                    {
+                        resolve([]);
+                    }
+                },
+                sender = null,
+                before = function (e)
+                {
+                    $("#dtContentPayrollFiler").hide();
+                    $("#PRloaderList").show();
+                },
+                complete = function (e)
+                {
+                    $("#dtContentPayrollFiler").show();
+                    $("#PRloaderList").hide();
+                }
+            );
+        })
+    }
+    //#endregion
+    //#region // LOAD DATA COMMISSION
+
+    async function Payroll_Commission(_dateFrom, _dateTo, _branchID)
+    {
+        return new Promise((resolve) =>
+        {
+            if (dataRevPayroll == undefined || Object.entries(dataRevPayroll).length == 0)
+            {
+                resolve({});
+                return;
+            }
+            let objData = {
+                DateFrom: _dateFrom,
+                DateTo: _dateTo,
+                BranchID: _branchID,
+                MyLoad: 0
+            }
+            var promiseComm = {};
+            for ([key, value] of Object.entries(dataRevPayroll))
+            {
+                switch (key)
+                {
+                    case "assistant":
+                        promiseComm["assistant"] = Payroll_Assistant(objData);
+                        break;
+                    case "assistant_treat":
+                        promiseComm["assistant_treat"] = Payroll_AssistantTreat(objData);
+                        break;
+                    case "consult":
+                        promiseComm["consult"] = Payroll_Consult(objData);
+                        break;
+                    case "cskh":
+                        promiseComm["cskh"] = Payroll_CSKH(objData);
+                        break;
+                    case "doctor":
+                        promiseComm["doctor"] = Payroll_Doctor(objData);
+                        break;
+                    case "doctor_treat":
+                        promiseComm["doctor_treat"] = Payroll_DoctorTreat(objData);
+                        break;
+                    case "support":
+                        promiseComm["support"] = Payroll_Support(objData);
+                        break;
+                    case "telesale":
+                        promiseComm["telesale"] = Payroll_Telesale(objData);
+                        break;
+                }
+            };
+
+            Promise.all(Object.keys(promiseComm).map(function (key)
+            {
+                return Promise.resolve(promiseComm[key]).then(function (val)
+                {
+                    val = val.map(ele => { return { ...ele, key: key } })
+                    return val;
+                });
+            })).then(function (values)
+            {
+                resolve(Payroll_CommissionCount(values));
+            });
+        })
+    }
+
+    function Payroll_CommissionCount(data)
+    {
+        try
+        {
+            let result = {};
+            if (data && data.length != 0)
+            {
+                let objAll = data.reduce((pre, arr) =>
+                {
+                    pre = [...pre, ...arr];
+                    return pre;
+                }, []);
+                result = objAll.reduce((pre, arr) =>
+                {
+                    if (arr["emp"] != undefined)
+                    {
+                        let key = arr["key"] ?? 'other';
+                        let amount = arr["realamount"] || 0;
+                        if (pre[arr["emp"]] != undefined)
+                        {
+                            pre[arr["emp"]].total = (pre[arr["emp"]]?.total ?? 0) + amount;
+                            pre[arr["emp"]][key] = (pre[arr["emp"]]?.[key] ?? 0) + amount;
+                        }
+                        else
+                        {
+                            let initObj = { total: amount, [key]: amount };
+                            pre[arr["emp"]] = initObj;
+                        }
+                    }
+                    return pre;
+
+                }, {});
+            }
+            return result;
+        }
+        catch (ex)
+        {
+            return {};
+        }
+    }
+
+    async function Payroll_Assistant(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueAssistant({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_AssistantTreat(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueAssistantTreat({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_Consult(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueConsult({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_CSKH(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueCSKH({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_Doctor(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueDoctor({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_DoctorTreat(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueDoctorTreat({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_Support(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueSupport({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+    async function Payroll_Telesale(obj)
+    {
+        return new Promise((resolve) =>
+        {
+            let comm = new RevenueTelesale({
+                ...obj,
+                fnMaster_CountComplete: function (result)
+                {
+                    resolve(result)
+                }
+            });
+            comm.Init();
+        })
+    }
+
+    //#endregion
+
+    //#region //RENDER
+    async function PRPayroll_Render(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            var myNode = document.getElementById(id);
+            if (myNode != null)
+            {
+                let stringContent = '';
+                if (data && data.length > 0)
+                {
+
+                    for (var i = 0; i < data.length; i++)
+                    {
+                        let item = data[i];
+
+                        let objCommission = dataRevCommission[item.ID] != undefined ? dataRevCommission[item.ID] : {};
+                        let strAllowanceDetail = PRPayroll_Render_AllowanceDetail(item);
+                        let strCommisionDetail = PRPayroll_Render_CommissionDetail(objCommission);
+                        let tr = '<td class="vt-number-order"></td>'
+                            + '<td data-name="code" >' + item.Emp_Num + '</td>'
+                            + '<td>' + item.Name + '</td>'
+                            + '<td data-name="birthday">' + ConvertDateTimeUTC_DMY(item.Birthday) + '</td>'
+                            + '<td data-name="hr_begin_working">' + ConvertDateTimeUTC_DMY(item.DayReceivingJob) + '</td>'
+                            + '<td data-name="hr_level">' + item.Level + '</td>'
+                            + '<td data-name="hr_depart">' + item.EmployeeGroup + '</td>'
+                            + '<td data-name="hr_constract_type">' + item.ContractName + '</td>'
+                            + '<td>' + formatNumber(item.SalaryAgreed) + '</td>'
+                            + '<td>' + formatNumber(objCommission.total) + '</td>'
+                            + strCommisionDetail
+                            + '<td>' + formatNumber(item.Allowance) + '</td>'
+                            + strAllowanceDetail
+                            + '<td>' + formatNumber(item.PunishAmount) + '</td>'
+                            + '<td>' + formatNumber(item.SalaryAgreed + item.Allowance - item.PunishAmount + (objCommission?.total ?? 0)) + '</td>'//thu nhap trong thang
+
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                    }
+                }
+                myNode.innerHTML = stringContent;
+                shtablepay.Refresh();
+            }
+        })
+    }
+
+    //Use Render dynamic header(data: array, key: string (data-name group & detail)) //Commission & allowance
+    function PRPayroll_Render_HeaderDynamic(data, key = 'hr_allowance')
+    {
+        if (data && data.length > 0)
+        {
+            let strContent = '';
+            for (var i = 0; i < data.length; i++)
+            {
+                let item = data[i];
+                strContent += `<th data-name="${key}_detail" rowspan="1"  style="min-width: 200px;">${item.Name}</th>`;
+            }
+            $(strContent).insertAfter(`#${key}_detail`);
+            $(`#${key}_group`).attr("colspan", data.length);
+        }
+        else
+        {
+            $(`[data-name="${key}_detail"]`).removeAttr('checked');
+            $(`[data-name="${key}_detail"]`).attr("disabled", true);
+        }
+    }
+
+    function PRPayroll_Render_CommissionDetail(item)
+    {
+        let result = '';
+        let data = Object.values(dataRevPayroll) ?? [];
+        for (let i = 0; i < data.length; i++)
+        {
+            let keys = data[i];
+            let amount = item?.[keys.GroupOption] ?? 0;
+            result += `<td rowspan="1" data-name="hr_commission_detail">${formatNumber(amount)}</td>`
+        }
+        return result;
+    }
+
+    function PRPayroll_Render_AllowanceDetail(item)
+    {
+        if (item && Object.keys(item).length > 0)
+        {
+            let result = '';
+            let data = dataAllowance?.[item.ID] ?? [];
+            for (let i = 0; i < dataAllowanceType.length; i++)
+            {
+                let allowitem = dataAllowanceType[i];
+                let amount = data[allowitem.ID]?.Amount ?? 0;
+                result += `<td rowspan="1" data-name="hr_allowance_detail">${formatNumber(amount)}</td>`
+            }
+            return result;
+        }
+        else
+        {
+            return '';
+        }
+    }
+
+    function PRPayroll_Commission_GetHeaderName(key)
+    {
+        switch (key)
+        {
+            case "assistant":
+                return decodeHtml('@Local["KTV - PT"]');
+                break;
+            case "assistant_treat":
+                return decodeHtml('@Local["KTV - PT theo điều trị"]');
+                break;
+            case "consult":
+                return decodeHtml('@Local["Tư vấn"]');
+                break;
+            case "cskh":
+                return decodeHtml('@Local["Cskh"]');
+                break;
+            case "doctor":
+                return decodeHtml('@Local["Bác sĩ"]');
+                break;
+            case "doctor_treat":
+                return decodeHtml('@Local["Bác sĩ điều trị"]');
+                break;
+            case "support":
+                return decodeHtml('@Local["Hỗ trợ"]');
+                break;
+            case "telesale":
+                return decodeHtml('@Local["Telesale"]');
+                break;
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function PRPayroll_Export()
+    {
+        exportToExcel("dtContentPayrollFiler", Outlang['Bang_luong']);
+    }
+    function PRPayroll_Event()
+    {
+        $('#payrollheader .payrollheader').on('click', function () {
+            let target = $(this).attr('data-bs-target');
+             
+            switch (target) {
+                case "#PR_timekeeping": {
+                    if ($("#PR_timekeeping").html().trim() == "") {
+                        let pages = '/HR/Employee/Timekeeping/TimekeepingEmployee?ver=' + versionofWebApplication;
+                        $("#PR_timekeeping").load(pages);
+                    }
+                    break;
+                }
+                case "#PR_tabworksche": {
+                    if ($("#PR_tabworksche").html().trim() == "") {
+                        let pages = '/HR/Employee/WorkSchedule/WorkSchedule?ver=' + versionofWebApplication;
+                        $("#PR_tabworksche").load(pages);
+                    }
+                    break;
+                }
+                    
+                case "#PR_tabpayroll": {
+                    
+                   
+                }
+                   
+            }
+        })
+
+
+       
+    }
+//#endregion
+</script>
+
+<style>
+    .whitespace {
+        white-space: nowrap;
+        border-bottom: 1px solid #eee;
+        padding: 5px 0px;
+        margin: 0;
+        font-size: 1em;
+    }
+
+        .whitespace:last-child {
+            border-bottom: none;
+        }
+</style>

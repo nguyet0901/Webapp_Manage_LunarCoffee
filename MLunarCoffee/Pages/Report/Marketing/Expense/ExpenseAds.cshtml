@@ -1,0 +1,610 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Marketing.Expense.ExpenseAdsModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Chi phí quảng cáo"]</h6>
+            <p class="mb-0 text-sm">@Local["Danh sách chi phí marketing trên dịch vụ"]</p>
+        </div>
+    </div>
+    <div class="card-body p-0 pt-0">
+        <div class="row mx-0 mt-3 mb-2">
+            <div class="col-12 col-sm-6 col-lg-2 p-1">
+                <div class="fw-bold text-center text-dark mb-1 text-sm">
+                    @Local["Tỉ trọng"] data/@Local["Dịch vụ"] :
+                    <span id="EA_PieServiceList" class="fw-bolder"></span>
+                </div>
+                <div class="position-relative mt-3" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="EA_PieService" class="chart-canvas" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4 p-1">
+                <div class="mt-3 ms-0 ms-lg-n2 table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <tbody id="EA_PieService_Total">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2 p-1  mt-2 mt-lg-0">
+                <div class="fw-bold text-center text-dark mb-1 text-sm">
+                    @Local["Tỉ trọng"] data/@Local["Nhân viên"] :
+                    <span id="EA_PieEmpList" class="fw-bolder"></span>
+                </div>
+                <div class="position-relative mt-3" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="EA_PieEmp" class="chart-canvas" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4 p-1 mt-2 mt-lg-0">
+                <div class="mt-3 ms-0 ms-lg-n2 table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <tbody id="EA_PieEmp_Total">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-header p-0">
+    <div class="row m-0">
+        <div class="col-lg-2 col-sm-4 px-0 pe-sm-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tổng"] @Local["Chi phí"]</h6>
+                <h6 class="font-weight-bolder"><span id="EA_TotalCost">0</span><span> đ</span></h6>
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 px-0 pe-sm-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tổng"] data</h6>
+                <h6 class="font-weight-bolder"><span id="EA_Data">0</span></h6>
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 px-0 pe-lg-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tổng chi phí"]/data</h6>
+                <h6 class="font-weight-bolder"><span id="EA_CostData">0</span><span> đ</span></h6>
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 px-0 pe-sm-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Chi phí"]/@Local["Tương tác"]</h6>
+                <h6 class="font-weight-bolder"><span id="EA_CostClick">0</span><span> đ</span></h6>
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 px-0 pe-sm-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tỉ lệ xin số"]</h6>
+                <h6 class="font-weight-bolder"><span id="EA_ReponseRate">0</span><span> %</span></h6>
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 px-0">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                <h6 class="text-sm text-primary text-gradient mb-0">@Local["Doanh thu"]</h6>
+                <h6 class="font-weight-bolder"><span id="EA_Revenue">0</span><span> đ</span></h6>
+            </div>
+        </div>
+    </div>
+    <div class="vtcardheader pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#EA_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return EA_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return EA_ExportMaster()"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="collapsesticky collapse show" id="EA_GridArea">
+    <div class="card-body p-0">
+        <div class="m-0 my-3 mobile-responsive">
+            <table class="table vt-table mb-0" id="EA_Grid">
+                <thead>
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th>#</th>
+                        <th>@Local["Ngày"]</th>
+                        <th>@Local["Dịch vụ"]</th>
+                        <th>@Local["Ngân sách"]</th>
+                        <th>Data</th>
+                        <th>@Local["Hiển thị"]</th>
+                        <th>@Local["Tương tác"]</th>
+                        <th>@Local["Tin nhắn"]</th>
+                        <th>@Local["Bình luận"]</th>
+                        <th>@Local["Chi phí"]</th>
+                        <th>@Local["Chi phí"]/data</th>
+                        <th>@Local["Chi phí"]/@Local["Tương tác"]</th>
+                        <th>@Local["Tỉ lệ xin số"]</th>
+                        <th>@Local["Doanh thu"]</th>
+                        <th>@Local["Kênh tương tác"]</th>
+                        <th>@Local["Chi nhánh"]</th>
+                    </tr>
+                </thead>
+                <tbody id="EA_GridBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="EA_Detail" style="display: none;">
+    <div class="card-header p-2">
+        <div class="d-lg-flex">
+            <div class="ms-0 col-auto my-auto">
+                <p id="EA_DetailService" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="my-auto ms-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2">
+                    <span id="EA_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="EA_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#EA_GridDetail" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return EA_DetailPrintReport()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); EA_DetailPrintReport()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="EA_GridDetail">
+        <div class="card-body p-2 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table data-name="EA_GridDetail" class="table vt-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">#</th>
+                            <th class="d-none">ID</th>
+                            <th>@Local["Nhân viên"]</th>
+                            <th>@Local["Dịch vụ"]</th>
+                            <th>@Local["Ngân sách"]</th>
+                            <th>@Local["Hiển thị"]</th>
+                            <th>Data</th>
+                            <th>@Local["Tương tác"]</th>
+                            <th>@Local["Tin nhắn"]</th>
+                            <th>@Local["Bình luận"]</th>
+                            <th>@Local["Chi phí"]</th>
+                            <th>@Local["Tỉ lệ xin số"]</th>
+                            <th>@Local["Doanh thu"]</th>
+                            <th>@Local["Chi phí marketing/doanh thu"]</th>
+                            <th>@Local["Kênh tương tác"]</th>
+                            <th>@Local["Chi nhánh"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="EA_GridDetailBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return EA_RenderDetailMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let xhrLoadList, xhrLoadDetail;
+    let DataExportDetail = [], DataExportMaster = [];
+    let DataReportDetailSlice;
+    let TotalData = 0, TotalCost = 0, TotalCostData = 0, TotalCostClick = 0, TotalReponseRate = 0, ToTalRevenue = 0;
+    let TotalCmt = 0, TotalInbox = 0, TotalDisplay = 0; TotalClick = 0, TotalBudget = 0;
+    let _branchID = "@Model._branchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let timeoutCount;
+    $(document).ready(function () {
+        let Index = 0;
+        ToolPopper();
+        EA_Load();
+        Checking_TabControl_Permission();
+    });
+
+    //#region //Master
+    function EA_Load() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        xhrLoadList = AjaxLoad(url = "/Report/Marketing/Expense/ExpenseAds/?handler=Loadata"
+            , data = {
+                'branchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataList = data.Table;
+                    let dataPieSer = data.Table1;
+                    let dataPieEmp = data.Table2;
+                    EA_RenderPie(dataPieSer, 'EA_PieService', 'EA_PieService_Total', 'EA_PieServiceList');
+                    EA_RenderPie(dataPieEmp, 'EA_PieEmp', 'EA_PieEmp_Total', 'EA_PieEmpList');
+                    EA_RenderMaster(dataList, "EA_GridBody");
+
+                }
+            }
+        );
+        return false;
+    }
+    async function EA_RenderMaster(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let string = '';
+                    if (data && data.length) {
+                        for (let i = 0; i < data.length; i++) {
+                            item = data[i];
+                            let CostData = item.MarData != 0 ? (item.MarCost / item.MarData) : 0;
+                            let CostClick = item.MarClick != 0 ? item.MarCost / item.MarClick : 0;
+                            let ResponseRate = item.MarInbox + item.MarCmt > 0 ? item.MarData / (item.MarInbox + item.MarCmt) * 100 : 0;
+                            TotalBudget += item.MarBudget;
+                            TotalData += item.MarData;
+                            TotalCost += item.MarCost;
+                            TotalCmt += item.MarCmt;
+                            TotalInbox += item.MarInbox;
+                            TotalDisplay += item.MarDisplay;
+                            TotalClick += item.MarClick;
+                            TotalCostData += CostData;
+                            TotalCostClick += CostClick;
+                            TotalReponseRate += TotalInbox + TotalCmt > 0 ? TotalData / (TotalInbox + TotalCmt) * 100 : 0;
+                            ToTalRevenue += item.Revenue;
+                            let dataMaster = {};
+                            dataMaster.DateBegin = ConvertDateTimeUTC_DMY(item.DateBegin);
+                            dataMaster.ServiceName = item.ServiceName;
+                            dataMaster.MarBudget = formatNumber(item.MarBudget);
+                            dataMaster.MarCost = formatNumber(item.MarCost);
+                            dataMaster.MarData = item.MarData;
+                            dataMaster.MarDisplay = item.MarDisplay;
+                            dataMaster.MarClick = item.MarClick;
+                            dataMaster.MarInbox = item.MarInbox;
+                            dataMaster.MarCmt = item.MarCmt;
+                            dataMaster.CostData = CostData.toFixed(2);
+                            dataMaster.CostClick = CostClick.toFixed(2);
+                            dataMaster.ResponseRate = ResponseRate.toFixed(2);
+                            dataMaster.Revenue = item.Revenue;
+                            dataMaster.Channel = item.Channel;
+                            dataMaster.Branch = RP_DataBranch[item.Branch_ID] != undefined ? RP_DataBranch[item.Branch_ID].Name : '';
+                            DataExportMaster.push(dataMaster);
+                            let tr = `
+                                                    <tr class="vt-number" role="row">
+                                                        <td class="d-none">${item.ID}</td>
+                                                        <td class="vt-number-order"></td>
+                                                        <td>${ConvertDateTimeUTC_DMY(item.DateBegin)}</td>
+                                                        <td>
+                                                            <a class="border-bottom border-primary text-primary service" data-id="${item.ServiceID}" href="#">${item.ServiceName}</a>
+                                                        </td>
+                                                            <td>${formatNumber(item.MarBudget)}</td>
+                                                        <td>${item.MarData}</td>
+                                                        <td>${item.MarDisplay}</td>
+                                                        <td>${item.MarClick}</td>
+                                                        <td>${item.MarInbox}</td>
+                                                        <td>${item.MarCmt}</td>
+                                                        <td>${formatNumber(item.MarCost)}</td>
+                                                        <td>${(CostData.toFixed(2))}</td>
+                                                        <td>${(CostClick.toFixed(2))}</td>
+                                                        <td>${(ResponseRate.toFixed(2))}</td>
+                                                        <td>${formatNumber(item.Revenue)}</td>
+                                                        <td>${item.Channel}</td>
+                                                        <td>${RP_DataBranch[item.Branch_ID] != undefined ? RP_DataBranch[item.Branch_ID].Name : ''}</td>
+                                                    </tr>
+                                                `;
+                            string += tr;
+                            if (data.length > 1 && i == data.length - 1) {
+                                trtotal = `
+                                                    <tr class="text-white bg-gradient bg-primary">
+                                                        <td></td>
+                                                        <td></td>
+                                                        <td>
+                                                            <a href="#" class="border-1 border-white border-primary border-bottom scdetail text-white service" data-id="0">@Local["Tổng"]</a>
+                                                        </td>
+                                                            <td class="text-center">${formatNumber(TotalBudget)}</td>
+                                                        <td class="text-center">${(TotalData)}</td>
+                                                        <td class="text-center">${(TotalDisplay)}</td>
+                                                        <td class="text-center">${(TotalClick)}</td>
+                                                        <td class="text-center">${(TotalCmt)}</td>
+                                                        <td class="text-center">${(TotalInbox)}</td>
+                                                        <td class="text-center">${formatNumber(TotalCost)}</td>
+                                                        <td class="text-center">${(TotalCostData.toFixed(2))}</td>
+                                                        <td class="text-center">${(TotalCostClick.toFixed(2))}</td>
+                                                        <td class="text-center">${TotalReponseRate.toFixed(2)}</td>
+                                                        <td>${formatNumber(ToTalRevenue)}</td>
+                                                        <td></td>
+                                                        <td></td>
+                                                    </tr>
+                                                    `;
+                                string += trtotal;
+                            }
+                        }
+                    }
+                    myNode.innerHTML = string;
+                    Count_Up("EA_TotalCost", TotalCost);
+                    Count_Up("EA_Data", TotalData);
+                    Count_Up("EA_CostData", TotalCostData);
+                    Count_Up("EA_CostClick", TotalCostClick);
+                    Count_Up("EA_ReponseRate", TotalReponseRate);
+                    Count_Up("EA_Revenue", ToTalRevenue);
+                    EA_Event();
+                }
+            }, 300)
+        })
+    }
+    //#endregion //Master
+
+    //#region //Detail
+    function EA_LoadDetail(serviceid) {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        xhrLoadDetail = AjaxLoad(url = "/Report/Marketing/Expense/ExpenseAds/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+                , 'serviceid': serviceid
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+
+                if (result != "[]") {
+                    let _d = JSON.parse((result));
+                    Count_Up("EA_totaldata", _d.length)
+                    DataReportDetailSlice = sliceIntoChunks(_d, 500);
+                    Index = 0;
+                    $("#EA_GridDetailBody").empty();
+                    fnRenderBlock(DataReportDetailSlice[Index], "EA_GridDetailBody"
+                        , blocknum = 100
+                        , fnrender = EA_RenderDetail
+                        , fnsuccess = null
+                    );
+                }
+            }
+        );
+    }
+    function EA_RenderDetailMore() {
+        Index += 1;
+        if (DataReportDetailSlice && DataReportDetailSlice[Index]) {
+            fnRenderBlock(DataReportDetailSlice[Index], "EA_GridDetailBody"
+                , blocknum = 100
+                , fnrender = EA_RenderDetail
+                , fnsuccess = null
+            );
+        }
+    }
+    async function EA_RenderDetail(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                myNode.innerHTML = '';
+                if (myNode) {
+                    let string = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let SerResponseRate = (item.MarInbox + item.MarCmt) > 0 ? item.MarData / (item.MarInbox + item.MarCmt) * 100 : 0;
+                            let CostRevenue = 0;
+                            let dataDetail = {};
+                            dataDetail.Emp = item.Emp;
+                            dataDetail.Service = item.Service;
+                            dataDetail.MarBudget = item.MarBudget;
+                            dataDetail.MarCost = formatNumber(item.MarCost);
+                            dataDetail.MarDisplay = item.MarDisplay;
+                            dataDetail.MarData = item.MarData;
+                            dataDetail.MarClick = item.MarClick;
+                            dataDetail.MarInbox = item.MarInbox;
+                            dataDetail.MarCmt = item.MarCmt;
+                            dataDetail.SerResponseRate = SerResponseRate.toFixed(2);
+                            dataDetail.Revenue = formatNumber(item.Revenue);
+                            dataDetail.CostRevenue = item.CostRevenue;
+                            dataDetail.Channel = item.Channel;
+                            dataDetail.Branch = RP_DataBranch[item.Branch_ID] != undefined ? RP_DataBranch[item.Branch_ID].Name : '';
+                            DataExportDetail.push(dataDetail);
+                            let tr = `
+                                                    <tr class="vt-number" role="row">
+                                                        <td class="d-none">${item.EmpID}</td>
+                                                        <td class="vt-number-order"></td>
+                                                        <td>${item.Emp}</td>
+                                                        <td>${item.Service}</td>
+                                                        <td>${formatNumber(item.MarBudget)}</td>
+                                                        <td>${item.MarDisplay}</td>
+                                                        <td>${item.MarData}</td>
+                                                        <td>${item.MarClick}</td>
+                                                        <td>${item.MarInbox}</td>
+                                                        <td>${item.MarCmt}</td>
+                                                        <td>${formatNumber(item.MarCost)}</td>
+                                                        <td>${SerResponseRate.toFixed(2)}%</td>
+                                                        <td>${formatNumber(item.Revenue)}</td>
+                                                        <td>${CostRevenue}%</td>
+                                                        <td>${item.Channel}</td>
+                                                        <td>${RP_DataBranch[item.Branch_ID] != undefined ? RP_DataBranch[item.Branch_ID].Name : ''}</td>
+                                                    </tr>
+                                                `;
+                            string += tr;
+                        }
+                        myNode.insertAdjacentHTML('beforeend', string);
+                    }
+                    clearTimeout(timeoutCount);
+                    timeoutCount = setTimeout(() => {
+                        $('#EA_currentdata').html($("#" + id).children().length)
+                    }, 300)
+                }
+            }, 300)
+        });
+    }
+    //#endregion //Detail
+
+    //#region //Event
+    function EA_Event() {
+        $("#EA_GridBody .service").unbind().on('click', function () {
+            let id = $(this).attr('data-id');
+            $('#EA_Detail').fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#EA_Detail").offset().top
+            }, 300);
+            $("#EA_DetailService").html((RP_DataServiceCareObj[id] != undefined) ? RP_DataServiceCareObj[id].Name : '@Local["Tất cả dịch vụ quan tâm"]');
+            EA_LoadDetail(id);
+        });
+    }
+    function EA_ExportMaster() {
+        try {
+            if (DataExportMaster && DataExportMaster.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "DateBegin": ["@Local["Ngày bắt đầu"]"],
+                    "MarBudget": ["@Local["Ngân sách"]"],
+                    "MarData": ["@Local["Data"]"],
+                    "MarDisplay": ["@Local["Hiển thị"]"],
+                    "MarClick": ["@Local["Tương tác"]"],
+                    "MarInbox": ["@Local["Nhắn tin"]"],
+                    "MarCmt": ["@Local["Bình luận"]"],
+                    "MarCost": ["@Local["Chi phí"]"],
+                    "CostData": ["@Local["Chi phí/data"]"],
+                    "CostClick": ["@Local["Tương tác"]"],
+                    "ResponseRate": ["@Local["Tỉ lệ tương tác"]"],
+                    "Revenue": ["@Local["Doanh thu"]"],
+                    "Channel": ["@Local["Kênh tương tác"]"],
+                    "Branch": ["@Local["Chi nhánh"]"],
+                }
+                syslog_ExpExcel('e', Outlang["Hieu_qua_quang_cao"]);
+                exportJsonToExcel(Outlang["Hieu_qua_quang_cao"], DataExportMaster, dataHeader);
+
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+
+        }
+        catch (e) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    function EA_ExportDetail() {
+        try {
+            if (DataExportDetail && DataExportDetail.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "Emp": ["@Local["Tên nhân viên"]"],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "MarBudget": ["@Local["Ngân sách"]"],
+                    "MarData": ["@Local["Data"]"],
+                    "MarDisplay": ["@Local["Hiển thị"]"],
+                    "MarClick": ["@Local["Tương tác"]"],
+                    "MarInbox": ["@Local["Nhắn tin"]"],
+                    "MarCmt": ["@Local["Bình luận"]"],
+                    "MarCost": ["@Local["Chi phí"]"],
+                    "SerResponseRate": ["@Local["Tỉ lệ tương tác"]"],
+                    "Revenue": ["@Local["Doanh thu"]"],
+                    "Channel": ["@Local["Kênh tương tác"]"],
+                    "Branch": ["@Local["Chi nhánh"]"],
+                }
+                let fileName = xoa_dau($("#EA_DetailService").text()).replaceAll(' ', '-');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(fileName, DataExportDetail, dataHeader);
+
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+
+        }
+        catch (e) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function EA_DetailPrintReport() {
+        try {
+            if (DataExportDetail && DataExportDetail.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "Emp": ["@Local["Tên nhân viên"]"],
+                    "ServiceName": ["@Local["Dịch vụ"]"],
+                    "MarBudget": ["@Local["Ngân sách"]"],
+                    "MarData": ["@Local["Data"]"],
+                    "MarDisplay": ["@Local["Hiển thị"]"],
+                    "MarClick": ["@Local["Tương tác"]"],
+                    "MarInbox": ["@Local["Nhắn tin"]"],
+                    "MarCmt": ["@Local["Bình luận"]"],
+                    "MarCost": ["@Local["Chi phí"]"],
+                    "SerResponseRate": ["@Local["Tỉ lệ tương tác"]"],
+                    "Revenue": ["@Local["Doanh thu"]"],
+                    "Channel": ["@Local["Kênh tương tác"]"],
+                    "Branch": ["@Local["Chi nhánh"]"]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = $("#EA_DetailService").text(), DataExportDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    //#endregion //Event
+    //#region //Pie
+    function EA_RenderPie(data, idPie, idDescrip, idTotal) {
+        let Total = 0;
+        for (let i = 0; i < data.length; i++) {
+            Total += data[i].Data;
+        }
+        $("#" + idTotal).html(formatNumber(Total));
+        ReportPie_Description(data, 'Name', 'Data', idDescrip);
+        rp_pie(idPie, data, 'Name', 'Data')
+    }
+
+    //#endregion //Pie
+
+</script>
+<script>js_require('/js/main.js');</script>

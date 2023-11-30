@@ -1,0 +1,344 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Treatment.TreatmentMesure.MesDetail
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100 ps-3">
+                            <h6 class="fw-bold mb-0">@Local["Đánh giá sau điều trị"]</h6>
+                            <p class="text-sm mb-0">@Local["Đánh giá sau điều trị"]</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card-body pt-2 position-relative">
+                <div id="Mesdetail_wait" class="d-none waitingdiv text-center position-absolute top-0 start-50 translate-middle-x">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+
+                </div>
+                <div id="TreatmesContent" class="p-2">
+                </div>
+            </div>
+
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <button class="btn btn-secondary  mt-2 me-2" onclick="event.preventDefault(); return MeasDetail_Cancel()">@Local["Hủy"]</button>
+                    <button id="btnMesPrint" type="button" class="btn bg-gradient-info mt-2 me-2 d-none" onclick="event.preventDefault();return MeasDetail_Print()">@Local["In"]</button>
+                    <button id="btnMesDelete" type="button" class="btn bg-gradient-danger mt-2 me-2 d-none" onclick="event.preventDefault();return MeasDetail_Delete()">@Local["Xóa"]</button>
+                    <button id="btnMesSave" type="button" class="btn bg-gradient-primary mt-2 me-2 d-none" onclick="event.preventDefault();return MeasDetail_Executed()">@Local["Lưu"]</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var MesDetailData = {};
+    var MesDetailContent = {};
+    var MesDetailType = {};
+    var MesDetailFlag = 1;
+    var ser_MesCurrentID = '@Model._CurrentID';
+     var ser_MesDetailTreatID = '@Model._TreatmentID';
+    $(document).ready(function () {
+        MeasDetail_LoadIni(function () {
+            MeasDetail_Initialize();
+        });
+    });
+    function MeasDetail_Initialize () {
+        if (ser_MesCurrentID == 0) {
+            for ([key, item] of Object.entries(MesDetailType)) {
+                let e = {};
+                e.ID = item.ID;
+                e.MeaTypeID = item.ID;
+                e.MeaContentID = 0;
+                e.Value = 0;
+                e.Content = '';
+                MesDetailData[item.ID] = e;
+            }
+            MeasDetail_Render(MesDetailData, 'TreatmesContent'
+                , render = function () {
+                    $('#TreatmesContent .measuretypecbb').each(function (i, obj) {
+                        Load_Combo(Object.values(MesDetailContent), $(this)[0].id, false);
+                    });
+                }
+                , fill = function () { });
+            $('#btnMesSave').removeClass('d-none');
+            $('#btnMesDelete').addClass('d-none');
+            $('#btnMesPrint').addClass('d-none');
+        }
+        else {
+            $('#btnMesPrint').removeClass('d-none');
+            MeasDetail_Load();
+        }
+    }
+    async function MeasDetail_LoadIni (callback) {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesDetail/?handler=LoadIni"
+                , data = {}
+                , async = true
+                , error = function () {
+                    resolve();
+                    notiError_SW()
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let datas = JSON.parse(result);
+                        let datatype = datas.Type;
+                        for (let i = 0; i < datatype.length; i++) {
+                            MesDetailType[datatype[i].ID] = datatype[i];
+                        }
+                        let datacontent = datas.Content;
+                        for (let i = 0; i < datacontent.length; i++) {
+                            MesDetailContent[datacontent[i].ID] = datacontent[i];
+                        }
+                        if (typeof callback == 'function') callback();
+                    }
+                    resolve();
+                }
+                , sender = null
+            );
+        });
+    }
+    function MeasDetail_Load () {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesDetail/?handler=LoadataDetail"
+            , data = {
+                'CurrentID': ser_MesCurrentID,
+                'CustomerID': ser_MainCustomerID
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "") {
+                    let datas = JSON.parse(result);
+                    let dataAllow = datas.Table;
+                    let data = datas.Table1;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let e = {};
+                        e.ID = item.ID;
+                        e.MeaTypeID = item.MeaTypeID;
+                        e.MeaContentID = item.MeaContentID;
+                        e.Value = item.Value;
+                        e.Content = item.Content;
+                        MesDetailData[item.ID] = e;
+                    }
+                    if (dataAllow != undefined && dataAllow.length == 1) {
+                        if (dataAllow[0].EditButton == 1) $('#btnMesSave').removeClass('d-none');
+                        if (dataAllow[0].DeleteButton == 1) $('#btnMesDelete').removeClass('d-none');
+                    }
+                    MeasDetail_Render(MesDetailData, 'TreatmesContent'
+                        , render = function () {
+                            $('#TreatmesContent .measuretypecbb').each(function (i, obj) {
+                                Load_Combo(Object.values(MesDetailContent), $(this)[0].id, false);
+                            });
+                        }
+                        , fill = function () {
+                            MesDetailFlag = 0;
+                            for ([key, item] of Object.entries(MesDetailData)) {
+                                $('#md_content' + key).val(item.Content);
+                                $('#md_typenum' + key).val(item.Value);
+                                $("#md_contenttype" + key).dropdown("refresh");
+                                $("#md_contenttype" + key).dropdown("set selected", item.MeaContentID);
+                            }
+                            MesDetailFlag = 1;
+                        });
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#Mesdetail_wait").removeClass('d-none');
+            }
+            , complete = function (e) {
+                $("#Mesdetail_wait").addClass('d-none');
+            }
+        );
+    }
+     async function MeasDetail_Render (data, id ,render,fill) {
+        new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            myNode.innerHTML = '';
+            if (myNode != null) {
+                for ([key, item] of Object.entries(data)) {
+                    let tr = MeasureDetail_Each(item);
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                if (typeof render !== 'undefined') render();
+                if (typeof fill !== 'undefined') fill();
+
+            }
+            MeasDetail_Event();
+            resolve();
+        });
+    }
+    function MeasureDetail_Each (item) {
+        let type = item.MeaTypeID;
+        if (MesDetailType[type] == undefined) return '';
+        let cldiff = '', clselect = '', typename = '';
+        if (MesDetailType[type].IsCalDiff == 1) {
+            clselect = `d-none`;
+        }
+        else {
+            cldiff = `d-none`;
+        }
+        typename = MesDetailType[type].Name;
+        measurename = MesDetailType[type].MessureUnit;
+        let tr
+            = `<div class="ps-2">
+                    <div class="row px-2">
+                        <div class="col-12 col-sm-12 col-md-6 col-xl-3 p-1">
+                            <div class="">
+                                <label class="ms-0">@Local["Tên"]</label>
+                                <div class="form-check ps-0">
+                                    <a data-id="${item.ID}" class="position-relative text-capitalize mb-0 pe-3 mt-2 detail text-sm fw-bold">
+                                        ${typename}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-12 col-md-6 col-xl-3 p-1 ${clselect}">
+                            <label>@Local["Đánh giá"]</label>
+                            <div id="md_contenttype${item.ID}" data-id="${item.ID}" class="measuretype ui fluid search selection dropdown form-control">
+                                <input type="hidden"/>
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Đánh giá"]</div>
+                                <div id="cbbmd_contenttype${item.ID}" class="menu measuretypecbb" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-12 col-md-6 col-xl-3 p-1 ${cldiff}">
+                            <label>@Local["Số liệu"]</label>
+                             <div class="input-group">
+                                <input id="md_typenum${item.ID}" data-id="${item.ID}" type="number" class="measurenum form-control" placeholder="eg.@Local["Số liệu"]" value="0">
+                                <span class="input-group-text">${measurename}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-12 col-md-6 col-xl-3 p-1 flex-grow-1">
+                            <label>@Local["Nội dung"]</label>
+                            <input id="md_content${item.ID}" data-id="${item.ID}" type="text" class="measurecontent form-control" placeholder="eg.@Local["Nội dung"]">
+                        </div>
+                    </div>
+
+                </div>
+                <hr class="my-3 w-80 mx-auto horizontal dark" />`;
+        return tr;
+    }
+    function MeasDetail_Event () {
+        $("#TreatmesContent .measurenum").unbind('change').on('change', function () {
+            if (MesDetailFlag == 1) {
+                MesDetailFlag = 0;
+                let id = Number($(this).attr('data-id'));
+                let va = $(this).val();
+                let num = (!isNaN(va) && Number(va) >= 0) ? Number(va) : 0;
+                MesDetailData[id].Value = num;
+                MesDetailFlag = 1;
+            }
+        });
+        $("#TreatmesContent .measuretype").unbind('change').on('change', function () {
+            if (MesDetailFlag == 1) {
+                MesDetailFlag = 0;
+                let id = Number($(this).attr('data-id'));
+                let va = $(this).dropdown('get value');
+                let num = (!isNaN(va) && Number(va) >= 0) ? va : 0;
+                MesDetailData[id].MeaContentID = Number(num);
+                MesDetailFlag = 1;
+            }
+        });
+        $("#TreatmesContent .measurecontent").unbind('change').on('change', function () {
+            if (MesDetailFlag == 1) {
+                MesDetailFlag = 0;
+                let id = Number($(this).attr('data-id'));
+                let va = $(this).val();
+                MesDetailData[id].Content = va;
+                MesDetailFlag = 1;
+            }
+        });
+    }
+    function MeasDetail_Cancel () {
+        if ($('#TreatmeslistArea').length) {
+            $('#TreatmeslistArea').removeClass('d-none');
+            $('#TreatmesDetailArea').addClass('d-none');
+            $('#TreatmesDetailArea').empty();
+        }
+        else {
+            CloseModal();
+        }
+
+    }
+    function MeasDetail_Delete () {
+        const promise = notiConfirm();
+        promise.then(function () {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesDetail/?handler=DeleteItem"
+                , data = {
+                    "CustomerID": ser_MainCustomerID,
+                    "CurrentID": ser_MesCurrentID
+                }
+                , async = true
+                , error = $('#btnMesDelete')
+                , success = function (result) {
+                    if (result != '0') {
+                        notiSuccess();
+                        if (typeof MeasDetail_Cancel === 'function') MeasDetail_Cancel();
+                        if (typeof MeasureLoad === 'function') MeasureLoad(0, 0);
+                        if (typeof Treatment_List_Service_Load === 'function') Treatment_List_Service_Load();
+                    }
+                    else notiError_SW();
+                }
+            );
+        }, function () { });
+    }
+    function MeasDetail_Executed () {
+        let _data = Object.values(MesDetailData);
+            _data = _data.map(x => {
+                x.Value = x.Value.toFixed(2);
+                return x;
+            })
+
+            if (_data != undefined && _data.length != 0) {
+                AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesDetail/?handler=ExcuteData"
+                    , data = {
+                        "CurrentID": ser_MesCurrentID,
+                        "CustomerID": ser_MainCustomerID,
+                        "TreatmentID": ser_MesDetailTreatID,
+                        "data": JSON.stringify(_data)
+                    }
+                    , async = true
+                    , error = $('#btnMesSave')
+                    , success = function (result) {
+                        if (result != '0') {
+                            notiSuccess();
+                            if (typeof MeasDetail_Cancel === 'function') MeasDetail_Cancel();
+                            if (typeof MeasureLoad === 'function') MeasureLoad(id = result, isLoadMore = 1);
+                            if (typeof Treatment_List_Service_Load === 'function') Treatment_List_Service_Load();
+                        }
+                        else notiError_SW();
+                    }
+                );
+            }
+            else  notiWarning('@Local["Chưa có dữ liệu"]');
+    }
+    function MeasDetail_Print () {
+        //syslog_cutpaid('p', code, ser_MainCustomerID);
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load('/Print/print?Type=CustomerMeasure&DetailID=' + ser_MesCurrentID);
+        $('#DetailModal').modal('show');
+
+    }
+</script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+
+

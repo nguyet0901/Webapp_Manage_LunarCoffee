@@ -1,0 +1,409 @@
+﻿@page
+@model MLunarCoffee.Pages.Account.InvoicePaymentModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row">
+    <div id="AGMaster" class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="card-header py-0 pt-3">
+                <div class="d-lg-flex">
+                    <div class="w-100 w-lg-40 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Lịch sử thu chi"]</h6>
+                        </div>
+                        <div class="row ps-2 mt-3">
+                            <div class="row ps-2 mt-2">
+                                <div class="col-12 col-md-12 col-xl-5 p-1 ps-sm-2">
+                                    <div class="ui fluid search selection dropdown form-control" id="AGBranchID">
+                                        <input type="hidden" name="branch" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                        <div id="cbbAGBranch" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-12 col-xl-5 p-1 ps-sm-2 ps-xl-1">
+                                    <div class="input-group flex-nowrap rounded-end position-relative">
+                                        <input id="AGDate" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày"]" title="@Local["Tối đa 31 ngày"]" />
+                                        <div id="InvPay_dteDate" class="input-group-text position-relative cursor-pointer  _tab_control_"
+                                            data-tab="acc_btn_view_invoice_all_day" title="">
+                                            <span class="btn badge bg-gradient-success my-auto me-2"
+                                                onclick="event.preventDefault(); InvPay_setToDay();">@Local["Hôm nay"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4 col-xl-2 p-1 ps-sm-2 ps-xl-1">
+                                    <button id="AGView" class="btn bg-gradient-primary mb-0 w-100 text-nowrap">@Local["OK"]</button>
+                                </div>
+                                <div class="col-12 col-md-12 col-xl-12 p-1 ps-2 mt-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="AGCashierID">
+                                        <input type="hidden" name="cashier" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Thu ngân"]</div>
+                                        <div id="cbbAGCashier" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-100 mt-2 me-2">
+                        <div class="row ">
+                            <div class="col-12 col-md-4 col-xl-4 p-1">
+                                <h6 class="my-2 fw-bold">@Local["Tổng thu"]</h6>
+                                <div class="card card-body border card-plain border-radius-lg p-3">
+                                    <div class="d-flex align-items-center">
+                                        <h6 id="AGInput" class="mb-0  fw-bold fs-5"></h6>
+                                        <div class="ms-auto text-dark cursor-pointer">
+                                            <button id="AGInputAdd" class="btn btn-small bg-gradient-success py-1 text-lg px-3 mb-0" title="@Local["Thu"]">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <p class="text-md mb-0 text-capitalize ellipsis_one_line">@Local["Tiền mặt"]</p>
+                                        <h6 class="ms-2 text-md text-primary mb-0" id="AGInputCash"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4 col-xl-4 p-1">
+                                <h6 class="my-2 fw-bold">@Local["Tổng chi"]</h6>
+                                <div class="card card-body border card-plain border-radius-lg p-3">
+                                    <div class="d-flex align-items-center">
+                                        <h6 id="AGOutput" class="mb-0  fw-bold fs-5"></h6>
+                                        <div class="ms-auto text-dark cursor-pointer">
+                                            <button id="AGOutputAdd" class="btn btn-small bg-gradient-warning py-1 text-lg px-3 mb-0" title="@Local["Chi"]">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <p class="text-md mb-0 text-capitalize ellipsis_one_line">@Local["Tiền mặt"]</p>
+                                        <h6 class="ms-2 text-md text-primary mb-0" id="AGOutputCash"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4 col-xl-4 p-1">
+                                <h6 class="my-2 fw-bold">@Local["Còn lại"]</h6>
+                                <div class="card card-body border card-plain border-radius-lg p-3">
+                                    <div class="d-flex align-items-center" style="height: 33.19px;">
+                                        <h6 id="AGLeft" class="mb-0  fw-bold fs-5"></h6>
+                                        <div class="ms-auto text-dark cursor-pointer">
+                                            <button id="showDetailAcc" class="btn btn-small bg-gradient-info py-1 text-lg px-3 mb-0" title="@Local["Xem thêm"]">
+                                                <i class="text-sm fa fa-chevron-down" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <p class="text-md mb-0 text-capitalize ellipsis_one_line">@Local["Tiền mặt"]</p>
+                                        <h6 class="ms-2 text-md text-primary mb-0" id="AGLeftCash"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- #region table-->
+            <div id="detailAcc" class="card-body py-2 mobile-responsive" style="display:none;">
+                <table class="table vt-table mb-0" id="dtContentInvoiceList">
+                    <thead>
+                        <tr>
+                            <th>@Local["#"]</th>
+                            <th>@Local["Hình thức"]</th>
+                            <th>@Local["Chuyển khoản"]</th>
+                            <th>@Local["Pos"]</th>
+                            <th>@Local["Chi tiết"] (@Local["Khác"])</th>
+                            <th>@Local["Thu"]</th>
+                            <th>@Local["Chi"]</th>
+                            <th>@Local["Còn lại"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dtAccDetail">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- #endregion -->
+            <div id="AGBody" class="card-body pt-2">
+            </div>
+        </div>
+    </div>
+    <div id="AGDetail" class="col-12 d-none">
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    //#region //INIT - DEFINE
+    let AGMaxDay = 31;
+    let AGDataBranch;
+    let InvPay_DatePicker;
+    $(document).ready(function () {
+        InvPay_DatePicker = $("#AGDate").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                } else {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31)
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        Checking_TabControl_Permission();
+        InvPay_CheckAllowFilterDate();
+        let date = new Date();
+        let firstDay = date;
+        let lastDay = date;
+        $("#AGDate").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        AccountGeneralIni();
+        AccountGeneralEvent();
+       
+    });
+
+    async function AccountGeneralIni () {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Account/InvoicePayment/?handler=LoadComboInitialize"
+                , data = {}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        AGDataBranch = JSON.parse(result);
+                        if (AGDataBranch && AGDataBranch.length > 0) {
+                            let data = [...AGDataBranch];
+                            Load_Combo(data, "cbbAGBranch", true, "@Local["Tất cả chi nhánh"]");
+                            $("#AGBranchID").dropdown("refresh");
+                            $("#AGBranchID").dropdown("set selected", Number(Master_branchID));
+                        }
+                        AccountLoadcomboCashier(Master_branchID);
+                        AccountGeneralLoad();
+                    }
+                }
+                , sender = null
+            );
+            resolve();
+        });
+    }
+
+    async function AccountLoadcomboCashier (branchID) {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Account/InvoicePayment/?handler=LoadComboCashier"
+                , data = {branchID: branchID}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        let DataCashier = JSON.parse(result);
+                        if (DataCashier && DataCashier.length > 0) {
+                            Load_Combo(DataCashier, "cbbAGCashier", false, "@Local["Tất cả thu ngân"]");
+                            $("#AGCashierID").dropdown("refresh");
+                            $("#AGCashierID").dropdown("set selected", "0");
+                        }
+                    }
+                }
+                , sender = null
+            );
+            resolve();
+        });
+    }
+
+    //#endregion
+
+    //#region //LOADDATA
+    async function AccountGeneralLoad (isReload = 0) {
+        new Promise((resolve, reject) => {
+            let branchid = (Number($('#AGBranchID').dropdown('get value')) ? Number($('#AGBranchID').dropdown('get value')) : 0);
+            let branchToken = branchid == 0 ? Object.values(AGDataBranch).map(e => e.ID).join(',') : '';
+            let cashierid = (Number($('#AGCashierID').dropdown('get value')) ? Number($('#AGCashierID').dropdown('get value')) : 0);
+            let dateFrom = "";
+            let dateTo = "";
+            let date = $('#AGDate').val() ? $('#AGDate').val() : new Date();
+            $('#IPShowMessenge').hide();
+            if (date.includes(" to ")) {
+                dateFrom = date.split(" to ")[0];
+                dateTo = date.split(" to ")[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            AjaxLoad(url = "/Account/InvoicePayment/?handler=Load"
+                , data = {
+                    'branchid': branchid
+                    , 'branchToken': branchToken
+                    , 'cashierid': cashierid
+                    , 'dateFrom': dateFrom
+                    , 'dateTo': dateTo
+                    , 'maxDate': AGMaxDay
+                }
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result == "0") {
+                        $('#IPShowMessenge').show();
+                    }
+                    else {
+                        let dttable = JSON.parse(result);
+                        let data = dttable.Table;
+                        let dataDetail = dttable.Table1;
+                        if (data != undefined && data.length == 1) {
+                            $("#AGInput").html(formatNumber(data[0].Incoming));
+                            $("#AGInputCash").html(formatNumber(data[0].IncomingCash));
+                            $("#AGOutput").html(formatNumber(data[0].Outcoming));
+                            $("#AGOutputCash").html(formatNumber(data[0].OutcomingCash));
+                            let AGMoneyLeft = data[0].Incoming - data[0].Outcoming;
+                            let AGMoneyLeftCast = data[0].IncomingCash - data[0].OutcomingCash;
+                            $("#AGLeft").html(formatNumber(AGMoneyLeft));
+                            $("#AGLeftCash").html(formatNumber(AGMoneyLeftCast));
+                            if (isReload == 0) {
+                                $("#AGBody").empty();
+                                $("#AGBody").load("/Account/InvoicePaymentTable?BranchID=" + branchid + '&BranchToken=' + branchToken + '&CashierID=' + cashierid + '&dateTo=' + dateTo.replace(" ", "x") + 'x23:59:59&DateFrom=' + dateFrom.replace(" ", "x") + "x00:00:00&ViewOnly=1" + "&ver=" + versionofWebApplication);
+                            }
+                        }
+                        if (isReload == 0) {
+                            $('#dtAccDetail').empty();
+                        }
+                        if (dataDetail != undefined && dataDetail.length > 0) {
+                            renderDetailAccount(dataDetail, 'dtAccDetail');
+                        }
+                    }
+                }
+                , sender = null
+            );
+            resolve();
+        });
+    };
+
+    function renderDetailAccount (data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                let AmountInAll = 0;
+                let AmountOutAll = 0;
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let methodname = author_get("UserLang") == 'en' ? Outlang[item.NameLangKey] : item.MethodName;
+                    let tr = `
+                                                    <td class="text-center">${(i + 1)}</td>
+                                                    <td>${methodname}</td>
+                                                    <td>${item.BankName}</td>
+                                                    <td>${item.PosName}</td>
+                                                    <td>${item.MethodDetailName}</td>
+                                                    <td>${formatNumber(item.AmountIn)}</td>
+                                                    <td>${formatNumber(item.AmountOut)}</td>
+                                                    <td>${formatNumber(item.AmountIn - item.AmountOut)}</td>
+                                                `
+                    AmountInAll += item.AmountIn;
+                    AmountOutAll += item.AmountOut;
+                    stringContent = stringContent + '<tr role="row" data-id="' + item.ID + '">' + tr + '</tr>';
+                }
+                stringContent += `<tr role="row" class="text-white bg-gradient bg-primary">
+                                                    <td colspan="2"class="text-center">@Local["Tổng"]</td><td></td> <td></td><td></td>
+                                                    <td>${formatNumber(AmountInAll)}</td>
+                                                    <td>${formatNumber(AmountOutAll)}</td>
+                                                    <td>${formatNumber(AmountInAll - AmountOutAll)}</td>
+                                                    </tr>
+                                                `
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    //#endregion
+
+    //#region //EVENT
+
+    function AccountGeneralEvent () {
+        $("#AGBranchID").unbind('change').change(function () {
+            let branchid = (Number($('#AGBranchID').dropdown('get value')) ? Number($('#AGBranchID').dropdown('get value')) : 0);
+            AccountLoadcomboCashier(branchid);
+        });
+        $("#AGView").unbind('click').click(function () {
+            AccountGeneralLoad();
+        });
+        $("#AGOutputAdd").unbind('click').click(function () {
+            AccountGeneralAdd(0);
+        });
+        $("#AGInputAdd").unbind('click').click(function () {
+            AccountGeneralAdd(1);
+        });
+        $("#showDetailAcc").unbind('click').click(function () {
+            if ($('#detailAcc').is(":visible")) {
+                $('#detailAcc').hide();
+                $('#showDetailAcc').children().removeClass("fa-chevron-up").addClass("fa-chevron-down");
+            }
+            else {
+                $('#detailAcc').show();
+                $('#showDetailAcc').children().removeClass("fa-chevron-down").addClass("fa-chevron-up");
+            }
+
+        });
+    }
+    function AccountGeneralAdd (type) {
+        let link = "/Account/InvoiceDetail" + "?Type=" + type + "&ver=" + versionofWebApplication;
+        $.ajax({
+            url: link,
+            success: function (data) {
+                $("#AGDetail").html(data);
+            },
+            beforeSend: function (e) {
+                $("#AGDetail").empty();
+                $('#AGDetail').removeClass('d-none');
+                $('#AGMaster').addClass('d-none');
+            }
+        })
+        return false;
+    }
+    function AccountGeneralCloseModal () {
+        $('#AGMaster').removeClass('d-none'); AGMaster
+        $('#AGDetail').addClass('d-none');
+    }
+    function AccountGeneralEdit (id, type) {
+        let link = "/Account/InvoiceDetail" + "?CurrentID=" + id + "&Type=" + type + "&ver=" + versionofWebApplication;
+        $.ajax({
+            url: link,
+            success: function (data) {
+                $("#AGDetail").html(data);
+            },
+            beforeSend: function (e) {
+                $("#AGDetail").empty();
+                $('#AGDetail').removeClass('d-none');
+                $('#AGMaster').addClass('d-none');
+            }
+        })
+        return false;
+    }
+    function AccountGeneralClose () {
+        $('#AGDetail').addClass('d-none');
+        $('#AGMaster').removeClass('d-none');
+        $("#AGDetail").html('');
+    }
+
+    //#region //permission date
+    function InvPay_CheckAllowFilterDate()
+    {
+        if ($('#InvPay_dteDate').length == 0) {
+            $("#AGDate").flatpickr({
+                mode: "range",
+                dateFormat: 'd-m-Y',
+                enableTime: false,
+                clickOpens: false,
+                minDate: "today",
+                maxDate: "today"
+            });
+        } 
+    }
+    function InvPay_setToDay(){
+        InvPay_DatePicker.setDate([new Date(), new Date()]);
+    }
+    //#endregion
+            //#endregion
+</script>

@@ -1,0 +1,155 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.UnitCountListModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 data-languagestatic="list_of_unit_header" class="mb-0">Danh Sách Đơn Vị Tính</h6>
+                                <p data-languagestatic="list_of_unit_header_sub" class="text-sm mb-0">Đơn Vị Tính không được trùng, chỉ xoá khi chưa được sử dụng</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+                            <button data-languagestatic="create_new" id="btnAddUnitCountList" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return AddNewUnitCount()">Thêm Mới</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class=" m-0 my-3 table-responsive">
+                        <table id="dtContentUnit" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th data-languagestatic="no">#</th>
+                                    <th data-languagestatic="unit">Tên Đơn Vị Tính</th>
+                                    <th data-languagestatic="note">Ghi Chú</th>
+                                    <th data-languagestatic="update">Người Sửa</th>
+                                    <th data-languagestatic="delete">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentUnitBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let DataUser;
+    function LoadUnitAjax() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                UnitCount_LoadData();
+            });
+
+    }
+    function UnitCount_LoadData() {
+        AjaxLoad(url = "/WareHouse/UnitCountList/?handler=LoadataUnit"
+            , data = {  }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                RenderTableUnit(data, 'dtContentUnitBody');
+            }
+        );
+    }
+    function DeleteUnit(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteUnit(id); }, function () { });
+    }
+    function ExecuteDeleteUnit(id) {
+        AjaxLoad(url = "/WareHouse/UnitCountList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadUnitAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    $(document).ready(function () {
+        LoadUnitAjax();
+        $('#dtContentUnit tbody').on('mousedown', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditUnit(ID);
+        });
+        $('#dtContentUnit tbody').on('mousedown', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteUnit(ID)
+        });
+    });
+    function AddNewUnitCount() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/UnitCountDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EditUnit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/UnitCountDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function RenderTableUnit(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_circleAvatar;
+                    let note = (item.Note == '') ? '<span style="color: #d4d4d5;">no content</span>' : item.Note;
+
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass">' + item.Name + '</a></td>'
+                        + '<td>' + note + '</td><td>'
+                        + '<div class="d-flex">'
+                        + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+                        + '<img class="avatar avatar-xs mt-2" src="data:image/png;base64,' + img + ' " alt="label-image">'
+                        + '</div>'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+                        + '<span class="text-xs">' + GetDateTime_String_DMY(item.DayEditor) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        + '<td>'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Hover_Edit(id);
+        Checking_TabControl_Permission();
+    }
+
+</script>
+<script>js_require('/js/main.js');</script>
+

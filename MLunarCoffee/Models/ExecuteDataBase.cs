@@ -57,10 +57,10 @@ namespace MLunarCoffee.Models
         {
             try
             {
-                string connectionString = String.Format(@"Server={0}; " + "Initial Catalog={1}; User ID={2};Password={3};Trusted_Connection=false; ", loc[0]
-                    , loc[1]
-                    , loc[2]
-                    , loc[3]);
+                string connectionString = String.Format(@"Server={0}; " + "Initial Catalog={1}; User ID={2};Password={3};Trusted_Connection=false; " ,loc[0]
+                    ,loc[1]
+                    ,loc[2]
+                    ,loc[3]);
                 _conn = new SqlConnection(connectionString);
                 if (_conn.State == ConnectionState.Closed) _conn.Open();
             }
@@ -70,18 +70,41 @@ namespace MLunarCoffee.Models
             }
         }
 
-        public async Task<DataTable> ExecuteDataTable(string sql, CommandType commandType, params object[] pars)
+
+
+        public async Task<DataTable> LoadPara(string paraTypeName)
         {
             try
             {
                 if (_conn.State == ConnectionState.Closed) _conn.Open();
-                using (SqlCommand com = new SqlCommand(sql, _conn))
+                DataTable table = new DataTable("myTable");
+                using (Models.ExecuteDataBase confunc = new Models.ExecuteDataBase())
+                {
+                    table = await confunc.ExecuteDataTable("MLU_sp_LoadCombo_Para" ,CommandType.StoredProcedure ,
+                      "@paraTypeName" ,SqlDbType.NVarChar ,paraTypeName.Trim());
+                }
+                if (_conn.State == ConnectionState.Open) _conn.Close();
+                return table;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
+        public async Task<DataTable> ExecuteDataTable(string sql ,CommandType commandType ,params object[] pars)
+        {
+            try
+            {
+                if (_conn.State == ConnectionState.Closed) _conn.Open();
+                using (SqlCommand com = new SqlCommand(sql ,_conn))
                 {
                     com.CommandType = commandType;
                     com.CommandTimeout = 120;
                     for (int i = 0; i < pars.Length; i += 3)
                     {
-                        SqlParameter par = new SqlParameter(pars[i].ToString(), pars[i + 1]);
+                        SqlParameter par = new SqlParameter(pars[i].ToString() ,pars[i + 1]);
                         par.Value = pars[i + 2];
                         com.Parameters.Add(par);
                     }
@@ -97,8 +120,10 @@ namespace MLunarCoffee.Models
                             }
                             return dt;
                         }
+                        //DataTable dt = new DataTable();
 
                     }
+                    //SqlDataAdapter dad = new SqlDataAdapter(com);
 
                 }
 
@@ -113,19 +138,19 @@ namespace MLunarCoffee.Models
 
         }
 
-        public async Task<DataSet> ExecuteDataSet(string sql,
-           CommandType commandType,
+        public async Task<DataSet> ExecuteDataSet(string sql ,
+           CommandType commandType ,
            params object[] pars)
         {
             if (_conn.State == ConnectionState.Closed) _conn.Open();
 
-            using (SqlCommand com = new SqlCommand(sql, _conn))
+            using (SqlCommand com = new SqlCommand(sql ,_conn))
             {
                 com.CommandType = commandType;
                 com.CommandTimeout = 120;
                 for (int i = 0; i < pars.Length; i += 3)
                 {
-                    SqlParameter par = new SqlParameter(pars[i].ToString(), pars[i + 1]);
+                    SqlParameter par = new SqlParameter(pars[i].ToString() ,pars[i + 1]);
                     par.Value = pars[i + 2];
                     com.Parameters.Add(par);
                 }
@@ -150,6 +175,58 @@ namespace MLunarCoffee.Models
 
 
 
+        }
+
+        public async Task<DataTable> LoadEmployee(int GroupID ,int Branch_ID ,int isAllBranch)
+        {
+            try
+            {
+                //if (_conn.State == ConnectionState.Closed) _conn.Open();
+                DataTable table = new DataTable("myTable");
+                using (Models.ExecuteDataBase confunc = new Models.ExecuteDataBase())
+                {
+                    table = await confunc.ExecuteDataTable("MLU_sp_LoadCombo_Employee" ,CommandType.StoredProcedure ,
+                      "@GroupID" ,SqlDbType.Int ,GroupID ,
+                      "@Branch_ID" ,SqlDbType.Int ,Branch_ID ,
+                      "@isAllBranch" ,SqlDbType.Int ,isAllBranch
+                      );
+                }
+                //if (_conn.State == ConnectionState.Open)
+                //{
+                //    _conn.Close();
+                //    _conn.Dispose();
+                //}
+                return table;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public async Task<DataTable> LoadEmployeeFull(int Branch_ID ,int isAllBranch)
+        {
+            try
+            {
+                if (_conn.State == ConnectionState.Closed) _conn.Open();
+                DataTable table = new DataTable("myTable");
+                using (Models.ExecuteDataBase confunc = new Models.ExecuteDataBase())
+                {
+                    table = await confunc.ExecuteDataTable("MLU_sp_LoadCombo_EmployeeFull" ,CommandType.StoredProcedure ,
+                      "@Branch_ID" ,SqlDbType.Int ,Branch_ID ,
+                      "@isAllBranch" ,SqlDbType.Int ,isAllBranch
+                      );
+                }
+                if (_conn.State == ConnectionState.Open)
+                {
+                    _conn.Close();
+                    _conn.Dispose();
+                }
+                return table;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
     }

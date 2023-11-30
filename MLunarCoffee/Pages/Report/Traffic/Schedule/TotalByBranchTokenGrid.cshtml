@@ -1,0 +1,166 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Traffic.Schedule.TotalByBranchTokenGridModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="list_total_schedule_token_branch_header"
+                   class="text-md text-dark font-weight-bold mb-1">
+                    Tổng Lịch Hẹn Tại Chi Nhánh Theo Ngày
+                </p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+                <p id="error_max_dates_show" style="display:none;" class="text-sm mb-0">
+                    <span data-languagestatic="user_date_max_lock">Số ngày được xem tối đa</span>
+                    <span class="ps-2" id="report_max_dates_show"></span>
+                </p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#TotalByBranchTokenGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="Schedule_TokenBrand_LoadDataReport()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="ExportData_TotalScheldule_TokenBrand()"></i>
+ 
+            </div>
+        </div>
+   
+
+    </div>
+    <div class="collapsesticky collapse show" id="TotalByBranchTokenGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+
+                </div>
+                <table class="table vt-table mb-0" id="dtContentReportMaster">
+                    <thead data-languagedyn="grid" class="hiddenCollapse" id="headerTableReportMaster">
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportMasterBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var ser_maxDates = 31;
+    $(document).ready(function () {
+ 
+        $("#report_max_dates_show").html(": " + ser_maxDates);
+        Schedule_TokenBrand_LoadDataReport();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function Schedule_TokenBrand_LoadDataReport() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _TokenBranch = "@Model._TokenBranch";
+        $('#error_max_dates_show').hide();
+        AjaxLoad(url = "/Report/Traffic/Schedule/TotalByBranchTokenGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _TokenBranch, 'maxDates': ser_maxDates }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "" && result != "0") {
+                    let listBranch = JSON.parse(result)["Table1"];
+                    let listDates = JSON.parse(result)["Table2"];
+                    let data = JSON.parse(result)["Table"];
+                    RenderReport_Header(listDates, "headerTableReportMaster");
+                    RenderReportMater(listDates, listBranch, data, "dtContentReportMasterBody");
+                } else {
+                    if (result == "0") {
+                        $('#error_max_dates_show').show();
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#dtContentReportMaster").hide();
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#dtContentReportMaster").show();
+                $("#loaderList").hide();
+            }
+        );
+        return false;
+    }
+    function RenderReport_Header(HeaderReason, id) {
+        if (HeaderReason && HeaderReason.length > 0) {
+            let stringContent = '';
+            let tr = '<th class="fixed-side" style="width:20px">#</th>'
+                + '<th class="fixed-side" data-languagestatic="branch">Chi Nhánh</th>'
+                + '<th class="fixed-side" data-languagestatic="total">Tổng</th>';
+            for (var i = 0; i < HeaderReason.length; i++) {
+                let item = HeaderReason[i];
+                tr += '<th class="date_show">' + item.DateShow + '</th>';
+            }
+            stringContent += '<tr role="row">' + tr + '</tr>'
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function RenderReportMater(listDate, listBranch, data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < listBranch.length - 1; i++) {
+                    let sv = listBranch[i];
+                    let items = data.filter(data => data.BranchID == listBranch[i].BranchID);
+
+                    let tr = /*'<td style="display:none">' + sv.BranchID + '</td>'*/
+                        '<td class="vt-number-order"></td>'
+                        + '<td class="fixed-side"  >' + sv.BranchName + '</td>'
+                        + '<td class="fixed-side"  >' + (sv.TotalSchedule) + '</td>';
+
+                    for (var j = 0; j < listDate.length; j++) {
+                        let item = items.filter(data => data.DateFrom == listDate[j].DateInMonth);
+                        if (item.length > 0)
+                            tr += '<td class="selectedtd" >' + (item[0].NumSchedule) + '</td>';
+                        else {
+                            tr += '<td class="selectedtd" > 0 </td>';
+                        }
+                    }
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+                let row_toatal =
+                    '<td class="vt-number-order"></td>'
+                    + '<td class="fixed-side">' + (listBranch[listBranch.length - 1].BranchName) + '</td>'
+                    + '<td class="fixed-side">' + (listBranch[listBranch.length - 1].TotalSchedule) + '</td>';
+                for (var j = 0; j < listDate.length; j++) {
+                    let item = listDate[j];
+                    row_toatal += '<td>' + (item.TotalSchedule) + '</td>';
+                }
+                stringContent = stringContent + '<tr role="row" class="vt-number active">' + row_toatal + '</tr>';
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        //$("#dtContentReportMaster").tableHeadFixer({ "head": false, "headleft": true, "left": 3, "class": "fixed-side" });
+    }
+    function ExportData_TotalScheldule_TokenBrand() {
+        exportToExcel("dtContentReportMaster", 'tong-lich-hen-chi-nhanh-theo-ngay');
+    }
+
+</script>
+ 

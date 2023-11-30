@@ -1,0 +1,333 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.Detail.ProfitGridModel
+@{
+    Layout = null;
+}
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#PG_DivGrid" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return PGrid_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return PGrid_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="PG_DivGrid">
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="PG_DivTable">
+                    <thead>
+                        <tr id="PG_HeadGrid">
+                        </tr>
+                    </thead>
+                    <tbody id="PG_BodyGrid">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="PG_DivDetail" class="mt-3" style="display:none;">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p class="text-md text-dark font-weight-bold mb-0 mt-1"><span id=""></span></p>
+            </div>
+            <div class="right">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local[" Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#PG_DivDetail" aria-expanded="true"></i>
+
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local[" Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary _tab_control_" data-tab="export_excel"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       data-bs-original-title="@Local[" Xuất excel"]" onclick="event.preventDefault(); return PGrid_ExportDetail()"></i>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="PG_DivDetail">
+            <div class="card-body p-0 mt-3">
+                <div class="m-0 my-0 mobile-responsive position-relative vt-header-sticky">
+                    <table class="table vt-table mb-0" id="PG_TableDetail">
+                        <thead>
+                            <tr role="row">
+                                <th>#</th>
+                                <th>@Local["MSKH"]</th>
+                                <th>@Local["Khách hàng"]</th>
+                                <th>@Local["Loại"]</th>
+                                <th>@Local["Số tiền"]</th>
+                                <th>@Local["Ngày tạo"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="PG_BodyGridDetail">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+<script>
+
+    //#region //Init
+    var PG_TypeName = {
+        "Revenue": decodeHtml("@Local["Doanh thu bán hàng"]" + " [1]")
+        , "AmountReturn": decodeHtml("@Local["Giảm trừ doanh thu"]" + " [2]")
+        , "ReceiptIn": decodeHtml("@Local["Thu khác"]" + " [6]")
+        , "ReceiptOut": decodeHtml("@Local["Chi phí"]" + " [4]")
+        , "OtherOut": decodeHtml("@Local["Chi khác"]" + " [7]")
+        , "RevRoot": decodeHtml("@Local["Doanh thu thuần"]" + " [3]=[2] - [1]")
+        , "RevSale": decodeHtml("@Local["Lợi nhuận từ hoạt động kinh doanh"]" + " [5]=[3] - [4]")
+        , "RevFinal": decodeHtml("@Local["Lợi nhuận thuần"]" + " [8]=[5] + [6] - [7]")
+    }
+    let PG_TypeDetail = {
+        "PayService": decodeHtml("@Local["Dịch vụ"]")
+        , "PayCard": decodeHtml("@Local["Thẻ"]")
+        , "PayMedicine": decodeHtml("@Local["Thuốc"]")
+        , "PayDesposit": decodeHtml("@Local["Tiền cọc"]")
+        , "Account": decodeHtml("@Local["Thu/chi khách hàng"]")
+        , "Supplier": decodeHtml("@Local["Nhà cung cấp"]")
+        , "DespositSupplier": decodeHtml("@Local["Tiền cọc"]-@Local["Nhà cung cấp"]")
+        , "Labo": decodeHtml("@Local["Labo"]")
+        , "Broker": decodeHtml("@Local["Hoa hồng giới thiệu"]")
+    }
+    let PG_ArrBody = [
+        { "TypeMain": "Revenue" }
+        , { "TypeMain": "AmountReturn" }
+        , { "TypeMain": "ReceiptOut" }
+        , { "TypeMain": "ReceiptIn" }
+        , { "TypeMain": "OtherOut" }
+    ]
+
+
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let _BranchID = "@Model._BranchID";
+
+    $(document).ready(function () {
+        PGrid_Load();
+    })
+
+    function PGrid_Load() {
+        $("#PG_HeadGrid").empty();
+        $("#PG_BodyGrid").empty();
+
+        AjaxLoad(url = "/Report/Revenue/Detail/ProfitGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'BranchID': _BranchID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let DtHead = data["Table1"];
+                    let DtBody = PG_ArrBody;
+                    let DtMain = data["Table2"];
+                    PGrid_HeadRender(DtHead, "PG_HeadGrid");
+                    PGrid_BodyRender(DtBody, "PG_BodyGrid", DtHead, DtMain);
+                }
+            }
+        );
+    }
+
+    function PGrid_LoadDetail(type) {
+        AjaxLoad(url = "/Report/Revenue/Detail/ProfitGrid/?handler=LoadDetail"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'BranchID': _BranchID, 'TypeDetail': type }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    $("#PG_BodyGridDetail").empty();
+                    PGrid_RenderDetail(data["Table"], "PG_BodyGridDetail");
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //Render
+
+    async function PGrid_HeadRender(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            let tr = `<th style="width: 10px">#</th><th>@Local["Tên"]</th>`;
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        tr += `
+                                <th>${item.Month}/${item.Year}</th>
+                            `;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+
+                }
+            }
+        })
+    }
+
+    async function PGrid_BodyRender(data, id, DtHead, DtMain) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                                <tr role="row" class="vt-number">
+                                    <td class="vt-number-order"></td>
+                                    <td><a href="#" class="border-1 border-primary border-bottom mb-0 text-sm fw-bold PG_Btn" data-type="${item.TypeMain}">${PG_TypeName[item.TypeMain]}</a></td>
+                                    ${PGrid_brRenderDetail(item, DtHead, DtMain)}
+                                </tr>
+                            `;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                        if (item["TypeMain"] == "AmountReturn" || item["TypeMain"] == "ReceiptOut" || item["TypeMain"] == "OtherOut") {
+                            tr = PGrid_Cal(item, DtHead);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    PGrid_Event();
+                }
+            }
+        })
+    }
+    function PGrid_brRenderDetail(item, DtHead, DtMain) {
+        try {
+            let result = '';
+            if (DtHead && DtHead.length > 0) {
+                for (let _i = 0; _i < DtHead.length; _i++) {
+                    let data = DtMain.filter((value) => { return value["TypeMain"] == item["TypeMain"] && value["Month"] == DtHead[_i].Month && value["Year"] == DtHead[_i].Year })
+                    if (data && data.length > 0) {
+                        result += `<td id="${item["TypeMain"]}_${DtHead[_i].Month}_${DtHead[_i].Year}">${formatNumber(data[0].Amount)}</td>`;
+                    } else {
+                        result += `<td id="${item["TypeMain"]}_${value["Month"]}_${value["Year"]}">0</td>`;
+                    }
+                }
+            }
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+
+    function PGrid_Cal(item, DtHead) {
+        try {
+            let ValueTd = '', result = '', NameVal_1 = '', NameVal_2 = '', NameVal_3 = '', TypeMain = '';
+
+            switch (item["TypeMain"]) {
+                case "AmountReturn":
+                    TypeMain = "RevRoot";
+                    NameVal_1 = "Revenue";
+                    NameVal_2 = "AmountReturn";
+                    break;
+                case "ReceiptOut":
+                    TypeMain = "RevSale"
+                    NameVal_1 = "RevRoot";
+                    NameVal_2 = "ReceiptOut";
+                    break;
+                case "OtherOut":
+                    TypeMain = "RevFinal";
+                    NameVal_1 = "RevSale";
+                    NameVal_2 = "OtherOut";
+                    NameVal_3 = "ReceiptIn"
+                    break;
+                default:
+                    TypeMain = '';
+            }
+
+            if (TypeMain != '') {
+                if (DtHead && DtHead.length > 0) {
+                    for (let _ii = 0; _ii < DtHead.length; _ii++) {
+                        let Val_1 = $("#" + NameVal_1 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html() != undefined ? Number($("#" + NameVal_1 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html().replaceAll(',', '')) : 0;
+                        let Val_2 = $("#" + NameVal_2 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html() != undefined ? Math.abs(Number($("#" + NameVal_2 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html().replaceAll(',', ''))) : 0;
+                        let Val_3 = $("#" + NameVal_3 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html() != undefined ? Number($("#" + NameVal_3 + '_' + DtHead[_ii].Month + '_' + DtHead[_ii].Year).html().replaceAll(',', '')) : 0;
+                        ValueTd += `<td id="${TypeMain}_${DtHead[_ii].Month}_${DtHead[_ii].Year}">${formatNumber(Val_1 - Val_2 + Val_3)}</td>`
+                    }
+                }
+                result = `
+                        <tr role="row" class="vt-number bg-gray-200">
+                            <td class="vt-number-order"></td>
+                            <td>${PG_TypeName[TypeMain]}</td>
+                            ${ValueTd}
+                        </tr>
+                    `;
+            }
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+
+    async function PGrid_RenderDetail(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                                <tr role="row" class="vt-number">
+                                    <td class="vt-number-order"></td>
+                                    <td><a class="fw-bold" target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CusID}&ver=${versionofWebApplication}">${item.CusCode}</a></td>
+                                    <td>${item.CusName}</td>
+                                    <td>${item.TypeAccount == "" ? PG_TypeDetail[item.Type] : item.TypeAccount}</td>
+                                    <td>${formatNumber(item.Amount)}</td>
+                                    <td>${ConvertDateTimeToString_D_M_Y(item.Created)}</td>
+                                </tr>
+                            `;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    //#endregion
+
+    //#region //Event
+
+    function PGrid_Event() {
+        $("#PG_BodyGrid .PG_Btn").unbind("click").click(function () {
+            let type = $(this).attr("data-type");
+            if (type != '') {
+                $("#PG_DivDetail").fadeIn('slow');
+                $('html, body').animate({
+                    scrollTop: $("#PG_DivDetail").offset().top
+                }, 300);
+                PGrid_LoadDetail(type);
+            }
+        })
+    }
+
+    function PGrid_Export() {
+        syslog_ExpExcel('e', Outlang["Loi_nhuan"] != undefined ? Outlang["Loi_nhuan"] : 'Lợi nhuận');
+        exportToExcel("PG_DivTable", Outlang["Loi_nhuan"] != undefined ? Outlang["Loi_nhuan"] : 'Lợi nhuận');
+    }
+    function PGrid_ExportDetail() {
+        syslog_ExpExcel('e', Outlang["Loi_nhuan"] != undefined ? Outlang["Loi_nhuan"] : 'Lợi nhuận');
+        exportToExcel("PG_TableDetail", Outlang["Loi_nhuan"] != undefined ? Outlang["Loi_nhuan"] : 'Lợi nhuận');
+    }
+        //#endregion
+</script>

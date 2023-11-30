@@ -1,0 +1,101 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.GeneralInfo.CustomerPaymentModel
+@{
+    Layout = null;
+}
+<div class="card mb-3 mt-lg-0 mt-4">
+    <div class="card-header pb-0 p-3">
+        <div class="row">
+            <div class="col-md-8 d-flex align-items-center fw-bold">
+                <h6  class="mb-0">@Local["Thanh toán"]</h6>
+            </div>
+            <div class="col-md-4 text-end">
+
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-3">
+        <div id="generalInfo_payment">
+        </div>
+    </div>
+</div>
+<script>
+
+    $(document).ready(function () {
+        GeneralInfo_PaymentLoad();
+    })
+    function GeneralInfo_PaymentLoad () {
+        AjaxLoad(url = "/Customer/GeneralInfo/CustomerPayment/?handler=Loadata"
+            , data = {'custID': ser_MainCustomerID}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data.length != 0) {
+                        GeneralInfo_PaymentRender(data, "generalInfo_payment");
+                    }
+                    else {
+
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function () {
+            }
+            , complete = function (e) {
+            }
+        );
+    }
+    function GeneralInfo_PaymentRender (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let amount = formatNumber(item.Amount);
+                    let code = item.Code;
+                    if (Number(item.Amount < 0))
+                        amount = '<span class="badge bg-gradient-danger">' + ('-' + amount) + '</span>';
+                    else amount = '<span class="badge bg-gradient-success">' + ('+' + amount) + '</span>';
+                    switch (item.Type) {
+                        case "Deposit":
+                            code = 'Deposit';
+                            break;
+                        case "Tab":
+                        case "Card":
+                            code = item.Code;
+                            break;
+                    }
+                    let obj = Fun_GetObject_ByID(DataEmployee, item.EmpID);
+                    tr = '<li class="list-group-item border-0 justify-content-between ps-0 pb-0 border-radius-lg">'
+                        + '<div class="d-flex">'
+                        + '<div class="d-flex align-items-center">'
+                        + '<img class="icon icon-shape icon-sm me-3 bg-gradient-dark shadow text-center" src="' + ((obj.Avatar != '') ? obj.Avatar : Master_Default_Pic) + '">'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="mb-1 text-dark text-sm">' + code + '</h6>'
+ 
+                        + '<span class="text-xs">' + ConvertTimeSpanUTC_Time(item.Created) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="d-flex align-items-center ms-auto">'
+                        + amount
+                        + '</div>'
+                        + '</div>'
+                        + '<hr class="horizontal dark mt-3 mb-2">'
+                        + '</li>';
+                    stringContent = stringContent + tr;
+                }
+
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+</script>
+
+

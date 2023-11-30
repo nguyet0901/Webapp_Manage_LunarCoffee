@@ -1,0 +1,665 @@
+﻿@page
+@model MLunarCoffee.Pages.Card.Status.CardList
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js')</script>
+
+<div class="container-fluid px-0" id="divCardList">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <div style="min-width:150px;">
+                            <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer active" data-bs-toggle="collapse" href="#cl_infoarea">
+                                        <i class="text-gradient text-primary fas fa-filter"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer  " data-bs-toggle="collapse" href="#cl_infodes">
+                                        <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div id="cl_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-3 mb-4 mt-2 multi-collapse collapse">
+                    <h6 class="mb-0">@Local["Danh sách thẻ"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách thẻ đã phát sinh chi phí"]</p>
+                </div>
+                <div class="row collapsesticky z-index-sticky collapse show" id="cl_infoarea">
+                    <div class="col-lg-2 col-12 mt-4 mt-lg-0">
+                        <div class="p-3 bg-info-soft border-radius-md ms-2">
+                            <div class="pb-0 pt-1">
+                                <h6 class="mb-0">@Local["Tổng giá trị"]</h6>
+
+                            </div>
+                            <div class="border-radius-lg py-2 mt-3">
+                                <div class="d-flex">
+                                    <div>
+                                        <div class="icon icon-shape bg-info-soft shadow text-center border-radius-md shadow-none">
+                                            <i class="fas fa-users text-lg text-info text-gradient opacity-10" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="numbers">
+                                            <h6 class="mb-1 text-secondary text-sm">@Local["Tổng khách"]</h6>
+                                            <span id="CL_TotalCust" class="text-sm text-primary fw-bold">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex mt-4">
+                                    <div>
+                                        <div class="icon icon-shape bg-primary-soft shadow text-center border-radius-md shadow-none">
+                                            <i class="ni ni-money-coins text-lg text-primary text-gradient opacity-10" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="numbers">
+                                            <h6 class="mb-1 text-secondary text-sm">@Local["Tổng tiền thẻ"]</h6>
+                                            <span id="CL_TotalAmount" class="text-sm text-primary fw-bold">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-12 mt-4 mt-lg-0">
+                        <div class="d-lg-flex">
+                            <div class="col-w-200 text-center mt-3 position-relative" style="min-height: 150px;">
+                                <div class="chart  position-absolute top-50 start-50 translate-middle">
+                                    <canvas id="CL_Chart" class="chart-canvas" height="150"></canvas>
+                                </div>
+                            </div>
+                            <div class="table-responsive m-0 flex-grow-1 " style=" min-height: 84px;">
+                                <table class="table align-items-center mb-0">
+                                    <tbody id="LC_Chart">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-4 col-12 mt-4 mt-lg-0">
+                        <div class="vtcondition">
+                            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                            <div class="fulllap collapse collapsesticky show">
+                                <div class="col-12 p-1">
+                                    <div class="input-group flex-nowrap" id="CL_divcardSearch">
+                                        <input id="CL_Searching" autocomplete="off" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]">
+                                        <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                                        <div class="input-group-text" style="border-right: 1px solid #e6e6e6 !important;">
+                                            <div class="newim position-relative cursor-pointer">
+                                                <span class="text-sm text-primary fw-bold" id="CL_SearchAll">@Local["Tìm kiếm"]</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="position-relative w-100 text-center">
+                                    <hr class="horizontal dark" />
+                                    <span class="position-absolute bg-body text-sm px-2 py-0 translate-middle top-0 text-dark">
+                                        @Local["Nhập ngày và chi nhánh"]
+                                    </span>
+                                </div>
+                                <div class="col-12 p-1 pt-2">
+                                    <div class="input-group">
+                                        <input id="CL_date" class="flatpickr form-control" type="text" placeholder="@Local["Ngày"].." title="@Local["Giới hạn 31 ngày"]" />
+                                        <span class="input-group-text"><i class="remove link icon opacity-1"></i></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 p-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="CLBranchID">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <i class="remove icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                        <div id="cbbCLBranch" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-danger text-end me-2 text-gradient text-sm font-weight-bold" style="display:none;" id="lcfiltermess">
+                                    @Local["Tối đa 31 ngày"]
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<div class="card-body">
+    <div class="d-lg-flex">
+        <div class=" my-auto">
+            <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info _tab_control_" data-tab="export_excel"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               data-bs-original-title="@Local["Excel"]" onclick="CardList_ExportData()"></i>
+        </div>
+    </div>
+    <div class="m-0 my-3 mobile-responsive position-relative">
+        <div id="CL_Waiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <table id="CLContent" class="table vt-table mb-0">
+            <thead class="hiddenCollapse">
+                <tr role="row">
+                    <th>#</th>
+                    <th>@Local["Mã thẻ"]</th>
+                    <th>@Local["Mã khách hàng"]</th>
+                    <th>@Local["Khách hàng"]</th>
+                    <th>@Local["Giá tiền"]</th>
+                    <th>@Local["Giá trị sử dụng"]</th>
+                    <th>@Local["Số tiền đã sử dụng"]</th>
+                    <th>@Local["Còn lại"]</th>
+                    <th class="CardList_thHandle">@Local["Xử lý"]</th>
+                </tr>
+            </thead>
+            <tbody id="CLContentBody">
+            </tbody>
+        </table>
+    </div>
+    <button id="btnLoadMove" class="btnsysmore btn btn-secondary w-100 p-1" onclick="CardList_LoadData(1,0)">
+        @Local["Xem thêm"]
+    </button>
+</div>
+
+<script>
+    //#region // Declare & Initalize
+    let ser_EditCustomer_PassingDate = '@Model._EditCustomer_PassingDate';
+
+    let CL_beginID = 0;
+    let CL_Limit = 200;
+    let CL_TimerOnChange;
+    let CL_date = new Date();
+    let CL_FlagChange = 0;
+    let CL_IsSearchAll = 0;
+
+    $(document).ready(function () {
+        $("#CL_date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                } else {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31)
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+
+        $("#CL_date").val(formatDateClient(CL_date) + ' to ' + formatDateClient(CL_date));
+
+        CardList_Initialize();
+        CardList_Event();
+        Checking_TabControl_Permission();
+    })
+    function CardList_Initialize() {
+        AjaxLoad(url = "/Card/Status/CardList/?handler=Initialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let DataBranch = data;
+                Load_Combo(DataBranch, "cbbCLBranch", false, "All");
+                $("#CLBranchID").dropdown("refresh");
+                $("#CLBranchID").dropdown("set selected", Number(Master_branchID));
+                CardList_LoadAction();
+            }, sender = null
+        );
+    }
+    function CardList_LoadAction() {
+        CardList_LoadData(0, 0);
+        CardList_LoadTotal();
+    }
+    //#endregion
+
+    //#region //Loadlist
+    function CardList_LoadTotal() {
+        let CL_DateFrom = '01-01-1900';
+        let CL_DateTo = '01-01-1900';
+        let CL_SearchDay = 0;
+
+        let CL_BranchID = $("#CLBranchID").dropdown('get value') ? Number($("#CLBranchID").dropdown('get value')) : '';
+        let CL_TextSearch = xoa_dau($("#CL_Searching").val().toLowerCase()).trim().replace(/[^a-zA-Z0-9 ]/g, '');
+        let CL_Date = $("#CL_date").val() ? $("#CL_date").val() : '';
+
+        if (CL_Date != '') {
+            CL_SearchDay = 1;
+            CL_DateFrom = CardList_GetDateFilter(CL_Date, 'from');
+            CL_DateTo = CardList_GetDateFilter(CL_Date, 'to');
+        }
+
+        if (CL_TextSearch.length <= 3 && CL_Date == '' && CL_BranchID === '') { console.log('Empty Fill') }
+        else {
+            AjaxLoad(url = "/Card/Status/CardList/?handler=LoadDataTotal"
+                , data = {
+                    DateFrom: CL_DateFrom
+                    , DateTo: CL_DateTo
+                    , SearchDay: CL_SearchDay
+                    , BranchID: CL_BranchID
+                    , TextSearch: CL_TextSearch
+                    , IsSearchAll: CL_IsSearchAll
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        let CL_DataTotal = JSON.parse(result);
+                        CardList_Chart(CL_DataTotal);
+                    }
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        }
+    }
+    function CardList_LoadData(NonReLoad, id) {
+        let CL_DateFrom = '01-01-1900';
+        let CL_DateTo = '01-01-1900';
+        let CL_SearchDay = 0;
+
+
+        let CL_BranchID = $("#CLBranchID").dropdown('get value') ? Number($("#CLBranchID").dropdown('get value')) : '';
+        let CL_TextSearch = xoa_dau($("#CL_Searching").val().toLowerCase()).trim().replace(/[^a-zA-Z0-9 ]/g, '');
+        let CL_Date = $("#CL_date").val() ? $("#CL_date").val() : '';
+
+        if (CL_Date != '') {
+            CL_SearchDay = 1;
+            CL_DateFrom = CardList_GetDateFilter(CL_Date, 'from');
+            CL_DateTo = CardList_GetDateFilter(CL_Date, 'to');
+        }
+
+        if (NonReLoad == 0) {
+            CL_beginID = 0;
+        }
+        if (CL_TextSearch.length <= 3 && CL_Date == '' && CL_BranchID === '') {
+            $("#CL_divcardSearch .fa-search").show();
+            $("#CL_divcardSearch .spinner-border").hide();
+        }
+        else {
+            AjaxLoad(url = "/Card/Status/CardList/?handler=LoadData"
+                , data = {
+                    limit: CL_Limit
+                    , beginID: CL_beginID
+                    , DateFrom: CL_DateFrom
+                    , DateTo: CL_DateTo
+                    , SearchDay: CL_SearchDay
+                    , BranchID: CL_BranchID
+                    , TextSearch: CL_TextSearch
+                    , IsSearchAll: CL_IsSearchAll
+                    , CurrenID: id
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        let CL_Data = JSON.parse(result)["Table"];
+                        if (CL_Data && CL_Data.length != 0) {
+                            if (id == 0) {
+                                if (NonReLoad == 0) $("#CLContentBody").empty();
+                                CL_beginID = Number(CL_Data[CL_Data.length - 1].Card_ID)
+                                fnRenderBlock(CL_Data, "CLContentBody"
+                                    , blocknum = 50
+                                    , fnrender = CardList_Render
+                                    , fnsuccess = function (e) { }
+                                    , fnbegin = function (e) { }
+                                );
+                            }
+                            else {
+                                if ($("#CL_CardUsed_" + id).length) {
+                                    $("#CL_CardUsed_" + id).replaceWith(CardList_RenderEach(CL_Data[0]));
+                                    CardList_EventGrid();
+                                }
+                            }
+                        }
+                    }
+
+                }
+                , sender = $('#CL_Search')
+                , before = function (e) {
+                    $('#CL_Waiting').show();
+                }
+                , complete = function (e) {
+                    $('#CL_Waiting').hide();
+                    $("#CL_divcardSearch .fa-search").show();
+                    $("#CL_divcardSearch .spinner-border").hide();
+                }
+            );
+        }
+    }
+    //#endregion
+
+    //#region //render
+    async function CardList_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CardList_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        ToolPopper();
+                        CardList_EventGrid();
+                    }
+                }
+                resolve();
+            }, 30)
+        })
+    }
+    function CardList_RenderEach(item) {
+        try {
+            let icon = '', textlock = '';
+            let card = '';
+
+            if (item.Is_Lock == 1) icon = '<i class="vtt-icon vttech-icon-lock-01 text-danger text-gradient fs-6" title="@Local["Khóa"]" data-bs-toggle="tooltip"></i>';
+            if (item.Is_Lock == 1) textlock = ' [@Local["Đã khóa"]] ';
+
+            if (((item.CreateByID == sys_userID_Main && item.PerSameDay == 1) || Number(ser_EditCustomer_PassingDate) == 1) && item.Is_Lock == 0 && item.IsDisabled == 0) {
+                card = '<td data-name="cardcode">'
+                    + '<a href="#" class="buttonEditClass mb-0 text-sm fw-bold" data-cardid="' + item.Card_ID + '">'
+                    + icon + item.CardCode + '<span class="d-none">' + textlock + '</span>'
+                    + '</a>'
+                    + '</td>';
+            }
+            else {
+                card = `<td>${icon + item.CardCode}<span class="d-none">${textlock}</span></td>`;
+            }
+            let tr = `
+                    <td class="d-none">${item.Card_ID}</td>
+                    <td class="d-none">${item.CustomerID}</td>
+                    <td class="vt-number-order text-center"></td>
+                        ${card}
+                    <td><a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}"&ver="${versionofWebApplication}">${item.CusCode}</a></td>
+                    <td>${item.CusName}</td>
+                    <td>${formatNumber(item.Price)}</td>
+                    <td>${formatNumber(item.PriceUsed)}</td>
+                    <td>${formatNumber(item.Amount)}</td>
+                    <td>${formatNumber(item.PriceUsed - item.Amount)}</td>
+                    <td class="text-nowrap CardList_rowBtnHandle">
+                        ${CardList_RenderButtonGroup(item.Card_ID, item.Created_By, item.PerSameDay, item.IsDisabled, item.Is_Lock)}
+                    </td>
+                `;
+            tr = `<tr role="row" id="CL_CardUsed_${item.Card_ID}" class="vt-number">${tr}</tr>`;
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function CardList_RenderButtonGroup(ID, CreateByID, PerSameDay, IsDisabled, Is_Lock) {
+        let buttons = [];
+        if (IsDisabled == 0) {
+            if (Is_Lock != 0) {
+                buttons.push('<button class="buttonGrid" title="@Local["Mở khóa"]" data-bs-toggle="tooltip" value="' + ID + '"><i class="buttonServiceCardUnLock vtt-icon vttech-icon-unlock-01"></i></button>')
+            }
+            else {
+                buttons.push('<button class="buttonGrid" title="@Local["Khóa"]" data-bs-toggle="tooltip" value="' + ID + '"><i class="buttonServiceCardLock vtt-icon vttech-icon-lock-01"></i></button>')
+            }
+            if (Is_Lock == 0) {
+                buttons.push('<button class="buttonGrid" title="@Local["Chuyển thẻ"]" data-bs-toggle="tooltip" value="' + ID + '"><i class="buttonMoveClass fas fa-people-carry"></i></button>');
+                buttons.push('<button class="buttonGrid" title="@Local["Gửi sms"]" data-bs-toggle="tooltip" value="' + ID + '"><i class="buttonSendSMSClass fas fa-sms"></i></button>');
+                buttons.push('<button class="buttonGrid" title="@Local["Gửi email"]" data-bs-toggle="tooltip" value="' + ID + '"><i class="buttonSendMailClass fas fa-envelope"></i></button>');
+            }
+        }
+        return Render_Button_Grid(buttons)
+    }
+
+    async function CardList_Chart(data) {
+        new Promise((resolve) => {
+            if (data != undefined) {
+                $("#CL_TotalAmount").html(formatNumber(data[0].TotalAmount));
+                $("#CL_TotalCust").html(formatNumber(data[0].TotalCus));
+                let CL_Data = [];
+                let CL_ElementCusNew = {}, CL_ElementCusOld = {};
+                CL_ElementCusNew.Name = decodeHtml('@Local["Khách mới"]'); CL_ElementCusNew.Amount = data[0].TotalAmountNew;
+                CL_Data.push(CL_ElementCusNew);
+                CL_ElementCusOld.Name = decodeHtml('@Local["Khách cũ"]'); CL_ElementCusOld.Amount = data[0].TotalAmount - data[0].TotalAmountNew;
+                CL_Data.push(CL_ElementCusOld);
+
+                CardList_Description(CL_Data, 'Name', 'Amount', 'LC_Chart');
+                rp_pie("CL_Chart", CL_Data, "Name", "Amount")
+            }
+            resolve();
+        })
+    }
+    function CardList_Description(data, name, amount, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let TotalPaid = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    TotalPaid += Number(data[i][amount]);
+                }
+
+                for (let j = 0; j < data.length; j++) {
+                    let item = data[j];
+                    let percent = (TotalPaid != 0) ? (Number(item[amount]) * 100 / TotalPaid).toFixed(2) : 0;
+                    let _color = colorChart[j % colorChart.length];
+
+                    let tr = '<td>'
+                        + '<div class="d-flex px-2 py-0">'
+                        + '<span class="badge me-3" style="background-color:' + _color + '"> </span>'
+                        + '<div class="d-flex flex-column justify-content-center">'
+                        + '<h6 class="mb-0 text-sm">' + item[name] + '</h6>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        + '<td class="align-middle text-end text-sm">'
+                        + '<span class="text-md pe-2 text-dark fw-bold">' + formatNumber(item[amount]) + ' </span>'
+                        + '<span class="text-md" style="color:' + _color + '"> ' + percent + ' % </span>'
+                        + '</td>'
+
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    //#endregion
+
+
+    //#region //event
+    function CardList_Event() {
+
+        $("#CL_divcardSearch .btn_clear").unbind().click(function (e) {
+            $("#CL_divcardSearch #CL_Searching").val('');
+            $("#CL_divcardSearch .btn_clear").addClass('opacity-1');
+        });
+
+        $("#CL_divcardSearch #CL_SearchAll").unbind().click(function (e) {
+            if ($("#CL_Searching").val().length > 0) CL_IsSearchAll = 1;
+            else CL_IsSearchAll = 0;
+            CardList_LoadAction();
+        });
+
+        $('.input-group-text .remove.link').on('click', function (e) {
+            let obj = $(this).parent().prev();
+            if (obj && obj != undefined) {
+                obj.val('');
+                CL_IsSearchAll = 0;
+                CardList_LoadAction();
+            }
+        });
+        $('#CL_date, #CLBranchID').unbind().on('change', function () {
+            if (CL_FlagChange == 1) {
+                CL_IsSearchAll = 0;
+                CardList_LoadAction();
+            }
+            CL_FlagChange = 1;
+        });
+    }
+
+    function CardList_EventGrid() {
+
+        $('#CLContent .buttonMoveClass').unbind('click').on('click', function () {
+            let CardID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CustomerID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_MoveCard(CardID, CustomerID);
+        });
+
+        $('#CLContent .buttonServiceCardLock').unbind('click').on('click', function () {
+            let ID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CusID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_CardLock(ID, CusID);
+        });
+
+        $('#CLContent .buttonServiceCardUnLock').unbind('click').on('click', function () {
+            let ID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CusID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_CardUnLock(ID, CusID);
+        });
+
+        $('#CLContent .buttonEditClass').unbind('click').on('click', function () {
+            let ID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CusID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_EditDetail(ID, CusID);
+        });
+
+        $('#CLContent .buttonSendSMSClass').unbind('click').on('click', function () {
+            let ID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CusID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_SendSMS(ID, CusID);
+        });
+
+        $('#CLContent .buttonSendMailClass').unbind('click').on('click', function () {
+            let ID = $(this).closest('tr')[0].childNodes[1].innerHTML;
+            let CusID = $(this).closest('tr')[0].childNodes[3].innerHTML;
+            CardList_SendMail(ID, CusID);
+        });
+    }
+
+
+
+    function CardList_GetDateFilter(date, type) {
+        let result = date;
+        if (date.includes('to')) {
+            let dateTemp = date.split(" to ");
+            if (type == 'from') {
+                result = dateTemp[0];
+            }
+            else {
+                result = dateTemp[1];
+            }
+        }
+        return result;
+    }
+
+    async function CardList_ExportData() {
+        exportToExcel("CLContent", Outlang['The_tra_truoc']);
+        syslog_ser('e', '');
+    }
+    function CardList_MoveCardRemove(CardID) {
+        let TrMoveCard = $('#CL_CardUsed_' + CardID);
+        if (TrMoveCard != null) {
+            TrMoveCard.remove();
+        }
+    }
+    //#endregion
+
+    //#region // Modal
+
+    function CardList_MoveCard(CardID, CustomerID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Customer/Service/TabList/TabList_Card_Move?CustomerID=" + CustomerID + "&CurrentID=" + CardID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+
+    function CardList_SendSMS(CardID, CustomerID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Sms/SmsDetail?Type=" + "SMSContentCardInfo"
+            + "&CustomerID=" + CustomerID
+            + "&CustCardID=" + CardID
+            + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CardList_SendMail(CardID, CustomerID) {
+        $("#MainSendMail_Content").empty();
+        $("#MainSendMail_Content").load('/Mail/MailDetail?CustomerID=' + CustomerID
+            + '&CustomerCardID=' + CardID
+            + '&Type=MAILContentCard'
+            + '&ver=' + versionofWebApplication,
+            function () {
+                $("#MainSendMail").addClass('active');
+            }
+        );
+        return false;
+    }
+
+
+    //#endregion
+
+    //#region //Lock and Unlock Card
+
+    function CardList_CardLock(id, CusID) {
+        const promise = notiConfirm("@Local["Khóa thẻ"]?");
+        promise.then(function () { CardList_ExecutedCard(id, 1, CusID); }, function () { });
+    }
+    function CardList_CardUnLock(id, CusID) {
+        const promise = notiConfirm("@Local["Mở khóa thẻ"]?");
+        promise.then(function () { CardList_ExecutedCard(id, 0, CusID); }, function () { });
+    }
+    function CardList_ExecutedCard(id, type, CusID) {
+        AjaxLoad(url = "/Card/Status/CardList/?handler=LockAndUnlockCard"
+            , data = { 'id': id, 'type': type }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    syslog_cutcard('u', result, CusID, type == 1 ? 'lock' : 'unlock');
+                    CardList_LoadData(1, id);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //handle
+
+    function CardList_EditDetail(CardID, CusID) {
+        let CL_Date = $("#CL_date").val() ? $("#CL_date").val() : '';
+        let CL_DateFrom = CardList_GetDateFilter(CL_Date, 'from');
+        let CL_DateTo = CardList_GetDateFilter(CL_Date, 'to');
+        $("#DetailModal_Content").html();
+        $("#DetailModal_Content").load("/Card/Status/CardList_Edit?CustomerID=" + CusID + "&CurrentID=" + CardID + "&DateFrom=" + CL_DateFrom + "&DateTo=" + CL_DateTo + "&ver=" + versionofWebApplication);
+        $("#DetailModal").modal('show');
+        return false;
+    }
+    //#endregion
+
+</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/assets/js/plugins/chartjs.min.js', true);</script>

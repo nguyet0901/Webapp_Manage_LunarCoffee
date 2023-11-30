@@ -1,0 +1,529 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.DrugStore.DrugStoreDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require_notasync('/js/drug/drugexe.js', true);</script>
+<div class="row" id="drudetail_container">
+    <div class="col-12 pe-0 ps-4 position-relative">
+        <div id="drudetail_wait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="drudetail_area" class="mb-3 border-dashed border-1 border-secondary border-radius-md p-4">
+            <div class="p-3">
+                <div class="d-flex">
+                    <div class="w-auto d-flex">
+                        <div class="ms-n2">
+                            <div class="text-md text-dark">
+                                <svg id="DSD_Medbarcode" style="height:60px;" class="w-100 text-center">
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ms-auto">
+                        <div>
+                            <span class="text-sm text-secondary">@Local["Khách hàng"]:</span>
+                            <span class="text-sm text-dark font-weight-bold">
+                                <a class="cursor-pointer fw-bold mb-0 ms-1 mt-0 my-auto text-primary text-sm" id="DSD_customerCode"></a>
+                                <span class="fw-bold mb-0 ms-1 mt-0 my-auto text-dark text-sm" id="DSD_customerName"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-secondary">@Local["Số điện thoại"]:</span>
+                            <span class="text-sm text-dark font-weight-bold ms-1 _tab_control_" id="DSD_CustPhone" data-name="phone" data-tab="phone_customer"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-0 ">
+                    <div class="text-center">
+                        <h6 class="fs-5 fw-bold text-primary mb-0 text-uppercase">@Local["Đơn thuốc"]</h6>
+                        <span class="text-sm text-dark fst-italic mt-n1" id="DSD_CreatedBy"></span>
+                        <span class="text-sm text-dark fst-italic mt-n1 ms-2" id="DSD_Created"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-0 form3" id="DSD_ExportContainer">
+                <div class="row px-2">
+                    <div class="field col-12 col-sm-12 col-md-5 col-lg-4 p-1 mt-0">
+                        <label>@Local["Kho xuất"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="DSD_DetailWareID" onchange="event.preventDefault();return DSD_OnchangeWare()">
+                            <input type="hidden" name="name" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Kho xuất"]</div>
+                            <div id="cbbDSD_DetailWareID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <label class="pt-2">@Local["Chi tiết"]</label>
+                <ul class="list-group mt-0" id="DSD_Tablebody">
+                </ul>
+                <button id="DSD_btnWareHouse_New" style="display:none" type="button" class="btn btn-secondary button_chose p-3" onclick="event.preventDefault();return DSD_NewRow();"></button>
+                <div class="text-danger text-gradient text-sm font-weight-bold" id="DSD_Message" style="min-height:50px;"></div>
+                <div class="action_Save mt-3" id="DSD_handleContainer">
+                    <div class="action_Save-Content">
+                        <button id="DSD_btnWareHouse_UnExport" style="display:none" form="form3" type="button" class="btn btn-sm bg-gradient-success mt-0 me-2" onclick="return DSD_UnExport()">@Local["Hủy xuất kho"]</button>
+                        @*<button id="DSD_btnWareHouse_Cancel" class="btn btn-sm btn-secondary" form="form3" onclick="event.preventDefault();DSD_Cancel()">@Local["Đóng"]</button>*@
+                        <button id="DSD_btnWareHouse_Check" style="display:none" form="form3" type="button" class="btn btn-sm bg-gradient-warning mt-0 me-2" onclick="return DSD_Check()">@Local["Kiểm tra"]</button>
+                        <button id="DSD_btnWareHouse_Save" style="display:none" form="form3" type="button" class="btn btn-sm bg-gradient-primary mt-0 me-2" onclick="return DSD_Save()">@Local["Xuất kho"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var DSD_ware = [];
+    var DSD_detail = [];
+
+    var data_product = {};
+    var IsPackageNumber = 0;
+    var can_editexport = 0;
+    var exportTimer;
+    var DSD_extype = 0;
+    var DSD_ExportID = "@Model._ExportID";
+    var DSD_MedID = "@Model._MedID";
+    var DSD_CustID = 0;
+    var DSD_WareCurrent = 0;
+    var DSD_DataPackage = {};
+
+    var DSD_sysArisePresAfterExport = "@Model.sysArisePresAfterExport";
+
+    //#region // Load
+
+    $(document).ready(function () {
+        DSD_GetInfo(DSD_MedID);
+    });
+    async function DSD_GetInfo (id = DSD_MedID) {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/WareHouse/DrugStore/DrugStoreDetail/?handler=GetWareHouse"
+                , data = {'MedID': id}, async = true, error = null
+                , success = function (result) {
+                    if (result != "[]" && result != "0") {
+                        let data = JSON.parse(result);
+                        if (data != undefined) {
+                            if (data.Table[0].RESULT == 1) {
+                                DSD_ware = data.Table1;
+                                DSD_detail = data.Table2;
+                                if (DSD_ware.length == 0) {
+                                    DSD_GetInitialize();
+                                }
+                                Load_Combo(DSD_ware, "cbbDSD_DetailWareID", true);
+                                $("#DSD_DetailWareID").dropdown("clear");
+                                $("#DSD_DetailWareID").dropdown("refresh");
+                                JsBarcode("#DSD_Medbarcode", DSD_detail[0]?.Code, {
+                                    lineColor: "#000",
+                                    fontsize: 12,
+                                    width: 1,
+                                    height: 30,
+                                    displayValue: true,
+                                    background: "#ffffff00"
+                                });
+                                $("#DSD_customerCode").html(DSD_detail[0].CustCode);
+                                $("#DSD_customerCode").attr("href", "/Customer/MainCustomer?CustomerID=" + DSD_detail[0]?.CustID);
+                                $("#DSD_customerName").html(DSD_detail[0]?.CustName);
+                                $("#DSD_CustPhone").html(DSD_detail[0]?.CustPhone);
+                                $("#DSD_CustPhone").attr("data-info", encrypt_phone(DSD_detail[0]?.CustPhone));
+                                $("#DSD_Created").html(ConvertDateTimeUTC_DMYHM(DSD_detail[0]?.Created));
+                                $("#DSD_CreatedBy").html(DSD_detail[0]?.CreatedBy);
+                                can_editexport = DSD_detail[0]?.IsEdit;
+                                if (can_editexport == 1) {
+                                    $("#DSD_btnWareHouse_New").show();
+                                    $("#DSD_btnWareHouse_Save").show();
+                                    $("#DSD_btnWareHouse_Check").show();
+
+                                    if (DSD_detail[0].Export == 1) {
+                                        $("#DSD_btnWareHouse_UnExport").show();
+                                    }
+                                }
+                                if (DSD_detail[0].Export == 1) {
+                                    $("#DSD_DetailWareID").dropdown("set selected", DSD_detail[0]?.WareID);
+                                    DSD_WareCurrent = DSD_detail[0]?.WareID
+                                }
+                                else {
+                                    $("#DSD_DetailWareID").dropdown("set selected", DSD_ware[0]?.ID);
+                                    DSD_WareCurrent = DSD_ware[0]?.ID
+                                }
+
+                                if(DSD_sysArisePresAfterExport == "1" && (DSD_detail[0].IsPresPaid > 0)) {
+                                    $("#DSD_handleContainer").hide();
+                                }
+                                else {
+                                    $("#DSD_handleContainer").show();
+                                }
+
+                                Checking_TabControl_Permission();
+                            }
+
+                        }
+
+                    }
+                }, sender = null
+                , before = function (e) {
+                    $("#drudetail_wait").show();
+                }
+                , complete = function (e) {
+                    $("#drudetail_wait").hide();
+                }
+            );
+            resolve();
+        })
+    }
+    async function DSD_OnchangeWare() {
+        return new Promise((resolve, reject) => {
+            let WareBranch = Number($('#DSD_DetailWareID').dropdown('get value')) ? Number($('#DSD_DetailWareID').dropdown('get value')) : 0;
+            let ware = DSD_ware.filter(word => word["ID"] == WareBranch);
+            if (ware != undefined && ware.length == 1) {
+                DSD_WareCurrent = WareBranch;
+                IsPackageNumber = ware[0].IsPackageNumber;
+                DSD_GetInitialize();
+            };
+            resolve();
+        })
+    }
+    function DSD_GetInitialize() {
+        let promises = [];
+        // promises.push(DSD_Initialize());
+        promises.push(DSD_LoadDetail(DSD_ExportID));
+        Promise.all(promises).then((values) => {
+            for ([key, value] of Object.entries(data_product)) {
+                DSD_RenderRow(key, value, 'DSD_Tablebody');
+            }
+        });
+        return false;
+    }
+
+    async function DSD_LoadDetail(id) {
+        return new Promise((resolve, reject) => {
+            $('#DSD_Tablebody').html('');
+                data_product = {};
+            AjaxLoad(url = "/WareHouse/DrugStore/DrugStoreDetail/?handler=LoadData"
+                , data = {
+                    'DetailID': id
+                }, async = true, error = null
+                , success = function (result1) {
+                    if (result1 != "") {
+                        let data = JSON.parse(result1);
+                        for (let i = 0; i < data.length; i++) {
+                            let element = {};
+                            element.productID = data[i].ProductID;
+                            element.unitID = data[i].UnitID;
+                            element.number = (data[i].Number).toFixed(2);
+                            element.package = data[i].PackageNumber;
+                            element.exPackageID = data[i].ExPackageID;
+                            element.current = data[i].ExportID;
+                            element.numberStandard = (data[i].NumberStandard).toFixed(2);
+                            element.unitnameStandard = data[i].UnitNameStandard;
+                            element.usingPackage = 1;
+                            element.timepsan = Date.now() + Math.floor(Math.random() * 100) + data[i].ExportID;
+                            data_product[data[i].ExportID] = element;
+                        }
+                        resolve();
+                    }
+                }
+            );
+
+        })
+    }
+
+    //#endregion
+
+    //#region // Render
+
+    function DSD_NewRow() {
+        let element = {};
+        let id = (new Date()).getTime();
+        element.productID = 0;
+        element.unitID = 0;
+        element.number = 0;
+        element.package = '';
+        element.exPackageID = 0;
+        element.current = 0;
+        element.numberStandard = 0;
+        element.unitnameStandard = '';
+        element.usingPackage = 1;
+        element.timepsan = Date.now() + Math.floor(Math.random() * 100);
+        data_product[id] = element;
+        DSD_RenderRow(id, element, 'DSD_Tablebody');
+        return id;
+    }
+
+    async function DSD_RenderRow(key, value, id) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let ex = formatNumber(Math.round(Number(value.numberStandard) * 100) / 100) + " " + value.unitnameStandard;
+                    let tr = `<li id=row_${key} data-id="${key}" class="row row-add border-dashed border-1 position-relative border-secondary border-radius-lg pb-3  border-0 d-flex justify-content-between ps-0 mb-4 border-radius-lg">
+                                ${can_editexport == 1 ? `<i data-id="${key}" class="opacity-2 position-absolute buttonDeleteClass text-danger fas fa-times"></i>` : ''}
+                                <div class="row col-12 w-100 mx-0">
+                                    <div class="col-12 col-md-8 px-1 mt-2">
+                                        ${DSD_Renproduct(key)}
+                                    </div>
+                                    <div class="col-12 col-md-4 px-1 mt-2">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                ${DSD_Renunit(key)}
+                                                ${DSD_Rennumber(key, value.number)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${(IsPackageNumber == 0
+                            ? ''
+                            : `     <div class="form-group row col-12 w-100 mx-0">
+                                           <div class="input-group px-1 ">
+                                                <span class="input-group-text">@Local["Số lô"]</span>
+                                                <div id="package_wait_${key}" class="position-absolute ms-n4 top-50  border-0 start-0 translate-middle-y waitingdiv text-center" style="display: none;">
+                                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                        <span class="sr-only">Loading...</span>
+                                                    </div>
+                                                </div>
+
+                                               <i style="display:none;" id="package_exist_error_${value.timepsan}" class="input-group-text fw-bold text-danger fas fa-exclamation-triangle"></i>
+                                               <i style="display:none;" id="package_exist_success_${value.timepsan}" class="input-group-text fw-bold text-success fas fa-check"></i>
+                                               ${DSD_Renpackage(key, value.timepsan)}
+                                          </div>
+                                     </div>`)
+                        }
+                                <div class="text-dark text-sm ps-3 mt-n2 fst-italic">
+                                   <span class="text-secondary">@Local["Xuất"]</span>
+                                   <span id="DSD_totalex_${key}" class="fw-bold pe-2">${ex}</span>
+                                   <span class="text-secondary">@Local["Còn lại"]</span>
+                                   <span id="normProduct_${value.timepsan}" class="fw-bold pe-2"></span>
+                                   <i style="display:none;" id="inorm_error_${value.timepsan}" class="fw-bold text-danger fas fa-exclamation-triangle"></i>
+                                   <i style="display:none;" id="inorm_success_${value.timepsan}" class="fw-bold text-success fas fa-check"></i>
+                                </div>
+                            </li>`
+                    myNode.insertAdjacentHTML("beforeend", tr);
+                }
+                DSD_FillData(key, value);
+                DSD_EventRow(key);
+                resolve();
+            }, 10)
+        });
+    }
+    function DSD_CountTotalExport(id) {
+        let product = Number($('#DSD_product_' + id).dropdown('get value')) ? Number($('#DSD_product_' + id).dropdown('get value')) : 0;
+        let unit = Number($('#DSD_unit_' + id).dropdown('get value')) ? Number($('#DSD_unit_' + id).dropdown('get value')) : 0;
+        let pro = DataUnitProduct.filter(word => word["ProductID"] == product && word["UnitChange"] == unit);
+        let number = Number($('#DSD_number_' + id).val());
+        let numberstandard = 0;
+        if (pro != undefined && pro.length > 0) {
+            let unitname = pro[0].UnitName;
+            numberstandard = Number(pro[0].Number * number);
+            $("#DSD_totalex_" + id).html(formatNumber((numberstandard * 100 / 100).toFixed(2)) + " " + unitname);
+        }
+        else {
+            numberstandard = Number(number);
+            $("#DSD_totalex_" + id).html(formatNumber((numberstandard * 100 / 100).toFixed(2)));
+        }
+        data_product[id].numberStandard = numberstandard.toFixed(2);
+    }
+
+    //#endregion
+
+    //#region // Main Event
+
+    function DSD_Check(callback) {
+        $('#DSD_Message').html('')
+        let nonvalid = 0;
+        for ([key, value] of Object.entries(data_product)) {
+            if (Number(value.productID) == 0) {
+                $('#DSD_product_' + key).addClass('error'); nonvalid = 1;
+            }
+            else $('#DSD_product_' + key).removeClass('error');
+            if (Number(value.unitID) == 0) {
+                $('#DSD_unit_' + key).addClass('error'); nonvalid = 1;
+            }
+            else $('#DSD_unit_' + key).removeClass('error');
+
+            if (!$.isNumeric(value.number) || Number(value.number) <= 0
+                || Number(value.number) > vtth_range_max
+                || Number(value.number) < vtth_range_min) {
+                $('#DSD_number_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#DSD_number_' + key).removeClass('error');
+
+            if (IsPackageNumber == 1 && value.package == '') {
+                $('#DSD_packageNumber_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#DSD_packageNumber_' + key).removeClass('error');
+            }
+        }
+        if (nonvalid == 1) $('#DSD_Message').html('@Local["Kiểm tra dữ liệu"]');
+
+        DSD_CheckNorm(callback);
+    }
+    function DSD_CheckNorm(callback) {
+        if ($('#DSD_Message').html() == '') {
+            let ware = Number($('#DSD_DetailWareID').dropdown('get value')) ? Number($('#DSD_DetailWareID').dropdown('get value')) : 0;
+            AjaxLoad(url = "/WareHouse/DrugStore/DrugStoreDetail/?handler=CheckQuantityRealTime"
+                , data = {
+                    'data': JSON.stringify(Object.values(data_product))
+                    , 'ware': ware
+                    , 'CurrentID': DSD_ExportID
+                    , 'IsPackageNumber': IsPackageNumber
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data.Table[0][0] == 0) {
+                            $('#DSD_Message').html("@Local["Lần chốt kho trước chưa hoàn thành hoặc thời gian xuất kho không phù hợp"]");
+                        }
+                        else {
+                            let dataNorm = data.Table1;
+
+                            for (i = 0; i < dataNorm.length; i++) {
+                                for ([key, value] of Object.entries(data_product)) {
+                                    if (value.productID == dataNorm[i].ProductID && value.package == dataNorm[i].PackageNumber) {
+                                        $("#normProduct_" + value.timepsan).html(formatNumber(Math.round(Number(dataNorm[i].FinalNum) * 100) / 100));
+                                        $("#DSD_packageExpired_" + key).html(ConvertDateTimeUTC_DMY(dataNorm[i].DateExpired));
+                                        if (Number(dataNorm[i].ExpiredStatus) == 1) {
+                                            $('#package_expired_error_' + value.timepsan).hide();
+                                            $('#package_expired_success_' + value.timepsan).show();
+                                        }
+                                        else {
+                                            $('#DSD_Message').html("@Local["Hết hạn"]");
+                                            $('#package_expired_error_' + value.timepsan).show();
+                                            $('#package_expired_success_' + value.timepsan).hide();
+                                        }
+                                        if (Number(dataNorm[i].FinalNum) >= 0) {
+                                            $('#inorm_error_' + value.timepsan).hide();
+                                            $('#inorm_success_' + value.timepsan).show();
+                                        }
+                                        else {
+                                            $('#DSD_Message').html("@Local["Thiếu hàng xuất"]");
+                                            $('#inorm_error_' + value.timepsan).show();
+                                            $('#inorm_success_' + value.timepsan).hide();
+                                        }
+                                        if (IsPackageNumber == 1
+                                            && dataNorm[i].ProductInPackage == 0) {
+                                            $('#DSD_Message').html("@Local["Số lô không đúng"]");
+                                            $('#package_exist_error_' + value.timepsan).show();
+                                            $('#package_exist_success_' + value.timepsan).hide();
+
+                                        }
+                                        else {
+                                            $('#package_exist_error_' + value.timepsan).hide();
+                                            $('#package_exist_success_' + value.timepsan).show();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (callback != undefined) callback();
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                , sender = $('#DSD_btnWareHouse_Check')
+                , before = function (e) {
+                    $("#drudetail_wait").show();
+                }
+                , complete = function (e) {
+                    $("#drudetail_wait").hide();
+                }
+            );
+        }
+    }
+    function DSD_Save() {
+        $('#DSD_ExportContainer').form('validate form');
+        if ($('#DSD_ExportContainer').form('is valid')) {
+            DSD_Check(callback = function () {
+                DSD_SaveExe();
+            });
+        }
+
+    }
+    function DSD_SaveExe() {
+        if ($('#DSD_Message').html() == '') {
+            let ware = Number($('#DSD_DetailWareID').dropdown('get value')) ? Number($('#DSD_DetailWareID').dropdown('get value')) : 0;
+            if (ware == 0 || Object.keys(data_product).length == 0) {
+                $('#DSD_Message').html("@Local["Kiểm tra dữ liệu"]")
+            }
+            else {
+                AjaxLoad(url = "/WareHouse/DrugStore/DrugStoreDetail/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(Object.values(data_product))
+                        , 'ware': ware
+                        , 'CurrentID': DSD_ExportID
+                    }
+                    , async = true
+                    , error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccess();
+                            syslog_whr('u', result);
+                            if (typeof WDS_LoadData == 'function') WDS_LoadData(DSD_MedID, 0);
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                );
+            }
+        }
+    }
+    function DSD_UnExport () {
+        const promise = notiConfirm();
+        promise.then(function () {
+            AjaxLoad(url = "/WareHouse/DrugStore/DrugStoreDetail/?handler=UnExport", data = {
+                'DetailID': DSD_ExportID
+            }, async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        if (typeof WDS_LoadData == 'function')
+                            WDS_LoadData(DSD_MedID, 0);
+                        syslog_whr('u', result);
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }, function(
+        ) {});
+
+    }
+
+
+    //#endregion
+</script>
+<script>js_require('/js/comon/initialize_setting.js', true)</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require('/js/customjs/custom-validation.js', true)</script>
+<style>
+
+    #DSD_Tablebody li input[type=text] {
+        display: block;
+    }
+
+    #DSD_Tablebody .error {
+        background: #fff6f6 !important;
+        border-color: #e0b4b4 !important;
+    }
+
+    #DSD_Tablebody .buttonDeleteClass:hover {
+        opacity: 1 !important;
+        cursor: pointer;
+    }
+
+    #DSD_Tablebody .buttonDeleteClass {
+        top: 21px;
+        left: -21px;
+    }
+</style>

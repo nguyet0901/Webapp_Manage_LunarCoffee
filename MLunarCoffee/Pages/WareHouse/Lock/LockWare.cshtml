@@ -1,0 +1,378 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Lock.LockWareModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <!--Master-->
+            <div class="card card-plain" id="Lockware_List">
+                <div class="vtcardheader card-header pb-0 pt-3">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Danh sách lần chốt kho"]</h6>
+                        <p class="text-sm mb-0">@Local["Chỉ người chốt mới được sửa, xóa. Chỉnh sửa trong ngày và nếu chưa phát sinh lần chốt kho nào tiếp theo"].</p>
+                    </div>
+                    <div class="right overflow-auto">
+                        <button id="btnwarelock_import" class="btn btn-success btn-sm mt-1 text-nowrap" onclick="event.preventDefault();return LockWare_Import();">@Local["Nhập kho"]</button>
+                        <button id="btnwarelock_new" style="display: none;" class="btn bg-gradient-primary btn-sm mt-1 text-nowrap" onclick="event.preventDefault();return WareStep_ChoosingDate();">@Local["Chốt kho"]</button>
+                        <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                    <div class="toggle">
+                        <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                            <ul class="card card-body text-dark text-capitalize opacity-10">
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogle form-check-input" data-name="lock_date_closest" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Thao tác gần nhất"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogle form-check-input" data-name="type" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Loại"]</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-1">
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row px-2">
+                                <div class="col-12 col-sm-12 col-md-6 col-xl-4 p-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="WareHouseID" onchange="event.preventDefault();return LockWare_Load(0);">
+                                        <input type="hidden" name="name" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbWareHouseID" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive overflow-y vt-header-sticky" style="max-height: calc(100vh - 250px);">
+                        <div id="LoaderList" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table data-name="WareListLock" class="table vt-table mb-0" id="dtWareList">
+                            <thead>
+                                <tr>
+                                    <th style="max-width: 50px;">@Local["#"]</th>
+                                    <th>@Local["Mã chốt kho"]</th>
+                                    <th>@Local["Người chốt"]</th>
+                                    <th>@Local["Giá trị"]</th>
+                                    <th>@Local["Số lượng mặt hàng"]</th>
+                                    <th>@Local["Thành công"]</th>
+                                    <th>@Local["Thất bại"]</th>
+                                    <th data-name="type">@Local["Loại"]</th>
+                                    <th data-name="lock_date_closest">@Local["Thao tác gần nhất"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtWareListBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="Lockware_Step" class="pt-3 px-3" style="display:none;">
+                <button id="Step_ChoosingDate" class="btn btn-dark btn-sm mt-1" onclick="event.preventDefault();return WareStep_ChoosingDate()">@Local["Chọn ngày"]</button>
+                <button id="Step_LockExecuted" class="btn btn-dark btn-sm mt-1" onclick="event.preventDefault();return WareStep_LockExecuting()">@Local["Chốt kho"]</button>
+                <span id="Step_ProductCard" class="btn btn-dark btn-sm mt-1 d-none">
+                </span>
+            </div>
+            <div class="row" id="LockInfo" style="display:none;">
+                <div class="card col-md-8 mx-auto">
+                    <div class="card-body pt-2 ">
+                        <div class="row px-2 form3">
+                            <div class="field col-12 col-sm-12 col-xl-12 px-1 mt-2">
+                                <label>@Local["Kho"]</label>
+                                <input id="LockInfo_Ware" readonly="readonly" disabled="disabled" class="form-control">
+                            </div>
+                            <div class="field col-12 col-sm-12 col-xl-12 px-1 mt-2">
+                                <label>@Local["Ngày chốt gần nhất"]</label>
+                                <input id="LockInfo_DateLast" readonly="readonly" disabled="disabled" class="form-control">
+                            </div>
+                            <div class="field col-12 col-sm-12 col-xl-12 px-1 mt-2">
+                                <label>@Local["Ngày chốt"]</label>
+                                <input id="LockInfo_DateLock" class="flatpickr form-control" type="text" placeholder="@Local["Ngày"]..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer fixed-botombutton">
+                        <div class="action_Save">
+                            <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" onclick="event.preventDefault();LockWare_Cancel()">@Local["Đóng"]</button>
+                                <button id="btnConfirmNewLockWare" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return LockInfo_BeginLock();">@Local["Chốt kho"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="WareLockDetail">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/assets/js/plugins/multistep-form.js');</script>
+
+
+<script type="text/javascript">
+
+    let shtable;
+    let DataUser;
+    var data_ware;
+    let flag_ware = 0;
+    $(document).ready(function () {
+        shtable = $("#dtWareList").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                LockWare_Initialize();
+            });
+
+    });
+
+    //#region // Load And Render
+    function LockWare_Initialize () {
+        AjaxLoad(url = "/WareHouse/Lock/LockWare/?handler=Initialize"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    data_ware = JSON.parse(result).Ware;
+                    if (data_ware && data_ware.length > 0) {
+                        Load_Combo(data_ware, "cbbWareHouseID", true);
+                        $("#WareHouseID").dropdown("refresh");
+                        $("#WareHouseID").dropdown("set selected", Number(data_ware[0].ID));
+                        flag_ware = 1;
+                        LockWare_Load(0);
+                    } else {
+                        notiWarning("@Local["Cấu hình kho"]!");
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function LockWare_Load (_lockid) {
+        let lockid = (_lockid == undefined) ? 0 : Number(_lockid);
+        if (flag_ware == 1) {
+            let wareID = Number($('#WareHouseID').dropdown('get value'));
+
+            if (!isNaN(wareID)) {
+                AjaxLoad(url = "/WareHouse/Lock/LockWare/?handler=LoadLockList"
+                    , data = {
+                        'WareID': wareID,
+                        'lockid': lockid
+                    }
+                    , async = true
+                    , error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            LockWare_Render(data, "dtWareListBody");
+                            LockWare_DectectButton(wareID);
+                            shtable.Refresh();
+                        }
+                    }
+                );
+            }
+        }
+    }
+
+    function LockWare_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let objuser = Fun_GetObject_ByID(DataUser, item.Created_By);
+                    let objlast = Fun_GetObject_ByID(DataUser, item.LastUser);
+                    let tr = '<td class="vt-number-order"></td>'
+                        + '<td>'
+                        + '<a data-id="' + item.ID + '" data-term="' + item.NewTerm + '" class="cursor-pointer mb-1 text-sm border-bottom border-dark LW-btnEdit">' + item.Code + '</a>'
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="d-flex align-items-center">'
+                        + '<img class="avatar avatar-xs me-2"  src="' + objuser.Avatar + '" alt="label-image">'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="mb-1 text-dark text-sm">' + objuser.Name + '</h6><span class="text-xs">' + GetDateTime_String_DMYHM(item.DateLock) + '</span></div></div>'
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="text-center">' + formatNumber(Math.round(item.Amount * 100) / 100) + '</div>'
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="text-center">' + formatNumber(item.TotalProduct) + '</div>'
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="text-center">' + formatNumber(Number(item.TotalProduct) - Number(item.NeedToComplete)) + '</div>'
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="text-center">' + formatNumber(item.NeedToComplete) + '</div>'
+                        + '</td>'
+                        + '<td data-name="type">'
+                        + (item.NewTerm == 1 ? '<span class="d-block badge bg-gradient-success">@Local["Nhập kho"]</span>' : '<span class="d-block badge bg-gradient-primary">@Local["Chốt kho"]</span>')
+                        + '</td>'
+                        + '<td data-name="lock_date_closest">'
+                        + '<div class="d-flex align-items-center">'
+                        + '<img class="avatar avatar-xs me-2"  src="' + objlast.Avatar + '" alt="label-image">'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="mb-1 text-dark text-sm">' + objlast.Name + '</h6><span class="text-xs">' + GetDateTime_String_DMYHM(item.LastDate) + '</span></div></div>'
+                        + '</td>';
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+        LockWare_Event();
+
+    }
+
+    //#endregion
+
+    //#region // Event
+
+    function LockWare_DectectButton (wareID) {
+        AjaxLoad(url = "/WareHouse/Lock/LockWare/?handler=CheckButton"
+            , data = {'WareID': wareID}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length == 1) {
+                        let lastid = Number(data[0].ID);
+                        let lastUncomplete = Number(data[0].IsNonComplete);
+                        if (lastUncomplete == 0) $('#btnwarelock_new').show();
+                        else $('#btnwarelock_new').hide();
+                        if (lastid == 0) {
+                            $('#btnwarelock_new').hide();
+                        }
+                        else {
+                            $('#btnwarelock_new').show();
+                        }
+                    }
+                    else {
+                        $('#btnwarelock_new').show();
+                    }
+                }
+            }
+        );
+
+    }
+
+    function LockWare_Event () {
+
+        $("#dtWareListBody .LW-btnEdit").unbind('click').on("click", function () {
+            let id = $(this).attr('data-id');
+            $("#WareLockDetail").load("/WareHouse/Lock/LockEdit?LockID=" + id
+                + "&ViewOnly=" + 0
+                + "&ver=" + versionofWebApplication);
+            $("#WareLockDetail").show();
+            $('#LockInfo').hide();
+            $('#Lockware_List').hide();
+        })
+    }
+
+    function LockWare_Cancel () {
+        $('#LockInfo').hide();
+        $('#Lockware_List').show();
+        $('#Lockware_Step').hide();
+        $('#WareLockDetail').html('');
+        $('#WareLockDetail').hide();
+    }
+
+    function LockWare_Import () {
+        let wareID = Number($('#WareHouseID').dropdown('get value'));
+        $('#Lockware_List').hide();
+        $('#WareLockDetail').html('');
+        $("#WareLockDetail").load("/WareHouse/Lock/ImportWare?WareID=" + wareID + "&ver=" + versionofWebApplication);
+        $("#WareLockDetail").show();
+    }
+
+    function LockInfo_BeginLock () {
+        let wareID = Number($('#WareHouseID').dropdown('get value'));
+        let Date_to = $('#LockInfo_DateLock').val() ? $('#LockInfo_DateLock').val() : "";
+        let Date_from = $('#LockInfo_DateLast').val() ? $('#LockInfo_DateLast').val() : "";
+        Date_to = Date_to.replace(" ", "x");
+        Date_from = Date_from.replace(" ", "x");
+        WareStep_LockExecuting();
+        $("#WareLockDetail").html('');
+        $("#WareLockDetail").load("/WareHouse/Lock/LockNew?WareID=" + wareID
+            + "&DateTo=" + Date_to
+            + "&ver=" + versionofWebApplication);
+    }
+
+    //#endregion
+
+    //#region // Step
+
+    function WareStep_ChoosingDate () {
+        $('#LockInfo').show();
+        $('#Lockware_Step').show();
+        $('#Lockware_List').hide();
+        $("#WareLockDetail").hide();
+        $('#WareLockDetail').html('');
+        $('#Step_LockExecuted').addClass('d-none');
+        $('#Step_ProductCard').addClass('d-none');
+        let wareID = Number($('#WareHouseID').dropdown('get value'));
+        let currentWare = data_ware.filter(word => word["ID"] == wareID);
+        if (currentWare != undefined && currentWare.length == 1) {
+            $('#LockInfo_Ware').val(currentWare[0].Name);
+
+            $('#LockInfo_DateLast').val(currentWare[0].LastetLock.includes('1900') ? '' : currentWare[0].LastetLock);
+            $("#LockInfo_DateLock").flatpickr({
+                dateFormat: 'd-m-Y H:i:s',
+                enableTime: true,
+                time_24hr: true,
+                minDate: currentWare[0].LastetLock.replace("-", "."),
+                maxDate: new Date(),
+                defaultDate: new Date()
+            });
+        }
+        $('#Step_LockCardView').hide();
+        $('#WareLock_Card').hide();
+        $("#WareLock_MainList").show();
+    }
+
+    function WareStep_LockExecuting () {
+        $("#WareLockDetail").show();
+        $('#Lockware_Step').show();
+        $('#LockInfo').hide();
+        $('#Lockware_List').hide();
+        $('#Step_LockExecuted').removeClass('d-none');
+        $('#Step_ProductCard').addClass('d-none');
+        $('#Step_LockCardView').hide();
+        $('#WareLock_Card').hide();
+        $("#WareLock_MainList").show();
+    }
+
+    function WareStep_CardView(text) {
+        $('#Step_LockExecuted').removeClass('d-none');
+        $('#Step_LockCardView').show();
+        $('#Step_ProductCard').html(text);
+        $('#Step_ProductCard').removeClass('d-none');
+    }
+
+    //#endregion
+
+</script>
+
+

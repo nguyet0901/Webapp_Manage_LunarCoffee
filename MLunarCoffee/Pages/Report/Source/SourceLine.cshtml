@@ -1,0 +1,95 @@
+﻿@page
+@model Report.Source.SourceLine
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#SourceLineDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadDataReport_SourceLine()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="SourceLineDiv">
+        <div class="card-body p-0">
+            <div class="row px-2">
+                <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Theo nguồn"]:
+                        <span id="SourcePieTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="SourcePie" class="chart-canvas" height="200"></canvas>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                    <div class="mt-2  table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="SourcePieList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadDataReport_SourceLine();
+        ToolPopper();
+    });
+    function LoadDataReport_SourceLine () {
+        let _branch = "@Model._branch";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/Source/SourceLine/?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let datasource = JSON.parse(result).Table;
+                    let Total = 0;
+                    for (let i = 0; i < datasource.length; i++) {
+                        Total += Number(datasource[i]['Amount']);
+                    }
+                    ReportPie_Description(datasource, 'Name', 'Amount', 'SourcePieList');
+                    rp_pie("SourcePie", datasource, 'Name', 'Amount')
+                    $('#SourcePieTotal').html(formatNumberToMilion(Number(Total)));
+
+                    
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+
+    }
+
+</script>
+
+

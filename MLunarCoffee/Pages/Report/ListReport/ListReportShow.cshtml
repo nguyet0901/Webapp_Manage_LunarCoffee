@@ -1,0 +1,437 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.ListReport.ListReportShowModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid bg-white px-1">
+    <div class="row px-1">
+        <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+            <div class="vtcardheader card-header px-1 py-3">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Báo cáo"]</h6>
+                    <p class="text-sm mb-0">
+                        @Local["Danh sách báo cáo"]
+                    </p>
+                </div>
+            </div>
+            <div class="nav-wrapper mt-2" style="--max-height:calc( 100vh - 180px ); --overflow-y: auto">
+                <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column  bg-white border-radius-lg"
+                    id="dtListReportBody">
+                </ul>
+            </div>
+ 
+        </div>
+        <div class="field col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+            <div class="vtcardheader card-header px-1 py-3 pb-0">
+                <div class="left">
+                    <div class="input-group" id="ReportGeneral_Sort">
+                        <span class="input-group-text input-group-text px-2">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                        </span>
+                        <input id="searching_report" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]">
+                        <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                        <div class="input-group-text form-check form-check-inline my-0">
+                            <input title="@Local["Ẩn báo cáo không hoạt động"]" id="rp_showdisabled" class="ms-0 form-check-input" type="checkbox" checked="checked">
+                             
+                        </div>
+                    </div>
+                </div>
+                <div class="right">
+                    <div class="form-check form-check-inline">
+                        <input id="rp_disabledexe" class="form-check-input" type="checkbox">
+                        <label id="LRDetailName" class="form-check-label b-1"></label>
+                    </div>
+
+                </div>
+            </div>
+ 
+            <div class="p-3 pt-0 px-1">
+                <div class="px-0 py-0 m-0 mt-0 mobile-responsive position-relative" style="max-height: calc(100vh - 192px)">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0 showdis" id="dtListReportDetail">
+                            <thead>
+                                <tr>
+                                    <th class="d-none"></th>
+                                    <th>#</th>
+                                    <th class="fw-bold">@Local["Báo cáo"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtListReportBodyDetail">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+    <div id="ReportInfoDetail">
+    </div>
+</div>
+<script type="text/javascript">
+
+    //#region // Var, contructor and Initialize
+
+    var LRTemplate, LRSheet, Report_Temp_GroupID;
+    var currrentDetail = 0;
+    var re_TimerOnchange;
+    let AllowGroupReport = "@Model._AllowGroup";
+    let re_flag = 1;
+    $(document).ready(function () {
+        LR_MasterLoad();
+    });
+    //#endregion
+
+    //#region // Master
+    function LR_MasterLoad(id) {
+        AjaxLoad(url = "/Report/ListReport/ListReportShow/?handler=Loadata"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let Group = LR_AllowGroup(JSON.parse(result)["Table"], "ID");
+                    LRTemplate = LR_AllowGroup(JSON.parse(result)["Table1"], "GroupID") ;
+                    LRSheet = JSON.parse(result)["Table2"];
+                    LR_MasterRender(JSON.parse(JSON.stringify(Group)), "dtListReportBody");
+                    if (id != undefined) {
+                        $('.masterrow[data-id="' + id + '"]').trigger("click");
+                    }
+                    else {
+                        if ($('.masterrow')[0]) {
+                            $('.masterrow')[0].click();
+                        }
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            });
+
+        return false;
+    }
+
+    function LR_AllowGroup(data, dataType) {
+        try {
+            var dataGroup = [];
+            AllowGroupReport = AllowGroupReport.trim();
+            if (AllowGroupReport != '') {
+                let dataGroupByID = AllowGroupReport.split(',');
+                if (dataGroupByID && dataGroupByID.length != 0) {
+                    dataGroup = data.reduce((pre, arr) => {
+                        if (arr[dataType]) {
+                            let dtFilter = dataGroupByID.filter((item) => { return Number(item) === Number(arr[dataType]) });
+                            if (dtFilter && dtFilter.length != 0) pre.push(arr);
+                        }
+                        return pre;
+                    }, [])
+                }
+            }
+            else dataGroup = data;
+            return dataGroup;
+        }
+        catch (ex) {
+            return [];
+        }
+    }
+
+    function LRMaster_Event () {
+        $('#dtListReportBody .masterrow').on('shown.bs.tab', function (e) {
+            re_flag = 0;
+            currrentDetail = Number($(this).attr('data-id'));
+            let NameDetail = $(this).attr('data-name');
+            let isdis = Number($(this).attr('data-state'));
+            $('#dtListReportBody .masterrow').removeClass('active');
+            $(this).addClass('active');
+            $('#LRDetailName').html(NameDetail);
+ 
+            if (isdis == -1) {
+                $("#rp_disabledexe").prop("disabled", true);
+                $("#rp_disabledexe").prop('checked', false);
+            }
+            else if (isdis == 0) {
+                $("#rp_disabledexe").prop("disabled", false);
+                $("#rp_disabledexe").prop('checked', false);
+            }
+            else {
+                $("#rp_disabledexe").prop("disabled", false);
+                $("#rp_disabledexe").prop('checked', true);
+            }
+            
+
+            let dataRender = LRTemplate.filter(LRTemplate => LRTemplate.GroupID == currrentDetail || currrentDetail == 0);
+            LR_DetailRender(dataRender, 'dtListReportBodyDetail');
+            LRDetail_Event();
+            re_flag = 1;
+        });
+
+ 
+        $('#rp_disabledexe').unbind().change(function () {
+            if (re_flag == 1) {
+                re_flag = 0;
+                let id = currrentDetail;
+                AjaxLoad(url = "/Report/ListReport/ListReportShow/?handler=ExcuteData"
+                    , data = {
+                        IsActive: $(this).is(":checked") ? 1 : 0,
+                        CurrentID: id
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            CloseModal();
+                            LR_MasterLoad(currrentDetail);
+                        }
+                    });
+                re_flag = 1;
+            }
+          
+        });
+        $('#rp_showdisabled').unbind().change(function () {
+            if ($('#rp_showdisabled').is(":checked")) {
+                $('#dtListReportDetail').addClass('showdis');
+            } else $('#dtListReportDetail').removeClass('showdis');
+        });
+
+        $('#dtListReportBody .buttonEditClass').unbind().click(function () {
+            let CurrentID = Number($(this).attr('data-id'));
+            if (CurrentID != 0) {
+                $("#DetailModal_Content").html('');
+                $("#DetailModal_Content").load("/Report/ListReport/EditDescriptionReportGroup?SheetID=" + CurrentID + "&ver=" + versionofWebApplication);
+                $('#DetailModal').modal('show');
+            }
+            return false;
+        });
+ 
+        $('#searching_report').unbind().keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#ReportGeneral_Sort .fa-search").hide();
+            $("#ReportGeneral_Sort .spinner-border").show();
+            clearTimeout(re_TimerOnchange);
+            re_TimerOnchange = setTimeout(function (e) {
+                LR_MasterSearch(xoa_dau($('#searching_report').val().toLowerCase()).trim());
+            }, 500);
+        });
+        $("#ReportGeneral_Sort .btn_clear").unbind().click(function (e) {
+            $('#searching_report').val('');
+            $(".btn_clear").addClass('opacity-1');
+            LR_MasterSearch('');
+        });
+    }
+    function LR_MasterRender (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+
+                let e = {}; e.ID = 0; e.Title = 'Total'; e.Description = '';
+                data.unshift(e);
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let _detail = LRTemplate.filter(LRTemplate => (LRTemplate.GroupID == item.ID || item.ID == 0) && LRTemplate.State == 1 && LRTemplate.IsActive == 1);
+                    let _check = '';
+                    let _state=0
+                    if (item.ID != 0) {
+                        if (item.IsActive == 1) _state = 1;
+                        else _state = 0;
+
+                    } else _state = -1;
+                    let tr = `<li class="nav-item" role="presentation">
+                            <a data-id="${item.ID}" data-state=${_state} data-name="${item.Title}" class="text-sm px-1 item-menu  masterrow nav-link cursor-pointer " data-hover data-bs-toggle="tab">
+                                <div class="px-1">
+                                    <div data-id="${item.ID}"  class="d-inline buttonEditClass ">
+                                        <span class="mt-0 cursor-pointer col-auto my-auto mb-0 text-dark ms-0 text-sm fw-bold">
+                                            ${item.Title != "" ? item.Title :"#"}
+                                        </span>
+                                        <span class="ps-1 text-sm text-dark">
+                                            ${item.Description}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center mt-0">
+                                        <div class="ps-0">
+                                            <span class="SL_total fw-bold text-primary">${_detail.length}</span>
+                                            <span class="px-1 text-lowercase text-secondary">@Local["Báo cáo"]</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </a>
+                        <hr class="horizontal dark my-1">
+                        </li>`;
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        LRMaster_Event();
+    }
+    function LR_MasterSearch(text) {
+
+        if (text == "") {
+            if ($('.masterrow')[0]) {
+                $('.masterrow')[0].click();
+            }
+        }
+        else {
+
+            let searchingValue = (xoa_dau($('#searching_report').val())).trim().toLowerCase();
+
+            let _detail = LRTemplate.filter(s => (xoa_dau(s.Title).trim().toLowerCase().includes(searchingValue)));
+
+            LR_DetailRender(_detail, 'dtListReportBodyDetail');
+            if (searchingValue != '') {
+                ColorSearchFilterText(searchingValue, "reportitem");
+            }
+        }
+        $("#ReportGeneral_Sort .fa-search").show();
+        $("#ReportGeneral_Sort .spinner-border").hide();
+    }
+    //#endregion
+
+    //#region //Detail
+
+    function LR_DetailRender_Check(text, value, number) {
+        let _prefix = '', _text = '';
+        if (number == 0) {
+            if (value == 0) {
+ 
+                return '';
+            }
+            else {
+ 
+                _text = '<span class="text-dark fw-bold">' + text + '</span>';
+                return '<span class="ps-1 pe-1 m-1 d-inline-flex justify-content-center align-items-center badge badge-light py-0">'
+                    + _text
+                    + '</span>'
+            }
+        }
+        else {
+            _prefix = '<h6 class="text-sm text-danger fw-bold py-1  m-0 pe-2">' + value + '</h6>';
+            _text = '<span class="text-dark">' + text + '</span>'
+            return '<span class="ps-1 pe-3 m-1 d-inline-flex justify-content-center align-items-center badge badge-light py-0">'
+                + _prefix
+                + _text
+                + '</span>'
+        }
+
+    }
+
+    function LR_DetailRender_Sheet(value) {
+        let result = '';
+        let _data = JSON.parse(value).sheet;
+        for (let i = 0; i < _data.length; i++) {
+
+            let _detail = LRSheet.filter(LRSheet => (LRSheet.ID == _data[i].value));
+            if (_detail != undefined && _detail.length == 1) {
+                result = result
+                    + '<div class="d-lg-flex text-lowercase">'
+                    + '<div class="content_line_clamp text-dark px-2">' + _detail[0].Name + '</div>'
+                    + '<div class="content_line_clamp text-secondary px-2">' + _detail[0].Value + '</div>'
+                    + '</div>';
+            }
+
+        }
+
+
+        return result;
+    }
+    function LR_DetailRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td class="">'
+                        +'<div>'
+                        + '<div class="d-flex align-items-center">'
+                        + '<div class="ps-2 ms-1 form-check form-check-inline" >'
+                        + ((item.ID == 0) ? '' : ('<input data-id="' + item.ID + '" id="detailcheck_' + item.ID + '" class="detailcheck form-check-input ms-auto" type="checkbox" ' + ((item.IsActive == 1) ? 'checked' : '') + '>'))
+                        + '</div>'
+                        + '<a class="ms-0 text-primary fw-bold text-sm reportitem border-bottom border-1 border-primary">' + item.Title + '</a>'
+                        + '</div>'
+                        + '<div class="d-lg-flex content_line_clamp ps-1">'
+                        + LR_DetailRender_Check('ALL_BRA', item.UseAllBranch, 0)
+                        + LR_DetailRender_Check('MUL_BRA', item.UseMultiBranch, 0)
+                        + LR_DetailRender_Check('BRA', item.UseBranch, 0)
+                        + LR_DetailRender_Check('WARE', item.UseWare, 0)
+                        + LR_DetailRender_Check('STAFF', item.UseStaff, 0)
+                        + LR_DetailRender_Check('GROUPSTAFF', item.UseGroupStaff, 0)
+                        + LR_DetailRender_Check('MUL_GSTA', item.UseMultiGroupStaff, 0)
+                        + LR_DetailRender_Check('SOURCE', item.UseSource, 0)
+                        + LR_DetailRender_Check('PAGE', item.UsePage, 0)
+                        + LR_DetailRender_Check('DATE', item.UseDate, 0)
+                        + LR_DetailRender_Check('RAN_DATE', item.AllowRangeDate, 1)
+                        + LR_DetailRender_Check('TYPEDATE', item.UseTypeDate, 0)
+                        + '</div>'
+                        + '<div class="mx-1">'
+                        + LR_DetailRender_Sheet(item.Teamplate)
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+ 
+
+
+                    stringContent = stringContent + '<tr class="cursor-pointer vt-number ' + ((item.IsActive == 0) ? 'unactive':'') + '" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            LRDetail_Event()
+        }
+    }
+    function LRDetail_Event () {
+        $('#dtListReportBodyDetail tr').unbind();
+        $('#dtListReportBodyDetail tr').click(function () {
+            $(this).parent().children().removeClass('active')
+            $(this).closest('tr').addClass('active');
+        });
+        $('#dtListReportBodyDetail .reportitem').click(function () {
+            let CurrentID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Report/ListReport/ListReportShowDetail?CurrentID="
+                + CurrentID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        });
+        $('#dtListReportBodyDetail .detailcheck').unbind().change(function () {
+            let id = $(this).attr('data-id');
+
+            AjaxLoad(url = "/Report/ListReport/ListReportShow/?handler=ExcuteDataDetail"
+                , data = {
+                    IsActive: $(this).is(":checked") ? 1 : 0,
+                    CurrentID: id
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        CloseModal();
+                        LR_MasterLoad(currrentDetail);
+                    }
+                });
+        });
+    }
+
+    //#endregion
+
+
+
+
+
+
+
+
+</script>
+
+   <style>
+       #dtListReportDetail.showdis .unactive{
+           display:none !important;
+       }
+       .masterrow .buttonEditClass:hover {
+           border-bottom: 1px solid var(--color--primary)
+       }
+   </style>

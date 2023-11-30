@@ -1,0 +1,433 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Setting.Status.StatusListModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="pt-2">
+            <div class="row m-0">
+                <div class="col-12 col-lg-5 col-sm-5 px-0">
+                    <div class="card card-plain">
+                        <div class="vtcardheader card-header pb-0 pt-2">
+                            <div class="left">
+                                <h6 class="mb-0">@Local["Trạng thái labo"]</h6>
+                                <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                            </div>
+                        </div>
+                        <div class="card-body pt-2">
+                            <div id="LStatus_List" class="pt-4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-7 col-sm-7 px-0" id="LStatus_Detail">
+                    <div id="LStatus_InfoDetail">
+                        <div class="card card-plain">
+                            <div class="vtcardheader card-header px-2 pb-0 pt-2">
+                                <div class="left">
+                                    <h6 class="mb-0">@Local["Trạng thái labo"]</h6>
+                                    <p class="text-sm mb-0">@Local["Chi tiết trạng thái"]</p>
+                                </div>
+                            </div>
+                            <div class="card-body px-2 pt-2">
+                                <div class="p-3 pt-2 row form3">
+                                    <div class="field col-12 p-1">
+                                        <label>@Local["Tên trạng thái"]</label>
+                                        <input id="LS_StatusName" name="name" type="text" class="form-control" />
+                                    </div>
+                                    <div class="field col-12 col-md-12 p-1">
+                                        <label>@Local["Mã màu"]</label>
+                                        <div class="border border-1 rounded-2 p-1 w-100">
+                                            <input id="LS_Color" name="fillCode" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="field col-12 p-1">
+                                        <label>@Local["Nội dung"]</label>
+                                        <textarea id="LS_StatusContent" type="text" class="form-control"></textarea>
+                                    </div>
+                                    <div class="d-flex field col-12 p-1 mt-2 gap-3">
+                                        <div class="field form-check">
+                                            <input id="LS_Complete" class="form-check-input pr-2 typeschedule" name="typeschedule" type="checkbox">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["Hoàn thành"]</label>
+                                        </div>
+                                        <div class="field form-check">
+                                            <input id="LS_Begin" class="form-check-input pr-2 typeschedule" name="typeschedule" type="checkbox">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["Bắt đầu"]</label>
+                                        </div>
+                                        <div class="field form-check">
+                                            <input id="LS_Cancel" class="form-check-input pr-2" type="checkbox" checked="checked">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["Hủy"]</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fixed-botombutton p-2">
+                                    <div class="action_Save">
+                                        <div class="text-danger text-gradient text-sm mt-2 font-weight-bold" id="LS_InfoTextMess"></div>
+                                        <div class="action_Save-Content">
+                                            <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();return LStatus_ExcuteInfo()">@Local["Lưu"]</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="LStatus_StatusFollow" class="d-none">
+                        <div class="card card-plain">
+                            <div class="vtcardheader card-header px-2 pb-0 pt-2">
+                                <div class="left">
+                                    <h6 class="mb-0">@Local["Sắp xếp trạng thái"]</h6>
+                                    <p class="text-sm mb-0">@Local["Kéo thả trạng thái để sắp xếp"]</p>
+                                </div>
+                            </div>
+                            <div class="card-body px-2 pt-2">
+                                <div class="pt-1 mt-3">
+                                    <div class="col-12 status_follow" id="LS_StatusFollowDiv"></div>
+                                </div>
+                                <div class="fixed-botombutton pe-3">
+                                    <div class="action_Save">
+                                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                                        <div class="action_Save-Content">
+                                            <button form="formSettingSchedule" id="" data-fontchanged="true" class="btn bg-gradient-primary btn-sm mt-1" onclick="event.preventDefault();return LStatus_ExcuteStatusFollow()">
+                                                @Local["Lưu"]
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let LS_CurrentID = 0;
+    $(document).ready(function (){
+        LStatus_Init();
+        LStatus_ListLoadData();
+    });
+    //#region Init
+    function LStatus_Init() {
+        $("#LS_Color").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            showInput: true,
+            color: '#ffffff',
+            palette: [
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+    }
+    //#endregion Init
+
+    //#region Loaddata List
+    function LStatus_ListLoadData(){
+        AjaxLoad(url = "/Labo/Setting/Status/StatusList/?handler=LoadData"
+            , data = {}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    LStatus_ListRender(data, "LStatus_List");
+                }
+            }
+        )
+    }
+    //#endregion
+    //#region Render List
+    function LStatus_ListRender(data,id){
+        let myNode = document.getElementById(id);
+        if( myNode != null){
+            if(data && data.length != 0){
+                let str = '';
+                for (let i = 0; i < data.length; i++){
+                    let item = data[i];
+                    let bgcolor = 'rgba(' + parseInt(item.Color.slice(-6, -4), 16)
+                        + ',' + parseInt(item.Color.slice(-4, -2), 16)
+                        + ',' + parseInt(item.Color.slice(-2), 16)
+                        + ',0.3)'
+                    str +=
+                    `
+                    <div class="d-flex align-items-center form-control mb-3" data-id="${item.ID}" style="background:${bgcolor};">
+                            <span class="editstatus z-index-3 me-2 mb-0">
+                                <i class="vtt-icon vttech-icon-edit-content text-white text-sm cursor-pointer" aria-hidden="true"></i>
+                        </span>
+                        <div class="LS_StatusNameRow" data-id="${item.ID}">${item.StatusName}</div>
+                        <div class="position-relative page_status_item w-auto ms-auto">
+                            <div class="ms-auto editstatusfollow arrow cursor-pointer"><i class="vtt-icon vttech-icon-Arrow-right text-white text-sm"></i></div>
+                        </div>
+                    </div>
+                    `
+                }
+                myNode.innerHTML = str;
+            }
+            LStatus_Event();
+            $("#LStatus_List .editstatus")[0].click();
+        }
+    }
+    //#endregion
+    //#region Event
+    function LStatus_Event(){        
+        $("#LStatus_List .editstatus").unbind('click').click(function () {
+            $('.page_status_item').removeClass('active');
+            $("#LStatus_StatusFollow").addClass('d-none');
+            $("#LStatus_InfoDetail").removeClass('d-none');
+            LS_CurrentID = $(this).parent().attr('data-id');
+            LStatus_InfoDetailLoad()
+        });
+        $("#LStatus_List").on("click", ".page_status_item", function (e) {
+            $('.page_status_item').removeClass('active');
+            $(this).addClass("active");            
+            $("#LStatus_StatusFollow").removeClass('d-none');
+            $("#LStatus_InfoDetail").addClass('d-none');
+            LS_CurrentID = $(this).parent().attr('data-id');
+            LStatus_StatusFollowLoad()
+        });
+    }
+    //#endregion
+
+    //#region StatusFollow
+    function LStatus_StatusFollowLoad() {
+        AjaxLoad(url = "/Labo/Setting/Status/StatusList/?handler=StatusFollowLoad"
+            , data = {"CurrentID" : LS_CurrentID}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    LStatus_StatusFollowRender(data, "LS_StatusFollowDiv");
+                }
+            }
+        )
+    }
+    function LStatus_StatusFollowRender(data,id) {
+        let myNode = document.getElementById(id);
+        let str = '';
+        if (myNode != null){
+            if(data && data.length != 0 ){
+                for(let i = 0; i <data.length;i++){
+                    let item = data[i];
+                    str +=
+                        `<div class="statusfollow_item form-control cursor-pointer d-flex mb-3 ${item.IsDisable == 0 ? "bg-light disabled" : ""}" data-id="${item.ID}">
+                        <span>${item.StatusName}</span>
+                        <div class="button_disabled ${item.IsDisable == 0 ? "text-danger" : ""} ms-auto"><span class="vtt-icon vttech-icon-cancel1 me-2 form-control-feedback" aria-hidden="true"></span></div>
+                    </div>
+                    `                    
+                }
+                myNode.innerHTML = str;
+            }
+            LStatus_StatusFollowArran();
+            LStatus_StatusFollowEvent();
+        }
+    }
+    function LStatus_StatusFollowArran() {
+        $("#LS_StatusFollowDiv").unbind('sortable').sortable({
+            items: ".statusfollow_item:not(.disabled)",
+            start: function (event, ui) {
+            },
+            stop: function (event, ui) {
+            }
+        });
+    }
+    function LStatus_StatusFollowEvent(){
+        $("#LS_StatusFollowDiv").on("click", '.button_disabled', function () {
+            let parent = $(this).parent(".statusfollow_item");
+            let parentedit = $(this).parent(".statusfollow_item .button_disabled");
+            let height_item = $("#LS_StatusFollowDiv .statusfollow_item:first-child").outerHeight();
+            if (parent.hasClass("disabled")) {
+                parent.removeClass("disabled");
+                parent.removeClass('bg-light');
+                parent.children(1).removeClass('text-danger');
+                parent.children(1).children(1).removeClass('text-danger');
+                let top = 0;
+                let itemInsert;
+                if ($(".statusfollow_item:not(.disabled)").length != 0) {
+                    let length = $(".statusfollow_item:not(.disabled)").length;
+                    itemInsert = $(".statusfollow_item:not(.disabled)")[length - 2];
+                    top = height_item * (length - 1);
+                }
+                if (parent.prev().hasClass("disabled")) {
+                    let postion = parent.position().top;
+                    parent.css({
+                        top: postion + 'px',
+                        position: 'absolute',
+                        'zIndex': '60'
+                    }).animate({
+                        top: top + 'px',
+                        position: 'absolute'
+                    }, {
+                        duration: 'slow',
+                        complete: function () {
+                            parent.removeAttr('style');
+                            if (itemInsert != undefined) {
+                                parent.insertAfter(itemInsert)
+                            }
+                            else {
+                                parent.insertBefore($(".statusfollow_item:first-child"));
+                            }
+                            $("#LS_StatusFollowDiv").sortable("destroy");
+                            LStatus_StatusFollowArran();
+                        }
+                    }, function () {
+
+                    });
+                }
+                else {
+                }
+            }
+            else {
+                parent.addClass("disabled");
+                parent.addClass('bg-light');
+                parent.children(1).children(1).addClass('text-danger');
+                let height = $("#LS_StatusFollowDiv").outerHeight() - $("#LS_StatusFollowDiv .statusfollow_item:first-child").outerHeight();
+                let postion = parent.position().top;
+                parent.css({
+                    top: postion + 'px',
+                    position: 'absolute',
+                    'zIndex': '60'
+                }).animate({
+                    top: height + 'px',
+                    position: 'absolute'
+                }, 'slow', function () {
+                    parent.removeAttr('style');
+                    parent.insertAfter($(".statusfollow_item:last-child"));
+                    $("#LS_StatusFollowDiv").sortable("destroy");
+                    LStatus_StatusFollowArran();
+                })
+            }
+        })
+    }
+    function LStatus_ExcuteStatusFollow(){debugger
+        let obj = $("#LS_StatusFollowDiv .statusfollow_item:not(.disabled)");
+        let val = ',';
+        for(let i = 0; i < obj.length ; i++){
+            let item = obj[i];
+            val += item.getAttribute('data-id') + ',';
+        }
+        AjaxLoad(url = "/Labo/Setting/Status/StatusList/?handler=StatusFollowUpdate"
+            , data = { "CurrentID": LS_CurrentID, "StatusFollow": val }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                }
+            }
+        )
+    }
+    //#endregion
+
+    //#region Info Detail
+    function LStatus_InfoDetailLoad() {
+        AjaxLoad(url = "/Labo/Setting/Status/StatusList/?handler=InfoDetailLoad"
+            , data = {"CurrentID" : LS_CurrentID}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    LStatus_InfoDetailFill(data);
+                }
+            }
+        )
+    }
+    function LStatus_InfoDetailFill(data) {
+        if(data && data.length != 0){
+            $('#LS_StatusName').val(data[0].StatusName);
+            $('#LS_StatusContent').val(data[0].StatusContent);
+            
+            $("#LS_Color").spectrum("set", data[0].Color);
+            if (data[0].isComplete == 1) $("#LS_Complete").prop("checked", true)
+            else $("#LS_Complete").prop("checked", false);
+
+            if (data[0].isCancel == 1) $("#LS_Cancel").prop("checked", true);
+            else $("#LS_Cancel").prop("checked", false);
+
+            if (data[0].isBegin == 1) $("#LS_Begin").prop("checked", true);
+            else $("#LS_Begin").prop("checked", false);
+        }
+    }
+    function LStatus_ExcuteInfo(){
+        let data = {};
+        let arrData = [];
+        data.StatusName = $('#LS_StatusName').val() ? $('#LS_StatusName').val() : '';
+        data.StatusContent = $('#LS_StatusContent').val() ? $('#LS_StatusContent').val() : '';
+        data.Color = $("#LS_Color").spectrum('get').toHexString();
+
+        data.IsBegin = $("#LS_Begin").is(":checked") ? 1 : 0;
+        data.isCancel = $("#LS_Cancel").is(":checked") ? 1 : 0;
+        data.isComplete = $("#LS_Complete").is(":checked") ? 1 : 0;
+        arrData.push(data);
+        $('.form3').form('validate form');
+        if ($('.form3').form('is valid')) {
+            AjaxLoad(url = "/Labo/Setting/Status/StatusList/?handler=ExecuteInfo"
+                , data = {
+                    "CurrentID": LS_CurrentID.toString()
+                    , "Data": JSON.stringify(arrData)
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        let data = JSON.parse(result);
+                        let obj = $(`.LS_StatusNameRow[data-id=${LS_CurrentID}]`)[0];
+                        let bgcolor = 'rgba(' + parseInt(data[0].Color.slice(-6, -4), 16)
+                            + ',' + parseInt(data[0].Color.slice(-4, -2), 16)
+                            + ',' + parseInt(data[0].Color.slice(-2), 16)
+                            + ',0.3)'
+                        obj.textContent = data[0].StatusName;
+                        obj.parentElement.style.background = bgcolor;
+                        
+                    } else notiError_SW();
+                }
+            )
+        }
+    }
+    //#endregion
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+<style>
+    .page_status_item .arrow {
+        position: absolute;
+        top: 50%;
+        right: 30px;
+        transform: translateY(-50%);
+        color: white !important;        
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    }
+
+        .page_status_item .arrow i {
+            font-size: 15px;
+        }
+
+    .page_status_item.active .arrow {
+        opacity: 1;
+        right: 10px;
+    }
+
+    .statusfollow_item {
+        counter-increment: num-sections;
+    }
+
+        .status_follow .statusfollow_item:not(.disabled):before {
+        content: counter(num-sections);
+        position: absolute;
+        margin-left: -17px;
+        margin-top: -20px;
+        width: 20px;
+        height: 20px;
+        background-color: #00bcd4;
+        text-align: center;
+        color: white;
+        line-height: 20px;
+        border-radius: 50%;
+    }
+</style>

@@ -1,0 +1,641 @@
+﻿@page
+@model Pages.Student.Library.ClassLibrary
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="card-header pt-1 pb-0 px-0 position-relative">
+    <div id="clibra_Loader" class="waitingdiv position-absolute top-50 start-50 translate-middle" style="display:none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div class="px-2   d-inline">
+        <a id="clibra_home" class="d-inline text-primary text-sm me-2"><i class="fs-5 text-gradient text-warning me-2 fas fa-folder"></i>@Local["Thư viện"] / </a>
+        <div class="d-inline" id="clibra_listnav">
+        </div>
+    </div>
+    <div class="d-lg-flex d-md-flex px-0 mt-3 ">
+        <div class="d-lg-flex ps-2 d-md-flex align-items-center  col-auto my-auto">
+            <ul class="ms-n1 nav nav-pills p-1 ps-0 bg-transparent" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a onclick="CLibra_displaylist()" class="linkgroup nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" aria-selected="true">
+                        <i class="text-gradient text-primary fas fa-list-ul"></i>
+
+                    </a>
+                </li>
+                <li class="nav-item " role="presentation">
+                    <a onclick="CLibra_displaygrid()" class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab" aria-selected="true">
+                        <i class="text-gradient text-primary fas fa-th"></i>
+
+                    </a>
+                </li>
+            </ul>
+            <div class="form-check me-2">
+                <input id="library_shffile" onchange="CLibra_ShowHidePusblish()" class="form-check-input" type="checkbox">
+                <label>@Local["Hiển thị file publish"]</label>
+            </div>
+            <button id="library_movefile" onclick="CLibra_ShowSelect()" class="d-none btn btn-sm btn-outline-dark mb-0 ">
+                @Local["Di chuyển file"]
+            </button>
+            <div id="library_moveexearea" class="d-none">
+                <button onclick="CLibra_movefile()" class="btn bg-gradient-info btn-sm mb-0 ms-3">
+                    OK
+                </button>
+            </div>
+        </div>
+        <div class="ms-auto my-auto mt-1">
+
+            <div class="input-group flex-nowrap" id="clibra_div">
+
+                <div class="input-group-text input-group-text px-2">
+
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <div class="spinner-border spinner-border-sm d-none"></div>
+                </div>
+                <input id="clibra_input" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm tên file"]">
+                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                <a id="clibra_sortname" title="sort by name" class="input-group-text"><i class="text-lg text-dark fas fa-sort-alpha-down"></i></a>
+                <a id="clibra_sorttype" title="sort by type" class="input-group-text">
+                    <i class="text-lg text-dark fas fa-layer-group"></i>
+                </a>
+                <a id="clibra_sortdate" title="sort by date" class="input-group-text">
+                    <i class="text-lg text-dark fas fa-clock"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <ul id="clibra_list" class="border-1 mt-3 px-3 ps-3 py-4 bg-gray-100 border-radius-lg nav nav-pills  bg-white border-radius-lg d-block pt-2 px-2 showmineonly">
+    </ul>
+    <button id="clibra_more" class="btn btnsysmore  btn-secondary w-100 p-1" onclick="CLibra_Load(1,1)">@Local["Xem thêm"]</button>
+
+</div>
+<script type="text/javascript">
+    var clbraparent = 0;
+    var clbracurrent = 0;
+    var clbradata = [];
+    var clbradataroot = [];
+    var clibra_timer;
+    let clitype = 'asc', cliname = 'asc', clidate = 'asc';
+    let clibeginID = 0;
+    let cliLimit = 30;
+    let clidisplay_type = 'list';
+    var cliAllowUpload = 0;
+    var cli_ClassID = '@Model._Class'
+    $(document).ready(function () {
+        if (Number(cli_ClassID) != 0) {
+            $('#library_movefile').remove();
+        }
+        CLibra_Load(isnew = 1, loadmore = 0);
+        CLibra_MainEvent();
+
+    })
+    //#region // Event
+    function CLibra_ShowHidePusblish()
+    {
+        if ($('#library_shffile').is(':checked')) {
+            $('#clibra_list').removeClass('showmineonly');
+        }
+        else $('#clibra_list').addClass('showmineonly');
+    }
+    function CLibra_Load (isnew, loadmore) {
+
+        clitype = 'asc', cliname = 'asc', clidate = 'asc';
+        if (loadmore == 0) {
+            $('#clibra_list').html('');
+            clibeginID = 0;
+        }
+        AjaxLoad(url = "/Student/Library/ClassLibrary/?handler=LoadLibrary"
+            , data = {
+                ParentID: clbraparent
+                , begin: clibeginID
+                , limit: cliLimit
+                , loadmore: loadmore
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    $('#library_moveexearea').addClass('d-none');
+                    let data = JSON.parse(result).Table;
+                    if (data != undefined) {
+                        if (loadmore == 0) {
+                            clbradataroot = [];
+                            clbradataroot = data;
+                            CLibra_Render(data, 'clibra_list');
+                            let info = JSON.parse(result).Table1;
+                            if (isnew == 1) {
+                                CLibra_InfoRender(info, "clibra_listnav", isnew);
+                            }
+                            if (info.length == 1 && info[0].IsAllow == 1 && info[0].Level < 5) {
+                                $('#library_addfile').removeClass('d-none');
+                                $('#library_movefile').removeClass('d-none');
+                            }
+                            else {
+                                $('#library_addfile').addClass('d-none');
+                                $('#library_movefile').addClass('d-none');
+
+                            }
+                            if (info.length == 0 || (info[0].IsAllow == 1 && info[0].Level < 5)) {
+                                $('#library_addfolder').removeClass('d-none');
+
+                            }
+                            else {
+
+                                $('#library_addfolder').addClass('d-none');
+                            }
+                        }
+                        else {
+                            clbradataroot = clbradataroot.concat(data);
+                            CLibra_Render(data, 'clibra_list');
+                        }
+                        let folder = data.filter(w => w.FileType != 'folder');
+                        if (folder != undefined && folder.length != 0) {
+                            clibeginID = Number(folder[folder.length - 1].ID)
+                        }
+                        clbradata = JSON.parse(JSON.stringify(clbradataroot))
+
+
+
+                    }
+
+
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#clibra_Loader').show();
+            }
+            , complete = function (e) {
+                $('#clibra_Loader').hide();
+            }
+        );
+    }
+    function Clibra_Publish (currentid, status) {
+        AjaxLoad(url = "/Student/Library/ClassLibrary/?handler=Actionpublish"
+            , data = {
+                currentid: currentid
+                , publish: status
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    if (status == 1) {
+                        $('#cli_button_' + currentid).html('publish');
+                        $('#cli_button_' + currentid).addClass('btn-outline-success').removeClass('btn-outline-dark');
+                        $('#cli_button_' + currentid).addClass('unpublish').removeClass('publish');
+                    }
+                    else {
+                        $('#cli_button_' + currentid).html('private');
+                        $('#cli_button_' + currentid).removeClass('btn-outline-success').addClass('btn-outline-dark');
+                        $('#cli_button_' + currentid).addClass('publish').removeClass('unpublish');
+                    }
+                    notiSuccess();
+                    CLibra_Event();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#clibra_Loader').show();
+            }
+            , complete = function (e) {
+                $('#clibra_Loader').hide();
+            }
+        );
+    }
+    function CLibra_DeleteFile (id, _url) {
+        AjaxLoad(url = "/Student/Library/ClassLibrary/?handler=Deletefile"
+            , data = {
+                currentid: id
+                , url: _url
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    $('#clibra_item' + id).remove();
+                    notiSuccess();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#clibra_Loader').show();
+            }
+            , complete = function (e) {
+                $('#clibra_Loader').hide();
+            }
+        );
+    }
+    function CLibra_MainEvent () {
+        $('#clibra_input').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#clibra_div .fa-search").hide();
+            $("#clibra_div .spinner-border").removeClass('d-none');
+            clearTimeout(clibra_timer);
+            clibra_timer = setTimeout(function (e) {
+                CLibra_Search();
+            }, 500);
+        });
+        $("#clibra_div").on('click', '.btn_clear', function (e) {
+            $('#clibra_input').val('');
+            $(".btn_clear").addClass('opacity-1');
+            $('#clibra_list').html('');
+            CLibra_Render(clbradata, 'clibra_list');
+        });
+
+        $("#clibra_sortname").unbind().click(function (e) {
+            $('#clibra_input').val('');
+            cliname = cliname == 'desc' ? 'asc' : 'desc';
+            clbradata = CLibra_Sort(clbradata, 'name');
+            $('#clibra_list').html('');
+            CLibra_Render(clbradata, 'clibra_list');
+        });
+        $("#clibra_sorttype").unbind().click(function (e) {
+            $('#clibra_input').val('');
+            clitype = clitype == 'desc' ? 'asc' : 'desc';
+            clbradata = CLibra_Sort(clbradata, 'type');
+            $('#clibra_list').html('');
+            CLibra_Render(clbradata, 'clibra_list');
+        });
+        $("#clibra_sortdate").unbind().click(function (e) {
+            $('#clibra_input').val('');
+            clidate = clidate == 'desc' ? 'asc' : 'desc';
+            clbradata = CLibra_Sort(clbradata, 'date');
+            $('#clibra_list').html('');
+            CLibra_Render(clbradata, 'clibra_list');
+        });
+    }
+    function CLibra_Search () {
+        let textsearch = $('#clibra_input').val().trim();
+        if (textsearch != undefined && textsearch.length > 3) {
+            AjaxLoad(url = "/Student/Library/ClassLibrary/?handler=Search"
+                , data = {"name": textsearch}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result).Table;
+                        $('#clibra_list').html('');
+                        CLibra_Render(data, 'clibra_list',search=true);
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#clibra_Loader').show();
+                }
+                , complete = function (e) {
+                    $('#clibra_Loader').hide();
+                    $("#clibra_div .fa-search").show();
+                    $("#clibra_div .spinner-border").addClass('d-none');
+                }
+            );
+        }
+        else {
+            $("#clibra_div .fa-search").show();
+            $("#clibra_div .spinner-border").addClass('d-none');
+            $('#clibra_list').html('');
+            CLibra_Render(clbradata, 'clibra_list');
+        }
+    }
+    function CLibra_Event () {
+        $("#clibra_list .unpublish").unbind().click(function (e) {
+            e.preventDefault();
+            event.stopPropagation();
+            let id = $(this).attr('data-currentid');
+            Clibra_Publish(id, 0);
+        });
+        $("#clibra_list .publish").unbind().click(function (e) {
+            e.preventDefault();
+            event.stopPropagation();
+            let id = $(this).attr('data-currentid');
+            Clibra_Publish(id, 1);
+        });
+        $("#clibra_list .remove").unbind().click(function (e) {
+            e.preventDefault();
+            const promise = notiConfirm('Xóa file này ?');
+            let id = $(this).attr('data-currentid');
+            let url = $(this).attr('data-url');
+            promise.then(function () {CLibra_DeleteFile(id, url);}, function () { });
+        });
+        $("#clibra_list .detail").unbind().click(function (event) {
+            let id = $(this).attr('data-id');
+            let current = $(this).attr('data-currentid');
+            let type = $(this).attr('data-type');
+            if (type == 'folder') {
+                clbraparent = id;
+                clbracurrent = current;
+                CLibra_Load(isnew = 1, loadmore = 0);
+            }
+
+        });
+        $("#clibra_list .linkfilesh").unbind().click(function (event) {
+            let link = $(this).attr('data-link');
+            let type = $(this).attr('data-type');
+            if (type != 'folder') {
+                window.open(link, '_blank').focus();
+            }
+        });
+        $("#clibra_list .linkfolder").unbind().click(function (event) {
+            let id = $(this).attr('data-id');
+            clbraparent = id;
+            clbracurrent = id;
+            CLibra_Load(isnew = 1, loadmore = 0);
+        });
+
+        $("#clibra_list .edit").unbind('click').click(function (event) {
+            let id = $(this).attr('data-id');
+            let current = $(this).attr('data-currentid');
+            let type = $(this).attr('data-type');
+            if (type == 'folder') {
+                clbracurrent = current;
+                $("#DetailModal_Content").html('');
+                $("#DetailModal_Content").load(`/student/library/folderdetail?CurrentID=${id}&ParentID=${clbraparent}&ver=${versionofWebApplication}`);
+                $('#DetailModal').modal('show');
+            }
+            else {
+
+            }
+        });
+
+
+    }
+    function CLibra_ShowSelect (forcehide) {
+
+        $('#clibra_list .selectfile').prop('checked', false);
+        if (forcehide != undefined || !$('#library_moveexearea').hasClass('d-none')) {
+            $('#clibra_list .selectfile').addClass('d-none');
+            $('#library_moveexearea').addClass('d-none');
+        }
+        else {
+            $('#clibra_list .selectfile').removeClass('d-none');
+            $('#library_moveexearea').removeClass('d-none');
+
+        }
+
+    }
+
+    function CLibra_movefile () {
+        let stringfile = '';
+        let file = $('#clibra_list .selectfile:checked');
+        if (file != undefined && file.length != 0) {
+            for (let i = 0; i < file.length; i++) {
+                stringfile = stringfile + file[i].dataset.id + ',';
+            }
+        }
+        if (stringfile != '') {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load(`/student/library/FolderMove?file=${stringfile}&currentfolder=${clbraparent}`);
+            $('#DetailModal').modal('show');
+        }
+        else {
+            notiWarning('@Local["Chọn file"]');
+        }
+    }
+    //#endregion
+    //#region // Sort
+    function CLibra_Sort (data, type) {
+        switch (type) {
+            case "type":
+                if (clitype == 'desc')
+                    data.sort((a, b) => (a.FileType < b.FileType) ? 1 : ((b.FileType < a.FileType) ? -1 : 0));
+                else data.sort((a, b) => (a.FileType > b.FileType) ? 1 : ((b.FileType > a.FileType) ? -1 : 0));
+                break;
+            case "name":
+                if (cliname == 'desc')
+                    data.sort((a, b) => (a.Name < b.Name) ? 1 : ((b.Name < a.Name) ? -1 : 0));
+                else data.sort((a, b) => (a.Name > b.Name) ? 1 : ((b.Name > a.Name) ? -1 : 0));
+                break;
+            case "date":
+                if (clidate == 'desc')
+                    data.sort((a, b) => (a.Created < b.Created) ? 1 : ((b.Created < a.Created) ? -1 : 0));
+                else data.sort((a, b) => (a.Created > b.Created) ? 1 : ((b.Created > a.Created) ? -1 : 0));
+                break;
+        }
+        return data;
+    }
+    //#endregion
+    //#region // Display
+    function CLibra_displaylist () {
+        clidisplay_type = 'list';
+        $('#clibra_list').html('');
+        $('#clibra_list').removeClass('d-flex');
+        CLibra_ShowSelect(forcehide = true);
+        CLibra_Render(clbradata, 'clibra_list');
+    }
+    function CLibra_displaygrid () {
+        clidisplay_type = 'grid';
+        $('#clibra_list').html('');
+        $('#clibra_list').addClass('d-flex');
+        CLibra_ShowSelect(forcehide = true);
+        CLibra_Render(clbradata, 'clibra_list');
+    }
+    //#endregion
+    //#region // Info
+    async function CLibra_InfoRender (data, id) {
+
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        tr = ` <a data-id="${item.ID}" data-currentid="${item.ID}" class="detail text-primary text-sm">${item.Name}<span class="mx-2">/</span></a>
+                            `
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+
+                    }
+                }
+            }
+            CLibra_InfoEvent();
+            resolve();
+        })
+    }
+    function CLibra_InfoEvent () {
+        $("#clibra_home").unbind('click').click(function (event) {
+            clbraparent = 0;
+            clbracurrent = 0;
+            CLibra_InfoRemoveNav(clbraparent);
+            CLibra_Load(isnew = 0, loadmore = 0);
+        });
+        $("#clibra_listnav .detail").unbind('click').click(function (event) {
+            let id = $(this).attr('data-id');
+            clbraparent = id;
+            clbracurrent = id;
+            CLibra_InfoRemoveNav(clbraparent);
+            CLibra_Load(isnew = 0, loadmore = 0);
+
+        });
+
+    }
+    function CLibra_InfoRemoveNav (id) {
+        let subs = $('#clibra_listnav .detail');
+        for (let i = subs.length - 1; i >= 0; i--) {
+
+            if (Number(subs[i].dataset.id) == Number(id)) {
+                i = 0;
+            }
+            else {
+                subs[i].remove();
+            }
+        }
+    }
+    //#endregion
+    //#region // Render
+    function CLibra_Icon (type) {
+        let result = '';
+        let fs = clidisplay_type == 'list' ? 'fs-3' : 'fs-2';
+        switch (type) {
+            case "folder":
+                result = '<i class="' + fs + ' ms-n1 text-gradient text-warning fas fa-folder"></i>';
+                break;
+            case "pdf":
+                result = '<i class="' + fs + ' text-gradient text-danger fas fa-file-pdf"></i>';
+                break;
+            case "word":
+                result = '<i class="' + fs + ' text-gradient text-info fas fa-file-word"></i>';
+                break;
+            case "xcel":
+            case "excel":
+                result = '<i class="' + fs + ' text-gradient text-success fas fa-file-excel"></i>';
+                break;
+        }
+        return result;
+    }
+    async function CLibra_Render (data, id, search) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        let isAllow = item.IsAllow;
+                        let iddiv = '', selectdiv = '<div class="form-check me-2"></div>';
+                        let button = '', publishbutton = '';
+                        let classraw = '';
+                        let searchfolder = '';
+                        if (search != true) {
+                            if (item.FileType != 'folder') {
+                                iddiv = 'clibra_item' + item.ID;
+                                if (isAllow == 1)
+                                    selectdiv = `<div class="form-check me-2">
+                                            <input data-id="${item.ID}" class="selectfile file form-check-input d-none" type="checkbox">
+                                        </div>`;
+                            }
+                            if (isAllow == 1) {
+                                button = CLibra_RenderButton(item.FolderID, item.ID, item.FileType, item.URL, isAllow);
+                                publishbutton = CLibra_RenderPublish(item.ID, item.FileType, item.IsPublish);
+                            }
+                        }
+                        else {
+                            searchfolder = `
+                                <i class="fs-5 text-gradient text-warning ms-2 fas fa-folder"></i>
+                                <span data-id="${item.FolderID}" class="linkfolder text-dark cursor-pointer ms-2">${item.FolderName}</span>`;
+                        }
+                        if (item.IsMine == 0) classraw = 'itemnotmine';
+                        if (clidisplay_type == 'list') {
+                            tr = `<div id="${iddiv}" class="${classraw} nav-item my-0 py-2 position-relative d-flex align-items-center">
+                                    ${selectdiv}
+                                    ${button}
+                                    <a data-id="${item.FolderID}" data-currentid="${item.ID}" data-link="${item.URL}" data-type="${item.FileType}" class="ms-2 d-flex w-100 text-sm detail nav-link cursor-pointer">
+                                        <div class="w-100 d-lg-flex d-md-flex">
+                                            <div class="w-50 col-auto my-auto align-items-center d-flex">
+                                                ${CLibra_Icon(item.FileType)}
+                                                <span data-type="${item.FileType}" data-link="${item.URL}" class="linkfilesh text-dark cursor-pointer ms-3">${item.Name}</span>
+                                                 ${searchfolder}
+                                            </div>
+                                            <div class="w-50 ps-2 ps-lg-0 ps-md-0 my-auto mt-1">
+                                                <div class="row align-items-center">
+                                                    <div class="col-12 col-md-4 col-xl-4 p-1">
+                                                        ${publishbutton}
+                                                        ${item.TypeName}
+                                                    </div>
+                                                    <div class="col-12 col-md-4 col-xl-4 p-1">
+                                                          ${item.CreatedName}
+                                                    </div>
+                                                    <div class="col-12 col-md-4 col-xl-4 p-1">
+                                                        ${GetDateTime_String_DMYHM(item.Created)}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                    </a>
+                                </div>
+                            ${(i == data.length - 1) ? `` : `<hr class="horizontal dark my-0 opacity-2">`}
+                            `
+                        }
+                        else {
+
+                            tr = `<div class="libragrid ${classraw}  position-relative">
+                                <a title="${item.Name}" data-currentid="${item.ID}" data-id="${item.FolderID}" data-link="${item.URL}" data-type="${item.FileType}" class="d-flex w-100 text-sm detail nav-link cursor-pointer">
+                                       <div class="card shadow-none">
+                                        <div class=" mx-4 p-3 text-center">
+                                           ${CLibra_Icon(item.FileType)}
+                                        </div>
+                                        <div class="card-body pt-0 p-3 text-center">
+                                            <h6 data-type="${item.FileType}" data-link="${item.URL}" class="linkfilesh text-dark text-sm mb-0 text-primary cursor-pointer">${item.Name}</h6>
+                                            <h6 class="text-center text-sm mb-0">${item.CreatedName}</h6>
+                                            <span class="mb-0 text-secondary">${GetDateTime_String_DMYHM(item.Created)}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>`;
+                        }
+                        document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+                    }
+
+                }
+            }
+            CLibra_Event();
+            resolve();
+        })
+    }
+    function CLibra_RenderPublish (ID, FileType, IsPublish) {
+        if (FileType == 'folder') return ``;
+        else if (IsPublish == 1) return `<button id="cli_button_${ID}" data-currentid="${ID}" class="unpublish mb-0 btn btn-sm btn-outline-success">publish</button>`
+        else return `<button id="cli_button_${ID}" data-currentid="${ID}"  class="publish btn btn-sm mb-0 btn-outline-dark"> private</button>`
+
+    }
+    function CLibra_RenderButton (FolderID, ID, FileType, URL, isAllow) {
+        let result = '';
+        if (isAllow == 1) {
+            if (FileType == 'folder') {
+                result = `<div><a data-id="${FolderID}" data-currentid="${ID}"  data-type="${FileType}" class="edit action opacity-1 ">
+                                    <i class="text-sm fas fa-tools"></i></a></div>`
+            }
+            else {
+                result = `<div><a data-url="${URL}" data-currentid="${ID}"  class="remove action opacity-1 ">
+                            <i class="text-sm fas fa-times"></i></a></div>`
+            }
+        }
+        return result;
+    }
+    //#endregion
+</script>
+
+<style>
+    .libragrid {
+        width: 180px;
+    }
+
+    #clibra_list .action:hover {
+        opacity: 1 !important;
+        font-weight: 600;
+    }
+    .linkfilesh:hover {
+        color: rgb(var(--bs-primary)) !important;
+        font-weight: 600;
+    }
+    .linkfolder:hover {
+        color: rgb(var(--bs-primary)) !important;
+        font-weight: 600;
+    }
+    #clibra_list.showmineonly .itemnotmine {
+        display: none !important;
+    }
+</style>

@@ -1,0 +1,377 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.DentistChart.DentistChartModel
+@{
+    Layout = null;
+}
+<div class="container-fluid pt-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" id="statusTeethList">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                       @* <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Tình trạng răng"]</h6>
+                                <p class="text-sm mb-0">@Local["Tình trạng răng người trưởng thành và trẻ em"]</p>
+                            </div>
+                        </div>*@
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#CDC_infodes">
+                                    <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="ms-auto my-auto mt-1 align-items-center d-flex">
+                            <ul class="nav nav-pills p-1 bg-transparent" role="tablist">
+                                <li class="text-dark nav-item">
+                                    <a onclick="AddNewStatusTeeth(2)" title="@Local["Răng trẻ em"]" class="type nav-link px-2 text-dark mb-0 px-0 py-1">
+                                        <img class="border p-1 border-secondary avatar avatar-sm" src="/Image/child.png" />
+                                    </a>
+                                </li>
+                                <li class="text-dark nav-item">
+                                    <a onclick="AddNewStatusTeeth(1)" title="@Local["Răng người lớn"]" class="type nav-link px-2 text-dark mb-0 px-0 py-1">
+                                        <img class="border p-1 border-secondary avatar avatar-sm" src="/Image/face.png" />
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="position-relative d-inline">
+                                <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle"
+                                        data-bs-toggle="collapse" data-bs-target="#colLists">
+                                    @Local["Xem thêm"]
+                                </button>
+                                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="patient" type="checkbox">
+                                            </div>
+                                            <p class="text-sm">@Local["Bệnh án"]</p>
+                                        </li>
+                                        <li class="d-flex">
+                                            <div class="form-check form-switch">
+                                                <input class="shtoogle form-check-input" data-name="handlelname" type="checkbox">
+                                            </div>
+                                            <p class="text-sm">@Local["Người sửa"]</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="CDC_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-2 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Tình trạng răng"]</h6>
+                        <p class="text-sm mb-0">@Local["Tình trạng răng người trưởng thành và trẻ em"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive" style="max-height:80vh;">
+                        <div id="CDC_WaitingDiv" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table data-name="ContentTeethStatus" class="table vt-table mb-0" id="CDC_dtContent">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th class="d-none">Type</th>
+                                    <th style="width: 45px;">@Local["#"]</th>
+                                    <th style="width: 140px;">@Local["Ngày"]</th>
+                                    <th data-name="patient" style="min-width: 200px; width: 200px;">@Local["Bệnh án"]</th>
+                                    <th>@Local["Ghi chú"]</th>
+                                    <th style="width: 80px;">@Local["Loại"]</th>
+                                    <th>@Local["Người tạo"]</th>
+                                    <th>@Local["Ngày"]</th>
+                                    <th data-name="handlelname">@Local["Người sửa"]</th>
+                                    <th style="width: 45px;">@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="CDC_dtContentBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="CDC_btnloadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" style="pointer-events: auto;" onclick="event.preventDefault(); return CDC_Load(0, 1);">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+            <div class="card" id="statusTeethListDetail">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //#region //DECLARE - INIT
+    var isCurrentView_Detail = 0;
+    var CurrentStatusTeethID = 0;
+    var CurrentStatusTeeth_Type = 0;
+    let shtable;
+    var ser_imageFeature_Disease = '@Model._imageFeature_Disease';
+    let CDC_data;
+    let CDC_limit = 100, CDC_beginID = 0;
+    let CDC_isDoneLoadMore = false;
+    $(document).ready(function () {
+        shtable = $("#CDC_dtContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        CDC_Load(0, 0)
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControl, '@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+
+    });
+    //#endregion
+
+    //#region //LOAD DATA
+    function CDC_Load(CDC_currentID, CDC_isLoadMore = 0) {
+        if (CDC_currentID == 0 && CDC_isLoadMore == 0) {
+            CDC_data = [];
+            CDC_beginID = 0;
+            CDC_isDoneLoadMore = false;
+            $('#CDC_dtContentBody').html('');
+        }
+
+        AjaxLoad(url = "/Customer/DentistChart/DentistChart/?handler=Load_Chart_Teeth_List"
+            , data =
+            {
+                'customerID': ser_MainCustomerID
+                , 'id': CDC_currentID
+                , 'limit': CDC_limit
+                , 'beginID': CDC_beginID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    if (CDC_currentID == 0) {
+                        CDC_data = CDC_data.concat(data);
+                        CDC_beginID = data[data.length - 1].ID;
+                        fnRenderBlock(data, "CDC_dtContentBody"
+                            , blocknum = 50
+                            , fnrender = CDC_RenderData
+                            , fnsuccess = function (e) { }
+                            , fnbegin = function (e) { }
+                        );
+                    }
+                    else {
+                        if (data && data.length != 0) {
+                            if ($('#CDC_rowContent_' + CDC_currentID).length > 0) {
+                                CDC_data = CDC_data.reduce((pre, arr) => {
+                                    if (arr.ID == data[0].ID) arr = data[0];
+                                    pre.push(arr);
+                                    return pre;
+                                }, []);
+                                $('#CDC_rowContent_' + CDC_currentID).replaceWith(CDC_RenderEach(data[0]));
+                                CDC_Event();
+                            }
+                            else {
+                                if (CDC_isDoneLoadMore) {
+                                    CDC_data.push(data[0]);
+                                    $('#CDC_dtContentBody').prepend(CDC_RenderEach(data[0]));
+                                    CDC_Event();
+                                }
+                                else {
+                                    CDC_Load(0, 0);
+                                }
+                            }
+                        }
+                        else {
+                            if ($('#CDC_rowContent_' + CDC_currentID).length > 0) {
+                                CDC_data = CDC_data.filter(word => {
+                                    return word.ID != CDC_currentID
+                                })
+                                $('#CDC_rowContent_' + CDC_currentID).remove();
+                            }
+                        }
+                    }
+                }
+                else if (result == "[]") {
+                    if (CDC_isLoadMore == 1) {
+                        $("#CDC_btnloadMore").hide();
+                        CDC_isDoneLoadMore = true;
+                    }
+                    else {
+                        if (CDC_currentID != 0) {
+                            if ($('#CDC_rowContent_' + CDC_currentID).length > 0) {
+                                CDC_data = CDC_data.filter(word => {
+                                    return word.ID != CDC_currentID
+                                })
+                                $('#CDC_rowContent_' + CDC_currentID).remove();
+                            }
+                        }
+                        else {
+                            
+                        }
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+                shtable.Refresh();
+            }
+            , before = function () {
+                $("#CDC_WaitingDiv").show();
+            }
+            , complete = function (e) {
+                $("#CDC_WaitingDiv").hide();
+            });
+    }
+    //#endregion
+
+    //#region //RENDER DATA
+    async function CDC_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CDC_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        CDC_Event();
+                        shtable.Refresh();
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+
+    function CDC_RenderEach(item) {
+        try {
+            let tr =
+                '<td  style="display:none !important">' + item.ID + '</td>'
+                + '<td  style="display:none !important">' + item.Type + '</td>'
+                + '<td class="vt-number-order"></td>'
+                + '<td>'
+                + '<a class="cursor-pointer border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold">' + ConvertDateTimeUTC_DMY(item.Created) + '</a>'
+                + '</td>'
+                + '<td  data-name="patient">' + item.TemplateName + '</td>'
+                + '<td style="white-space: pre-line;">' + item.Note + '</td>'
+                + '<td>'
+                + ((Number(item.Type) == 1)
+                    ? '<span class="badge bg-gradient-info">Adult</span>'
+                    : ' <span class="badge bg-gradient-success">Child</span>'
+                )
+                + '</td>'
+                + '<td>' + item.CreatedName + '</td>'
+                + '<td>' + ConvertDateTimeUTC_DMYHM(item.Created) + '</td>'
+                + '<td data-name="handlelname">' + item.ModifiedName
+                + '<br>' + item.Modified + '</td>'
+                + '<td>'
+                + '<div class="text-nowrap">' + CDC_RenderTable_Button(item.ID,item.EditButton,item.DeleteButton) + '</div>'
+                + '</td>'
+
+            tr = `<tr id="CDC_rowContent_${item.ID}" role="row" class="vt-number CLS_clsRowContent cursor-pointer vt-number">${tr}</tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function CDC_RenderTable_Button(ID, EditButton, DeleteButton) {
+        let buttons = [];
+        if (EditButton === 1) {
+            buttons.push(`<button class="buttonGrid" value="${ID}"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>`);
+        }
+        if (DeleteButton === 1) {
+            buttons.push(`<button class="buttonGrid" value=" ${ID} "><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>`);
+        }
+        return Render_Button_Grid(buttons);
+    }
+    //#endregion
+
+    //#region //HANDLE EVENT
+    function CDC_Event() {
+        $('#CDC_dtContent tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let type = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            isCurrentView_Detail = 0;
+            EditStatusTeethChart(ID, type);
+        });
+        $('#CDC_dtContent tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteStatusTeethChart(ID)
+        });
+        $('#CDC_dtContent tbody').on('click', '.buttonViewClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let type = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            isCurrentView_Detail = 1;
+            EditStatusTeethChart(ID, type);
+        });
+        $('#CDC_dtContent tbody').on('click', '.buttonPrintClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            syslog_cutteeth('p', ser_MainCustomerID, '');
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=teeth_status&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+        });
+    }
+
+    function AddNewStatusTeeth(type) {
+        isCurrentView_Detail = 0
+        CurrentStatusTeeth_Type = Number(type);
+        CurrentStatusTeethID = 0;
+        $('#statusTeethListDetail').empty();
+        $('#statusTeethList').hide();
+        $('#statusTeethListDetail').show();
+        $("#statusTeethListDetail").load('/Customer/DentistChart/DentistChartCanvas?Type=' + type + '&CurrentID=0&ver=' + versionofWebApplication);
+    }
+    function Dendis_Cancel() {
+        CurrentStatusTeethID = 0;
+        $('#statusTeethList').show();
+        $('#statusTeethListDetail').hide();
+        $('#statusTeethListDetail').empty();
+    }
+    function EditStatusTeethChart(id, type) {
+        CurrentStatusTeeth_Type = Number(type);
+        CurrentStatusTeethID = id;
+        $('#statusTeethListDetail').empty();
+        $('#statusTeethList').hide();
+        $('#statusTeethListDetail').show();
+        $("#statusTeethListDetail").load('/Customer/DentistChart/DentistChartCanvas?Type=' + type + '&CurrentID=' + id + '&ver=' + versionofWebApplication);
+    }
+    function HideOrShowColumFunction() {
+        var x = document.getElementById("divColumnMore");
+        if (x.style.display === "none") {
+            x.style.display = "-webkit-box";
+        } else {
+            x.style.display = "none";
+        }
+    }
+
+    function DeleteStatusTeethChart (id) {
+        const promise = notiConfirm();
+        promise.then(function () {ExecuteDeleteStatusTeethChart(id);}, function () { });
+    }
+    function ExecuteDeleteStatusTeethChart (id) {
+        AjaxLoad(url = "/Customer/DentistChart/DentistChart/?handler=DeleteItem"
+            , data = {'id': id}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result == "1") {
+                    syslog_cutteeth('d', ser_MainCustomerID, '');
+                    notiSuccess();
+                    CDC_Load(id, 0);
+                } else {
+                    notiError_SW();
+                }
+            }
+
+        );
+
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require_notasync('/assests/js/fabric.js', true);</script>
+<script src="/js/comon/canvasteeth.js" type="text/javascript"></script>

@@ -1,0 +1,286 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Treatment.TreatmentMesure.MesList
+@{
+    Layout = null;
+}
+
+<div id="TreatmeslistArea" class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 pt-0">
+                <div class="d-lg-flex">
+                    <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#TreatmesDetail_infodes">
+                                <i class="text-gradient text-lg text-primary fas fa-info-circle"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="ms-auto my-auto mt-1">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="Treatmes_New()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div id="TreatmesDetail_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-2 mt-2 multi-collapse collapse">
+                    <h6 class="mb-0">@Local["Tình trạng"]</h6>
+                    <p class="text-sm mb-0">@Local["Ghi nhận tình trạng"]</p>
+                </div>
+            </div>
+            <div class="card-body px-1 pt-2">
+                <div class="position-relative">
+                    <div id="Treatmes_wait" class="d-none waitingdiv text-center position-absolute top-0 start-50 translate-middle-x">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0 mobile-responsive position-relative">
+                        <table class="table vt-table mb-0" id="dtContentTreatmentWork">
+                            <thead>
+                                <tr role="row">
+                                    <th rowspan="2" style="width: 50px;">#</th>
+                                    <th rowspan="2" style="min-width: 130px;">@Local["Ngày tạo"]</th>
+                                    <th rowspan="2" style="min-width: 130px;">@Local["Người tạo"]</th>
+                                    <th id="MesrowTypeParent">@Local["Tình trạng"]</th>
+                                </tr>
+                                <tr id="MesrowType" role="row">
+                                </tr>
+                            </thead>
+                            <tbody id="TreatmeslistBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-secondary w-100 p-1 btnsysmore" onclick="MeasureLoad(0,1)">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="TreatmesDetailArea" class="row col-12 d-none">
+</div>
+<div id="MesList_buttonContainer" class="fixed-botombutton">
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="formBAreaD" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    var ser_MesCustomerID = '@Model._CustomerID';
+    var ser_MesTreatID = '@Model._TreatmentID';
+    var MesData = {};
+    var MesLimit = 30;
+    var MesBegin = 0;
+   
+    var MesContent = {};
+    var MesCustomerType = {};
+    let _mesdetail = {};
+    $(document).ready(function () {
+       
+        if (ser_MesTreatID == 0) $('#MesList_buttonContainer').remove();
+        MeasureIni(function () {
+            MeasureLoad(0, 0);
+        });
+    });
+    async function MeasureIni(callback) {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesList/?handler=LoadIni"
+                , data = {
+                    'CustomerID': ser_MesCustomerID
+                }
+                , async = true
+                , error = function () {
+                    resolve();
+                    notiError_SW()
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let datas = JSON.parse(result);
+                        let datacustype = datas.CustType;
+                        for (let i = 0; i < datacustype.length; i++) {
+                            MesCustomerType[datacustype[i].ID] = datacustype[i];
+                        }
+                        MeasureRender_Header(datacustype, "MesrowType");
+                        $('#MesrowTypeParent').attr('colspan', datacustype.length);
+                        let datacontent = datas.Content;
+                        for (let i = 0; i < datacontent.length; i++) {
+                            MesContent[datacontent[i].ID] = datacontent[i];
+                        }
+                        if (typeof callback == 'function') callback();
+                    }
+                    resolve();
+                }
+                , sender = null
+            );
+        });
+    }
+    function MeasureLoad(id, isLoadMore, isReloadHeader = 0) {
+        if (isLoadMore != 1) {
+            $("#TreatmeslistBody").empty();
+            MesData = {};
+            MesBegin = 0;
+        }
+        AjaxLoad(url = "/Customer/Treatment/TreatmentMesure/MesList/?handler=Loadata"
+            , data = {
+                'CustomerID': ser_MesCustomerID
+                , 'TreatmentID': ser_MesTreatID
+                , 'limit': MesLimit
+                , 'begin': MesBegin
+                , 'currentid': id
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = async function (result) {
+                if (result != "") {
+                    let datas = JSON.parse(result);
+                    let data = datas.Table;
+                    let datadetail = datas.Table1;
+                    _mesdetail = {};
+                    for (let i = 0; i < datadetail.length; i++) {
+                        _mesdetail[datadetail[i].MeasureID.toString() + '-' + datadetail[i].MeaID.toString()] = datadetail[i];
+                    }
+
+                    if (data && data.length != 0) {
+                        if (id != 0) {
+                            if (!MesData[data[0].ID]) {
+                                await MeasureIni();
+                            }
+                            MesData[data[0].ID] = data[0];
+                            let tr = MeasureRender_Each(data[0]);
+                            if ($('#treatmea_' + id).length) $('#treatmea_' + id).replaceWith(tr);
+                            else $("#TreatmeslistBody").prepend(tr);
+                            Measure_Event();
+                            $('#treatmea_' + id).trigger('click');
+                        }
+                        else {
+                            if (isReloadHeader == 1) {
+                                await MeasureIni();
+                            }
+                            for (let i = 0; i < data.length; i++) {
+                                MesData[data[i].ID] = data[i];
+                            }
+                            MesBegin = data[data.length - 1].ID;
+                            MeasureRender(data, 'TreatmeslistBody');
+                            if (isLoadMore == 0) {
+                                $('#treatmea_' + data[0].ID).trigger('click');
+                            }
+                        }
+                    }
+                    else {
+                        MeasureIni();
+                    }
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#Treatmes_wait").removeClass('d-none');
+            }
+            , complete = function (e) {
+                $("#Treatmes_wait").addClass('d-none');
+            }
+        );
+    }
+
+    //#region // Render and event
+    function MeasureRender_Header(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = "";
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let unit = '';
+                    if (item.Unit != "") {
+                        unit = `<span class="text-danger text-xs ps-1">${item.Unit}</span>`;
+                    }
+                    let tr = `<th>${item.Name}${unit}</th>`;
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+            }
+        }
+
+    }
+
+    function MeasureRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = MeasureRender_Each(item);
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+            }
+        }
+        Measure_Event();
+    }
+    function MeasureRender_Each(item) {
+        let status = ``;
+        for ([k, v] of Object.entries(MesCustomerType)) {
+            let _id = item.ID.toString() + '-' + k.toString();
+            if (_mesdetail[_id] != undefined) {
+                if (_mesdetail[_id].MeaIsCal == 1) {
+                    status = status
+                        + `<td>
+                                   <div class="d-flex align-items-center justify-content-center">
+                                        <span class="fw-bold">${_mesdetail[_id].Value}</span>
+                                        <span class="fw-normal text-secondary ps-2">${_mesdetail[_id].Diff}</span>
+                                   </div>
+                               </td>`;
+                }
+                else {
+                    let _content = MesContent[_mesdetail[_id].MeaContentID];
+                    status = status + `<td>${_content != undefined ? _content.Name : ''}</td>`;
+                }
+
+            }
+            else {
+                status += '<td></td>'
+            }
+        }
+        let tr = `<tr id="treatmea_${item.ID}" role="row" class=" vt-number">
+                           <td class="vt-number-order"></td>
+                           <td><a  data-id="${item.ID}" class="cursor-pointer border-bottom border-primary measureitem">${GetDateTime_String_DMY(item.Created)}</a></td>
+                           <td>
+                                <div class="d-inline">
+                                    <img class="avatar avatar-xs me-2" src="${item.EmpAvatar}" alt="label-image" />
+                                    <span>${item.EmpName}</span>
+                                </div>
+                           </td>
+                            ${status}
+                       </tr>`
+        return tr;
+    }
+    function Measure_Event() {
+        $('#TreatmeslistBody .measureitem').unbind().click(function () {
+            let ID = Number($(this).attr("data-id"));
+            Treatmes_Edit(ID);
+        });
+    }
+    //#endregion
+
+    //#region // Handle Event
+    function Treatmes_New() {
+        $("#TreatmeslistArea").addClass('d-none');
+        $("#TreatmesDetailArea").removeClass('d-none');
+        $("#TreatmesDetailArea").empty();
+        $("#TreatmesDetailArea").load("/Customer/Treatment/TreatmentMesure/MesDetail?Current=0&ver=" + versionofWebApplication);
+    }
+    function Treatmes_Edit(id) {
+        $("#TreatmeslistArea").addClass('d-none');
+        $("#TreatmesDetailArea").removeClass('d-none');
+        $("#TreatmesDetailArea").empty();
+        $("#TreatmesDetailArea").load("/Customer/Treatment/TreatmentMesure/MesDetail?Current=" + id + "&ver=" + versionofWebApplication);
+
+    }
+
+
+    //#endregion
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+

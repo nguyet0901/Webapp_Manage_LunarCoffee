@@ -1,0 +1,1009 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketList
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div id="Ticket_List_Master" class="container-fluid px-0 position-relative">
+    <div id="Ticketlist_wait" class="waitingdiv text-center z-index-sticky" style="display: none; position: absolute; left: 50%;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <div style="min-width:150px;">
+                            <ul class="nav nav-pills p-0 bg-transparent permissionlist" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer active" data-bs-toggle="collapse" href="#tt_infoarea">
+                                        <i class="text-gradient text-primary fas fa-filter"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link cursor-pointer  " data-bs-toggle="collapse" href="#tt_infodes">
+                                        <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="wrap">
+                            <div class="wrapblock">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" id="NormalTicket" value="1" onchange="event.preventDefault();return ChangeView_Executing();" checked="">
+                                    <label class="form-check-label mb-0" for="NormalTicket">@Local["Danh sách"]</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input type_show" type="radio" name="inlineRadioOptions" id="QuicklyTicket" value="2" onchange="event.preventDefault();return ChangeView_Executing();">
+                                    <label class="form-check-label mb-0" for="QuicklyTicket">@Local["Xử lý nhanh"]</label>
+                                </div>
+                            </div>
+                            <div class="wrapblock">
+                                <button class="btn btn-primary btn-sm mt-1 m-0" onclick="event.preventDefault();return TicketList_Create();">@Local["Thêm mới"]</button>
+                                <div class="btn-group mt-1">
+                                    <button class="btn btn-dark btn-sm px-3 py-1 pe-none mb-0">
+                                        <i class="ni vtt-icon vttech-icon-export-ex text-white text-xs"></i>
+                                    </button>
+                                    <button class="btn btn-dark border-start border-light px-3 py-2 mb-0 text-nowrap" onclick="event.preventDefault();return TicketList_ExportExcel(0);">@Local["Tất cả"]</button>
+                                    <button class="btn btn-dark border-start border-light btn-sm px-3 py-2 mb-0 text-nowrap" onclick="event.preventDefault();return TicketList_ExportExcel(1);">@Local["Tùy chọn"]</button>
+                                </div>
+                                <button class="btn btn-dark btn-sm mt-1 m-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colListTicket">
+                                    @Local["Xem thêm"]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="toggle">
+                        <div class="collapse position-absolute z-index-3 end-1 top-100 mt-3" id="colListTicket" style="min-width:255px;">
+                            <div class="card card-body text-dark text-capitalize opacity-10">
+                                <ul class="p-0 m-0" id="btnMoreTicketList">
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="area" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Khu vực"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="time_period" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Khung giờ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="symbol" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ký hiệu"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="campaign" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chiến dịch"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="gclid" type="checkbox">
+                                        </div>
+                                        <p class="text-sm mb-0">@Local["Gclid"]</p>
+                                    </li>
+                                    <li class="d-block">
+                                        <hr class="horizontal dark mt-3 mb-4">
+                                    </li>
+                                </ul>
+                                <ul class="p-0 m-0">
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="custphone" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Số điện thoại"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="CusCare" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Dịch vụ quan tâm"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="app" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Lịch hẹn"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="staff" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người phụ trách"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="followOld" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người phụ trách trước"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="marstaff" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nhân viên marketing"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="datedevided" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày chia ticket"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="devidedBy" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người chia ticket"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nguồn khách hàng"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="Gender" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Giới tính"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="City" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thành phố"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="District" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Quận huyện"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="Created" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày tạo"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input data-name="CreatedBy" class="shtoogle form-check-input" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người tạo"]</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-1">
+                    <div id="tt_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark mb-4 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Danh sách ticket"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách ticket xử lý theo ngày, những ticket nào đã là khách hàng không thể xóa"]</p>
+                    </div>
+                    <div class="collapsesticky z-index-sticky collapse mt-2 me-n3" id="tt_infoarea">
+                        <div class="card-body pt-0 pb-0 px-1">
+                            <div class="row col-12 px-1 pe-0">
+                                <div class="field col-12 col-md-12 col-lg-3 my-1 px-1 ">
+                                    <div class="form-group mb-0">
+                                        <div class="input-group mb-0 flex-nowrap">
+                                            <div class="ui fluid search selection dropdown max-width-100" id="TypeDate" onchange="TicketList_ResetLoad();">
+                                                <input type="hidden" name="branch" readonly="readonly">
+                                                <input class="search" autocomplete="off" tabindex="0" readonly="readonly">
+                                                <i class="dropdown icon"></i>
+                                                <div class="default text"></div>
+                                                <div class="menu" tabindex="-1">
+                                                    <div class="item" data-value="0">@Local["Cần xử lý"]</div>
+                                                    <div class="item" data-value="1">@Local["Ngày chia"]</div>
+                                                    <div class="item" data-value="2">@Local["Ngày xử lý"]</div>
+                                                    <div class="item" data-value="3">@Local["Ngày tạo"]</div>
+                                                    <div class="item" data-value="4">@Local["Ngày gọi lại"]</div>
+                                                </div>
+                                            </div>
+                                            <input id="TicketDate" class="flatpickr form-control ps-2 border-start border-1" type="text" placeholder="eg .date" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-lg-3 my-1  px-1">
+                                    <div class="input-group" id="TicketList_Filter">
+                                        <span class="input-group-text input-group-text px-2">
+                                            <i class="fas fa-search" aria-hidden="true"></i>
+                                            <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                        </span>
+                                        <input id="searching_ticket" type="text" class="form-control" onkeyup="TicketList_FillSearchText();" placeholder="eg. @Local["Tìm kiếm"]">
+                                        <span class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></span>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-lg-3 my-1  px-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="TicketGroupTele" onchange="TicketList_FilterTeleByGroup()">
+                                        <input type="hidden" name="branch">
+                                        <input class="search" autocomplete="off" tabindex="0">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text">eg. @Local["Nhóm"] tele</div>
+                                        <div id="CbbTicketGroupTele" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-lg-3 my-1  px-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="InvidualTele">
+                                        <input type="hidden" name="branch">
+                                        <input class="search" autocomplete="off" tabindex="0">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text">eg. Tele</div>
+                                        <div id="cbbInvidualTele" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row col-12 mt-0 mb-0  px-1 pe-0">
+                                <div class="field col-12 col-md-6 col-lg-3 my-1 px-1 ">
+                                    <div class="ui fluid search selection dropdown" id="StatusData">
+                                        <input type="hidden" name="branch" readonly="readonly">
+                                        <input class="search" autocomplete="off" tabindex="0" readonly="readonly">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div id="cbbStatusData" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-lg-3 my-1 px-1">
+                                    <div class="ui fluid search selection dropdown" id="TakeCareStatus">
+                                        <input type="hidden" name="branch" readonly="readonly">
+                                        <input class="search" autocomplete="off" tabindex="0" readonly="readonly">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div id="cbbTakeCareStatus" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-lg-3 my-1 px-1">
+                                    <div class="ui fluid search selection dropdown form-control" id="TicketSource">
+                                        <input type="hidden" name="branch" readonly="readonly">
+                                        <input class="search" autocomplete="off" tabindex="0" readonly="readonly">
+                                        <i class="dropdown icon"></i>
+                                        <div class="default text"></div>
+                                        <div id="cbbTicketSource" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-lg-3 my-1  px-1">
+                                    <div class="d-flex">
+                                        <div class="ui fluid search selection dropdown form-control w-50" id="TL_TicketIsCust">
+                                            <input type="hidden" name="branch" value="0">
+                                            <input class="search" autocomplete="off" tabindex="0" readonly="readonly">
+                                            <i class="dropdown icon"></i>
+                                            <div class="text">@Local["Loại ticket"]</div>
+                                            <div id="TL_cbbTicketIsCust" class="menu" tabindex="-1">
+                                                <div class="item active" data-value="0">@Local["Có là khách hàng"]</div>
+                                                <div class="item" data-value="1">@Local["Chưa là khách hàng"]</div>
+                                                <div class="item" data-value="2">@Local["Là khách hàng"]</div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-0 flex-grow-1 ms-2 text-nowrap">
+                                            <div class="input-group mb-0">
+                                                <span class="input-group-text fw-bold text-primary  t">@Local["Tổng"]</span>
+                                                <span class="ps-2 form-control fw-bolder text-dark" id="lbTotalTicket">0</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="d-flex px-0 pb-2">
+                                    <div class="ms-auto my-auto mt-1">
+                                        <button id="TicketList_OK" class="ms-auto mx-1 btn bg-gradient-primary btn-sm mt-0 m-0" onclick="event.preventDefault();return TicketList_ActionLoad();">@Local["Ok"]</button>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="m-0 mobile-responsive px-0 mt-2">
+                        <div class="d-flex gap-2">
+                            <div class="col-12 col-md-5 col-xl-4 flex-grow-1">
+                                <div class="overflow-auto stickytable" style="max-height:calc(100vh - 178px);">
+                                    <table data-name="TicketList_Table" class="table vt-table mb-0" id="TicketList_Table">
+                                        <thead class="z-index-1">
+                                            <tr>
+                                                <th class="p-0" style="width: 40px;">#</th>
+                                                <th style="width: 160px">@Local["Mã ticket"]</th>
+                                                <th style="min-width: 200px">@Local["Khách hàng"]</th>
+                                                <th style="min-width: 130px" data-name="custphone">@Local["Số điện thoại"]</th>
+                                                <th data-name="CusCare" style="min-width: 250px;">@Local["Dịch vụ quan tâm"]</th>
+                                                <th class="full" style="min-width: 150px;">@Local["Loại ticket"]</th>
+                                                <th style="min-width: 250px">@Local["Nội dung"]</th>
+                                                <th data-name="app" class="full" style="min-width: 150px;">@Local["Lịch hẹn"]</th>
+                                                <th class="full" style="min-width: 350px;">@Local["Thông tin xử lý"]</th>
+                                                <th data-name="staff" class="full" style="min-width: 200px;">@Local["Người phụ trách"]</th>
+                                                <th data-name="followOld" class="full" style="min-width: 200px;">@Local["Người phụ trách trước"]</th>
+                                                <th class="full" data-name="marstaff" style="min-width: 180px;">@Local["Nhân viên marketing"]</th>
+                                                <th class="full" data-name="datedevided" style="min-width: 180px;">@Local["Ngày chia"]</th>
+                                                <th class="full" data-name="devidedBy" style="min-width: 180px;">@Local["Người chia"]</th>
+                                                <th data-name="source" class="full" style="min-width: 180px;">@Local["Nguồn khách hàng"]</th>
+                                                <th data-name="area" class="full">@Local["Khu vực"]</th>
+                                                <th data-name="time_period" class="full">@Local["Khung giờ"]</th>
+                                                <th data-name="symbol" class="full">@Local["Ký hiệu"]</th>
+                                                <th data-name="campaign" class="full">@Local["Chiến dịch"]</th>
+                                                <th data-name="gclid" style="min-width: 200px;" class="full">@Local["Gclid"]</th>
+
+                                                <th data-name="Gender" style="min-width: 150px;">@Local["Giới tính"]</th>
+                                                <th class="full" data-name="City" style="min-width: 150px;">@Local["Thành phố"]</th>
+                                                <th class="full" data-name="District" style="min-width: 150px;">@Local["Quận huyện"]</th>
+                                                <th class="full" data-name="Created" style="min-width: 150px;">@Local["Ngày tạo"]</th>
+                                                <th class="full" data-name="CreatedBy" style="min-width: 150px;">@Local["Người tạo"]</th>
+
+                                                <th class="full" style="width: 30px">@Local["Xử lý"]</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="TicketList_Body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button id="btnLoadMove" class="btnsysmore btn btn-secondary p-1 mb-0 w-100" onclick="TicketList_Load()">
+                                    @Local["Xem thêm"]
+                                </button>
+                            </div>
+                            <div id="TicketList_Detail" class="col-12 col-md-7 col-xl-8 d-none flex-grow-1 pb-4 mt-n2">
+                                <div id="TicketList_DetailAction" class="w-100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<script type="text/javascript">
+    let TicketBeginid = 0
+    let sys_Limit_LoadList = 300;
+    let IsFastHandleView = 0;
+    let DataUser, DataServiceCare1, DateEmployee;
+    let ticketshtable;
+    let data_TimerOnchange;
+    var data_Fill
+    let xhrTicketList;
+    let timeOutSearchTicket;
+    let perLevel = 0, perGroup = 0;
+    let TL_DtTicket = [];
+
+    $(document).ready(function () {
+        ticketshtable = $('#TicketList_Table').TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+
+        $("#TypeDate").dropdown("refresh");
+        $("#TypeDate").dropdown("set selected", "0");
+        Master_IndexDB_Reads(_Session_Data, [_Session_User, _Session_ServiceCare, _Session_Employee]
+            , function (data) {
+                DataUser = data[0];
+                DataServiceCare1 = data[1];
+                DateEmployee = data[2];
+                InitializeTicketList(sys_userID_Main);
+            });
+        $("#TicketList_Filter .btn_clear").on("click", () => {
+            $("#searching_ticket").val('');
+        })
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+    });
+
+    function InitializeTicketList(userID) {
+        AjaxLoad(url = "/Marketing/TicketList/?handler=LoadCombo"
+            , data = { 'userID': userID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let dataGroup = data.GroupTele;
+                TL_DtTicket = data.Tele;
+
+                Load_Combo(data.Status, "cbbTakeCareStatus", true);
+                $("#TakeCareStatus").dropdown("refresh");
+                $("#TakeCareStatus").dropdown("set selected", "0");
+                Load_Combo(data.Source, "cbbTicketSource", true, '@Local["Nguồn"]');
+                $("#TicketSource").dropdown("refresh");
+                $("#TicketSource").dropdown("set selected", "0");
+
+                dataGroup = TicketList_FilterGroupTele(dataGroup, TL_DtTicket);
+
+                Load_Combo(dataGroup, "CbbTicketGroupTele", true, '@Local["Tất cả nhóm tele"]');
+                $("#TicketGroupTele").dropdown("refresh");
+                $("#TicketGroupTele").dropdown("set selected", "0");
+
+                if ((TL_DtTicket) && (TL_DtTicket).length == 1) {
+                    Load_Combo(TL_DtTicket, "cbbInvidualTele", true);
+                    $("#InvidualTele").dropdown("refresh");
+                    $("#InvidualTele").dropdown("set selected", (TL_DtTicket)[0].ID);
+                }
+                else {
+                    Load_Combo(TL_DtTicket, "cbbInvidualTele", true, '@Local["Tất cả telesale"]');
+                    $("#InvidualTele").dropdown("refresh");
+                    $("#InvidualTele").dropdown("set selected", "0");
+                }
+                let dataPer = data.PerTele;
+                if (dataPer && dataPer.length != 0) {
+                    perLevel = dataPer[0].LEVEL
+                    perGroup = dataPer[0].GROUPID
+                }
+                Load_Combo(data.StatusData, "cbbStatusData", true, '@Local["Tất cả trạng thái"]');
+                $("#StatusData").dropdown("refresh");
+                $("#StatusData").dropdown("set selected", "0");
+                let lastDay = new Date();
+                let firstDay = new Date();
+                firstDay.setDate(firstDay.getDate() - 7);
+                $("#TicketDate").flatpickr({
+                    mode: "range",
+                    dateFormat: 'd-m-Y',
+                    enableTime: false
+                });
+                $("#TicketDate").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+                TicketList_Load();
+            }
+        );
+    }
+    function TicketList_FilterGroupTele(dataGroup, dataTele) {
+        let dataGroupNew = [];
+        if (dataTele && dataTele.length != 0 && dataGroup && dataGroup.length != 0) {
+            dataGroupNew = dataGroup.reduce((pre, acc) => {
+                let isTele = dataTele.filter((tele) => { return tele.GroupID == acc.ID });
+                if (isTele.length != 0) {
+                    pre.push(acc);
+                }
+                return pre;
+            }, [])
+        }
+        return dataGroupNew;
+    }
+    function TicketList_ResetLoad() {
+        TicketBeginid = 0;
+        let TypeDate = Number($('#TypeDate').dropdown('get value')) ? Number($('#TypeDate').dropdown('get value')) : 0;
+        if (TypeDate == 4) {
+            $("#StatusData").dropdown("refresh");
+            $("#StatusData").dropdown("set selected", "88");
+            $("#StatusData").addClass("disabled");
+        }
+        else {
+            $("#StatusData").removeClass("disabled");
+        }
+    }
+    function TicketList_ActionLoad() {
+        TicketBeginid = 0;
+        TicketList_Load();
+    }
+    function TicketList_Load(currentid) {
+        if (xhrTicketList && xhrTicketList.readyState != 4) xhrTicketList.abort();
+        let dataObj = new Object();
+        currentid = currentid != undefined ? currentid : 0;
+        let ticketDate = $('#TicketDate').val() ? $('#TicketDate').val() : '';
+        let _dateFrom;
+        let _dateTo;
+        if (ticketDate != '' && ticketDate.includes(" to ")) {
+            ticketDate = ticketDate.replace(" to ", "#");
+            _dateFrom = ticketDate.split('#')[0];
+            _dateTo = ticketDate.split('#')[1];
+        }
+        else {
+            _dateFrom = ticketDate;
+            _dateTo = ticketDate;
+        }
+        dataObj.TypeDate = Number($('#TypeDate').dropdown('get value')) ? Number($('#TypeDate').dropdown('get value')) : 0;
+        dataObj.Type = Number($('#TakeCareStatus').dropdown('get value')) ? Number($('#TakeCareStatus').dropdown('get value')) : 0;
+        dataObj.Status = Number($('#StatusData').dropdown('get value')) ? Number($('#StatusData').dropdown('get value')) : 0;
+        dataObj.Source = Number($('#TicketSource').dropdown('get value')) ? Number($('#TicketSource').dropdown('get value')) : 0;
+        dataObj.IsCust = !isNaN(Number($('#TL_TicketIsCust').dropdown('get value'))) ? Number($('#TL_TicketIsCust').dropdown('get value')) : 0;
+        dataObj.UserID = Number($('#InvidualTele').dropdown('get value')) ? Number($('#InvidualTele').dropdown('get value')) : 0;
+        dataObj.GroupID = $('#TicketGroupTele').dropdown('get value') ? Number($('#TicketGroupTele').dropdown('get value')) : 0;
+        dataObj.DateFrom = _dateFrom
+        dataObj.DateTo = _dateTo
+        $('#lbTotalTicket').html('0');
+        xhrTicketList = AjaxLoad(url = "/Marketing/TicketList/?handler=LoadList"
+            , data = {
+                "data": JSON.stringify(dataObj)
+                , "TicketID": currentid
+                , "idbegin": TicketBeginid
+                , "limit": sys_Limit_LoadList
+                , "LevelUser": perLevel
+                , "GroupUser": perGroup
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (currentid == 0) {
+                        if (TicketBeginid == 0) {
+                            $('#TicketList_Body').html('');
+                            data_Fill = [];
+                        }
+                        if (data != undefined && data.length != 0) {
+                            data_Fill = data_Fill.concat(data);
+                            TicketBeginid = data[data.length - 1].TicketID;
+                            fnRenderBlock(data, "TicketList_Body"
+                                , blocknum = 100
+                                , fnrender = TicketList_Render
+                                , fnsuccess = function () {
+                                }
+                            );
+                        }
+                        else {
+                            $('#lbTotalTicket').html(formatNumber($('#TicketList_Body > tr').length));
+                        }
+                    }
+                    else {
+                        if (data != undefined && data.length == 1) {
+                            let newitem = TicketList_RenderEach(data[0], active = 1);
+                            for (let i = 0; i < data_Fill.length; i++) {
+                                if (data_Fill[i].TicketID == data[0].TicketID) {
+                                    data_Fill[i] = data[0];
+                                    i = data_Fill.length;
+                                }
+                            }
+                            if ($('#TicketRow' + currentid).length) {
+                                $('#TicketRow' + currentid).replaceWith(newitem);
+                            }
+                            else {
+                                $("#TicketList_Body").prepend(newitem);
+                            }
+                            TicketList_RenderComplete();
+                        }
+
+                    }
+
+                }
+            }
+            , sender = $('#TicketList_OK')
+            , before = function (e) {
+                $("#Ticketlist_wait").show();
+            }
+            , complete = function (e) {
+                $("#Ticketlist_wait").hide();
+            }
+        );
+
+    }
+    async function TicketList_Render(data, id) {
+        new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let tr = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        tr = TicketList_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            TicketList_RenderComplete();
+            resolve();
+        });
+    }
+
+    function TicketList_RenderComplete() {
+        Checking_TabControl_Permission();
+        TicketList_SetView();
+        TicketList_Event();
+        ticketshtable.Refresh();
+        $('#lbTotalTicket').html(formatNumber($('#TicketList_Body > tr').length));
+
+    }
+
+    function TicketList_FilterTeleByGroup() {
+        let GroupID = $("#TicketGroupTele").dropdown('get value') ? Number($("#TicketGroupTele").dropdown('get value')) : 0;
+        if (GroupID == 0) {
+            Load_Combo(TL_DtTicket, "cbbInvidualTele", true, '@Local["Tất cả telesale"]');
+            $("#InvidualTele").dropdown("clear");
+            $("#InvidualTele").dropdown("refresh");
+            $("#InvidualTele").dropdown("set selected", "0");
+        } else {
+            let dataFilter = TL_DtTicket.filter((word) => { return word.GroupID == GroupID });
+            if (perLevel == 3 || perLevel == 2) Load_Combo(dataFilter, "cbbInvidualTele", true, "@Local["Tất cả telesale"]");
+            else Load_Combo(dataFilter, "cbbInvidualTele", true);
+            $("#InvidualTele").dropdown("clear");
+            $("#InvidualTele").dropdown("refresh");
+            $("#InvidualTele").dropdown("set selected", dataFilter[0] ? (dataFilter[0].ID).toString() : 0);
+        }
+    }
+
+    async function TicketList_Event() {
+        $('#TicketList_Body .buttonActionClass').unbind('click').click(function () {
+            let ticketid = $(this).attr("data-id");
+            let custid = $(this).attr("data-cus");
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Marketing/CallDetailInput?"
+                + "MasterID=" + 0
+                + "&CustomerID=" + custid
+                + "&TicketID=" + ticketid
+                + "&Type=" + 7
+                + "&AppID=" + 0
+                + "&TreatID=" + 0
+                + "&TreatmentDate=" + null);
+            $('#DetailModal').modal('show');
+        });
+        $('#TicketList_Body .buttonViewClass').unbind('click').click(function () {
+            let id = $(this).attr("data-id");
+            window.open("/Marketing/TicketAction?CustomerID=" + 0 + "&TicketID=" + id + "&Type=" + 7 + "&MasterID=" + 0);
+        });
+
+        $('#TicketList_Body .buttonDeleteClass').unbind('click').click(function () {
+            let id = $(this).attr("data-id");
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Marketing/TicketDelete?TicketID=" + id);
+            $('#DetailModal').modal('show');
+        });
+        $('#TicketList_Body .quick').unbind('click').click(function () {
+            let CustomerID = Number($(this).attr("data-cus"));
+            let TicketID = Number($(this).attr("data-id"));
+            let TreatmentDate = null;
+            let AppID = null; let MasterID = null;
+            $(this).closest("tr").addClass("active").siblings().removeClass("active");
+            if ($('#TicketList_DetailAction').html() != '') {
+                TicketAction_Outside(CustomerID, TicketID, 0, AppID, TreatmentDate, 7);
+
+            }
+            else {
+
+                let link = '/Marketing/Ticket/TicketActionTable?CustomerID=' + CustomerID
+                    + ((TicketID != null) ? ("&TicketID=" + TicketID) : '')
+                    + "&Type=" + 7
+                    + ((AppID != null) ? ("&AppID=" + AppID) : '')
+                    + ((TreatmentDate != null) ? ("&TreatmentDate=" + TreatmentDate) : '')
+                    + ((MasterID != null) ? ("&MasterID=" + 0) : '')
+                    + "&ver=" + versionofWebApplication;
+                $('#TicketList_DetailAction').load(link);
+                $('#TicketList_DetailAction').show();
+
+            }
+        });
+        $("#TicketList_Body .custcare_phone").unbind('click').click(function () {
+            let phone = $(this).attr("data-info");
+            let cus = $(this).attr("data-custid");
+            let tic = $(this).attr("data-ticid");
+            callTakeCareCalling(phone, cus, tic);
+        });
+    }
+
+    async function TicketList_FillSearchText() {
+        new Promise((resolve, reject) => {
+            $('#lbTotalTicket').html('0');
+            clearTimeout(timeOutSearchTicket);
+            timeOutSearchTicket = setTimeout(() => {
+                if (data_Fill && data_Fill.length > 0) {
+                    let search = xoa_dau($('#searching_ticket').val().toLowerCase()).trim();
+                    let dataFill = data_Fill;
+                    if (search != "") {
+                        dataFill = data_Fill.filter(function (item) {
+                            if (item['Phone'].includes(search)
+                                || xoa_dau(item['TicketName']).toLowerCase().includes(search)
+                                || xoa_dau(item['CustCode']).toLowerCase().includes(search))
+                                return true;
+                            return false;
+                        })
+                    }
+                    if (dataFill != undefined && dataFill != null) {
+                        $('#TicketList_Body').html('');
+                        fnRenderBlock(dataFill, "TicketList_Body"
+                            , blocknum = 100
+                            , fnrender = TicketList_Render
+                            , fnsuccess = function () {
+                                ColorSearchFilterText(search, 'ColorSeach');
+                            }
+                        );
+                    }
+                    resolve();
+                }
+            }, 500)
+        })
+    }
+    function callTakeCareCalling(phone, customer, ticket) {
+        if (typeof CCF_OutcomCall !== 'undefined' && $.isFunction(CCF_OutcomCall)) {
+            CCF_OutcomCall(phone, customer, ticket, 0);
+        }
+    }
+    function TicketList_DeleteRow(id) {
+        if ($('#TicketRow' + id)) {
+            $('#TicketRow' + id).remove();
+        }
+    }
+    function TicketList_NewRow(id) {
+        TicketList_Load(id)
+    }
+    function TicketList_Create() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/TicketDetail");
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function TicketList_RenderEach(item, active) {
+        let custcode = '', isexecute = '', _active = '';
+        if (active != undefined) _active = 'active';
+        if (Number(item.IsExecuted) == 1) isexecute = 'border-primary';
+        if (Number(item.CustID) != 0) custcode = '<a target="_blank" class="d-block cursor-pointer text-decoration-underline" href="/Customer/MainCustomer?CustomerID=' + Number(item.CustID) + '" >' + item.CustCode + '</a>'
+        else custcode = ''
+        //let obj = Fun_GetObject_ByID(DataUser, item.ExecutedUser);
+        let ticketcode = `<a target="_blank" class="fw-bold border-bottom border-primary" href="/Marketing/TicketAction?CustomerID=${0}&TicketID=${item.TicketID}&Type=${7}&MasterID=${0}">${TicketList_GeneralCode(item.TicketID)}</a>`
+        return `
+                <tr id="TicketRow${item.TicketID}" class="${isexecute} ${_active} ColorSeach border-5 border-bottom-0 border-top-0 border-end-0 border-3 vt-number">
+                    <td class="vt-number-order"></td>
+                    <td >${ticketcode}</td>
+                    <td class="position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class=" w-100">
+                                ${custcode + item.TicketName}
+                            </div>
+                            <button data-cus="${item.CustID}" data-id="${item.TicketID}" class="quick position-absolute d-none btn btn-link btn-icon-only w-100 h-100">
+                            </button>
+                        </div>
+                    </td>
+                    <td data-name="custphone">
+                        <a href="#" data-ticid="${item.TicketID}" data-custid="${item.CustID}" data-info="${encrypt_phone(item.Phone)}" class="custcare_phone">
+                            <i class="text-sm text-gradient text-success vtt-icon vttech-icon-call-action"></i>
+                            <span class="_tab_control_" data-tab="phone_customer">${item.Phone}</span>
+                        </a>
+                    </td>
+                    <td data-name="CusCare">
+                        <div class="text-sm pt-1 text-pre-wrap">${Fun_GetString_ByToken(DataServiceCare1, item.ServiceCare)}</div>
+                    </td>
+                    <td class="full">
+                        <span>${item.StatusName}</span>
+                        ${(item.StatusID == 88) ? `<div>${GetDateTime_String_DMYHM(item.TimeRepeat)}</div>` : ''}
+                    </td>
+                    <td><div class="content_line_clamp">
+                        <div class="text-sm text-pre-wrap">${item.Content}</div>
+                        ${item.ContentLast != '' ? `<div class="text-sm text-pre-wrap">${item.ContentLast}</div>` : ''}
+                        </div>
+                    </td>
+                    <td data-name="app" class="full">
+                            <span>${item.IsBook != 0 ?
+                `<h6 class="mb-0 text-sm">${item.AppBranch}</h6>
+                        <span class="text-sm">${GetDateTime_String_DMYHM(item.AppDateFrom)}</span>`
+                : ''}</span>
+                    </td>
+                    <td class="full">
+                            <span data-cus="${item.CustID}" data-id="${item.TicketID}" class="text-lg buttonActionClass text-gradient text-primary  border-bottom border-primary text-sm cursor-pointer">${item.ExecuteStatus != "" ? item.ExecuteStatus : '@Local["Xử lý"]'}</span>
+                         ${item.StatusCallDetail != '' ? ' - ' + item.StatusCallDetail : ''}
+                        ${Fun_GetName_ByID(DateEmployee, item.ExecutedID) != '' ?
+                `
+                        <div class="text-xs pt-0 mt-1">${Fun_GetName_ByID(DateEmployee, item.ExecutedID) + ' ' + GetDateTime_String_DMYHM(item.ExecutedDate)}</div>
+                        `
+                : ''
+            }
+                    </td>
+
+                    <td data-name="staff" class="full">
+                        <span>${Fun_GetName_ByID(DateEmployee, item.StaffID)}</span>
+                    </td>
+                    <td data-name="followOld" class="full">
+                       <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                    <p class="text-sm mb-0">${Fun_GetName_ByID(DateEmployee, item.StaffIDOld)}</p>
+                                    ${ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(item.executedOld))}
+                            </div>
+                        </div>
+                    </td>
+                    <td data-name="marstaff" class="full">${Fun_GetName_ByID(DateEmployee, item.MarID)}</td>
+                    <td data-name="datedevided" class="full">${ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(item.devideDate))}</td>
+                    <td data-name="devidedBy" class="full">${Fun_GetName_ByID(DateEmployee, item.devideBy)}</td>
+                    <td data-name="source" class="full">
+                        <span>${item.SourceName}</span>
+                    </td>
+                    <td data-name="area" class="full">
+                        <span>${item.Area}</span>
+                    </td>
+                    <td data-name="time_period" class="full">
+                        <span>${item.TimeSlot}</span>
+                    </td>
+                    <td data-name="symbol" class="full">
+                        <span>${item.Symbol}</span>
+                    </td>
+                    <td data-name="campaign" class="full">
+                        <span>${item.Campaign}</span>
+                    </td>
+                    <td data-name="gclid" class="full text-break">
+                        <span>${item.Gclid}</span>
+                    </td>
+                    <td data-name="Gender">${item.Gender_ID == 60 ? "@Local["Nam"]" : "@Local["Nữ"]"}</td>
+                    <td data-name="City" class="full">${item.CityName} </td>
+                    <td data-name="District" class="full">${item.DistrictName}</td>
+                    <td data-name="Created" class="full">
+                        ${ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(item.Created))}
+                    </td>
+                    <td data-name="CreatedBy" class="full">
+                        ${Fun_GetName_ByID(DateEmployee, item.CreatedBy)}
+                    </td>
+                    <td class="full">
+
+                        <div class="text-nowrap">
+                                    ${TicketList_RenderButton(item.CustID, item.TicketID, item.UserStaffID, item.GroupStaffID)}
+                        </div>
+                    </td>
+
+                </tr>
+                `;
+    }
+    function TicketList_GeneralCode(id) {
+        try {
+            let result = '';
+            let stringTemm = '00000000';
+            stringTemm = stringTemm + id.toString();
+            let lengthTemp = stringTemm.length;
+            result = stringTemm.slice(lengthTemp - 8, lengthTemp)
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function TicketList_RenderButton(CustomerID, TicketID, StaffID, GroupStaffID) {
+        let buttons = [];
+        let levelTele = !isNaN(Number(perLevel)) ? Number(perLevel) : 0;
+        let groupTele = !isNaN(Number(perGroup)) ? Number(perGroup) : 0;
+
+        let isAllow = false;
+        switch(levelTele) {
+            case 1:
+                isAllow = (StaffID == sys_userID_Main);
+                break;
+            case 2:
+                isAllow = (StaffID == sys_userID_Main || groupTele == GroupStaffID);
+                break;
+            case 3:
+                isAllow = true;
+                break;
+        }
+
+        if (Number(CustomerID) == 0 && isAllow) {
+            buttons.push('<button class="buttonGrid"><i data-id="' + TicketID + '" data-tab="delete_ticket" class="buttonDeleteClass _tab_control_ text-lg vtt-icon vttech-icon-delete"></i></button>');
+        }
+        return Render_Button_Grid(buttons)
+    }
+
+    //#region // Collape
+
+    function ChangeView_Executing() {
+        let Ticket_TypeShow = 1;
+        if ($('.type_show:radio:checked').length > 0) {
+            Ticket_TypeShow = Number($('.type_show:radio:checked').val());
+        }
+        IsFastHandleView = (Ticket_TypeShow == 1) ? 0 : 1;
+        TicketList_SetView();
+    }
+
+    function TicketList_SetView() {
+        if (IsFastHandleView == 1) {
+
+            $('#TicketList_Table .quick').removeClass('d-none');
+            $("#TicketList_Table .full").addClass('d-none');
+            $("#TicketList_Detail").removeClass('d-none');
+        }
+        else {
+            $('#TicketList_Table .quick').addClass('d-none');
+            $("#TicketList_Table .full").removeClass('d-none');
+            $("#TicketList_Detail").addClass('d-none');
+        }
+    }
+
+    async function TicketList_ExportExcel (isOption = 0) {
+        let isAll = (isOption == 0);
+        let eleContainer = $('#Ticket_List_Master');
+        let dataRoot = data_Fill;
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => {return idx + 1}]
+            , "TicketID": ["@Local["Mã ticket"]", (v) => {return TicketList_GeneralCode(v)}]
+            , "CustCode": "@Local["Mã khách hàng"]"
+            , "TicketName": "@Local["Tên"]"
+            , "Phone": {
+                dataNamePer: 'custphone',
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custphone']`)).is(":checked"),
+                data: ["@Local["Số điện thoại"]"]
+            }
+            , "ServiceCare": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusCare']`)).is(":checked"),
+                data: ["@Local["Dịch vụ quan tâm"]", (v) => {return Fun_GetString_ByToken(DataServiceCare1, v)}]
+            }
+            , "StatusName": "@Local["Loại ticket"]"
+            , "TimeRepeat": ["@Local["Thời gian gọi lại"]", (v, {StatusID}) => {return (StatusID == 88 ? GetDateTime_String_DMYHM(v) : '')}]
+            , "Content": "@Local["Nội dung"]"
+            , "ContentLast": ["@Local["Nội dung gần nhất"]", (v) => {return v ?? ''}]
+            , "AppBranch": {
+
+                data: ["@Local["Lịch hẹn"]", (v, {IsBook, AppDateFrom}) => {return (IsBook != 0 ? v + ' - ' + GetDateTime_String_DMYHM(AppDateFrom) : '')}]
+            }
+            , "ExecuteStatus": ["@Local["Thông tin xử lý"]", (v, {StatusCallDetail}) => {return (v != '' ? v + ' - ' + StatusCallDetail : '')}]
+            , "ExecutedID": ["@Local["Người xử lý"]", (v) => {return (Fun_GetName_ByID(DateEmployee, v))}]
+            , "ExecutedDate": ["@Local["Thời gian xử lý"]", (v) => {return (!v.includes('1900') ? GetDateTime_String_DMYHM(v) : '')}]
+            , "StaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='staff']`)).is(":checked"),
+                data: ["@Local["Tele phụ trách"]", (v) => {return (Fun_GetName_ByID(DateEmployee, v))}]
+            }
+            , "StaffIDOld": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='followOld']`)).is(":checked"),
+                data: ["@Local["Người phụ trách trước"]", (v, {executedOld}) => {return (Fun_GetName_ByID(DateEmployee, v) + ' - ' + ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(executedOld)))}]
+            }
+            , "MarID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='marstaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên marketing"]", (v) => {return Fun_GetName_ByID(DateEmployee, v)}]
+            }
+            , "devideDate": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='datedevided']`)).is(":checked"),
+                data: ["@Local["Ngày chia"]", (v) => {return ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(v))}]
+            }
+            , "devideBy": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='devidedBy']`)).is(":checked"),
+                data: ["@Local["Người chia"]", (v) => {return Fun_GetName_ByID(DateEmployee, v)}]
+            }
+            , "SourceName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                data: "@Local["Nguồn khách hàng"]"
+            }
+            , "Area": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='area']`)).is(":checked"),
+                data: "@Local["Khu vực"]"
+            }
+            , "TimeSlot": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='time_period']`)).is(":checked"),
+                data: "@Local["Khung giờ"]"
+            }
+            , "Symbol": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='symbol']`)).is(":checked"),
+                data: "@Local["Ký hiệu"]"
+            }
+            , "Campaign": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='campaign']`)).is(":checked"),
+                data: "@Local["Chiến dịch"]"
+            }
+            , "Gclid": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gclid']`)).is(":checked"),
+                data: "Gclid"
+            }
+            , "Gender_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Gender']`)).is(":checked"),
+                data: ["@Local["Giới tính"]", (v) => {return (v == 60 ? decodeHtml("@Local["Nam"]") : decodeHtml("@Local["Nữ"]"))}]
+            }
+            , "CityName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='City']`)).is(":checked"),
+                data: "@Local["Thành phố"]"
+            }
+            , "DistrictName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='District']`)).is(":checked"),
+                data: "@Local["Quận huyện"]"
+            }
+            , "Created": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Created']`)).is(":checked"),
+                data: ["@Local["Ngày tạo"]", (v) => {return ConvertToDateRemove1900(ConvertDateTimeUTC_DMYHM(v))}]
+            }
+            , "CreatedBy": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CreatedBy']`)).is(":checked"),
+                data: ["@Local["Người tạo"]", (v) => {return Fun_GetName_ByID(DateEmployee, v)}]
+            }
+        };
+        dataExport = Checking_TabControl_System_RebuildHeader(dataExport, tableBodyId = 'TicketList_Body', PermissionTable_TabControl);
+        let nameFile = Outlang["Danh_sach_khach_hang"];
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+        //#endregion
+
+</script>
+<style>
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+</style>

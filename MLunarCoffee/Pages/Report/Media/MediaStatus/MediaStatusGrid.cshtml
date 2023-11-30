@@ -1,0 +1,723 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Media.MediaStatus.MediaStatusGridModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div id="MSG_MasterContainer pb-3">
+    <div class="card-header p-3 px-0 pb-0">
+
+        <div class="d-lg-flex gap-1">
+            <div class="my-auto me-3">
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2">
+                    <span id="MSG_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="MSG_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#MSG_MasterGridArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return MSG_LoadData()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return MSG_Export()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); MSG_Print()"></i>
+                </div>
+            </div>
+        </div>
+        <div class="row p-2 pb-0">
+            <div class="col-lg-4 col-md-4 px-1">
+                <div class="bg-gray-100 py-3 border-5 border-dark border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2">
+                    <div class="ms-2">
+                        <span class="text-sm fw-bold text-dark">@Local["Tổng"]</span>
+                    </div>
+                    <div class="ms-2 d-flex text-dark">
+                        <span class="text-sm" id="MSG_TotalFile">-</span>
+                        <span class="text-sm ">/</span>
+                        <span id="MSG_TotalQuota" class="text-sm">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 px-1">
+                <div class="bg-gray-100 py-3 border-5 border-primary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2">
+                    <div class="ms-2">
+                        <span class="text-sm fw-bold text-primary">@Local["Hình ảnh"]</span>
+                    </div>
+                    <div class="ms-2 d-flex text-dark">
+                        <span class="text-sm" id="MSG_TotalFileImg">-</span>
+                        <span class="text-sm">/</span>
+                        <span id="MSG_TotalQuotaImg" class="text-sm">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 px-1">
+                <div class="bg-gray-100 py-3 border-5 border-secondary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body mt-2 p-2">
+                    <div class="ms-2">
+                        <span class="text-sm fw-bold text-secondary">@Local["Khác"]</span>
+                    </div>
+                    <div class="ms-2 d-flex">
+                        <span class="text-sm" id="MSG_TotalFileOther">-</span>
+                        <span class="text-sm">/</span>
+                        <span id="MSG_TotalQuotaOther" class="text-sm">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="MSG_MasterGridArea">
+        <div class="card-body p-0 mt-3">
+
+            <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                <div id="RPSS_GridWaiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <table data-name="MSG_Grid" class="table vt-table mb-0" id="MSG_Grid">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="d-none">ID</th>
+                            <th>@Local["Mã khách hàng"]</th>
+                            <th>@Local["Khách hàng"]</th>
+                            <th>@Local["Số lượng thư mục"]</th>
+                            <th>@Local["Số lượng tệp"]</th>
+                            <th>@Local["Tổng dung lượng"]</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="MSG_GridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return MSG_RenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+</div>
+<div id="MSG_DetailContainer" style="display:none;">
+    <div class="card-header p-3 px-0 pb-0">
+        <div class="d-lg-flex gap-1">
+            <div class="w-50 col-auto my-auto">
+                <p id="MSG_CustName" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2">
+                    <span id="MSG_Detailcurrentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="MSG_Detailtotaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#MSG_DetailGridArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return MSG_DetailLoad()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return MSG_DetailExport()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); MSG_DetailPrint()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="MSG_DetailGridArea">
+        <div class="card-body p-0 mt-3">
+            <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                <table data-name="MSG_DetailGrid" class="table vt-table mb-0" id="MSG_DetailGrid">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="d-none">ID</th>
+                            <th>@Local["Mã khách hàng"]</th>
+                            <th>@Local["Khách hàng"]</th>
+                            <th>@Local["Thư mục"]</th>
+                            <th>@Local["File"]</th>
+                            <th>@Local["Loại"]</th>
+                            <th>@Local["Dung lượng"]</th>
+                            <th>@Local["Ngày tạo"]</th>
+                            <th>@Local["Người tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="MSG_DetailGridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return MSG_DetailRenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    let _branchID = "@Model._BranchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let xhrLoad, xhrLoadDetail;
+    let MSG_DataMain = [];
+    let MSG_DataSlice;
+    let MSG_IndexReport = 0;
+    let MSG_TimeOut;
+    let MSG_CustID = 0;
+    let MSG_DetailDataMain = [];
+    let MSG_DetailDataSlice;
+    let MSG_DetailIndexReport = 0;
+    let MSG_DetailTimeOut;
+    var MSG_DetaildynamicGallery;
+    let MSG_dataImage = [];
+    $(document).ready(function () {
+
+        MSG_LoadData();
+        MSG_DetaildynamicGallery = lightGallery(document.getElementById('MSG_DetailGridBody'), {
+            speed: 300,
+            showZoomInOutIcons: true,
+            actualSize: false,
+            selector: '.MSG_DetailImage',
+            thumbnail: true,
+            plugins: [lgZoom, lgAutoplay, lgFullscreen, lgRotate, lgShare, lgThumbnail],
+            mode: 'lg-fade',
+            dynamic: true,
+            dynamicEl: []
+        });
+    })
+    //#region //LOADDATA
+    function MSG_LoadData() {
+        if (xhrLoad && xhrLoad.readyState != 4) xhrLoad.abort();
+        MSG_DataMain = [];
+        MSG_DataSlice = {}; MSG_IndexReport = 0;
+        $("#MSG_GridBody").empty("");
+        $("#MSG_DetailContainer").hide();
+        xhrLoad = AjaxLoad(url = "/Report/Media/MediaStatus/MediaStatusGrid/?handler=LoadData"
+            , data = {
+                'BranchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let { Table: dataTotal, Table1: dataMain } = datas; 
+                    MSG_FillTotal(dataTotal);
+                    if (dataMain && dataMain.length != 0) {
+                        MSG_DataMain = [...dataMain];
+                        MSG_DataSlice = sliceIntoChunks(dataMain, 500);
+                        fnRenderBlock(MSG_DataSlice[MSG_IndexReport], "MSG_GridBody"
+                            , blocknum = 100
+                            , fnrender = MSG_Render
+                            , fnsuccess = null
+                        );
+                        Count_Up("MSG_totaldata", MSG_DataMain.length);
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //RENDER
+    async function MSG_FillTotal(data) {
+        new Promise(resolve => {
+            let totalFile = 0, totalQuota = 0;
+            let totalFileImg = 0, totalQuotaImg = 0;
+            let totalFileOth = 0, totalQuotaOth = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    switch (item.Type) {
+                        case "png":
+                        case "jpg":
+                        case "jpeg":
+                        case "heif":
+                        case "svg":
+                        case "image":
+                            totalFileImg += Number(item.TotalMedia)
+                            totalQuotaImg += Number(item.TotalQuota)
+                            break;
+                        default:
+                            totalFileOth += Number(item.TotalMedia)
+                            totalQuotaOth += Number(item.TotalQuota)
+                            break;
+                    }
+                }
+                totalFile = totalFileImg + totalFileOth;
+                totalQuota = totalQuotaImg + totalQuotaOth;
+            }
+            $("#MSG_TotalFile").html(formatNumber(totalFile) + ` @Local["File"]`);
+            $("#MSG_TotalFileImg").html(formatNumber(totalFileImg) + ` @Local["File"]`);
+            $("#MSG_TotalFileOther").html(formatNumber(totalFileOth) + ` @Local["File"]`);
+
+            $("#MSG_TotalQuota").html(MSG_formatBytes(totalQuota));
+            $("#MSG_TotalQuotaImg").html(MSG_formatBytes(totalQuotaImg));
+            $("#MSG_TotalQuotaOther").html(MSG_formatBytes(totalQuotaOth));
+            resolve();
+        })
+    }
+    async function MSG_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr =
+                                `<td class="vt-number-order"></td>
+                                <td class="d-none">${item.ID}</td>
+                                <td>
+                                    <a target="_blank"  href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                        ${item.CustCode}
+                                    </a><br/>
+
+                                </td>
+                                <td class="buttonViewDetail cursor-pointer"   data-custid="${item.CustID}" data-name="${item.CustName}"><span class="text-primary fw-bold text-decoration-underline">${item.CustName}</span></td>
+                                <td>${formatNumber(item.TotalFolder)}</td>
+                                <td>${formatNumber(item.TotalMedia)}</td>
+                                <td>${MSG_formatBytes(item.TotalQuota)}</td>
+
+                                `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        clearTimeout(MSG_TimeOut);
+                        MSG_TimeOut = setTimeout(() => {
+                            Count_Up("MSG_currentdata", $("#" + id).children().length);
+                        })
+                    }
+                    MSG_Event();
+                }
+            }, 100);
+            resolve();
+        })
+    }
+
+    function MSG_RenderMore() {
+        MSG_IndexReport += 1;
+        if (MSG_DataSlice && MSG_DataSlice[MSG_IndexReport]) {
+            fnRenderBlock(MSG_DataSlice[MSG_IndexReport], "MSG_GridBody"
+                , blocknum = 100
+                , fnrender = MSG_Render
+                , fnsuccess = null
+            );
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function MSG_Event() {
+        $("#MSG_GridBody .buttonViewDetail").unbind("click").click(function () {
+            MSG_CustID = $(this).attr('data-custid');
+            let Name = $(this).attr('data-name');
+
+            $("#MSG_DetailContainer").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#MSG_DetailContainer").offset().top
+            }, 300);
+            $("#MSG_CustName").html(Name);
+
+            MSG_DetailLoad(MSG_CustID);
+        })
+    }
+    function MSG_DetailEvent() {
+        $("#MSG_DetailGridBody .MSG_DetailImage").unbind().click(function (event) {
+            let id = !isNaN(Number($(this).attr('data-id'))) ? Number($(this).attr('data-id')) : 0;
+            let index = MSG_dataImage.findIndex(e => e.id = id);
+            MSG_DetaildynamicGallery.openGallery(index);
+        });
+    }
+
+    //#endregion
+
+
+
+    //#region //Detail
+
+    function MSG_DetailLoad(CustID = MSG_CustID) {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        MSG_dataImage = [];
+        MSG_DetailDataMain = [];
+        MSG_DetailDataSlice = {};
+        MSG_DetailIndexReport = 0;
+        $("#MSG_DetailGridBody").empty("");
+        xhrLoadDetail = AjaxLoad(url = "/Report/Media/MediaStatus/MediaStatusGrid/?handler=LoadDetail"
+            , data = {
+                'BranchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+                , 'CustID': CustID
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        MSG_DetailDataMain = [...data];
+                        MSG_DetailDataSlice = sliceIntoChunks(data, 500);
+                        fnRenderBlock(MSG_DetailDataSlice[MSG_DetailIndexReport], "MSG_DetailGridBody"
+                            , blocknum = 100
+                            , fnrender = MSG_DetailRender
+                            , fnsuccess = null
+                        );
+                        Count_Up("MSG_Detailtotaldata", MSG_DetailDataMain.length);
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    async function MSG_DetailRender (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length != 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                                <tr class="vt-number" id="MSG_DetailRow_${item.ID}">
+                                    <td class="vt-number-order"></td>
+                                    <td>
+                                        <a target="_blank"  href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                            ${item.CustCode}
+                                        </a><br/>
+
+                                    </td>
+                                    <td>${item.CustName}</td>
+                                    <td>${item.FolderName}</td>
+                                    <td class="">
+                                        <div class="align-items-center d-flex my-auto">
+                                        ${MSG_RenderContentFile(item)} <p class="text-sm ms-2 m-0">${item.FileName}</p>
+                                        </div>
+                                    </td>
+                                    <td>${item.Type}</td>
+                                    <td>${MSG_formatBytes(item.FileQuota)}</td>
+                                    <td>${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                    <td>${Fun_GetName_ByID(RP_DataEmployee, item.CreatedBy)}</td>
+                                </tr>
+                                `;
+
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                        MSG_DetailFillImage(item);
+                    }
+
+                    MSG_DetaildynamicGallery.refresh(MSG_dataImage);
+                    MSG_DetailEvent();
+                    clearTimeout(MSG_DetailTimeOut);
+                    MSG_DetailTimeOut = setTimeout(() => {
+                        Count_Up("MSG_Detailcurrentdata", $("#" + id).children().length);
+                    })
+                }
+            }
+            resolve();
+
+        })
+    }
+
+    function MSG_DetailFillImage(item) {
+        if (item.Type == 'image') {
+            let e = {};
+            let link_img = sys_HTTPImageRoot + item.CustID
+                + '/' + item.FolderName + '/' + item.RealName;
+            let link_imgthum = sys_HTTPImageRoot + item.CustID
+                + '/' + item.FolderName + '/' + item.FeatureImage;
+
+            let sub = '<div class="text-sm">' + item.FileName + '</div>'
+                + `<div>${Fun_GetName_ByID(RP_DataEmployee, item.CreatedBy)} ${GetDateTime_String_DMYHM(ConvertToDateRemove1900(item.Created) ?? '')}</div>`;
+            e["src"] = link_img;
+            e["thumb"] = link_imgthum;
+            e["subHtml"] = sub;
+            e["id"] = item.ID;
+            MSG_dataImage.push(e);
+        }
+    }
+
+    function MSG_RenderContentFile(item) {
+        let result = '';
+        let link_img = sys_HTTPImageRoot + item.CustID
+            + '/' + item.FolderName + '/' + item.RealName;
+        let link_feaute = sys_HTTPImageRoot + item.CustID
+            + '/' + item.FolderName + '/' + item.FeatureImage;
+
+        let sub = '<div>' + item.FileName + '</div>'
+            + `<div>${Fun_GetName_ByID(RP_DataEmployee, item.CreatedBy)} ${GetDateTime_String_DMYHM(ConvertToDateRemove1900(item.Created) ?? '')}</div>`;
+        let link_imgthum = "'" + link_feaute + "'";
+        switch (item.Type) {
+            case "pdf":
+                result = `<i class=" text-gradient text-info fas fa-file-pdf"></i>`;
+                break;
+            case "docx":
+            case "doc":
+                result = `<i class=" text-gradient text-info fas fa-file-word"></i>`;
+                break;
+            case "xlsx":
+            case "xls":
+                result = `<i class=" text-gradient text-success fas fa-file-excel"></i>`;
+                break;
+            case "mp3":
+            case "wma":
+            case "wav":
+            case "flac":
+            case "aac":
+            case "ogg":
+                result = `<i class=" text-gradient text-info fas fa-file-audio"></i>`;
+                break;
+            case "mp4":
+            case "wmv":
+            case "mkv":
+            case "flv":
+            case "mpg":
+            case "mov":
+                result = `<i class=" text-gradient text-info fas fa-file-video"></i>`;
+                break;
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "heif":
+            case "svg":
+            case "image":
+                result = '<a data-sub-html ="' + sub + '" data-id="' + item.ID + '" class="description-rp design_img_item MSG_DetailImage ms-0" data-name="' + item.FileName
+                    + '" data-realname="' + item.RealName
+                    + '" data-created="' + item.Created
+                    + '" data-variation="inverted blueli"'
+                    + '  data-createdby="' + Fun_GetName_ByID(RP_DataEmployee, item.CreatedBy)
+                    + '" style="background-image: url(' + link_imgthum + ')">'
+                    + '<img class="imgload" style="width: 50px;height: 37px;object-fit: cover;opacity: 0;"  src="'
+                    + link_img
+                    + '"/> '
+                    + '</a>';
+                break;
+            default:
+                result = `<i class=" text-gradient text-info fas fa-file"></i>`;
+                break;
+        }
+        return result;
+    }
+
+    function MSG_DetailRenderMore() {
+        MSG_DetailIndexReport += 1;
+        if (MSG_DetailDataSlice && MSG_DetailDataSlice[MSG_DetailIndexReport]) {
+            fnRenderBlock(MSG_DetailDataSlice[MSG_DetailIndexReport], "MSG_DetailGridBody"
+                , blocknum = 100
+                , fnrender = MSG_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+    //#endregion
+
+    //#region // Export - Print
+
+    function MSG_Export() {
+        try {
+            if (MSG_DataMain && MSG_DataMain.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }]
+                    , "CustCode": ["@Local["Mã khách hàng"]"]
+                    , "CustName": ["@Local["Tên khách hàng"]"]
+                    , "TotalFolder": ["@Local["Số lượng thư mục"]"]
+                    , "TotalMedia": ["@Local["Số lượng tệp"]"]
+                    , "TotalQuota": ["@Local["Tổng dung lượng"]"]
+                }
+                syslog_ExpExcel('e', Outlang["Sys_tinh_Trang_media"]);
+                exportJsonToExcel((Outlang["Sys_tinh_Trang_media"] != undefined ? Outlang["Sys_tinh_Trang_media"] : "Tình trạng media"), MSG_DataMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+    async function MSG_Print() {
+        try {
+            let dataRoot = MSG_DataMain;
+            if (dataRoot && dataRoot.length != 0) {
+                let _branchID = "@Model._BranchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }]
+                    , "CustCode": ["@Local["Mã khách hàng"]"]
+                    , "CustName": ["@Local["Tên khách hàng"]"]
+                    , "TotalFolder": ["@Local["Số lượng thư mục"]"]
+                    , "TotalMedia": ["@Local["Số lượng tệp"]"]
+                    , "TotalQuota": ["@Local["Tổng dung lượng"]"]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = (Outlang["Sys_tinh_Trang_media"] != undefined ? Outlang["Sys_tinh_Trang_media"] : "Tình trạng media"), dataRoot, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+
+function MSG_DetailExport() {
+    try {
+        if (MSG_DetailDataMain && MSG_DetailDataMain.length != 0) {
+            var dataHeader = {
+                "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }]
+                , "CustCode": ["@Local["Mã khách hàng"]"]
+                , "CustName": ["@Local["Tên khách hàng"]"]
+                , "FolderName": ["@Local["Thư mục"]"]
+                , "FileName": ["@Local["File"]", (v, { CustID, FolderName, RealName }) => {
+                    return sys_HTTPImageRoot + CustID + '/' + FolderName + '/' + RealName
+                }]
+                , "Type": ["@Local["Loại"]"]
+                , "FileQuota": ["@Local["Dung lượng"]", (v) => { return MSG_formatBytes(v) }]
+                , "Created": ["@Local["Ngày tạo"]", (v) => { return ConvertDateTimeUTC_DMYHM(v) }]
+                , "CreatedBy": ["@Local["Người tạo"]", (v) => { return Fun_GetName_ByID(RP_DataEmployee,v) }]
+            }
+            syslog_ExpExcel('e', Outlang["Sys_tinh_Trang_media"]);
+            let fileName = xoa_dau($("#MSG_CustName").text()).replaceAll(' ', '-');
+            exportJsonToExcel((Outlang["Sys_tinh_Trang_media"] != undefined ? Outlang["Sys_tinh_Trang_media"] : "Tình trạng media") + '_' + fileName, MSG_DetailDataMain, dataHeader);
+        }
+        else {
+            notiWarning('@Local["Không có dữ liệu để xuất"]!');
+        }
+    }
+    catch (ex) {
+        notiWarning('@Local["Không xuất được file"]!');
+    }
+}
+
+async function MSG_DetailPrint() {
+    try {
+        let dataRoot = MSG_DetailDataMain;
+        if (dataRoot && dataRoot.length != 0) {
+            let _branchID = "@Model._BranchID";
+            let _dateFrom = "@Model._dateFrom";
+            let _dateTo = "@Model._dateTo";
+            var dataHeader = {
+                "STT": ["@Local["STT"]", {
+                    callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                }]
+                , "CustCode": ["@Local["Mã khách hàng"]"]
+                , "CustName": ["@Local["Tên khách hàng"]"]
+                , "FolderName": ["@Local["Thư mục"]"]
+                , "FileName": ["@Local["File"]", {
+                    callbackRenderValue: (v, { CustID, FolderName, RealName, FileName, Type, CreatedBy, Created, FeatureImage }) => {
+                        return `${MSG_RenderContentFile({ CustID, FolderName, RealName, FileName, Type, CreatedBy, Created, FeatureImage })} ${FileName}`
+                    }
+                }]
+                , "Type": ["@Local["Loại"]"]
+                , "FileQuota": ["@Local["Dung lượng"]", {
+                    callbackRenderValue: (v) => { return MSG_formatBytes(v) }
+                }]
+                , "Created": ["@Local["Ngày tạo"]", {
+                    callbackRenderValue: (v) => { return ConvertDateTimeUTC_DMYHM(v) }
+                }]
+                , "CreatedBy": ["@Local["Người tạo"]", {
+                    callbackRenderValue: (v) => { return Fun_GetName_ByID(RP_DataEmployee, v) }
+                }]
+            };
+            $("#MainSendMail_Content").empty();
+            $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                , function (responseTxt, statusTxt, xhr) {
+                    if (statusTxt == "success") {
+                        $("#MainSendMail").addClass('active');
+                        let options = {
+                            empName: sys_employeeName_Main
+                        }
+                        if (typeof PRF_CBPrintReport === 'function')
+                            PRF_CBPrintReport(namePrint = (Outlang["Sys_tinh_Trang_media"] != undefined ? Outlang["Sys_tinh_Trang_media"] : "Tình trạng media"), dataRoot, dataHeader, options);
+                    }
+                    if (statusTxt == "error") {
+                        console.warn("error");
+                    }
+                })
+        }
+        else {
+            notiWarning('@Local["Không có dữ liệu"]!');
+        }
+    }
+    catch (ex) {
+        notiWarning('@Local["Không in được file"]!');
+    }
+}
+    //#endregion
+
+    //#region //Ohter
+    function MSG_formatBytes(bytes, decimals = 2) {
+        if (!+bytes) return '0 Bytes'
+
+        const k = 1024
+        const dm = decimals < 0 ? 0 : decimals
+        const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+    }
+        //#endregion
+</script>
+<style>
+    .MSG_DetailImage {
+        margin: 3px;
+        border: 1px solid #d6d2d2;
+        display: inline-block;
+        background-position: center;
+        width: 50px;
+        height: 37px;
+        background-size: cover;
+    }
+</style>

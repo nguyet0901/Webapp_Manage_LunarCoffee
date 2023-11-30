@@ -1,0 +1,395 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Payment.PaymentCardDetailReturnModel
+@{
+    Layout = null;
+}
+<div class="row m-2 me-0 form3" id="form3">
+    <div class="col-md-6 px-1">
+
+        <div class="card mb-2">
+            <div class="card-header pb-0 px-3">
+                <h6 class="mb-0">@Local["Hoàn tiền thẻ trả trước"]</h6>
+                <p class="text-sm mb-0">@Local["Chi tiết hoàn tiền thẻ trả trước"]</p>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-1">
+                    <div class="field px-1 mt-2">
+                        <label>@Local["Thẻ trả trước"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="CustomerCardReturnPayment" onchange="event.preventDefault();return ChangeCustomerCardReturnPayment();" onkeyup="event.preventDefault();return SearchCard();">
+                            <input type="hidden" name="paymentMethod" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Thẻ trả trước"]</div>
+                            <div id="ccbCustomerCardReturnPayment" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Giá"]</label>
+                        <input id="PriceDiscounted" value="0" type="text" class="form-control money" disabled />
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Đã thanh toán"]</label>
+                        <input id="AmountPaid" name="discountOther" value="0" type="text" class="form-control money" disabled />
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Nội dung"]</label>
+                        <textarea class="form-control" id="txtContentPayment" rows="3" name="content" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-6 mt-md-0 px-1 form3">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Thông tin thanh toán"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết thông tin thanh toán"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Chi nhánh"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="BranchID">
+                            <input type="hidden" name="branch" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chi nhánh"]</div>
+                            <div id="ccbBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Hình thức"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="Method"  onchange="event.preventDefault();return PCD_changePayMethod();">
+                            <input type="hidden" name="paymentMethod" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Hình thức"]</div>
+                            <div id="ccbMethod" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Chi tiết"]</label>
+                        <div class="ui fluid search selection dropdown form-control disabled" id="MethodType">
+                            <input type="hidden" name="paymentMethodType" class="input payment" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chi tiết"]</div>
+                            <div id="ccbMethodType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="field col-12 px-1 mt-2">
+                        <label>@Local["Mã ngân hàng"]</label>
+                        <input id="bankInvoiceCode" class="form-control" placeholder="eg .@Local["Mã ngân hàng"]" type="text" disabled="disabled" />
+                    </div>*@
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Lý do"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="PCReasonReturn">
+                            <input type="hidden" name="ReasonReturn" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Lý do"]</div>
+                            <div id="cbbPCReasonReturn" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2" id="dateCreated" style="display: none;">
+                        <label>@Local["Ngày tạo"]</label>
+                        <input id="dateCreatedExt" class="form-control flatpickr detail" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Tiền hoàn"]</label>
+                        <input id="AmountReturn" value="0" name="discountOther" type="text" class="form-control money"
+                               onchange="event.preventDefault();return ChangingEvent();" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-botombutton pe-2">
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="CancelPaymentCardDetail()">@Local["Đóng"]</button>
+            <button id="button_save_card_return" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteData_PaymentCard()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+<script>
+    var dataCardReturnPayment = {};
+    var _PaymentCardReturnCustomerID
+    var ischange = 0;
+    let xhrPaymentDetail;
+    let dataPaymentMethod = {};
+    var data_payment_method_type = [];
+    $(document).ready(function () {
+        _PaymentCardReturnCustomerID = '@Model._PaymentCustomerID';
+        $(".flatpickr.detail").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+        CardReturnLoadComboMain();
+        let _ChooseDateCustomer = '@Model._ChooseDateCustomer';
+        if (_ChooseDateCustomer == "1") {
+            $("#dateCreated").show();
+        }
+        $('#AmountReturn').divide();
+        $('#AmountPaid').divide();
+        $('#PriceDiscounted').divide();
+        ischange = 1;
+    });
+
+    function CardReturnLoadComboMain() {
+        AjaxLoad(url = "/Customer/Payment/PaymentCardDetailReturn/?handler=LoadComboMain"
+            , data = { 'CustomerID': _PaymentCardReturnCustomerID }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dataCard = data.dataCard;
+                    let dataReasonReturn = data.dataReasonReturn;
+                    data_payment_method_type = data.MethodType;
+                    dataPaymentMethod = (data.dataPaymentMethod).reduce((pre, arr) => {if(arr.ID) pre[arr.ID] = arr; return pre}, {});
+                    let dataBranch = data.Branch;
+
+                    dataCardReturnPayment = dataCard.reduce((pre, arr) => {
+                        if (arr["ID"]) {
+                            arr.Name = `
+                                <div class="d-flex flex-column">
+                                    <h1 class="mb-0 text-dark text-sm fw-bold">${arr.CardName}</h1>
+                                    <p class="text-xs pb-0 mb-0">${ConvertDateTimeUTC_DMY(arr.Created)}</p>
+                                </div>
+                                `
+                            pre[arr["ID"]] = arr;
+                        }
+                        return pre;
+                    }, {})
+
+                    Load_Combo(dataCard, "ccbCustomerCardReturnPayment", true);
+                    $("#CustomerCardReturnPayment").dropdown("refresh");
+
+                    Load_Combo(dataBranch, "ccbBranch", true);
+                    $("#BranchID").dropdown("refresh");
+                    $("#BranchID").dropdown("set selected", Master_branchID);
+
+                    Load_Combo(data.dataPaymentMethod, "ccbMethod", true);
+                    $("#Method").dropdown("refresh");
+                    if ((data.dataPaymentMethod).length > 0)
+                        $("#Method").dropdown("set selected", Number((data.dataPaymentMethod)[0].ID));
+
+                    Load_Combo(dataReasonReturn, "cbbPCReasonReturn", true);
+                    $("#PCReasonReturn").dropdown("refresh");
+                    if (data.dataReasonReturn.length > 0)
+                        $("#PCReasonReturn").dropdown("set selected", Number(data.dataReasonReturn[0].ID));
+
+
+                }
+            }
+
+        );
+
+
+    }
+    function PCD_changePayMethod() {
+        let idMethod = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+        $("#MethodType").dropdown("clear");
+        $("#ccbMethodType").html("");
+
+        let data = data_payment_method_type.filter(a => a.Type == idMethod);
+
+        Load_Combo(data, "ccbMethodType", true);
+        //if (idMethod == 5)
+        //    $("#bankInvoiceCode").prop('disabled', false);
+        //else
+        //    $("#bankInvoiceCode").prop('disabled', true);
+
+        if (data.length > 0) {
+            $("#MethodType").removeClass('disabled');
+            $("#MethodType input.payment").attr('name', "paymentMethodType");
+
+            $("#MethodType").dropdown("refresh");
+            $("#MethodType").dropdown("set selected", data[0].ID.toString());
+        }
+        else {
+            $("#MethodType").addClass('disabled');
+            $("#MethodType input.payment").attr('name', "");
+        }
+    }
+
+    function ChangeCustomerCardReturnPayment() {
+        if (ischange == 1) {
+            $('#textShowMessage').html('');
+            $('#CustomerCardReturnPayment').css('background-color', 'white');
+            $('#Method').css('background-color', 'white');
+            $('#AmountReturn').css('background-color', 'white');
+            let ID = Number($('#CustomerCardReturnPayment').dropdown('get value')) ? Number($('#CustomerCardReturnPayment').dropdown('get value')) : 0;
+            if (ID != 0) {
+                let data = dataCardReturnPayment[ID];
+                if (data != null) {
+                    $('#AmountPaid').val(data.AmountPaid);
+                    $('#PriceDiscounted').val(data.PriceDiscounted);
+                    $('#AmountReturn').val(0);
+                } else {
+                    $('#textShowMessage').html('@Local["Chọn thẻ trả trước"]');
+                    $('#CustomerCardReturnPayment').css('background-color', 'rgb(255 216 216)');
+                }
+            } else {
+                $('#textShowMessage').html('@Local["Chọn thẻ trả trước"]');
+                $('#CustomerCardReturnPayment').css('background-color', 'rgb(255 216 216)');
+            }
+        }
+    }
+    function ChangingEvent() {
+        if (ischange == 1) {
+            $('#textShowMessage').html('');
+            $('#CustomerCardReturnPayment').css('background-color', 'white');
+            $('#Method').css('background-color', 'white');
+            $('#CustomerCardReturnPayment').css('background-color', 'white');
+            $('#AmountReturn').css('background-color', 'white');
+            let ID = Number($('#CustomerCardReturnPayment').dropdown('get value')) ? Number($('#CustomerCardReturnPayment').dropdown('get value')) : 0;
+            if (ID != 0) {
+                let data = dataCardReturnPayment[ID];
+                if (data != null) {
+                    let Amount = Number($('#AmountReturn').val()) ? Number($('#AmountReturn').val()) : 0;
+                    if (Amount > data.AmountPaid) {
+                        $('#textShowMessage').html('@Local["Số tiền hoàn lớn hơn số tiền khách đã đóng"]');
+                        $('#AmountReturn').css('background-color', 'rgb(255 216 216)');
+                    } else if (Amount <= 0) {
+                        $('#textShowMessage').html('@Local["Phải lớn hơn 0"]');
+                        $('#AmountReturn').css('background-color', 'rgb(255 216 216)');
+                    }
+                } else {
+                    $('#textShowMessage').html('@Local["Chọn thẻ trả trước"]');
+                    $('#CustomerCardReturnPayment').css('background-color', 'rgb(255 216 216)');
+                }
+            } else {
+                $('#textShowMessage').html('@Local["Chọn thẻ trả trước"]');
+                $('#CustomerCardReturnPayment').css('background-color', 'rgb(255 216 216)');
+            }
+        }
+    }
+
+    function ExcuteData_PaymentCard() {
+        ChangingEvent();
+        let Method_Type = Number($('#MethodType').dropdown('get value')) ? Number($('#MethodType').dropdown('get value')) : 0;
+        let method = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+        let reasonReturn = Number($('#PCReasonReturn').dropdown('get value')) ? Number($('#PCReasonReturn').dropdown('get value')) : 0;
+        if (document.getElementById("textShowMessage").innerHTML === "") {
+            if (method == 0) {
+                $('#Method').css('background-color', 'rgb(255 216 216)');
+                $('#textShowMessage').html('@Local["Chọn hình thức thanh toán"]');
+            }
+            else {
+                $('#form3').form('validate form');
+                if ($('#form3').form('is valid')) {
+                    let obj = new Object();
+                    obj.CardID = Number($('#CustomerCardReturnPayment').dropdown('get value')) ? Number($('#CustomerCardReturnPayment').dropdown('get value')) : 0;
+                    obj.BranchID = Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0;
+                    obj.Amount = Number($('#AmountReturn').val()) ? Number($('#AmountReturn').val()) : 0;
+                    obj.ReasonReturn = reasonReturn;
+                    obj.MethodID = method;
+                    obj.PosTypeID = (method == 5 ? Method_Type : 0);
+                    obj.TransferTypeID = (method == 4 ? Method_Type : 0);
+                    obj.MedthodDetail = ((method != 4 && method != 5) ? Method_Type : 0);
+                    obj.DateCreated = $('#dateCreatedExt').val() ? $('#dateCreatedExt').val() : new Date();
+                    obj.Content = $('#txtcontentPayment').val() ? $('#txtcontentPayment').val() : '';
+                    //obj.BankInvoiceCode = $('#bankInvoiceCode').val() ? $('#bankInvoiceCode').val() : "";
+                     if (xhrPaymentDetail && xhrPaymentDetail.readyState != 4) xhrPaymentDetail.abort();
+                        xhrPaymentDetail = AjaxLoad(url = "/Customer/Payment/PaymentCardDetailReturn/?handler=ExcuteData"
+                            , data = {
+                                'customerID': ser_MainCustomerID
+                                , 'data': JSON.stringify(obj)
+                            }
+                            , async = true
+                            , error = function () { notiError_SW() }
+                            , success = function (result) {
+                                if (result != "0") {
+                                    let datar = JSON.parse(result);
+                                    if (datar != undefined && datar.length == 1 && datar[0]["Result"] != "0") {
+                                        let idInserted = datar[0]["Result"];
+                                        if (idInserted == "-1") document.getElementById("textShowMessage_Payment").innerHTML = "@Local["Đã chốt sổ, không thể thêm thanh toán trước thời gian chốt"]";
+                                        else {
+                                            notiSuccess();
+                                            if (typeof LoadPaymentCardAjax === 'function') LoadPaymentCardAjax(idInserted, 0);
+                                            if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                                            if (typeof LoadTabDepositAjax === 'function') LoadTabDepositAjax();
+                                            if (typeof SMSSYS_AfterPaid === 'function')
+                                            SMSSYS_AfterPaid(_customerid = ser_MainCustomerID, _objCurrentID = { PaymentCardID: idInserted });
+                                            if (typeof PaymentCard_DetailReturn_UpdateThirdAccount === 'function')
+                                                PaymentCard_DetailReturn_UpdateThirdAccount(idInserted);
+                                            fcm_sendtopic("payment", Master_circleAvatar, sys_employeeName_Main, '- ' + formatNumber(obj.Amount));
+                                            let paymethod = Fun_GetName_ByID(dataPaymentMethod, datar[0]["PayMethod"]);
+                                            let amount = formatNumber(datar[0]["Amount"]);
+                                            syslog_cutpaid('i', datar[0]["Code"], ser_MainCustomerID, `${paymethod} ${amount} `);
+                                            CancelPaymentCardDetail();
+                                        }
+                                    }
+                                    else notiError_SW();
+
+                                } else notiError_SW();
+
+                            }
+                            , sender = $("#button_save_card_return")
+
+                        );
+                }
+            }
+        }
+        return false;
+    }
+
+    //#region //ThirdAccount
+    function PaymentCard_DetailReturn_UpdateThirdAccount(id) {
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+            APIAccount_Excute(currentID = id, type = 6, action = "save"
+                , beforefunc = function () { }
+                , successfunc = function (e) {
+                    if (typeof LoadPaymentCardAjax == 'function') LoadPaymentCardAjax(id, 0);
+                }
+                , failfunc = function (message) { }
+                , completefunc = function () { }
+            );
+        }
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<style type="text/css">
+    .final_price_title {
+        text-align: center;
+        background: #0060a9;
+        height: 30px;
+        font-size: 13px;
+        color: white;
+        line-height: 30px;
+    }
+</style>
+

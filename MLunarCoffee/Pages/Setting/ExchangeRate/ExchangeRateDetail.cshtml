@@ -1,0 +1,95 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ExchangeRate.ExchangeRateDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Tỷ giá tiền tệ"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết tỷ giá tiền tệ"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formExchangeRate">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tỷ giá"]</label>
+                            <input id="ExchangeRate" name="moneyAmount" class="form-control" type="text" placeholder="eg .@Local["Tỷ giá"]"/>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formxchangeRate" onclick="event.preventDefault();CloseModal()">@Local["Hủy"]</button>
+                        <button form="formExchangeRate" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();ExchangeRate_Excute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <script type="text/javascript">
+        let ser_ExchangeRateDetailID;
+        $("#ExchangeRate").divide();
+        $(document).ready(function () {
+            ser_ExchangeRateDetailID = ("@Model._exchangeRateDetailID");
+            if (ser_ExchangeRateDetailID != "0")
+                ExchangeRate_Load();
+            Checking_TabControl_Permission();
+        });
+
+        function ExchangeRate_Load() {
+            AjaxLoad(url = "/Setting/ExchangeRate/ExchangeRateDetail/?handler=Loadata"
+                , data = { id: ser_ExchangeRateDetailID }, async = true, error = null
+                , success = function (result) {
+                    let dataDetail = JSON.parse(result);
+                    $('#ExchangeRate').val((dataDetail[0].ExchangeRate));
+                });
+        }
+
+        function ExchangeRate_Excute() {
+            let data = new Object();
+            data.Exchange_Rate = $('#ExchangeRate').val() ? $('#ExchangeRate').val() : "";
+            $('#formExchangeRate').form('validate form');
+            if ($('#formExchangeRate').form('is valid')) {
+                AjaxLoad(url = "/Setting/ExchangeRate/ExchangeRateDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_ExchangeRateDetailID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            if (typeof ExchangeRate_Load_Ajax !== 'undefined' && $.isFunction(ExchangeRate_Load_Ajax)) {
+                                $('#DetailModal').modal('hide');
+                                $("#DetailModal_Content").html('');
+                                ExchangeRate_Load_Ajax();
+                            }
+                            if (typeof ExchangeRate_Load_History !== 'undefined' && $.isFunction(ExchangeRate_Load_History)) {
+                                ExchangeRate_Load_History(ser_ExchangeRateDetailID);
+                            }
+
+                    } else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Tỷ giá không tồn tại"]');
+                    } else {
+                        notiError_SW();
+                    }
+                    });
+            }
+            return false;
+        }
+
+    </script>
+    <script>js_require('/js/main.js')</script>
+    <script>js_require_notasync('/js/customjs/custom-validation.js')</script>

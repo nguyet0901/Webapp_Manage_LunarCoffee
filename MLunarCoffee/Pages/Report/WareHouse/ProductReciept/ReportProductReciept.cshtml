@@ -1,0 +1,244 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.WareHouse.ProductReciept.ReportProductRecieptModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0 pt-0">
+        <div class="left">
+            <div class="ui dropdown text-dark fw-bold text-sm border-0" id="RR_Supplier">
+                <input type="hidden" />
+                <div class="default text">eg .@Local["Nhà cung cấp"]</div>
+                <div id="RR_CbbSupplier" class="menu" tabindex="-1" style="max-height: 290px; overflow: scroll;">
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#RR_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return RReciept_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return RR_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="RR_GridArea">
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive" style="max-height: calc(100vh - 350px);">
+                <table class="table vt-table mb-0" id="RR_Grid">
+                    <thead>
+                        <tr>
+                            <th class="d-none">ID</th>
+                            <th>#</th>
+                            <th>@Local["Mã NCC"]</th>
+                            <th>@Local["Tên NCC"]</th>
+                            <th>@Local["Ngày nhập"]</th>
+                            <th>@Local["Phiếu nhập"]</th>
+                            <th>@Local["Sản phẩm"]</th>
+                            <th>@Local["Đơn vị"]</th>
+                            <th>@Local["Số lượng"]</th>
+                            <th>@Local["Đơn giá"]</th>
+                            <th>@Local["Thành tiền"]</th>
+                            <th>@Local["Nhập nhà cung cấp"]</th>
+                            <th>@Local["Ghi chú"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="RR_GridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return RReciept_Load(1);">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    let _dateTo = "@Model._dateTo";
+    let _dateFrom = "@Model._dateFrom";
+    let RR_Limit = 200;
+    let RR_BeginID = 0;
+    let xhrLoadList;
+    let RR_DataMain = [];
+
+    //#region //Load
+    $(document).ready(function () {
+        RReciept_LoadInit();
+        RReciept_Event();
+    })
+
+    function RReciept_LoadInit () {
+        AjaxLoad(url = "/Report/WareHouse/ProductReciept/ReportProductReciept/?handler=Initialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != '') {
+                    let data = JSON.parse(result);
+                    let Supplier = data.Supplier;
+                    Load_Combo(Supplier, "RR_CbbSupplier", true, "@Local["Tất cả"]");
+                    $("#RR_Supplier").dropdown("refresh");
+                    $("#RR_Supplier").dropdown("set selected", "0");
+                    RReciept_Load();
+                }
+            }
+        );
+    }
+
+    function RReciept_Load (Loadmore = 0) {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+
+        if (Loadmore == 0) {
+            RR_BeginID = 0
+            $("#RR_GridBody").empty();
+        }
+
+        xhrLoadList = AjaxLoad(url = "/Report/WareHouse/ProductReciept/ReportProductReciept/?handler=Loadata"
+            , data = {
+                'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+                , 'limit': RR_Limit
+                , 'beginID': RR_BeginID
+            }
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        RR_BeginID = data[data.length - 1].ID;
+                        fnRenderBlock(data, "RR_GridBody"
+                            , blocknum = 50
+                            , fnrender = RReciept_Render
+                            , fnsuccess = null
+                        );
+
+                        RR_DataMain = RR_DataMain.concat(data);
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    //#endregion
+
+    //#region //Render && Excel
+
+    async function RReciept_Render (data, id) {
+        new Promise((resolve) => {
+
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = RReciept_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+    function RReciept_RenderEach (item) {
+        try {
+            let result = '';
+
+            result = `
+                <tr class="vt-number">
+                    <td class="d-none">${item.ID}</td>
+                    <td class="vt-number-order text-center"></td>
+                    <td>${item.CodeSupp}</td>
+                    <td>${item.NameSupp}</td>
+                    <td>${ConvertDateTimeToString_D_M_Y(item.DateReceipt)}</td>
+                    <td>${item.CodeReceipt}</td>
+                    <td>${item.ProductName}</td>
+                    <td>${item.UnitName}</td>
+                    <td>${item.Quantity}</td>
+                    <td>${(item.TransferID == 0 ? formatNumber(item.UnitPrice) : formatNumber(item.PriceTransfer))}</td>
+                    <td>${(item.TransferID == 0 ? formatNumber(item.Amount) : formatNumber(item.AmountTransfer))}</td>
+                    <td class="text-center">${(item.TransferID == 0 ? `<i class="vtt-icon vttech-icon-check text-sm"></i>` : '')}</td>
+                    <td>${item.Note}</td>
+                </tr>
+            `
+
+            return result;
+        } catch {
+            return '';
+        }
+    }
+
+
+    async function RR_Export () {
+
+        let dataRoot = RR_DataMain;
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => {return idx + 1}]
+            , "CodeSupp": "@Local["Mã NCC"]"
+            , "NameSupp": "@Local["Tên NCC"]"
+            , "DateReceipt": ["@Local["Ngày nhập"]", (v) => {return (ConvertDateTimeToString_D_M_Y(v))}]
+            , "CodeReceipt": "@Local["Phiếu nhập"]"
+            , "ProductName": "@Local["Sản phẩm"]"
+            , "UnitName": "@Local["Đơn vị"]"
+            , "Quantity": "@Local["Số lượng"]"
+            , "Price": ["@Local["Đơn giá"]", (v, {TransferID, UnitPrice, PriceTransfer}) => {
+                return (TransferID == 0 ? UnitPrice : PriceTransfer)
+            }]
+            , "Price1": ["@Local["Thành tiền"]", (v, {TransferID, Amount, AmountTransfer}) => {
+                return (TransferID == 0 ? Amount : AmountTransfer)
+            }]
+            , "TransferID":  ["@Local["Nhập nhà cung cấp"]", (v) => {return (v == 0 ? '1' : '')}]
+            , "Note": "@Local["Ghi chú"]"
+        };
+        let nameFile = (Outlang["Sys_bao_cao_phieu_nhap_kho"] != undefined ? Outlang["Sys_bao_cao_phieu_nhap_kho"] : 'Báo cáo phiếu nhập kho');
+        syslog_ExpExcel('e', Outlang["Sys_bao_cao_phieu_nhap_kho"]);
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+
+    //#endregion
+
+    //#region //Event
+
+    function RReciept_Event () {
+        $("#RR_Supplier").change(function () {
+            let ID = $('#RR_Supplier').dropdown('get value') ? Number($('#RR_Supplier').dropdown('get value')) : 0;
+            $("#RR_GridBody").empty();
+            if (ID != 0) {
+                let data = JSON.parse(JSON.stringify(RR_DataMain));
+                if (data && data.length > 0) {
+                    data = data.filter((item) => {return item["IDSupp"] == ID});
+                    fnRenderBlock(data, "RR_GridBody"
+                        , blocknum = 50
+                        , fnrender = RReciept_Render
+                        , fnsuccess = null
+                    );
+                }
+            } else {
+                fnRenderBlock(RR_DataMain, "RR_GridBody"
+                    , blocknum = 50
+                    , fnrender = RReciept_Render
+                    , fnsuccess = null
+                );
+            }
+        })
+    }
+
+    //#endregion
+</script>

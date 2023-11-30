@@ -1,0 +1,1463 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.Detail.AllBranchGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Doanh thu chi tiết"]</h6>
+            <p class="mb-0 text-sm">@Local["Doanh thu chi tiết của chi nhánh bao gồm tiền khách hàng thanh toán dịch vụ, thẻ, cọc và thuốc trong thời gian tìm kiếm"]</p>
+        </div>
+    </div>
+    <div class="card-body pt-2 px-0" id="ABG_Container">
+        <div class="w-lg-50 col-auto my-auto">
+            <span class="text-sm text-dark mb-0">
+                @Local["Tổng tiền thu"]
+            </span>
+            <h5 id="RPieTotal" class="text-start fw-bold text-primary mb-0">
+            </h5>
+        </div>
+        <div class="row px-0 mb-2">
+            <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                <div class="fw-bold text-center text-dark mb-1 text-sm">
+                    @Local["Loại thanh toán"]
+                </div>
+                <div class="position-relative mt-3" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="RPieMethod" class="chart-canvas" height="150"></canvas>
+                    </div>
+                </div>
+                <div class="mt-2 ms-0 ms-lg-n2 table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <tbody id="RPieMethodList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-12 col-sm-12 col-md-6 col-xl-6 p-1">
+                <div class="fw-bold text-center text-dark mb-1 text-sm">
+                    @Local["Hình thức"]
+                </div>
+                <div class="position-relative mt-3" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="RPieType" class="chart-canvas" height="150"></canvas>
+                    </div>
+                </div>
+                <div class="mt-2  table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <tbody id="RPieTypeList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="vtcardheader card-header p-0">
+            <div class="left d-flex">
+                <div class="me-3">
+                    <div class="ui dropdown text-dark fw-bold text-sm border-0" id="ABG_SourceID" onchange="event.preventDefault(); ABG_Filter()">
+                        <input type="hidden" />
+                        <div class="default text">eg .@Local["Nguồn khách hàng"]</div>
+                        <div id="ABG_cbbSource" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="ui dropdown text-dark fw-bold text-sm border-0" id="ABG_ServiceSourceID" onchange="event.preventDefault(); ABG_Filter()">
+                        <input type="hidden" />
+                        <div class="default text">eg .@Local["Nguồn dịch vụ"]</div>
+                        <div id="ABG_cbbServiceSource" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                    <span id="Reve_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="Reve_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#RP_GridArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return RP_Load()"></i>
+                </div>
+                <div class="icon-hover mx-1 mt-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["In báo cáo"]">
+                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); RP_DetailPrintReport()"></i>
+                </div>
+                <div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer" s></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RP_Export(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RP_Export(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10 max-height-400 overflow-y">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="phone" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số điện thoại"]</p>
+                        </li>
+                        <li class="d-flex d-none">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="plancode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã kế hoạch"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="service" type="checkbox" checked="checked">
+                            </div>
+                            <p class="text-sm">@Local["Dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicetypecode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã loại dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicecode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="salescode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã lên đơn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="invoicenum" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã phiếu thu"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="quantity" type="checkbox" checked="checked">
+                            </div>
+                            <p class="text-sm">@Local["Số lượng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="priceunit" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Đơn giá"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="timetotreatment" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Số lần điều trị"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custcodeold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doccode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi tiết"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="percomplete" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Hoàn thành"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="method" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Hình thức thanh toán"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="SerCare" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Dịch vụ quan tâm"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="custnew" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Khách mới"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="age" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Độ tuổi"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="gender" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Giới tính"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="address" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Địa chỉ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="commune" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Phường xã"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="district" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Quận huyện"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="city" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tỉnh/Thành phố"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="billcode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hoá đơn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicesource" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn dịch vụ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày thanh toán"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="content" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nội dung thanh toán"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="tele" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Tele phụ trách"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusCare" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên chăm sóc"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="CusCreate" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thông tin khách hàng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="cashier" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thu ngân"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="Consult" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên tư vấn"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="Consult2" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên tư vấn"] 2</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="tabtele" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên telesale"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="tabtele2" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên telesale"] 2</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="ktv" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Người hỗ trợ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="vatamount" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["VAT"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="detaildiscount" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi tiết giảm giá"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="firstdate" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày đầu"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="Doctor" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Bác sĩ"]</p>
+                        </li>
+
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="combo" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Combo"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="combocode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã combo"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="combotype" type="checkbox">
+                            </div>
+                            <p class="text-sm mb-0">@Local["Loại combo"]</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="RP_GridArea">
+            <div class="card-body p-0 mt-3 overflow-y">
+                <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                    <table class="table vt-table mb-0" id="RP_Grid">
+                        <thead>
+                            <tr role="row">
+                                <th rowspan="2">#</th>
+                                <th rowspan="2" style="min-width:100px;">@Local["Mã khách hàng"]</th>
+                                <th rowspan="2" style="min-width:200px;">@Local["Khách hàng"]</th>
+                                <th rowspan="2" data-name="custcodeold" style="min-width:120px;">@Local["Mã khách hàng cũ"]</th>
+                                <th rowspan="2" data-name="doccode" style="min-width:120px;">@Local["Mã hồ sơ"]</th>
+                                <th rowspan="2" data-name="phone">@Local["Số điện thoại"]</th> 
+                                <th rowspan="2" data-name="service" style="min-width:200px;">@Local["Dịch vụ"]</th>
+                                <th rowspan="2" data-name="servicetypecode" style="min-width:170px;">@Local["Mã loại dịch vụ"]</th>
+                                <th rowspan="2" data-name="servicecode" style="min-width:170px;">@Local["Mã dịch vụ"]</th>
+                                <th rowspan="2" data-name="combocode" style="min-width:200px;">@Local["Mã combo"]</th>
+                                <th rowspan="2" data-name="combotype" style="min-width:200px;">@Local["Loại combo"]</th>
+                                <th rowspan="2" data-name="combo" style="min-width:200px;">@Local["Combo"]</th>
+                                <th rowspan="2" data-name="salescode">@Local["Mã lên đơn"]</th>
+                                <th rowspan="2" data-name="invoicenum">@Local["Mã phiếu thu"]</th>
+                                <th rowspan="2" data-name="quantity" style="min-width: 80px;">@Local["Số lượng"]</th>
+                                <th rowspan="2" data-name="priceunit" style="min-width: 100px;">@Local["Đơn giá"]</th>
+                                <th rowspan="2" data-name="timetotreatment" style="min-width: 80px;">@Local["Số Lần điều trị"]</th>
+                                <th rowspan="2" data-name="detail" style="min-width:150px;">@Local["Chi tiết"]</th>
+                                <th rowspan="2" data-name="percomplete" style="min-width:150px;">@Local["Hoàn thành"]</th>
+                                <th rowspan="2" style="min-width: 100px;">@Local["Giá"]</th>
+                                <th rowspan="2" style="min-width: 100px;" data-name="vatamount">@Local["VAT"]</th>
+                                <th rowspan="2" style="min-width: 100px;">@Local["Giảm"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 150px">@Local["Chương trình"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 150px">@Local["Nhóm khách hàng"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 150px">@Local["Voucher"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 120px">@Local["Miễn phí"]</th>
+                                <th colspan="1" data-name="detaildiscount" style="min-width: 120px">@Local["Tiền tự giảm"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 120px">@Local["Hạng thành viên"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 120px">@Local["Bảo hiểm"]</th>
+                                <th colspan="2" data-name="detaildiscount" style="min-width: 120px">@Local["Điểm tích lũy"]</th>
+                                <th colspan="1" data-name="detaildiscount" style="min-width: 120px">@Local["Trừ thẻ"]</th>
+                                <th rowspan="2" style="min-width: 100px;">@Local["Thành tiền"]</th>
+                                <th colspan="5" style="min-width: 100px;">@Local["Thanh toán"]</th>
+                                <th rowspan="1" colspan="2" data-name="firstdate" style="min-width: 100px;">@Local["Ngày đầu"]</th>
+                                <th rowspan="2" style="min-width: 100px;">@Local["Tiền cọc cấn trừ"]</th>
+                                <th rowspan="2" data-name="method" class="vtt-filter no-sort" style="min-width:200px;">@Local["Hình thức thanh toán"]</th>
+                                <th rowspan="2" data-name="SerCare" style="min-width:100px;">@Local["Dịch vụ quan tâm"]</th>
+                                <th rowspan="2" data-name="custnew" style="min-width:120px;">@Local["Khách mới"]</th>
+                                <th rowspan="2" data-name="source" style="min-width:150px;">@Local["Nguồn"]</th>
+                                <th rowspan="2" data-name="age" style="min-width:100px;">@Local["Độ tuổi"]</th>
+                                <th rowspan="2" data-name="gender" style="min-width: 80px;">@Local["Giới tính"]</th>
+                                <th rowspan="2" data-name="address" style="min-width: 120px;">@Local["Địa chỉ"]</th>
+                                <th rowspan="2" data-name="commune" style="min-width: 120px;">@Local["Phường xã"]</th>
+                                <th rowspan="2" data-name="district" style="min-width: 120px;">@Local["Quận huyện"]</th>
+                                <th rowspan="2" data-name="city" style="min-width: 150px;">@Local["Tỉnh/Thành phố"]</th>
+                                <th rowspan="2" data-name="billcode">@Local["Mã hoá đơn"]</th>
+                                <th rowspan="2" data-name="servicesource">@Local["Nguồn dịch vụ"]</th>
+                                <th rowspan="2" data-name="content" style="min-width: 120px;">@Local["Nội dung thanh toán"]</th>
+                                <th rowspan="2" data-name="branch" style="min-width: 120px;">@Local["Chi nhánh"]</th>
+                                <th rowspan="2" data-name="created" style="min-width: 150px;">@Local["Ngày thanh toán"]</th>
+                                <th rowspan="2" data-name="cashier" style="min-width: 150px;">@Local["Thu ngân"]</th>
+                                <th rowspan="2" data-name="tele">@Local["Tele phụ trách"]</th>
+                                <th rowspan="2" data-name="CusCare">@Local["Nhân viên chăm sóc"]</th>
+                                <th colspan="2" data-name="CusCreate" style="min-width: 300px;">@Local["Thông tin khách hàng"]</th>
+                                <th rowspan="2" data-name="Consult">@Local["Nhân viên tư vấn"]</th>
+                                <th rowspan="2" data-name="Consult2">@Local["Nhân viên tư vấn"] 2</th>
+                                <th rowspan="2" data-name="tabtele">@Local["Nhân viên telesale"]</th>
+                                <th rowspan="2" data-name="tabtele2">@Local["Nhân viên telesale"] 2</th>
+                                <th rowspan="2" data-name="ktv">@Local["Người hỗ trợ"]</th>
+                                <th rowspan="2" class="vtt-filter no-sort" data-name="Doctor">@Local["Bác sĩ"]</th>
+                            </tr>
+                            <tr>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 130px">@Local["Chương trình"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tên nhóm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Voucher"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Lý do"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tên"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tên"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Đã sử dụng"]</th>
+                                <th data-name="detaildiscount" style="min-width: 100px">@Local["Tiền giảm"]</th>
+                                <th style="min-width: 100px;">@Local["Dịch vụ"]</th>
+                                <th style="min-width: 100px;">@Local["Sản phẩm"]</th>
+                                <th style="min-width: 100px;">@Local["Thẻ"]</th>
+                                <th style="min-width: 100px;">@Local["Cọc"]</th>
+                                <th style="min-width: 100px;">@Local["Thuốc"]</th>
+                                <th data-name="firstdate" style="min-width: 100px;">@Local["Thanh toán"]</th>
+                                <th data-name="firstdate" style="min-width: 100px;">@Local["Phát sinh"]</th>
+                                <th data-name="CusCreate">@Local["Ngày tạo"]</th>
+                                <th data-name="CusCreate">@Local["Người tạo"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="RP_GridBody">
+                        </tbody>
+                        <tfoot id="RP_GridFoot">
+                        </tfoot>
+                    </table>
+                </div>
+                <button class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return RP_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT LOAD LIST
+
+    let xhrLoadList;
+    let DataReportMainFilter, DataReportMain, DataReportMainSlice;
+    let IndexReport = 0;
+    let shtable;
+    let timeoutCount;
+    let ABG_DataServiceSource = {};
+    $(document).ready(function () {
+        ToolPopper();
+        $('#RP_Grid').tablecontrol();
+        shtable = $("#RP_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ABG_LoadIni();
+        Checking_TabControl_Permission();
+    });
+    function ABG_LoadIni() {
+        AjaxLoad(url = "/Report/Revenue/Detail/AllBranchGrid/?handler=LoadInitialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let dataServiceSource = datas.ServiceSource ?? [];
+                    ABG_DataServiceSource = dataServiceSource.reduce((pre, arr) => { if (!pre[arr.ID]) pre[arr.ID] = arr; return pre }, {});
+                    RP_Load();
+
+                    Load_Combo(dataServiceSource, "ABG_cbbServiceSource", true, "@Local["Nguồn dịch vụ"]");
+                    $("#ABG_ServiceSourceID").dropdown();
+                    $("#ABG_ServiceSourceID").dropdown("set selected", '0');
+
+                    Load_Combo(Object.values(RP_DataCustomerSource), "ABG_cbbSource", true, "@Local["Nguồn khách hàng"]");
+                    $("#ABG_SourceID").dropdown();
+                    $("#ABG_SourceID").dropdown("set selected", '0');
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+    async function RP_Load() {
+        new Promise(() => {
+            RP_ResetValue();
+            if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+            let _branchID = "@Model._BranchID";
+            let _dateFrom = "@Model._dateFrom";
+            let _dateTo = "@Model._dateTo";
+            IndexReport = 0;
+            $("#RP_GridBody, #RP_GridFoot").empty();
+            xhrLoadList = AjaxLoad(url = "/Report/Revenue/Detail/AllBranchGrid/?handler=Loadata"
+                , data = {
+                    'BranchID': _branchID
+                    , 'dateFrom': _dateFrom
+                    , 'dateTo': _dateTo
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let datas = JSON.parse(result);
+                        let data = datas.Table;
+                        if (data && data.length != 0) {
+                            DataReportMain = JSON.parse(JSON.stringify(data));
+                            DataReportMainSlice = sliceIntoChunks(data, 500);
+                            fnRenderBlock(DataReportMainSlice[IndexReport], "RP_GridBody"
+                                , blocknum = 100
+                                , fnrender = RP_Render
+                                , fnsuccess = null
+                            );
+                            Count_Up("Reve_totaldata", DataReportMain.length);
+                        }
+                        let dataMethod = datas.Table1;
+                        let dataType = datas.Table2;
+                        let Total = dataMethod.reduce((pre, arr) => { return (pre + arr.Amount); }, 0);
+                        for (let i = 0; i < dataType.length; i++) {
+                            if (dataType[i].Type == 'service') dataType[i].Type = decodeHtml("@Local["Dịch vụ"]");
+                            else if (dataType[i].Type == 'card') dataType[i].Type = decodeHtml("@Local["Thẻ trả trước"]");
+                            else if (dataType[i].Type == 'desposit') dataType[i].Type = decodeHtml("@Local["Tiền cọc"]");
+                            else if (dataType[i].Type == 'medicine') dataType[i].Type = decodeHtml("@Local["Đơn thuốc"]");
+                            else if (dataType[i].Type == 'product') dataType[i].Type = decodeHtml("@Local["Sản phẩm"]");
+                            else dataType[i].Type = "";
+                        }
+
+
+
+                        Count_Up("RPieTotal", Total, 1);
+                        ReportPie_Description(dataMethod, 'MethodName', 'Amount', 'RPieMethodList');
+                        rp_pie("RPieMethod", dataMethod, 'MethodName', 'Amount')
+                        ReportPie_Description(dataType, 'Type', 'Amount', 'RPieTypeList');
+                        rp_pie("RPieType", dataType, 'Type', 'Amount')
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        })
+    }
+    function RP_ResetValue() {
+        DataReportMainFilter = [];
+        DataReportMain = []
+        DataReportMainSlice = {};
+
+        $("#ABG_ServiceSourceID").dropdown("refresh");
+        $("#ABG_ServiceSourceID").dropdown("set selected", '0');
+
+        $("#ABG_SourceID").dropdown("refresh");
+        $("#ABG_SourceID").dropdown("set selected", '0');
+    }
+    function RP_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "RP_GridBody"
+                , blocknum = 100
+                , fnrender = RP_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+
+    //#region // RENDER
+
+    async function RP_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let type = item.Type;
+                            let detail = RP_Render_SerDetail(item.TeethType, item.TeethChoosing, item.TreatIndex, item.TimeToTreatment);
+                            let percentComplete = RP_Render_TreatmentOrPercentService(item.Type, item.TreatIndex, item.TimeToTreatment, item.PercentOfService, item.TeethChoosing, item.TreatPercentDetail, item.Quantity);
+                            let tr = `
+                                <td class="vt-number-order"></td>
+                                <td>
+                                    <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                        ${item.CustCode}
+                                    </a>
+                                </td>
+                                <td>${item.CustName}</td>
+                                    <td data-name="custcodeold" >${item.CustOldCode}</td>
+                                <td data-name="doccode" >${item.DocCode}</td>
+                                <td data-name="phone" ><span class="_tab_control_" data-tab="phone_customer">${item.Phone}</span></td>
+                                <td data-name="service" ><h6 class="text-sm mb-0 fw-bold">${item.ServiceName}</h6></td>
+                                <td data-name="servicetypecode">${item.ServiceTypeCode}</td>
+                                <td data-name="servicecode" >${item.ServiceCode}</td>
+                                <td data-name="combocode" >${item.ComboCode}</td>
+                                <td data-name="combotype" >${item.ComboType}</td>
+                                <td data-name="combo" >${item.ComboName}</td>
+                                <td data-name="salescode" >${item.SalesCode}</td>
+                                <td data-name="invoicenum" >${item.InvoiceNum}</td>
+                                <td data-name="quantity"> ${item.Quantity} </td>
+                                <td data-name="priceunit"> ${formatNumber(item.PriceUnit)} </td>
+                                <td data-name="timetotreatment" > ${(sys_dencos_Main == 0) && (item.TimeToTreatment != 0) ? item.TimeToTreatment : ''} </td>
+                                <td data-name="detail" > ${detail} </td>
+                                <td data-name="percomplete" > ${percentComplete}% </td>
+                                <td >${formatNumber(item.PriceRoot)}</td>
+                                <td data-name="vatamount">${formatNumber(item.VatAmount)}</td>
+                                <td >${formatNumber(item.PriceRoot - item.PriceDiscounted + item.VatAmount)}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSProgramAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSProgramName}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSGroupAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSGroupName}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSVouhcerAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSVoucherName}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSFreeAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSReasonFree}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSSelftAmount)}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSMemAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSMemName}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSInsurAmount)}</td>
+                                <td data-name="detaildiscount" >${item.DSInsurName}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSAmountPoint)}</td>
+                                <td data-name="detaildiscount" >${item.DSPointUsed}</td>
+                                <td data-name="detaildiscount">${formatNumber(item.DSCardAmountUsing)}</td>
+                                <td >${formatNumber(item.PriceDiscounted)}</td>
+                                <td >${((type == 'service') ? formatNumber(item.Amount) : 0)}</td>
+                                <td >${((type == 'product') ? formatNumber(item.Amount) : 0)}</td>
+                                <td >${((type == 'card') ? formatNumber(item.Amount) : 0)}</td>
+                                <td >${((type == 'desposit') ? formatNumber(item.Amount) : 0)}</td>
+                                <td >${((type == 'medicine') ? formatNumber(item.Amount) : 0)}</td>
+                                <td data-name="firstdate" class="text-center">${item.IsFirstPaid == 1 ? '<i class="fas fa-check text-success"></i>' : ''}</td>
+                                <td data-name="firstdate" class="text-center">${item.IsFirstTab == 1 ? '<i class="fas fa-check text-success"></i>' : ''}</td>
+                                <td>${formatNumber(item.DepositUsed)}</td>
+                                <td data-name="method">
+                                    ${item.Method}
+                                    ${(item.PosType != '') ? ' - ' + item.PosType : ''}
+                                    ${(item.TransferType != '') ? ' - ' + item.TransferType : ''}
+                                    ${(item.MethodTypeDetail != '') ? ' - ' + item.MethodTypeDetail : ''}
+                                </td>
+                                <td data-name="SerCare">${item.SerCareID != 0 ? RP_DataServiceCareObj[item.SerCareID].Name : ''}</td>
+                                <td data-name="custnew" class="text-center" >${(item.IsCustNew == 1) ? `<i class="fas fa-check text-success"></i>` : ``}</td>
+                                <td data-name="source" class="source" >${RP_Render_GetName(RP_DataCustomerSource, item.SourceID)}</td>
+                                <td data-name="age" >${RP_Render_TypeAge(item.Birthday)}</td>
+                                <td data-name="gender" >${RP_Render_Gender(item.Gender)}</td>
+                                <td data-name="address" class="_tab_control_" data-tab="address_customer">${item.Address}</td>
+                                <td data-name="commune" class="_tab_control_" data-tab="address_customer">${RP_Render_GetName(RP_DataCommune,item.CommuneID)}</td>
+                                <td data-name="district" class="_tab_control_" data-tab="address_customer">${RP_Render_GetName(RP_DataDistrict, item.DistrictID)}</td>
+                                <td data-name="city" class="_tab_control_" data-tab="address_customer">${RP_Render_GetName(RP_DataCity, item.CityID)}</td>
+                                <td data-name="billcode" >${item.BillCode}</td>
+                                <td data-name="servicesource" >${RP_Render_GetName(ABG_DataServiceSource, item.ServiceSourceID)}</td>
+                                <td data-name="content" >${item.Content}</td>
+                                <td data-name="branch" >${RP_Render_GetName(RP_DataBranch, item.BranchID)}</td>
+                                <td data-name="created" >${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                <td data-name="cashier" >${RP_Render_GetName(RP_DataEmployee, item.CreatedBy)}</td>
+                                <td data-name="tele">${RP_Render_GetName(RP_DataEmployee, item.TeleID)}</td>
+
+                                <td data-name="CusCare">${RP_Render_GetName(RP_DataEmployee, item.CusCareID)}</td>
+                                <td data-name="CusCreate">${ConvertDateTimeUTC_DMYHM(item.CreateCus)}</td>
+                                <td data-name="CusCreate">${RP_Render_GetName(RP_DataEmployee, item.CreByCus)}</td>
+
+                                <td data-name="Consult">${RP_Render_GetName(RP_DataEmployee, item.ConsultID)}</td>
+                                <td data-name="Consult2">${RP_Render_GetName(RP_DataEmployee, item.ConsultID2)}</td>
+                                <td data-name="tabtele">${RP_Render_GetName(RP_DataEmployee, item.TabTeleID)}</td>
+                                <td data-name="tabtele2">${RP_Render_GetName(RP_DataEmployee, item.TabTeleID2)}</td>
+                                <td data-name="ktv">${RP_Render_GetName(RP_DataEmployee, item.KTV)}</td>
+                                <td data-name="Doctor">${RP_Render_GetName(RP_DataEmployee, item.DoctorID)}</td>
+                            `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtable.Refresh();
+                        $('#RP_Grid').tablesort();
+                        Checking_TabControl_Permission();
+                        clearTimeout(timeoutCount);
+                        timeoutCount = setTimeout(() => {
+                            Count_Up("Reve_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+            }, 100);
+        })
+    }
+    function RP_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment) {
+        try {
+            let result = '';
+            if (sys_dencos_Main == 0) {
+                result = `${decodeHtml("@Local["Đã điều trị"]")} ": ${TreatIndex} | ${TimeToTreatment}`
+            }
+            else {
+                result = `${(TeethChoosing != '') ? Fun_GetTeeth_ByToken(DataTeeth, TeethChoosing, TeethType) : ''}`
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RP_Render_TreatmentOrPercentService(Type, TreatIndex, TimeToTreatment, PercentService, Teethchoosing, TreatPercentDetail, Quantity) {
+        try {
+            let result = 100;
+            if (Type == 'service') {
+                if (sys_dencos_Main == 0) result = TimeToTreatment != 0 ? (100 * TreatIndex / TimeToTreatment) : 0;
+                else {
+                    if (sys_dencos_Main == 0) result = PercentService;
+                    else {
+                        if (Teethchoosing != '') result = Quantity != 0 ? TreatPercentDetail != 0 ? (TreatPercentDetail / Quantity) : PercentService : 0;
+                        else result = TreatPercentDetail != 0 ? TreatPercentDetail : PercentService;
+                    }
+                }
+            }
+            return result;
+        }
+        catch (ex) {
+            return 0;
+        }
+    }
+    function RP_Render_GetName(data, id) {
+        try {
+            let result = '';
+            if (data && data[id] != undefined) {
+                result = data[id].Name;
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RP_Render_Gender(id) {
+        try {
+            let result = decodeHtml('@Local["Nam"]');
+            if (id == 61) result = decodeHtml('@Local["Nữ"]');
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RP_Render_TypeAge(date) {
+        try {
+            let age = 0;
+            let result = '';
+            if (!date.includes('1900'))
+                age = RP_Render_GetAge(date);
+            if (age > 0) {
+                if (age < 16) result = '< 16'
+                else if (age > 16 && age < 31) result = '17 - 30'
+                else if (age > 16 && age <= 30) result = '17 - 30'
+                else if (age > 30 && age <= 40) result = '31 - 40'
+                else if (age > 40 && age <= 50) result = '41 - 50'
+                else if (age > 50) result = '> 51'
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RP_Render_GetAge(dateString) {
+        try {
+            var today = new Date();
+            var birthDate = new Date(dateString);
+            var age = today.getFullYear() - birthDate.getFullYear();
+            var m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        catch (ex) {
+            return 0;
+        }
+    }
+
+    //#endregion
+    //#region //EVENT
+    function ABG_Filter() {
+        if (DataReportMain && DataReportMain.length > 0) {
+            let sourceID = !isNaN(Number($('#ABG_SourceID').dropdown('get value'))) ? Number($('#ABG_SourceID').dropdown('get value')) : 0;
+            let serSourceID = !isNaN(Number($('#ABG_ServiceSourceID').dropdown('get value'))) ? Number($('#ABG_ServiceSourceID').dropdown('get value')) : 0;
+            DataReportMainFilter = DataReportMain.filter(work => {
+                return (sourceID == 0 || work["SourceID"] == sourceID)
+                    && (serSourceID == 0 || work["ServiceSourceID"] == serSourceID)
+            }
+            );
+            $("#RP_GridBody").empty();
+            let data = [...DataReportMainFilter];
+            $('#Reve_currentdata').html(0);
+            Count_Up("Reve_totaldata", data.length);
+            DataReportMainSlice = sliceIntoChunks(data, 500);
+            if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                IndexReport = 0;
+                fnRenderBlock(DataReportMainSlice[IndexReport], "RP_GridBody"
+                    , blocknum = 100
+                    , fnrender = RP_Render
+                    , fnsuccess = null
+                );
+            }
+        }
+    }
+    //#endregion
+    //#region // EXPORT - PRINT
+
+    function RP_Export(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#ABG_Container');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustOldCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcodeold']`)).is(":checked"),
+                        data: ["@Local["Mã khách hàng cũ"]"]
+                    },
+                    "DocCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                        data: ["@Local["Mã hồ sơ"]"]
+                    },
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='phone']`)).is(":checked"),
+                        data: ["@Local["Số điện thoại"]"]
+                    },
+                    "ServiceName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='service']`)).is(":checked"),
+                        data: ["@Local["Dịch vụ"]"]
+                    },
+                    "ServiceTypeCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                        data: ["@Local["Mã loại dịch vụ"]"]
+                    },
+                    "ServiceCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicecode']`)).is(":checked"),
+                        data: ["@Local["Mã dịch vụ"]"]
+                    },
+                    "ComboName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='combo']`)).is(":checked"),
+                        data: ["@Local["Combo"]"]
+                    },
+                    "ComboCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='combocode']`)).is(":checked"),
+                        data: ["@Local["Mã combo"]"]
+                    },
+                    "ComboType": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='combotype']`)).is(":checked"),
+                        data: ["@Local["Loại combo"]"]
+                    },
+                    "SalesCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='salescode']`)).is(":checked"),
+                        data: ["@Local["Mã lên đơn"]"]
+                    },
+                    "InvoiceNum": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='invoicenum']`)).is(":checked"),
+                        data: ["@Local["Mã phiếu thu"]"]
+                    },
+                    "Quantity": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='quantity']`)).is(":checked"),
+                        data: ["@Local["Số lượng"]"]
+                    },
+                    "PriceUnit": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='priceunit']`)).is(":checked"),
+                        data: ["@Local["Đơn giá"]"]
+                    },
+                    "TimeToTreatment": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='timetitreatment']`)).is(":checked"),
+                        data: ["@Local["Số lần điều trị"]"]
+                    },
+                    "Detail": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detail']`)).is(":checked"),
+                        data: ["@Local["Chi tiết"]", (v, { TeethType, TeethChoosing, TreatIndex, TimeToTreatment }) => {
+                            return RP_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }]
+                    },
+                    "PercentComplete": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='percomplete']`)).is(":checked"),
+                        data: ["@Local["Phần trăm hoàn thành"]", (value, { Type, TreatIndex, TimeToTreatment, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity }) => {
+                            return RP_Render_TreatmentOrPercentService(Type, TreatIndex, TimeToTreatment, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity);
+                        }]
+                    },
+                    "PriceRoot": ["@Local["Giá"]"],
+                    "VatAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='vatamount']`)).is(":checked"),
+                        data: ["@Local["VAT"]"]
+                    },
+                    "Discount": ["@Local["Giảm"]", (value, { PriceRoot, PriceDiscounted,VatAmount }) => { return PriceRoot - PriceDiscounted + VatAmount}],
+                    "DSProgramAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Giảm chương trình"]"]
+                    },
+                    "DSProgramName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Chương trình"]"]
+                    },
+                    "DSGroupAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Giảm nhóm khách hàng"]"]
+                    },
+                    "DSGroupName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Nhóm khách hàng"]"]
+                    },
+                    "DSVouhcerAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Giảm voucher"]"]
+                    },
+                    "DSVoucherName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Voucher"]"]
+                    },
+                    "DSFreeAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Tiền miễn phí"]"]
+                    },
+                    "DSReasonFree": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Lý do miễn phí"]"]
+                    },
+                    "DSSelftAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Tiền tự giảm"]"]
+                    },
+                    "DSMemAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Giảm theo hạng thành viên"]"]
+                    },
+                    "DSMemName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Hạng thành viên"]"]
+                    },
+                    "DSInsurAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Bảo hiểm thanh toán"]"]
+                    },
+                    "DSInsurName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Bảo hiểm"]"]
+                    },
+                    "DSAmountPoint": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Điểm tích lũy"]"]
+                    },
+                    "DSPointUsed": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Điểm tích lũy"] (@Local["Đã sử dụng"])"]
+                    },
+                    "DSCardAmountUsing": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detaildiscount']`)).is(":checked"),
+                        data: ["@Local["Trừ thẻ"]"]
+                    },
+                    "PriceDiscounted": ["@Local["Thành tiền"]"],
+                    "type1": ["@Local["Thanh toán dịch vụ"]", (value, { Type, Amount }) => { return Type == 'service' ? Amount : 0; }],
+                    "type2": ["@Local["Thanh toán sản phẩm"]", (value, { Type, Amount }) => { return Type == 'product' ? Amount : 0; }],
+                    "type3": ["@Local["Thanh toán thẻ"]", (value, { Type, Amount }) => { return Type == 'card' ? Amount : 0; }],
+                    "type4": ["@Local["Thanh toán thuốc"]", (value, { Type, Amount }) => { return Type == 'medicine' ? Amount : 0; }],
+                    "type5": ["@Local["Thanh toán cọc"]", (value, { Type, Amount }) => { return Type == 'desposit' ? Amount : 0; }],
+                    "IsFirstPaid": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='firstdate']`)).is(":checked"),
+                        data: ["@Local["Ngày đầu"] (@Local["Thanh toán"])", (value) => {return value == 1 ? 'x' : ''}]
+                    },
+                    "IsFirstTab": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='firstdate']`)).is(":checked"),
+                        data: ["@Local["Ngày đầu"] (@Local["Phát sinh"])", (value) => {return value == 1 ? 'x' : ''}]
+                    },
+                    "DepositUsed": ["@Local["Tiền cọc cấn trừ"]"],
+                    "Method": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='method']`)).is(":checked"),
+                        data: ["@Local["Hình thức thanh toán"]", (value, { PosType, TransferType,MethodTypeDetail }) => {
+                            return value + (PosType != '' ? ' - ' + PosType : '') + (TransferType != '' ? ' - ' + TransferType : '') + (MethodTypeDetail != '' ? ' - ' + MethodTypeDetail : '')
+                        }]
+                    },
+                    "SerCareID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='SerCare']`)).is(":checked"),
+                        data: ["@Local["Dịch vụ quan tâm"]", (value) => {return (value != 0 ? RP_DataServiceCareObj[value].Name : '' )}]
+                    },
+                    "IsCustNew": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custnew']`)).is(":checked"),
+                        data: ["@Local["Khách mới"]", (value) => { return (value == 1) ? 'x' : '' }]
+                    },
+                    "SourceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                        data: ["@Local["Nguồn"]", (value) => { return RP_Render_GetName(RP_DataCustomerSource, value) }]
+                    },
+                    "Birthday": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='age']`)).is(":checked"),
+                        data: ["@Local["Tuổi"]", (value) => { return RP_Render_TypeAge(value) }]
+                    },
+                    "Gender": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='gender']`)).is(":checked"),
+                        data: ["@Local["Giới tính"]", (value) => { return RP_Render_Gender(value) }]
+                    },
+                    "Address": {
+                        dataNamePer: 'address',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='address']`)).is(":checked"),
+                        data: ["@Local["Địa chỉ"]"]
+                    },
+                    "CommuneID": {
+                        dataNamePer: 'commune',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='commune']`)).is(":checked"),
+                        data: ["@Local["Phường xã"]", (value) => { return RP_Render_GetName(RP_DataCommune, value) }]
+                    },
+                    "DistrictID": {
+                        dataNamePer: 'district',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='district']`)).is(":checked"),
+                        data: ["@Local["Quận huyện"]", (value) => { return RP_Render_GetName(RP_DataDistrict, value) }]
+                    },
+                    "CityID": {
+                        dataNamePer: 'city',
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='city']`)).is(":checked"),
+                        data: ["@Local["Tỉnh/Thành phố"]", (value) => { return RP_Render_GetName(RP_DataCity, value) }]
+                    },
+                    "BillCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='billcode']`)).is(":checked"),
+                        data: ["@Local["Mã hoá đơn"]"]
+                    },
+                    "ServiceSourceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicesource']`)).is(":checked"),
+                        data: ["@Local["Nguồn dịch vụ"]", (value) => { return RP_Render_GetName(ABG_DataServiceSource, value) }]
+                    },
+                    "Content": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='content']`)).is(":checked"),
+                        data: ["@Local["Nội dung thanh toán"]"]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value) => { return RP_Render_GetName(RP_DataBranch, value) }]
+                    },
+                    "Created": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "CreatedBy": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='cashier']`)).is(":checked"),
+                        data: ["@Local["Thu ngân"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "TeleID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='tele']`)).is(":checked"),
+                        data: ["@Local["Tele phụ trách"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "CusCareID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusCare']`)).is(":checked"),
+                        data: ["@Local["Nhân viên chăm sóc"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "CreateCus": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusCreate']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo khách hàng"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "CreByCus": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusCreate']`)).is(":checked"),
+                        data: ["@Local["Người tạo hồ sơ"]", (value) => {return RP_Render_GetName(RP_DataEmployee, value)}]
+                    },
+                    "ConsultID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Consult']`)).is(":checked"),
+                        data: ["@Local["Nhân viên tư vấn"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "ConsultID2": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Consult2']`)).is(":checked"),
+                        data: ["@Local["Nhân viên tư vấn"] 2", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "TabTeleID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='tabtele']`)).is(":checked"),
+                        data: ["@Local["Nhân viên telesale"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "TabTeleID2": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='tabtele2']`)).is(":checked"),
+                        data: ["@Local["Nhân viên telesale"] 2", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "KTV": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='ktv']`)).is(":checked"),
+                        data: ["@Local["Người hỗ trợ"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    },
+                    "DoctorID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Doctor']`)).is(":checked"),
+                        data: ["@Local["Bác sĩ"]", (value) => { return RP_Render_GetName(RP_DataEmployee, value) }]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RP_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Doanh_thu_chi_tiet"]);
+                exportJsonToExcel(Outlang["Doanh_thu_chi_tiet"], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function RP_DetailPrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = "@Model._BranchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => {return index + 1;}
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustOldCode": ["@Local["Mã khách hàng cũ"]", {
+                        isShow: $(`.shtoogle[data-name='custcodeold']`).is(":checked")
+                    }],
+                    "DocCode": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='doccode']`).is(":checked")
+                    }],
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]", {isShow: $(`.shtoogle[data-name='phone']`).is(":checked")}]
+                    },
+                    "ServiceName": ["@Local["Dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='service']`).is(":checked")
+                    }],
+                    "ServiceTypeCode": ["@Local["Mã loại dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicetypecode']`).is(":checked")
+                    }],
+                    "ServiceCode": ["@Local["Mã dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicecode']`).is(":checked"),
+                    }],
+                    "ComboName": ["@Local["Combo"]", {
+                        isShow: $(`.shtoogle[data-name='combo']`).is(":checked")
+                    }],
+                    "ComboCode": ["@Local["Mã combo"]", {
+                        isShow: $(`.shtoogle[data-name='combocode']`).is(":checked")
+                    }],
+                    "ComboType": ["@Local["Mã combo"]", {
+                        isShow: $(`.shtoogle[data-name='combotype']`).is(":checked")
+                    }],
+                    "SalesCode": ["@Local["Mã lên đơn"]", {
+                        isShow: $(`.shtoogle[data-name='salescode']`).is(":checked")
+                    }],
+                    "InvoiceNum": ["@Local["Mã phiếu thu"]", {
+                        isShow: $(`.shtoogle[data-name='invoicenum']`).is(":checked")
+                    }],
+                    "Quantity": ["@Local["Số lượng"]", {
+                        isShow: $(`.shtoogle[data-name='quantity']`).is(":checked")
+                        , isTotalFooter: true
+                    }],
+                    "PriceUnit": ["@Local["Đơn giá"]", {
+                        isShow: $(`.shtoogle[data-name='priceunit']`).is(":checked")
+                        , isTotalFooter: true
+                    }],
+                    "TimeToTreatment": ["@Local["Số lần điều trị"]", {
+                        isShow: $(`.shtoogle[data-name='timetotreatment']`).is(":checked")
+                        , isTotalFooter: true
+                    }],
+                    "Detail": ["@Local["Chi tiết"]", {
+                        isShow: $(`.shtoogle[data-name='detail']`).is(":checked"),
+                        callbackRenderValue: (v, {TeethType, TeethChoosing, TreatIndex, TimeToTreatment}) => {
+                            return RP_Render_SerDetail(TeethType, TeethChoosing, TreatIndex, TimeToTreatment);
+                        }
+                    }],
+                    "PercentComplete": ["@Local["Phần trăm hoàn thành"]", {
+                        isShow: $(`.shtoogle[data-name='percomplete']`).is(":checked"),
+                        callbackRenderValue: (value, {Type, TreatIndex, TimeToTreatment, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity}) => {
+                            return RP_Render_TreatmentOrPercentService(Type, TreatIndex, TimeToTreatment, PercentOfService, TeethChoosing, TreatPercentDetail, Quantity);
+                        }
+                    }],
+                    "PriceRoot": ["@Local["Giá"]", {
+                        isTotalFooter: true
+                    }],
+                    "DSProgramName": ["@Local["VAT"]", {
+                        isShow: $(`.shtoogle[data-name='vatamount']`).is(":checked")
+                    }],
+                    "Discount": ["@Local["Giảm"]", {
+                        callbackRenderValue: (value, {PriceRoot, PriceDiscounted, VatAmount}) => {return PriceRoot - PriceDiscounted + VatAmount}
+                        , isTotalFooter: true
+                    }],
+                    "DSProgramAmount": ["@Local["Giảm chương trình"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSProgramName": ["@Local["Chương trình"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSGroupAmount": ["@Local["Giảm nhóm khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSGroupName": ["@Local["Nhóm khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSVouhcerAmount": ["@Local["Giảm voucher"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSVoucherName": ["@Local["Voucher"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSFreeAmount": ["@Local["Tiền miễn phí"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSReasonFree": ["@Local["Lý do miễn phí"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSSelftAmount": ["@Local["Tiền tự giảm"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+
+                    "DSMemAmount": ["@Local["Giảm theo hạng thành viên"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSMemName": ["@Local["Hạng thành viên"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSInsurAmount": ["@Local["Bảo hiểm thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSInsurName": ["@Local["Bảo hiểm"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSAmountPoint": ["@Local["Điểm tích lũy"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSPointUsed": ["@Local["Điểm tích lũy"] (@Local["Đã sử dụng"])", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "DSCardAmountUsing": ["@Local["Trừ thẻ"]", {
+                        isShow: $(`.shtoogle[data-name='detaildiscount']`).is(":checked")
+                    }],
+                    "PriceDiscounted": ["@Local["Thành tiền"]", {
+                        isTotalFooter: true
+                    }],
+                    "type1": ["@Local["Thanh toán dịch vụ"]", {
+                        callbackRenderValue: (value, {Type, Amount}) => {return Type == 'service' ? Amount : 0;}
+                        , isTotalFooter: true
+                    }],
+                    "type2": ["@Local["Thanh toán sản phẩm"]", {
+                        callbackRenderValue: (value, {Type, Amount}) => {return Type == 'product' ? Amount : 0;}
+                        , isTotalFooter: true
+                    }],
+                    "type3": ["@Local["Thanh toán thẻ"]", {
+                        callbackRenderValue: (value, {Type, Amount}) => {return Type == 'card' ? Amount : 0;}
+                        , isTotalFooter: true
+                    }],
+                    "type4": ["@Local["Thanh toán thuốc"]", {
+                        callbackRenderValue: (value, {Type, Amount}) => {return Type == 'medicine' ? Amount : 0;}
+                        , isTotalFooter: true
+                    }],
+                    "type5": ["@Local["Thanh toán cọc"]", {
+                        callbackRenderValue: (value, {Type, Amount}) => {return Type == 'desposit' ? Amount : 0;}
+                        , isTotalFooter: true
+                    }],
+                    "IsFirstPaid": ["@Local["Ngày đầu"] (@Local["Thanh toán"])", {
+                        isShow: $(`.shtoogle[data-name='firstdate']`).is(":checked"),
+                        callbackRenderValue: (value) => {return value == 1 ? 'x' : '';}
+                    }],
+                    "IsFirstTab": ["@Local["Ngày đầu"] (@Local["Phát sinh"])", {
+                        isShow: $(`.shtoogle[data-name='firstdate']`).is(":checked"),
+                        callbackRenderValue: (value) => {return value == 1 ? 'x' : '';}
+                    }],
+                    "DepositUsed": ["@Local["Tiền cọc cấn trừ"]", {
+                        isTotalFooter: true
+                    }],
+                    "Method": ["@Local["Hình thức thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='method']`).is(":checked"),
+                        callbackRenderValue: (value, {PosType, TransferType, MethodTypeDetail}) => {
+                            return value + (PosType != '' ? ' - ' + PosType : '') + (TransferType != '' ? ' - ' + TransferType : '') + (MethodTypeDetail != '' ? ' - ' + MethodTypeDetail : '')
+                        }
+                    }],
+                    "SerCareID": ["@Local["Dịch vụ quan tâm"]", {
+                        isShow: $(`.shtoogle[data-name='SerCare']`).is(":checked"),
+                        callbackRenderValue: (value) => {return (value != 0 ? RP_DataServiceCareObj[value].Name : '')}
+                    }],
+                    "IsCustNew": ["@Local["Khách mới"]", {
+                        isShow: $(`.shtoogle[data-name='custnew']`).is(":checked"),
+                        callbackRenderValue: (value) => {return (value == 1) ? 'x' : ''}
+                    }],
+                    "SourceID": ["@Local["Nguồn"]", {
+                        isShow: $(`.shtoogle[data-name='source']`).is(":checked"),
+                        callbackRenderValue: (value) => {return RP_Render_GetName(RP_DataCustomerSource, value)}
+                    }],
+                    "Birthday": ["@Local["Tuổi"]", {
+                        isShow: $(`.shtoogle[data-name='age']`).is(":checked"),
+                        callbackRenderValue: (value) => {return RP_Render_TypeAge(value)}
+                    }],
+                    "Gender": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='gender']`).is(":checked"),
+                        callbackRenderValue: (value) => {return RP_Render_Gender(value)}
+                    }],
+                    "Address": {
+                        dataNamePer: 'address',
+                        data: ["@Local["Địa chỉ"]", {
+                            isShow: $(`.shtoogle[data-name='address']`).is(":checked")
+                        }]
+                    },
+                    "CommuneID": {
+                        dataNamePer: 'commune',
+                        data: ["@Local["Phường xã"]", {
+                            isShow: $(`.shtoogle[data-name='commune']`).is(":checked"),
+                            callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataCommune, value) }
+                        }]
+                    },
+                    "DistrictID": {
+                        dataNamePer: 'district',
+                        data: ["@Local["Quận huyện"]", {
+                            isShow: $(`.shtoogle[data-name='district']`).is(":checked"),
+                            callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataDistrict, value) }
+                        }]
+                    },
+                    "CityID": {
+                        dataNamePer: 'city',
+                        data: ["@Local["Tỉnh/Thành phố"]", {
+                            isShow: $(`.shtoogle[data-name='city']`).is(":checked"),
+                            callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataCity, value) }
+                        }]
+                    },
+                    "BillCode": ["@Local["Mã hoá đơn"]", {
+                        isShow: $(`.shtoogle[data-name='billcode']`).is(":checked")
+                    }],
+                    "ServiceSourceID": ["@Local["Nguồn dịch vụ"]", {
+                        isShow: $(`.shtoogle[data-name='servicesource']`).is(":checked"),
+                        callbackRenderValue: (value) => {return RP_Render_GetName(ABG_DataServiceSource, value)}
+                    }],
+                    "Content": ["@Local["Nội dung thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='content']`).is(":checked")
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataBranch, value) }
+                    }],
+                    "Created": ["@Local["Ngày thanh toán"]", {
+                        isShow: $(`.shtoogle[data-name='created']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "CreatedBy": ["@Local["Thu ngân"]", {
+                        isShow: $(`.shtoogle[data-name='cashier']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "TeleID": ["@Local["Tele phụ trách"]", {
+                        isShow: $(`.shtoogle[data-name='tele']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "CusCareID": ["@Local["Nhân viên chăm sóc"]", {
+                        isShow: $(`.shtoogle[data-name='CusCare']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "CreateCus": ["@Local["Ngày tạo khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='CusCreate']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "CreByCus": ["@Local["Người tạo hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='CusCreate']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value)}
+                    }],
+                    "ConsultID": ["@Local["Nhân viên tư vấn"]", {
+                        isShow: $(`.shtoogle[data-name='Consult']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "ConsultID2": ["@Local["Nhân viên tư vấn"] 2", {
+                        isShow: $(`.shtoogle[data-name='Consult2']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "TabTeleID": ["@Local["Nhân viên telesale"]", {
+                        isShow: $(`.shtoogle[data-name='tabtele']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "TabTeleID2": ["@Local["Nhân viên telesale"] 2", {
+                        isShow: $(`.shtoogle[data-name='tabtele2']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "KTV": ["@Local["Người hỗ trợ"]", {
+                        isShow: $(`.shtoogle[data-name='ktv']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                    "DoctorID": ["@Local["Bác sĩ"]", {
+                        isShow: $(`.shtoogle[data-name='Doctor']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RP_Render_GetName(RP_DataEmployee, value) }
+                    }]
+                };
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RP_GridBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = "@Local["Doanh thu chi tiết"]", DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                    //#endregion
+
+</script>

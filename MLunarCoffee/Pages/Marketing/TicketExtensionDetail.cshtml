@@ -1,0 +1,97 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketExtensionDetailModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form class="form form3" id="form3">
+            <div class="card p-3 border-radius-xl bg-white mb-3">
+                <h6 class="font-weight-bolder mb-0">@Local["Bổ sung"]</h6>
+                <p class="mb-0 text-sm">@Local["Cài đặt bổ sung"]</p>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Bổ sung"]</label>
+                        <input id="Extension" class="form-control" name="name" type="text" placeholder="eg. @Local["Bổ sung"]" />
+                    </div>
+                </div>
+                <div class="row mt-2 px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Mật khẩu"]</label>
+                        <input id="ExtensionPass" class="form-control" name="statusType" type="text" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="action_Save">
+        <div class="action_Save-Content">
+            <div>
+                <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+            </div>
+            <div>
+                <button class="btn bg-gradient-primary mt-2 me-2" form="form3" type="submit" onclick="return ExcuteDataExtension()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    var ser_TeleExtensionDetailID;
+
+    $(document).ready(function () {
+        ser_TeleExtensionDetailID = '@Model._TeleExtensionDetailID';
+        TicketExtension_LoadDataDetail();
+    });
+
+    function TicketExtension_LoadDataDetail() {
+        if (ser_TeleExtensionDetailID != "0") {
+            AjaxLoad(url = "/Marketing/TicketExtensionDetail/?handler=Loadata"
+                , data = { 'id': ser_TeleExtensionDetailID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        $('#Extension').val((data[0].Extension));
+                        $('#ExtensionPass').val((data[0].Password));
+                    }
+                }
+            );
+        }
+    }
+
+    function ExcuteDataExtension() {
+        var data = new Object();
+        data.Extension = $('#Extension').val() ? $('#Extension').val() : "";
+        data.Password = $('#ExtensionPass').val() ? $('#ExtensionPass').val() : "";
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/Marketing/TicketExtensionDetail/?handler=ExcuteData"
+                , data = { 'data': JSON.stringify(data), 'CurrentID': ser_TeleExtensionDetailID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        LoadTicketExtensionAjax();
+                    } else if (result == "-1") {
+                        notiWarning('@Local["Trùng dữ liệu"]');
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+        }
+        return false;
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

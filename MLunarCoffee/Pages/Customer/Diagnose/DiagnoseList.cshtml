@@ -1,0 +1,328 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Diagnose.DiagnoseListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#DiaList_infodes">
+                                    <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="ms-auto my-auto mt-1 d-flex align-items-center">
+                            <ul id="dia_template" class="nav nav-pills p-1 bg-transparent" role="tablist"></ul>
+                            <button id="dia_newbtn" class="btn bg-gradient-primary btn-sm mb-0 d-none" onclick="DiaList_Add()">@Local["Thêm mới"]</button>
+                        </div>
+                    </div>
+                    <div id="DiaList_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-0 mb-2 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Chẩn đoán"]</h6>
+                        <p class="text-sm mb-0">@Local["Chi tiết chẩn đoán"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="d-lg-flex">
+                        <div id="DiaList_Area" class="col-w-200 me-2 mx-auto d-none">
+                            <div class="card-body p-0">
+                                <ul class="list-group overflow-auto" id="DiaList_Con" style="max-height:89vh;">
+
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ">
+                            <div class="mx-2">
+                                <div id="DiaDetail_Area">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var ser_DiagnoseDetail = 0;
+    let DataEmployee;
+    let DataDiagnose;
+ 
+    var DiaTemplate = {};
+    var DiaQuestionField = [];
+    var DiagnoseStatus = [];
+    var DiagnoseSign = [];
+    var DiagnoseICD = [];
+    $(document).ready(function () {
+        if (Number(sys_dencos_Main) == 1) $('#dia_newbtn').removeClass('d-none');
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                DiaList_Load();
+                DiaList_Ini();
+            })
+    });
+
+    async function DiaList_Ini () {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Diagnose/DiagnoseList/?handler=LoadIni"
+                , data = {'CustomerID': ser_MainCustomerID}
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        DiaQuestionField = data.QuestionField;
+                        DiagnoseStatus = data.DiagnoseStatus;
+                        DiagnoseSign = data.DiagnoseSign;
+                    }
+                }
+            );
+        })
+    }
+    async function DiaList_Load () {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/Diagnose/DiagnoseList/?handler=LoadData"
+                , data = { 'CustomerID': ser_MainCustomerID, 'ICDArea': Master_ICDGetArea ('diagnose')}
+                , async = true
+                , error = function () {notiError_SW()}
+                , success = function (result) {
+                    if (result != "" && result != "null") {
+                        let datas = JSON.parse(result);
+                        DataDiagnose = datas.List;
+                        DiagnoseICD = datas.ICD;
+            
+                        let _temp = datas.Template;
+                        Dia_TypeRender(_temp, "dia_template");
+                        for (let i = 0; i < _temp.length; i++) {
+                            DiaTemplate[_temp[i].Type] = _temp[i];
+                        }
+                          
+                        if (DataDiagnose != undefined && DataDiagnose.length != 0) {
+                            DiaList_Render(DataDiagnose, "DiaList_Con");
+                            DiaList_FirstClick();
+                            $('#DiaList_Area').removeClass('d-none');
+                        }
+                        else {
+                            $('#DiaList_Area').addClass('d-none');
+                            $('#DiaDetail_Area').hide();
+                        }
+                    }
+                }
+                , sender = null
+                , before = function () {
+                    $("#div_customer_waiting").show();
+                }
+                , complete = function (e) {
+                    $("#div_customer_waiting").hide();
+                }
+            );
+        })
+    }
+    function DiaList_FirstClick () {
+        if (DataDiagnose != undefined && DataDiagnose.length != 0) {
+            $("#DiaList_Con .diagnose_item:first-child").click();
+            $('#DiaDetail_Area').show();
+        }
+        else {
+            $('#DiaDetail_Area').hide();
+        }
+    }
+
+    //#region // Render Data  And Event
+    function DiaList_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let createdby = Fun_GetObject_ByID(DataEmployee, item.CreatedBy)
+                    let name = (createdby != null) ? createdby.Name : '';
+                    let img = (createdby != null) ? createdby.Avatar : Master_Default_Pic;
+                    let feauture = Dia_TypeRenderFeature(item.Type, item.CanvasType);
+ 
+                    let tr =
+                        '<li id="diagnose_item_' + item.ID + '"   data-id="' + item.ID + '" data-type="' + item.Type + '" class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg  diagnose_item">'
+                        + '<div class="d-flex ms-2">'
+                        + '<div class="icon icon-shape icon-sm me-3   text-center">'
+                        + feauture
+                        + '</div>'
+                        + '<div class="d-flex flex-column">'
+                        + '<h6 class="text-dark text-sm mb-0">' + GetDateTime_String_DMY(item.Created) + '</h6>'
+                        + '<span class="text-xs">' + name + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="d-flex">'
+                        + '<button class="btn btn-link btn-icon-only btn-rounded btn-sm text-dark icon-move-right my-auto"><i class="ni ni-bold-right" aria-hidden="true"></i></button>'
+                        + '</div>'
+                        + '</li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        DiaList_Event();
+    }
+    function DiaList_Event () {
+        $('#DiaList_Con .diagnose_item').on('click', function () {
+            ser_DiagnoseDetail = Number($(this).attr("data-id"));
+            let type = $(this).attr("data-type")
+            $('.diagnose_item').removeClass('active');
+            $(this).addClass('active');
+            DiaDetail_Load(currentid = ser_DiagnoseDetail, type = type);
+
+        });
+    }
+    //#endregion
+
+    //#region // Handle Event
+    function DiaList_Add () {
+        $('.diagnose_item').removeClass('active');
+        ser_DiagnoseDetail = 0;
+        DiaDetail_Load(currentid = 0, type = '');
+
+    }
+
+    function DiaDetail_Load (_currentid, _type) {
+        $("#DiaDetail_Area").html('');
+        $('#DiaDetail_Area').show();
+        if (_type == '') {
+            if (Number(sys_dencos_Main) == 1) {
+                $("#DiaDetail_Area").load("/Customer/Diagnose/DiagnoseDetail" + "?ver=" + versionofWebApplication, function () {
+                    $(this).slideDown();
+                });
+            } 
+        }
+        else {
+            $("#DiaDetail_Area").load("/Customer/Diagnose/DiaItem" + "?ver=" + versionofWebApplication, function () {
+                if (DiaTemplate[_type].CanvasType == 'canvas') {
+                    Dit_IniCanvas(currentid = _currentid, _type
+                        , DiaTemplate[_type].SVG
+                        , DiaTemplate[_type].ColorDraw
+                        , DiaTemplate[_type].Width
+                        , DiaTemplate[_type].Height
+                        , DiaTemplate[_type].Question
+                        , DiaTemplate[_type].IsUsingICD);
+                }
+                else {
+                    Dit_IniImage(currentid = _currentid, _type
+                        , DiaTemplate[_type].Image
+                        , DiaTemplate[_type].WidthImg
+                        , DiaTemplate[_type].HeightImg
+                        , DiaTemplate[_type].Question
+                        , DiaTemplate[_type].IsUsingICD);
+                }
+            });
+        }
+    }
+    //#endregion
+
+    //#region // Detail Event
+    function DiaDetail_Close () {
+        $("#DiaDetail_Area").html('');
+        DiaList_FirstClick();
+    }
+    function DiaDetail_Delete () {
+        const promise = notiConfirm();
+        promise.then(function () {DiaDetail_DeleteExe(ser_DiagnoseDetail);}, function () { });
+    }
+    function DiaDetail_DeleteExe (id) {
+        AjaxLoad(url = "/Customer/Diagnose/DiagnoseList/?handler=DeleteItem"
+            , data = {'id': id}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cutdia('d', ser_MainCustomerID, '');
+                    DiaList_Load();
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#div_customer_waiting").show();
+            }
+            , complete = function (e) {
+                $("#div_customer_waiting").hide();
+            }
+        );
+    }
+    //#endregion
+
+    function Dia_TypeRender (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let feauture = Dia_TypeRenderFeature(item.Type, item.CanvasType);
+                    let tr = `
+                            <li class="text-dark nav-item"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="${item.Name}">
+                                <a data-type="${item.Type}" class="type nav-link px-2 text-dark mb-0 px-0 py-1">
+                                   ${feauture}
+                                </a>
+                            </li>`
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        ToolPopper();
+        Dia_TypeEvent();
+    }
+    function Dia_TypeRenderFeature (type,canvastype) {
+        let result = '';
+        let border = 'border-secondary';
+        switch (type) {
+            case "face":
+                result = '/Image/dia/face.png';
+                break;
+            case "bodyimg":
+            case "body":
+                result = '/Image/dia/body.png';
+                break;
+            case "spines":
+                result = '/Image/dia/spine.png';
+                break;
+            case "footimg":
+                result = '/Image/dia/foot.png';
+                break;
+            case "handimg":
+                result = '/Image/dia/hand.png';
+                break;
+            case "earimg":
+                result = '/Image/dia/ear.png';
+                break;
+            default: result = '/Image/dia/form.png';
+        }
+        if (canvastype == "canvas") border =  `border-primary`;
+        result = `<img class="border border-2 p-1 ${border} avatar avatar-sm" src="${result}" />`;
+       
+        return result;
+    }
+    function Dia_TypeEvent () {
+        $("#dia_template .type").unbind('click').click(function () {
+            $("#dia_template .type").removeClass('active');
+            $(this).addClass('active');
+            let type = $(this).attr("data-type");
+            DiaDetail_Load(currentid = 0, type = type);
+   
+        })
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+ 
+

@@ -1,0 +1,631 @@
+﻿@page
+@model Report.Telesale.ImportGeneral
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Hiệu quả theo file import"]</h6>
+            <p class="text-sm mb-0">@Local["Tình trạng xử lý, hiệu quả từng file import"]</p>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#ImportFilediv" aria-expanded="true"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapsesticky collapse show" id="ImportFilediv">
+        <div class="card-body px-0 pt-0">
+            <div class="row px-2 m-0">
+                <div class="col-12 col-md-6 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh thu"]:
+                        <span id="ImportGenFirstTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3" style="min-height: 150px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="ImportGenFirst" class="chart-canvas" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-2  table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="ImportGenFirstList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Trạng thái lịch hẹn"] :
+                        <span id="ImportGenAppTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3" style="min-height: 150px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="ImportGenApp" class="chart-canvas" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-2  table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="ImportGenAppList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Trạng thái dữ liệu"] :
+                        <span id="ImportGenDataTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3" style="min-height: 150px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="ImportGenData" class="chart-canvas" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-2  table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="ImportGenDataList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0">
+        <div class="right">
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#ImportGridArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return Importfile_Load()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return Importfile_Export()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapsesticky collapse show" id="ImportGridArea">
+        <div class="card-body px-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive position-relative">
+                <div id="ImportGridWaiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <table name="ImportGridGeneral" class="table vt-table mb-0" id="ImportGrid">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="2" colspan="1">@Local["#"]</th>
+                            <th rowspan="2" colspan="1">@Local["File"]</th>
+                            <th rowspan="2" colspan="1">@Local["Nguồn"]</th>
+                            <th rowspan="1" colspan="3">@Local["Dữ liệu"]</th>
+                            <th rowspan="1" colspan="3">@Local["Lịch hẹn"]</th>
+                            <th rowspan="1" colspan="3">@Local["Tiền phát sinh"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th rowspan="1">@Local["Số lượng"]</th>
+                            <th rowspan="1">@Local["Đã xử lý"]</th>
+                            <th rowspan="1">@Local["Chưa xử lý"]</th>
+                            <th rowspan="1">@Local["Số lượng"]</th>
+                            <th rowspan="1">@Local["Đã đến"]</th>
+                            <th rowspan="1">@Local["Chưa đến"]</th>
+                            <th rowspan="1">@Local["Tổng"]</th>
+                            <th rowspan="1">@Local["Ngày đầu"]</th>
+                            <th rowspan="1">@Local["Ngày sau"]</th>
+                        </tr>
+
+                    </thead>
+                    <tbody id="ImportGridBody">
+                    </tbody>
+                </table>
+                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return Import_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="ImportGridAppDetail" class="mt-0" style="display:none;">
+
+    <div class="card card-plain">
+        <div class="vtcardheader card-header p-0">
+            <div class="left">
+                <p id="ImportDetail_Title" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="right">
+                <div class="wrap">
+                    <div class="wrapblock">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                            <span id="TD_Currentdata">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="TD_Totaldata">0</span>
+                        </div>
+                        <div class="icon-hover mx-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#ImportFile_DetailDiv" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["In báo cáo"]">
+                            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); Importfile_DetailPrintReport()"></i>
+                        </div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return Importfile_ExportDetail(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return Importfile_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colListdetail">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div> 
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colListdetail" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogledetail form-check-input" data-name="doccode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0 pt-0 collapsesticky collapse show" id="ImportFile_DetailDiv">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table class="table vt-table mb-0" id="ImportFile_Detail">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">@Local["#"]</th>
+                            <th>@Local["Mã khách hàng"]</th>
+                            <th data-name="doccode">@Local["Mã hồ sơ"]</th>
+                            <th>@Local["Khách hàng"]</th>
+                            <th>@Local["Dịch vụ/sản phẩm"]</th>
+                            <th>@Local["Số lượng"]</th>
+                            <th>@Local["Giá tiền"]</th>
+                            <th>@Local["Chi nhánh"]</th>
+                            <th>@Local["Ngày đầu"]</th>
+                            <th>@Local["Loại"]</th>
+                            <th>@Local["Telesale"]</th>
+                            <th>@Local["Ngày tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ImportFile_DetailBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return ImportDetail_RenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+    let xhrLoadList, xhrLoadDetail;
+    let DataReportMain, DataReportMainSlice;
+    let DataReportMaster, DataReportMasterSlice;
+    let shtableimport;
+    let IndexReport = 0;
+    let IndexMasterReport = 0;
+    $(document).ready(function () {
+        shtableimport = $("#ImportFile_Detail").TableExpandColumn({
+            shtoogle: $('.shtoogledetail')
+        });
+        ToolPopper();
+        Importfile_Load();
+        Checking_TabControl_Permission();
+    });
+    function Importfile_Load() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        IndexMasterReport = 0;
+        xhrLoadList = AjaxLoad(url = "/Report/Telesale/ImportGeneral/?handler=Loadata"
+            , data = {
+                'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+                    Importfile_ChartExecuted(data);
+                    $("#ImportGridBody").empty();
+                    DataReportMaster = JSON.parse(JSON.stringify(data));
+                    DataReportMasterSlice = sliceIntoChunks(data, 200);
+                    if (DataReportMasterSlice && DataReportMasterSlice.length != 0) {
+                        fnRenderBlock(DataReportMasterSlice[IndexMasterReport], "ImportGridBody"
+                            , blocknum = 200
+                            , fnrender = Importfile_Render
+                            , fnsuccess = null
+                        );
+                    }
+
+                } else {
+                    notiError_SW();
+                }
+            },
+            sender = null,
+            before = function (e) {
+                $("#ImportGridWaiting").show();
+                $("#ImportFilediv").addClass('opacity-0');
+            },
+            complete = function (e) {
+                $("#ImportGridWaiting").hide();
+                $("#ImportFilediv").removeClass('opacity-0');
+            }
+        );
+        return false;
+    }
+    function Import_RenderMore() {
+        IndexMasterReport += 1;
+        if (DataReportMaster && DataReportMasterSlice[IndexMasterReport]) {
+            fnRenderBlock(DataReportMasterSlice[IndexMasterReport], "ImportGridBody"
+                , blocknum = 100
+                , fnrender = Importfile_Render
+                , fnsuccess = null
+            );
+        }
+    }
+    async function Importfile_ChartExecuted(data) {
+        new Promise((resolve) => {
+            let App = 0, AppChecked = 0, AppNot = 0;
+            let TotalTicket = 0, TicketExecuted = 0, TicketNonExecuted = 0;
+            let TotalPerson = 0, PersonExecuted = 0, PersonNonExcute = 0
+            let Amount = 0, AmountFirst = 0, AmountNotFirst = 0;
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                //#region // Count Total
+                App = App + item.App;
+                AppChecked = AppChecked + item.AppChecked;
+                AppNot = AppNot + item.AppNot;
+                TotalTicket = TotalTicket + item.TotalTicket;
+                TicketExecuted = TicketExecuted + item.TicketExecuted;
+                TicketNonExecuted = TicketNonExecuted + item.TicketNonExecuted;
+                Amount = Amount + item.Amount;
+                AmountFirst = AmountFirst + item.AmountFirst;
+                AmountNotFirst = AmountNotFirst + item.AmountNotFirst;
+                //#endregion
+            }
+
+            let dataFirst = [{ 'Name': decodeHtml('@Local["Ngày đầu"]'), 'Amount': AmountFirst }, { 'Name': decodeHtml('@Local["Ngày sau"]'), 'Amount': AmountNotFirst }];
+            let dataApp = [{ 'Name': decodeHtml('@Local["Đã đến"]'), 'Amount': AppChecked }, { 'Name': decodeHtml('@Local["Chưa đến"]'), 'Amount': AppNot }];
+            let dataTicket = [{ 'Name': decodeHtml('@Local["Đã xử lý"]'), 'Amount': TicketExecuted }, { 'Name': decodeHtml('@Local["Chưa xử lý"]'), 'Amount': TicketNonExecuted }];
+
+            ReportPie_Description(dataFirst, 'Name', 'Amount', 'ImportGenFirstList');
+            rp_pie("ImportGenFirst", dataFirst, 'Name', 'Amount');
+            $("#ImportGenFirstTotal").html(formatNumberToMilion(Number(Amount)));
+            ReportPie_Description(dataApp, 'Name', 'Amount', 'ImportGenAppList');
+            rp_pie("ImportGenApp", dataApp, 'Name', 'Amount');
+            Count_Up("ImportGenAppTotal", App);
+            ReportPie_Description(dataTicket, 'Name', 'Amount', 'ImportGenDataList');
+            rp_pie("ImportGenData", dataTicket, 'Name', 'Amount');
+            Count_Up("ImportGenDataTotal", TotalTicket);
+        })
+    }
+    async function Importfile_Render(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                                                    <td class="vt-number-order"></td>
+                                                    <td>
+                                                        <a href="#" class="cursor-pointer border-1 border-primary border-bottom buttonViewClass" data-importname="${item.ImportName}" data-import="${item.Import}">
+                                                            ${item.ImportName}
+                                                        </a>
+                                                    </td>
+                                                    <td>${item.SourceName}</td>
+                                                    <td>${formatNumber(item.TotalTicket)}</td>
+                                                    <td>${formatNumber(item.TicketExecuted)}</td>
+                                                    <td>${formatNumber(item.TicketNonExecuted)}</td>
+                                                    <td class="raise">${formatNumber(item.App)}</td>
+                                                    <td class="raise">${formatNumber(item.AppChecked)}</td>
+                                                    <td class="raise">${formatNumber(item.AppNot)}</td>
+                                                    <td class="raise">${formatNumber(item.Amount)}</td>
+                                                    <td class="raise">${formatNumber(item.AmountFirst)}</td>
+                                                    <td class="raise">${formatNumber(item.AmountNotFirst)}</td>
+                                                    `;
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+
+                    }
+
+                }
+                document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + stringContent;
+            }
+            Importfile_Event();
+
+        })
+    }
+
+    //#region // DETAIL SOURCE
+    function Importfiledetail_Load(importid) {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        IndexReport = 0;
+        $('#TD_Currentdata').html(0);
+        $('#TD_Totaldata').html(0);
+        xhrLoadDetail = AjaxLoad(url = "/Report/Telesale/ImportGeneral/?handler=LoadDetail"
+            , data = {
+                'importid': importid
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let dataser = JSON.parse(result);
+                    DataReportMain = JSON.parse(JSON.stringify(dataser));
+                    DataReportMainSlice = sliceIntoChunks(dataser, 200);
+                    $("#ImportFile_DetailBody").empty();
+                    if (DataReportMainSlice && DataReportMainSlice.lenth != 0) {
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "ImportFile_DetailBody"
+                            , blocknum = 200
+                            , fnrender = ImportDetail_Render
+                            , fnsuccess = null
+                        );
+                    }
+
+                    Count_Up("TD_Totaldata", DataReportMain.length);
+
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function ImportDetail_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "ImportFile_DetailBody"
+                , blocknum = 100
+                , fnrender = ImportDetail_Render
+                , fnsuccess = null
+            );
+        }
+    }
+    async function ImportDetail_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let firstday = '', type;
+                            if (item.FirstDay == 1) firstday = `<span class="text-primary fw-bold">@Local["Ngày đầu"]</span>`
+                            else firstday = `<span class="text-secondary">@Local["Ngày sau"]</span>`
+                            if (item.IsProduct == 1) type = `<span class="text-info fw-bold">@Local["Sản phẩm"]</span>`
+                            else type = `<span class="text-success fw-bold">@Local["Dịch vụ"]</span>`
+
+                            let tr = `
+                                                            <tr class="vt-number">
+                                                                <td class="vt-number-order"></td>
+                                                                <td>
+                                                                    <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}">${item.CustCode}</a>
+                                                                </td>
+                                                                <td data-name="doccode">${item.DocCode}</td>
+                                                                <td>${item.CustName}</td>
+                                                                <td>${Importfile_Render_GetName(item.ServiceID)}</td>
+                                                                <td>${item.Quantity}</td>
+                                                                <td>${formatNumber(item.Amount)}</td>
+                                                                <td>${item.BranchName}</td>
+                                                                <td>${firstday}</td>
+                                                                <td>${type}</td>
+                                                                <td>${item.TeleName}</td>
+                                                                <td>${ConvertDateTimeUTC_DMY(item.Created)}</td>
+                                                            </tr>
+                                                        `
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableimport.Refresh();
+                Count_Up("TD_Currentdata", $("#" + id).children().length);
+                resolve();
+            }, 10)
+
+        })
+    }
+    async function Importfile_ExportDetail(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#ImportGridAppDetail');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='doccode']`)).is(":checked"),
+                        data: ["@Local["Mã hồ sơ"]"]
+                    },
+                    "Service": ["@Local["Dịch vụ"]", (value, { ServiceID }) => {
+                        return Importfile_Render_GetName(ServiceID);
+                    }],
+                    "Quantity": ["@Local["Số lượng"]"],
+                    "Amount": ["@Local["Giá tiền"]"],
+                    "TeleName": ["@Local["Nhân viên"]"],
+                    "BranchName": ["@Local["Chi nhánh"]"],
+                    "IsProduct": ["@Local["Loại"]", (value, { IsProduct }) => {
+                        return Importfile_Render_GetType(IsProduct);
+                    }],
+                    "FirstDay": ["@Local["Ngày đầu"]", (value, { FirstDay }) => {
+                        return (FirstDay == 1 ? 'x' : '');
+                    }],
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'ImportFile_DetailBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang['Chi_tiet_file_import']);
+                exportJsonToExcel(Outlang['Chi_tiet_file_import'], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function Importfile_DetailPrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = 0;
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "DocCode": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogledetail[data-name='doccode']`).is(":checked")
+                    }],
+                    "Service": ["@Local["Dịch vụ"]", {
+                        callbackRenderValue: (value, { ServiceID }) => {
+                            return Importfile_Render_GetName(ServiceID);
+                        }
+                    }],
+                    "Quantity": ["@Local["Số lượng"]"],
+                    "Amount": ["@Local["Giá tiền"]"],
+                    "TeleName": ["@Local["Nhân viên"]"],
+                    "BranchName": ["@Local["Chi nhánh"]"],
+                    "IsProduct": ["@Local["Loại"]", {
+                        callbackRenderValue: (value, { IsProduct }) => {
+                            return Importfile_Render_GetType(IsProduct);
+                        }
+                    }],
+                    "FirstDay": ["@Local["Ngày đầu"]", {
+                        callbackRenderValue: (value, { FirstDay }) => {
+                            return (FirstDay == 1 ? 'x' : '');
+                        }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang['Chi_tiet_file_import'], DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    //#endregion
+
+    //#region // Event
+    function Importfile_Render_GetName(serid) {
+        try {
+            let result = (RP_DataService[serid] != undefined) ? RP_DataService[serid].Name : '';
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function Importfile_Render_GetType(isproduct) {
+        try {
+            let result = '';
+            switch (isproduct) {
+                case 1:
+                    result = decodeHtml('@Local["Sản phẩm"]');
+                    break;
+                case 0:
+                    result = decodeHtml('@Local["Dịch vụ"]');
+                    break;
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function Importfile_Event() {
+
+        $("#ImportGridBody .buttonViewClass").unbind('click').on("click", function () {
+
+            let importid = $(this).attr('data-import');
+            let importname = $(this).attr('data-importname');
+            $("#ImportGridAppDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#ImportGridAppDetail").offset().top
+            }, 300);
+            if (importid == "0") {
+                $("#ImportDetail_Title").html('@Local["Tất cả"]');
+            }
+            else {
+                $("#ImportDetail_Title").html(importname);
+
+            }
+
+            Importfiledetail_Load(importid);
+        })
+    }
+
+    function Importfile_Export() {
+        syslog_ExpExcel('e', Outlang['Hieu_qua_file_import']);
+        exportToExcel("ImportGrid", Outlang['Hieu_qua_file_import']);
+    }
+
+                            //#endregion
+
+</script>
+

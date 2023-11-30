@@ -1,0 +1,511 @@
+﻿@page
+@model MLunarCoffee.Pages.Chatting.Conver
+@{
+    if(@Model.layout=="none") Layout=null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row">
+    <div class="col-12 pe-0">
+        <div class="card">
+            <div class="card-body p-2 pe-0">
+                <div class="row col-12">
+                    <div class="col-12 col-md-5 col-xl-4 p-1">
+                        <div class=" mb-5 mb-lg-0">
+                            <div class="card-header p-3 pb-0">
+                                <div class="d-lg-flex">
+                                    <div class="pb-2 col-auto my-auto">
+                                        <div class="h-100">
+                                            <h6 class="mb-0">@Local["Trò chuyện"]</h6>
+                                            <p class="text-sm mb-0">@Local["Thông tin trò chuyện"]</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-group flex-nowrap" id="DivConverSearch">
+                                    <div class="input-group-text input-group-text px-2">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                        <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                    </div>
+                                    <input id="txtConverSearch" type="text" class="form-control" placeholder="eg .@Local["Tên và mã khách hàng"]">
+                                    <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                                </div>
+                            </div>
+                            <div class="overflow-auto overflow-x-hidden " style=" height: calc(100vh - 225px) !important;">
+                                <div id="ConverBodyArea" class="card-body p-2">
+                                    <ul class="nav nav-pills flex-column bg-white border-radius-lg pt-1 px-2" id="ConverBody">
+                                    </ul>
+                                </div>
+                                <div id="ConverSearchArea" class="card-body p-2" style="display:none;">
+                                    <ul class="nav nav-pills flex-column bg-white border-radius-lg pt-1 px-2" id="ConverSearch">
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bg-white card-footer position-sticky bottom-0  p-2">
+                                <div id="conver_more" class="d-none cursor-pointer text-center text-primary fw-bold btnsysmore  text-xs w-100 p-1" onclick="Conversation_Load(1,'')">@Local["Xem thêm"]</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ConverDetail" class="col-12 col-md-7 col-xl-8 rounded-3 blur shadow-blur p-1 mb-n2 sectionChat">
+                        <div class="h-100">
+                            <div class="mx-auto p-4 text-center">
+                                <h4>@Local["Quy định nội dung gửi"]</h4>
+                                <p class="text-dark text-sm">@Local["Chọn khách hàng gửi tin nhắn, tập tin"] (.doc,.pdf,.docx 5M) , @Local["Hình ảnh"] (.png,.jpg,.jpeg 5M)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var converlimit = 10;
+    var converbegin = 0;
+    var converdata = {};
+    let DataUser;
+    let conver_timer;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                Conversation_Load(more = 0, detail = '')
+            });
+        $("#txtConverSearch").unbind('keyup').keyup(function (e) {
+            var code = e.key;
+            if (code === "Enter") e.preventDefault();
+            if (code === "Enter") {
+                if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+                else $(".btn_clear").addClass('opacity-1');
+
+                clearTimeout(conver_timer);
+                conver_timer = setTimeout(function (e) {
+                    Conver_Search();
+                }, 0);
+            }
+        });
+        $("#DivConverSearch").on('click', '.btn_clear', function (e) {
+            $('#txtConverSearch').val('');
+            $(".btn_clear").addClass('opacity-1');
+            $("#DivConverSearch .spinner-border").hide();
+            $("#DivConverSearch .fa-search").show();
+            $("#ConverBodyArea").show();
+            $("#ConverSearchArea").hide();
+            $("#ConverSearch").html('');
+        });
+    });
+    //#region // Load
+    function Conversation_Load (more, detail) {
+        AjaxLoad(url = "/Chatting/Conver/?handler=LoadConver"
+            , data = {
+                'detail': detail
+                , 'limit': converlimit
+                , 'time': converbegin
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (detail == '') {
+                        if (data != undefined && data.length != 0) {
+                            $('#conver_more').removeClass('d-none');
+                            converbegin = data[data.length - 1].LastTimeSend;
+                            if (more == 0) {
+                                converdata = {};
+                                $('#ConverBody').html('');
+                            }
+                            for (let i = 0; i < data.length; i++) {
+                                converdata[data[i].ID] = data[i];
+                            }
+                            ConverRender_List(data, "ConverBody");
+                        }
+                        else {
+                            $('#conver_more').addClass('d-none');
+                            $('#ConverBody').scrollTop(0);
+                        }
+                    }
+                    else {
+                        converdata[data[0].ID] = data[0];
+                        $("#ConverBody").prepend(ConverRender_Item(data[0]));
+
+                    }
+                    Conver_Event();
+                }
+            },
+            sender = null,
+            before = function (e) {
+
+            },
+            complete = function (e) {
+
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // Event
+    function Conver_Event () {
+        $("#ConverBody .conver").unbind('click').click(function () {
+            $('#ConverBody .conver').removeClass('active');
+            $(this).addClass('active');
+            if (!$(this).hasClass('noneuser')) {
+                $(this).removeClass('unread');
+            }
+            let id = $(this).attr('data-custid');
+            if (typeof Message_LoadOutside !== 'undefined' && typeof Message_LoadOutside === 'function') {
+                Message_LoadOutside(id);
+            }
+            else {
+                $("#ConverDetail").html('');
+                $("#ConverDetail").load("/Chatting/Message?CustID=" + id);
+            }
+
+        })
+    }
+    function Conver_UpdateUser (obj) {
+        try {
+            if (obj.User != sys_userID_Main) {
+                if ($("#conver_" + obj.Conver).length) {
+                    $("#conver_" + obj.Conver).removeClass('noneuser');
+                }
+                if ($("#userhandle_" + obj.Conver).length && $("#userhandle_" + obj.Conver).html() == '') {
+                    let _obj = Fun_GetObject_ByID(DataUser, obj.User);
+                    let _uname = (_obj != null) ? _obj.Name : '';
+                    let _uavatar = (_obj != null) ? _obj.Avatar : Master_Default_Pic;
+                    $('#userhandle_' + obj.Conver).html('<img title="' + _uname + '" src="' + _uavatar + '">');
+
+
+                }
+
+            }
+        } catch (ex) {
+
+        }
+    }
+    function Conver_UpdateItem (conver, type, message, link, filename, time, usersend, outconver, isusersend) {
+        if ($("#conver_" + conver).length) {
+            let _mess = '';
+            switch (type) {
+                case 'txt': _mess = message.substring(0, 30); break;
+                case 'fle': _mess = '<i class="fas fa-paperclip pe-2"></i>' + filename; break;
+                case 'img': {
+                    if (link == '/like.webp') _mess = '<i class="text-warning fas fa-thumbs-up"></i>';
+                    else _mess = '<i class="fas fa-images"></i>';
+                    break;
+                }
+            }
+            $("#conver_" + conver).prependTo("#ConverBody");
+            $("#converlc_" + conver).html(_mess);
+            let _sname = '', _stime = '';
+            if (usersend != 0) {
+                let obj = Fun_GetObject_ByID(DataUser, usersend);
+                _sname = (obj != null) ? obj.Name : '';
+            } else _sname = '<i class="fas fa-caret-right"></i>';
+            _stime = BigIntToAgo(time);
+            if (outconver) {
+                $("#conver_" + conver).addClass('unread');
+            }
+            else $("#conver_" + conver).removeClass('unread');
+
+            $("#converlt_" + conver).html(_stime);
+            $("#converlu_" + conver).html(_sname);
+            if (isusersend && usersend != 0) {
+                if ($('#userhandle_' + conver).length) {
+                    let obj = Fun_GetObject_ByID(DataUser, usersend);
+                    let _uname = (obj != null) ? obj.Name : '';
+                    let _uavatar = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    $('#userhandle_' + conver).html('<img title="' + _uname + '" src="' + _uavatar + '">');
+                }
+                $("#conver_" + conver).removeClass('noneuser');
+            }
+        }
+        else {
+            Conversation_Load(more = 0, detail = conver);
+        }
+    }
+    function Conver_Receipt (converid) {
+        try {
+            Conversation_Load(more = 0, detail = converid)
+        }
+        catch (e) { }
+    }
+    //#endregion
+
+    //#region // Search
+    async function Conver_Search () {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let search = xoa_dau($('#txtConverSearch').val().toLowerCase()).trim();
+                    Conver_ExeSearch(search);
+                    resolve()
+                }
+            )
+        })
+    }
+    function Conver_ExeSearch (search) {
+        try {
+
+            if (search != undefined && search != '' && search.length > 3) {
+                AjaxLoad(url = "/Chatting/Conver/?handler=SearchConver"
+                    , data = {'search': search}
+                    , async = true
+                    , error = function () {notiError_SW();}
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            if (data != undefined && data.length != 0) {
+                                ConverSearchRender_List(data, "ConverSearch");
+                                ConverSearchEvent();
+                            }
+                            else $("#ConverSearch").html('<div class="text-center mt-4"><h6>No result</h6></div>');
+                        }
+                        else $("#ConverSearch").html('<div class="text-center mt-4"><h6>No result</h6></div>');
+
+                        $("#ConverBodyArea").hide();
+                        $("#ConverSearchArea").show();
+                    }
+                    , sender = null
+                    , before = function (e) {
+                        $("#DivConverSearch .fa-search").hide();
+                        $("#DivConverSearch .spinner-border").show();
+                    }
+                    , complete = function (e) {
+                        $("#DivConverSearch .spinner-border").hide();
+                        $("#DivConverSearch .fa-search").show();
+                    }
+                );
+            }
+            else {
+                $("#ConverSearch").html('<div class="text-center mt-4"><h6>No result</h6></div>');
+            }
+        }
+        catch (ex) {
+            $("#ConverSearch").html('<div class="text-center mt-4"><h6>Error</h6></div>');
+        }
+    }
+    function ConverSearchRender_List (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+
+                let _message = '', _stime = '';
+                switch (item.LastContentSend) {
+                    case '::img': _message = '<i class="fas fa-images"></i>'; break;
+                    case '::like': _message = '<i class="text-warning fas fa-thumbs-up"></i>'; break;
+                    default: {
+                        if (item.LastContentSend.includes('::file'))
+                            _message = item.LastContentSend.replace('::file', '<i class="fas fa-paperclip pe-2"></i>');
+                        else _message = item.LastContentSend.substring(0, 30);
+                        break;
+                    }
+                }
+                _stime = BigIntToAgo(item.LastTimeSend);
+
+                let tr =
+                    '<div class="ms-1">'
+                    + '<div class="d-flex text-dark">'
+                    + '<div class="my-0 col-auto my-auto">'
+                    + '<h5 class="mb-0 text-md fw-bold">' + item.CustomerName + '</h5>'
+
+                    + '</div>'
+                    + '<div class="mb-0 ms-auto my-auto">'
+                    + '<span class="text-sm text-gradient text-primary">' + item.CustomerCode + '</span>'
+                    + '</div>'
+                    + '</div>'
+
+                    + '<div class="d-flex mt-n1">'
+                    + '<div class="col-auto my-auto">'
+                    + '<div>'
+                    + '<span class="text-muted col-11  text-sm text-truncate">' + _message + '</span>'
+                    + '</div>'
+                    + '</div>'
+
+                    + '<div class="ms-auto my-auto text-sm text-dark d-flex">'
+                    + _stime
+                    + '</div>'
+                    + '</div>'
+                    + '</div>';
+                tr = '<li  class="search nav-item p-2 rounded-2 mb-1 mt-0 conver cursor-pointer" role="presentation" data-custid="' + item.CustomerID + '">' + tr + '</li>'
+                    + '<hr class="horizontal dark my-0 opacity-2">'
+
+
+                stringContent = stringContent + tr;
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+
+    }
+    function ConverSearchEvent () {
+        $("#ConverSearch .search").unbind('click').click(function () {
+            let id = $(this).attr('data-custid');
+            if (typeof Message_LoadOutside !== 'undefined' && typeof Message_LoadOutside === 'function') {
+                Message_LoadOutside(id);
+            }
+            else {
+                $("#ConverDetail").html('');
+                $("#ConverDetail").load("/Chatting/Message?CustID=" + id);
+            }
+        })
+    }
+    //#endregion
+
+    //#region // Render
+    function ConverRender_List (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let stringContent = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                stringContent = stringContent + ConverRender_Item(item);
+            }
+            document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + stringContent;
+        }
+        $('#ConverBody').scrollTop($('#ConverBody')[0].scrollHeight);
+    }
+    function ConverRender_Item (item) {
+        let _sname = '', _stime = '', _sclasstime = '', _part = '', _isuser = '', _message = '';;
+        if (item.LastUserSend != 0) {
+            let obj = Fun_GetObject_ByID(DataUser, item.LastUserSend);
+            _sname = (obj != null) ? obj.Name : '';
+        }
+        else _sname = '<i class="fas fa-caret-right"></i>';
+        _part = ConverRender_Part(item.ID, item.UserID, item.UserPart);
+        if (item.UserID == 0) {
+            _isuser = 'noneuser';
+        }
+        switch (item.LastContentSend) {
+            case '::img': _message = '<i class="fas fa-images"></i>'; break;
+            case '::like': _message = '<i class="text-warning fas fa-thumbs-up"></i>'; break;
+            default: {
+                if (item.LastContentSend.includes('::file'))
+                    _message = item.LastContentSend.replace('::file', '<i class="fas fa-paperclip pe-2"></i>');
+                else _message = item.LastContentSend.substring(0, 30);
+                break;
+            }
+        }
+        if (item.LastTimeSend > item.UserTimeRead) _sclasstime = 'unread';
+        _stime = BigIntToAgo(item.LastTimeSend);
+        let tr =
+            '<div class="ms-1">'
+            + '<div class="hight d-flex">'
+            + '<div class="my-0 col-auto my-auto">'
+            + '<span class="mb-0 text-md ">' + item.CustomerName + '</span>'
+            + '</div>'
+            + '<div class="mb-0 ms-auto my-auto">'
+            + '<span  class="text-sm">'
+            + '<span class="badge badge-md badge-dot"><i class="bg-primary"></i></span>'
+            + '<span id="converlt_' + item.ID + '">' + _stime + '</span>'
+            + '</span>'
+
+            + '</div>'
+            + '</div>'
+
+            + '<div class="d-flex mt-n1">'
+            + '<div class="col-auto my-auto">'
+            + '<div>'
+            + '<span id="converlu_' + item.ID + '" class="text-sm text-dark">'
+            + _sname
+            + '</span>'
+            + '<span class="text-dark mx-2">:</span>'
+            + '<span id="converlc_' + item.ID + '" class="text-muted col-11  text-sm text-truncate">' + _message + '</span>'
+            + '</div>'
+            + '</div>'
+
+            + '<div class="ms-auto my-auto d-flex">'
+            + _part
+            + '</div>'
+            + '</div>'
+            + '</div>';
+        tr = '<li  class="nav-item ' + _isuser + ' ' + _sclasstime + '  p-2 rounded-2 my-1 conver cursor-pointer" role="presentation" data-custid="' + item.CustomerID + '" id="conver_' + item.ID + '">' + tr + '</li>'
+            + '<hr class="horizontal dark my-0 opacity-2">'
+        return tr;
+    }
+    function ConverRender_Part (id, user, part) {
+        try {
+
+            let obj, _uname, _uavatar;
+            let userpart = '';
+            let userhandle = '';
+            obj = Fun_GetObject_ByID(DataUser, user);
+            _uname = (obj != null) ? obj.Name : '';
+            _uavatar = (obj != null) ? obj.Avatar : Master_Default_Pic;
+            userhandle = '<a id="userhandle_' + id + '"  class="d-flex avatar avatar-lg avatar-xs rounded-circle ms-1" >'
+                + ((user != 0) ? ('<img title="' + _uname + '" src="' + _uavatar + '">') : '')
+                + '</a>';
+            if (part != '') {
+
+                let _arr = part.split(',');
+                let _num = 0;
+                for (let jj = 0; jj < _arr.length; jj++) {
+                    if (!isNaN(_arr[jj]) && _arr[jj] != "" && _arr[jj] != user) {
+                        if (jj > 2) _num = _num + 1;
+                        else {
+                            obj = Fun_GetObject_ByID(DataUser, _arr[jj]);
+                            _uname = (obj != null) ? obj.Name : '';
+                            _uavatar = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                            userpart = userpart +
+                                '<a href="javascript:;" class="avatar avatar-lg avatar-xs rounded-circle" title="' + _uname + '">'
+                                + '<img src="' + _uavatar + '">'
+                                + '</a>';
+                        }
+                    }
+                }
+
+                userpart = userpart
+                    + ((_num != 0) ? ('<a href="javascript:;" class="avatar bg-gray-200 text-primary text-md fw-bold  avatar-lg avatar-xs rounded-circle" >+'
+                        + _num
+                        + '</a>') : '');
+            }
+            return '<div class="avatar-group d-flex">' + userpart + userhandle + '</div>';
+
+        }
+        catch (e) {
+            return "";
+        }
+
+    }
+    //#endregion
+
+</script>
+
+<style>
+    .conver.active {
+        box-shadow: 0px 1px 5px 1px #80828f !important;
+        border-radius: 12px;
+    }
+
+    .conver:hover {
+        box-shadow: 0px 1px 5px 1px #ddd !important;
+        border-radius: 12px;
+    }
+
+    #ConverBody .badge-dot {
+        opacity: 0;
+    }
+
+    #ConverBody .unread .badge-dot {
+        opacity: 1;
+    }
+
+    #ConverBody .noneuser {
+        background-image: linear-gradient(310deg,#d6e6ff5e,#a5ccff4d);
+    }
+
+    #ConverBody .unread .hight {
+        color: #cb0c9f !important;
+        font-weight: 600 !important;
+    }
+    @@media only screen and (max-width: 991px) {
+        .sectionChat {
+            height: calc(100vh - 120px);
+        }
+    }
+    .sectionChat {
+        height: calc(100vh - 110px);
+    }
+</style>

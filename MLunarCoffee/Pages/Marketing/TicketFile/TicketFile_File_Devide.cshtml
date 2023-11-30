@@ -1,0 +1,351 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketFile.TicketFile_File_DevideModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card mb-3 card-plain">
+    <div class="card-header p-3 pb-0">
+        <h6 class="mb-0">@Local["Chia mới"]</h6>
+        <p class="text-sm mb-0">@Local["Đã thực hiện thao tác chia thì không thể chuyển file. Dữ liệu đã chia thì không thể hoàn tác"].</p>
+    </div>
+    <div class="card-body p-3 pt-2 form3">
+        <div class="row px-2 ">
+            <div class="field col-12 col-xl-6 col-md-6 p-1">
+                <label>@Local["Nhóm"]</label>
+                <div class="ui fluid search selection dropdown form-control" id="GroupTele" onchange="event.preventDefault();return TFD_FilterTele();">
+                    <input type="hidden" name="devideType" />
+                    <i class="dropdown icon"></i>
+                    <input class="search" autocomplete="off" tabindex="0" />
+                    <div class="default text"></div>
+                    <div id="cbbGroupTele" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+            <div class="field col-12 col-xl-6 col-md-6 p-1">
+                <label>@Local["Cấp bậc"]</label>
+                <div class="ui fluid search selection dropdown form-control" id="Level" onchange="event.preventDefault();return TFD_FilterTele();">
+                    <input type="hidden" name="devideType" />
+                    <i class="dropdown icon"></i>
+                    <input class="search" autocomplete="off" tabindex="0" />
+                    <div class="default text"></div>
+                    <div id="cbbLevel" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row px-2 ">
+            <div class="field col-12 col-xl-4 p-1">
+                <label>@Local["Số lượng chưa chia"]</label>
+                <input id="txtTotalRecordNotDevide" class="form-control" name="content" type="number" disabled />
+            </div>
+            <div class="field col-12 col-xl-4 col-md-6 p-1">
+                <label>@Local["Hình thức chia"]</label>
+                <div class="ui fluid search selection dropdown form-control" id="devideType" onchange="TFD_OnChangeDevideType()">
+                    <input type="hidden" name="devideType" />
+                    <i class="dropdown icon"></i>
+                    <input class="search" autocomplete="off" tabindex="0" />
+                    <div class="default text"></div>
+                    <div id="cbbdevideType" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+            <div class="field col-12 col-xl-4 col-md-6 p-1">
+                <label>@Local["Số lượng lấy chia"]</label>
+                <input id="txtTotalRecordUsingDevide" class="form-control" name="content" type="number" onchange="event.preventDefault();return Change_Record_Using_Devide();" />
+            </div>
+        </div>
+        <div class="m-0 my-3 mobile-responsive" id="TableTicketDevide">
+            <table class="table vt-table mb-0" id="dtTableTicketDevide">
+                <thead>
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th style="width:20px">@Local["#"]</th>
+                        <th>@Local["Nhân viên"]</th>
+                        <th>@Local["Nhóm"]</th>
+                        <th style="width: 200px">@Local["Số lượng chia"]</th>
+                        <th style="text-align: center; width: 50px;">@Local["Chia"]</th>
+                    </tr>
+                </thead>
+                <tbody id="dtTableTicketDevideBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="fixed-botombutton">
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="message_ticket_file_devide"></div>
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="TFM_CloseDetail()">@Local["Đóng"]</button>
+            <button id="btnExcuteDevide" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return TFD_ExcuteData()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var TFD_ImportID = '@Model._ImportID';
+    var TFD_InfoImport = {};
+    var data_selected_devide = {};
+    var changingflag = 0;
+    var dataUserDevide = [];
+
+    $(document).ready(function () {
+        TFD_InitializeCombo();
+    })
+
+    async function TFD_InitializeCombo() {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_Devide/?handler=LoadDataInitialize"
+                , data = { 'ImportID': TFD_ImportID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        let dataType = data.dtDevideType;
+                        let dataGroupTele = data.dataGroup;
+                        let dataLevel = data.dataLevel;
+                        TFD_InfoImport = data.dataTicket[0];
+                        $('#txtTotalRecordNotDevide').val(TFD_InfoImport.NumLeft);
+                        if (dataGroupTele != null && dataGroupTele.length != 0) {
+                            Load_Combo(dataGroupTele, "cbbGroupTele", true);
+                            $("#GroupTele").dropdown("refresh");
+                            $("#GroupTele").dropdown("set selected", Number(dataGroupTele[0].ID));
+                        }
+                        if (dataLevel != null && dataLevel.length != 0) {
+                            Load_Combo(dataLevel, "cbbLevel", true);
+                            $("#Level").dropdown("refresh");
+                            $("#Level").dropdown("set selected", Number(dataLevel[0].ID));
+                        }
+
+                        if (dataType != null && dataType.length != 0) {
+                            Load_Combo(dataType, "cbbdevideType", true);
+                            $("#devideType").dropdown("refresh");
+                            $("#devideType").dropdown("set selected", Number(dataType[dataType.length - 1].ID));
+                        }
+                    }
+                }
+            );
+        })
+    }
+
+    //#region // Excute Data
+
+    function TFD_ExcuteData() {
+        TFD_CheckDataDevide();
+        var data = Object.values(data_selected_devide);
+        let stringuser = '';
+        if (data != undefined)
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].isDevide == "1") {
+                stringuser = stringuser + data[i].ID + ",";
+            }
+        }
+        if ($("#message_ticket_file_devide").html() == "") {
+            AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_Devide/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify(data),
+                    'ImportID': TFD_ImportID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        if (typeof TFM_CloseDetail === 'function') TFM_CloseDetail();
+                        if (typeof TF_IM_Load === 'function') TF_IM_Load();
+                        fcm_sendmultiuser(stringuser, Master_circleAvatar, sys_employeeName_Main, '@Local["Nhận dữ liệu"]');
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        return false;
+    }
+
+    //#endregion
+
+    function TFD_CheckDataDevide() {
+        var total = 0;
+        for ([key, value] of Object.entries(data_selected_devide)) {
+            total = total + Number(value.Amount);
+        }
+        if (total > TFD_InfoImport.NumLeft) {
+            $("#message_ticket_file_devide").html("@Local["Tổng số lượng chia ticket vượt quá mức"]");
+        } else if (total == 0) {
+            $("#message_ticket_file_devide").html("@Local["Tổng số lượng chia ticket bằng 0"]");
+        }
+        else $("#message_ticket_file_devide").html("");
+    }
+
+    function TFD_FilterTele() {
+        $('#message_ticket_file_devide').html("");
+        document.getElementById('dtTableTicketDevideBody').innerHTML = '';
+        let Group_ID = Number($('#GroupTele').dropdown('get value')) ? Number($('#GroupTele').dropdown('get value')) : 0;
+        let Level_ID = Number($('#Level').dropdown('get value')) ? Number($('#Level').dropdown('get value')) : 0;
+        if (Level_ID != 0 && Group_ID != 0) {
+            if (Level_ID == -1) Level_ID = 0;
+            if (Group_ID == -1) Group_ID = 0;
+            AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_Devide/?handler=LoadDataUser"
+                , data = {
+                    'GroupID': Group_ID,
+                    'LevelID': Level_ID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        let dataUserDevide = data.dataUser;
+                        data_selected_devide = {};
+                        if (dataUserDevide.length != 0) {
+                            for (let i = 0; i < dataUserDevide.length; i++) {
+                                data_selected_devide[dataUserDevide[i].ID] = dataUserDevide[i];
+                                TFD_RenderRow(dataUserDevide[i].ID, dataUserDevide[i], 'dtTableTicketDevideBody');
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+
+
+    //#region // Render Data Devide & Event Element Devide
+
+    async function TFD_RenderRow(key, value, id) {
+        return new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let tr =
+                    '<td class="vt-number-order"></td>'
+                    + '<td>' + TFD_RenderRow_TeleName(key, value.Name) + '</td>'
+                    + '<td>' + TFD_RenderRow_TeleGroup(key, value.GroupName) + '</td>'
+                    + '<td>' + TFD_RenderRow_NumDevide(key, value.Amount, (value.isDevide == 1 ? '' : 'disabled')) + '</td>'
+                    + '<td class="text-center" style="width: 50px;">' + TFD_RenderRow_IsDevide(key, value.isDevide) + '</td>'
+                tr = '<tr class="rowDevide vt-number" data-id="' + key + '" id="rowDevide_' + key + '">' + tr + '</tr>';
+                myNode.insertAdjacentHTML('beforeend', tr);
+            }
+            TFD_Event(key);
+        })
+    }
+
+    function TFD_RenderRow_IsDevide(key, value) {
+        let result = '<div class="form-check form-switch my-auto">'
+            + '  <input class="form-check-input d-flex" checked="" type="checkbox" id="isDevide_' + key + '" ' + (value == '1' ? 'checked' : '') + '>'
+            + '  </div>'
+        return result;
+    }
+
+    function TFD_RenderRow_TeleName(key, value) {
+        let resulf = '<span class="TeleSaleName" id="TeleSaleName_' + key + '">' + value + '</span>';
+        return resulf;
+    }
+
+    function TFD_RenderRow_TeleGroup(key, value) {
+        let resulf = '<span class="TeleSaleGroup" id="TeleSaleGroup_' + key + '">' + value + '</span>';
+        return resulf;
+    }
+
+    function TFD_RenderRow_NumDevide(key, value, disabled) {
+        let resulf = '<input class="form-control NumberDevide" id="NumberDevide_' + key + '" value="' + value + '" type="number" ' + disabled + '/>';
+        return resulf;
+    }
+
+    function TFD_Event(key) {
+
+        $('#isDevide_' + key).change(function () {
+            let id = this.id.replace("isDevide_", "");
+            if ($(this).is(':checked') == false) {
+                data_selected_devide[id].isDevide = 0;
+                $('#txtTotalRecordUsingDevide').val(Number($('#txtTotalRecordUsingDevide').val()) - data_selected_devide[id].Amount);
+                data_selected_devide[id].Amount = 0;
+                $('#NumberDevide_' + key).val(0);
+                $('#NumberDevide_' + key).prop('disabled', true);
+                $('#NumberDevide_' + key).addClass('disabled');
+            } else {
+                $('#NumberDevide_' + key).prop('disabled', false);
+                $('#NumberDevide_' + key).removeClass('disabled', false);
+                data_selected_devide[id].isDevide = 1;
+            }
+        });
+
+        $('#NumberDevide_' + key).change(function () {
+            changingflag = 0;
+            let id = this.id.replace("NumberDevide_", "");
+            $('#txtTotalRecordUsingDevide').val(Number($('#txtTotalRecordUsingDevide').val()) + (this.value - data_selected_devide[id].Amount));
+            data_selected_devide[id].Amount = this.value;
+            changingflag = 1;
+        });
+
+    }
+
+    //#endregion
+
+    //#region // Onchange Devide Type
+
+    function TFD_OnChangeDevideType() {
+        let type = Number($('#devideType').dropdown('get value')) ? Number($('#devideType').dropdown('get value')) : 0;
+        let length = 0;
+        for ([key, value] of Object.entries(data_selected_devide)) {
+            data_selected_devide[key]["Amount"] = 0;
+            $('#NumberDevide_' + key).val(0);
+            if (data_selected_devide[key]["isDevide"] == 1)
+                length++;
+        }
+        if (type === 123) {
+            $("#txtTotalRecordUsingDevide").attr("disabled", true);
+            $('#txtTotalRecordUsingDevide').val(0);
+        }
+        else {
+            if (type === 121) { // Chia het
+                $("#txtTotalRecordUsingDevide").attr("disabled", true);
+                $('#txtTotalRecordUsingDevide').val(TFD_InfoImport.NumLeft);
+                var dataAmount = Math.floor(Number(TFD_InfoImport.NumLeft) / Number(length));
+                var dataAmountRest = Math.ceil(Number(TFD_InfoImport.NumLeft) % Number(length));
+                for ([key, value] of Object.entries(data_selected_devide)) {
+                    if (data_selected_devide[key]["isDevide"] == 1) {
+                        data_selected_devide[key]["Amount"] = dataAmount + (dataAmountRest > 0 ? 1 : 0);
+                        $('#NumberDevide_' + key).val(data_selected_devide[key]["Amount"]);
+                        dataAmountRest--;
+                    }
+                }
+            }
+            if (type === 122) {
+                $("#txtTotalRecordUsingDevide").attr("disabled", false);
+                $('#txtTotalRecordUsingDevide').val(0);
+            }
+        }
+    }
+
+    function Change_Record_Using_Devide() {
+        let type = Number($('#devideType').dropdown('get value'))
+            ? Number($('#devideType').dropdown('get value'))
+            : 0;
+        if (type === 123) {
+        }
+        else {
+            let length = Object.values(data_selected_devide).filter(word => word.isDevide == 1).length;
+            if (length > 0) {
+                let dataAmount = Math.floor(Number($('#txtTotalRecordUsingDevide').val()) / Number(length));
+                let dataAmountRest = Math.ceil(Number($('#txtTotalRecordUsingDevide').val()) % Number(length));
+                for ([key, value] of Object.entries(data_selected_devide)) {
+                    if (data_selected_devide[key]["isDevide"] == 1) {
+                        data_selected_devide[key]["Amount"] = dataAmount + (dataAmountRest > 0 ? 1 : 0);
+                        $('#NumberDevide_' + key).val(data_selected_devide[key]["Amount"]);
+                        dataAmountRest--;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    //#endregion
+
+</script>

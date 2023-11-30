@@ -1,0 +1,165 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.EmailSettingDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="py-3 px-2">
+                <div class="pb-0">
+                    <div class="d-lg-flex mt-1">
+                        <div class="w-lg-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Cài đặt email"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết cài đặt email"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2 form3" id="formEmailSettingDetail">
+                    <div class="row px-2">
+                        <div class="field col-12 p-1 ">
+                            <label>@Local["Tên hiển thị"]</label>
+                            <input name="name" id="ESD_Name" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row px-2 form3">
+                        <div class="field col-12 col-sm-6 p-1 ">
+                            <label >Email</label>
+                            <input name="emailEmpty" id="ESD_Email" placeholder="@Local["Email để gửi"]" class="form-control" />
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1 ">
+                            <label>@Local["Mật khẩu ứng dụng"]</label>
+                            <input name="password" id="ESD_Password" placeholder="@Local["Đây là mật khẩu ứng dụng, không phải mật khẩu tài khoản google (gmail)"]" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row px-2 form3">
+                        <div class="field col-12 col-sm-6 p-1 ">
+                            <label >Server/Host</label>
+                            <input name="ware" id="ESD_Host" placeholder="SMTP Host" class="form-control" />
+                        </div>
+                        <div class="field col-12 col-sm-6 p-1 ">
+                            <label >Port</label>
+                            <input name="basicsalary" placeholder="SMTP Port" id="ESD_Port" class="form-control" type="number" />
+                        </div>
+                    </div>
+                    <div class="form-check mt-2">
+                        <input id="ESD_2Step" class="form-check-input" type="checkbox">
+                        <label class="form-check-label">
+                            @Local["Xác minh 2 bước"]
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formEmailSettingDetail" onclick="event.preventDefault();EmailSetting_CloseDetail()">@Local["Đóng"]</button>
+                        <button form="formEmailSettingDetail" type="button" class="btn bg-gradient-primary mt-2 me-2 setting_projectclosure" onclick="return EmailDetail_Executed()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //#region //LOAD INIT
+
+    let Ser_CurrentID = ("@Model._SerCurrentID");
+
+
+    $(document).ready(function () {
+        EmailDetail_LoadDetail();
+    })
+
+    function EmailDetail_LoadDetail () {
+        if (Ser_CurrentID != 0) {
+            AjaxLoad(url = "/Setting/EmailSettingDetail/?handler=LoadData"
+                , data = {
+                    "CurrentID": Ser_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != 0) {
+                        let data = JSON.parse(result);
+                        EmailDetail_RenderInFo(data[0])
+                        EmailDetail_Decrypt(data[0].Password);
+                    }
+                    else {notiError_SW()}
+                }
+            )
+        }
+    }
+
+    //#endregion
+
+    //#region //RENDER
+    function EmailDetail_RenderInFo (data) {
+        $("#ESD_Name").val(data.Name);
+        $("#ESD_Email").val(data.Mail);
+        $("#ESD_Host").val(data.Host);
+        $("#ESD_Port").val(data.Port);
+        $("#ESD_2Step").prop('checked', data.Is2ndAuthen ==1);
+    }
+    //#endregion
+
+    //#region //EXECUTED
+
+    function EmailDetail_Executed () {
+        let data = new Object();
+
+        data.DisplayName = $("#ESD_Name").val() ? $("#ESD_Name").val() :  '';
+        data.Mail = $("#ESD_Email").val() ? $("#ESD_Email").val() : '';
+        data.Password = $("#ESD_Password").val() ? $("#ESD_Password").val() : '';
+        data.Host = $('#ESD_Host').val() ? $("#ESD_Host").val() : '';
+        data.Port = $('#ESD_Port').val() ? $("#ESD_Port").val() : '';
+        data.Is2ndAuthen = document.getElementById('ESD_2Step').checked ? 1 : 0;
+
+        $("#formEmailSettingDetail").form('validate form');
+        if ($("#formEmailSettingDetail").form('is valid')) {
+            AjaxLoad(url = "/Setting/EmailSettingDetail/?handler=Executed"
+                , data = {
+                    "data" : JSON.stringify(data)
+                    , "CurrentID" : Ser_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        EmailSetting_CloseDetail();
+                        if (typeof EmailSetting_Load === 'function') EmailSetting_Load();
+                        if (typeof EmailSetting_UpdateGlo === 'function') EmailSetting_UpdateGlo();
+
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            )
+        }
+    }
+
+    //#endregion
+
+    //#region //DecryptPassword
+    function EmailDetail_Decrypt (Password) {
+        AjaxLoad(url = "/Setting/EmailSettingDetail/?handler=DecryptPassword"
+            , data = {
+                "password": Password
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '') {
+                    $("#ESD_Password").val(result);
+                }
+                else {notiError_SW()}
+            }
+        )
+    }
+    //#endregion
+</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

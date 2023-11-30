@@ -1,0 +1,118 @@
+﻿@page
+@model MLunarCoffee.Pages.ToDo.WorkingProject.TodoListDetailModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+</head>
+
+<body>
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">Work Group Detail</h6>
+                                <p class="text-sm mb-0">Some text of detail sub</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form form3" id="form3">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>Name</label>
+                            <input id="ListName" name="name" class="form-control" placeholder="eg .name" type="text" />
+                        </div>
+                        <div class="field col-12 px-1 mt-2">
+                            <label>Description</label>
+                            <textarea id="ListDescription" name="note" class="form-control" rows="3" placeholder="eg .name" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" data-languagedyn="textShowMessage2" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button data-languagestatic="button_cancel" class="btn btn-secondary" form="form3" onclick="CloseModal()">Cancel</button>
+                        <button data-languagestatic="button_ok" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                onclick="ExcuteData()">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        let _TodoListID = (@Model._CurrentID);
+        let _dataDetail;
+
+        $(document).ready(function () {
+            LoadDataUpdateTodoList();
+        });
+
+        function LoadDataUpdateTodoList() {
+            if (_TodoListID != "0") {
+                _dataDetail = Todo_Project_Detail.filter(word => word["id"] == _TodoListID);
+                $('#ListName').val((_dataDetail[0].name));
+                $('#ListDescription').val((_dataDetail[0].description));
+             }
+        }
+
+        function ExcuteData() {
+            var ListName = $('#ListName').val() ? $('#ListName').val() : "";
+            var ListDescription = $('#ListDescription').val() ? $('#ListDescription').val() : "";
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                if (_TodoListID != "0") {
+                    for (var i = 0; i < Todo_Project_Detail.length; i++) {
+                        if (Todo_Project_Detail[i].id == _TodoListID) {
+                            Todo_Project_Detail[i].name = ListName;
+                            Todo_Project_Detail[i].description = ListDescription;
+                            break;
+                        }
+                    }
+                    ExcuteDataTodoProject();
+                    RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+                }
+                else {
+                    AjaxLoad(url = "/ToDo/WorkingProject/TodoListDetail/?handler=ExcuteData"
+                        , data = {
+                            ListName: ListName,
+                            ListDescription: ListDescription
+                        }, async = true, error = null
+                        , success = function (result) {
+                            if (result != "0") {
+                                let data = JSON.parse(result)
+                                data[0].id = Number((new Date()).getTime());
+                                Todo_Project_Detail.push(data[0]);
+                                ExcuteDataTodoProject();
+                                RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+                            } else {
+                                notiError_SW();
+                            }
+                        });
+                }
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+
+            }
+            return false;
+        }
+
+    </script>
+
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+
+</html>

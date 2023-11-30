@@ -1,0 +1,1029 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.CustomerSource.SourceGrid
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0">
+        <div class="right">
+            <div class="icon-hover mx-1 my-auto"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#DeSource_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1 my-auto"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return DeSource_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1 my-auto"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return DeSource_Export()"></i>
+            </div>
+            <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#SG_colLists">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="SG_colLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch chekMaster">
+                            <input class="shtoogle form-check-input" data-name="sales" type="checkbox" checked>
+                        </div>
+                        <p class="text-sm">@Local["Doanh số"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch chekMaster">
+                            <input class="shtoogle form-check-input" data-name="revenue" type="checkbox" checked>
+                        </div>
+                        <p class="text-sm mb-0">@Local["Doanh thu"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="DeSource_GridArea">
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table data-name="DeSource_Grid" class="table vt-table mb-0" id="DeSource_Grid">
+                    <thead>
+                        <tr role="row">
+                            <th rowspan="3">#</th>
+                            <th rowspan="3">@Local["Tên"]</th>
+                            <th class="DS_Header" rowspan="1" colspan="4">@Local["Tổng"]</th>
+                            <th class="DS_Header" rowspan="1" colspan="4">@Local["Khách mới"]</th>
+                            <th class="DS_Header" rowspan="1" colspan="4">@Local["Khách cũ"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th rowspan="1" colspan="2" data-name="sales">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2" data-name="revenue">@Local["Doanh thu"]</th>
+                            <th rowspan="1" colspan="2" data-name="sales">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2" data-name="revenue">@Local["Doanh thu"]</th>
+                            <th rowspan="1" colspan="2" data-name="sales">@Local["Doanh số"]</th>
+                            <th rowspan="1" colspan="2" data-name="revenue">@Local["Doanh thu"]</th>
+                        </tr>
+                        <tr role="row">
+                            <th data-name="sales">@Local["Số lượng khách"]</th>
+                            <th data-name="sales">@Local["Phát sinh"]</th>
+                            <th data-name="revenue">@Local["Số lượng khách"]</th>
+                            <th data-name="revenue">@Local["Thanh toán"]</th>
+                            <th data-name="sales">@Local["Số lượng khách"]</th>
+                            <th data-name="sales">@Local["Phát sinh"]</th>
+                            <th data-name="revenue">@Local["Số lượng khách"]</th>
+                            <th data-name="revenue">@Local["Thanh toán"]</th>
+                            <th data-name="sales">@Local["Số lượng khách"]</th>
+                            <th data-name="sales">@Local["Phát sinh"]</th>
+                            <th data-name="revenue">@Local["Số lượng khách"]</th>
+                            <th data-name="revenue">@Local["Thanh toán"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="DeSource_GridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="DeSource_GeneralDetail" style="display:none;">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0">
+            <div class="left">
+                <p class="text-md text-dark font-weight-bold mb-1">@Local["Nhóm dịch vụ"] </p>
+            </div>
+            <div class="right">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#DeSource_GridBySerCat" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return DeSource_LoadBySerCat()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return DeSource_ExportSerCat()"></i>
+                </div>
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="DeSource_GridBySerCat">
+            <div class="card-body p-0">
+                <div class="m-0 my-3 mobile-responsive vt-header-sticky" style="max-height: calc(80vh - 300px);">
+                    <table class="table vt-table mb-0" id="DeSource_SerCatGrid">
+                        <thead>
+                            <tr role="row">
+                                <th rowspan="3">#</th>
+                                <th rowspan="3">@Local["Nguồn"]</th>
+                                <th rowspan="3">@Local["Nhóm dịch vụ"]</th>
+                                <th rowspan="1" colspan="4">@Local["Tổng"]</th>
+                                <th rowspan="1" colspan="4">@Local["Khách mới"]</th>
+                                <th rowspan="1" colspan="4">@Local["Khách cũ"]</th>
+                            </tr>
+                            <tr role="row">
+                                <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                                <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                                <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                                <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                                <th rowspan="1" colspan="2">@Local["Doanh số"]</th>
+                                <th rowspan="1" colspan="2">@Local["Doanh thu"]</th>
+                            </tr>
+                            <tr role="row">
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Phát sinh"]</th>
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Thanh toán"]</th>
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Phát sinh"]</th>
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Thanh toán"]</th>
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Phát sinh"]</th>
+                                <th>@Local["Số lượng khách"]</th>
+                                <th>@Local["Thanh toán"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="DeSource_SerCatGridBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="d-lg-flex">
+        <div class="w-lg-50 col-auto my-auto">
+            <div class="d-flex align-items-center mb-sm-0 mb-4">
+                <div class="form-check">
+                    <input id="target" name="DeSourceTab" value="0" class="DeSourceTab form-check-input pr-2 cursor-pointer" type="radio" checked="checked">
+                    <label class="custom-control-label cursor-pointer" for="target">@Local["Doanh số"]</label>
+                </div>
+                <div class="form-check ms-3">
+                    <input id="revenue" name="DeSourceTab" value="1" class="DeSourceTab form-check-input pr-2 cursor-pointer" type="radio">
+                    <label class="custom-control-label cursor-pointer" for="revenue">@Local["Doanh thu"]</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="DeSource_TabDetail">
+        <div id="DeSource_TargetDetail">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header p-0">
+                    <div class="left">
+                        <p class="text-md text-dark font-weight-bold mb-1">@Local["Doanh số"] <span class="DeSource_DetailStatus text-lowercase"></span></p>
+                    </div>
+                    <div class="right">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap my-auto">
+                            <span id="DeSource_TargetCurrentData">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="DeSource_TargetTotalData">0</span>
+                        </div>
+                        <div class="icon-hover mx-1 my-auto"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#DeSource_TargetDetailDiv" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1 my-auto"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Tải lại"]">
+                            <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); return DeSource_LoadDetail()"></i>
+                        </div>
+                        <div class="icon-hover mx-1 my-auto"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                               onclick="event.preventDefault(); return DeSourceTarget_Export()"></i>
+                        </div>
+                        <button class="btn btn-dark btn-sm my-auto mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                    <div class="toggle">
+                        <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                            <ul class="card card-body text-dark text-capitalize opacity-10">
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="custcodeold" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="doccustcode" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="salecode" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã lên đơn"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="broker" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Người giới thiệu"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="branch" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Chi nhánh"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="sercreated" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Ngày lên dịch vụ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleTarget form-check-input" data-name="cuscreated" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Ngày tạo hồ sơ"]</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapsesticky collapse show" id="DeSource_TargetDetailDiv">
+                    <div class="card-body p-0">
+                        <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                            <div id="DeSource_TargetWaiting" class="waitingdiv text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table data-name="DeSource_TargetGrid" class="table vt-table mb-0" id="DeSource_TargetGrid">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">#</th>
+                                        <th style="min-width: 140px">@Local["Mã khách hàng"]</th>
+                                        <th data-name="custcodeold" style="min-width: 120px;">@Local["Mã khách hàng cũ"]</th>
+                                        <th data-name="doccustcode" style="min-width: 120px;">@Local["Mã hồ sơ"]</th>
+                                        <th data-name="custname" style="min-width: 180px;">@Local["Khách hàng"]</th>
+                                        <th data-name="custnew" style="min-width: 160px;">@Local["Khách hàng mới"]</th>
+                                        <th data-name="salecode">@Local["Mã lên đơn"]</th>
+                                        <th data-name="targetamount" style="min-width: 120px;">@Local["Phát sinh"]</th>
+                                        <th data-name="type" style="min-width: 160px;">@Local["Loại"]</th>
+                                        <th data-name="servicecat" style="min-width: 150px;">@Local["Nhóm dịch vụ"]</th>
+                                        <th data-name="service" style="min-width: 150px;">@Local["Dịch vụ"]</th>
+                                        <th data-name="source" style="min-width: 120px;">@Local["Nguồn"]</th>
+                                        <th data-name="broker" style="min-width: 160px;">@Local["Người giới thiệu"]</th>
+                                        <th data-name="branch" style="min-width: 120px;">@Local["Chi nhánh"]</th>
+                                        <th data-name="sercreated" style="min-width: 120px;">@Local["Ngày lên dịch vụ"]</th>
+                                        <th data-name="cuscreated" style="min-width: 120px;">@Local["Ngày tạo hồ sơ"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="DeSource_TargetGridBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return DeSource_LoadDetail(1);">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="DeSource_RevenueDetail" style="display:none;">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header p-0">
+                    <div class="left">
+                        <p class="text-md text-dark font-weight-bold mb-1">@Local["Doanh thu"] <span class="DeSource_DetailStatus text-lowercase"></span></p>
+                    </div>
+                    <div class="right">
+                        <div class="text-primary fw-bold d-inline mx-2">
+                            <span id="DeSource_RevenueCurrentData">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="DeSource_RevenueTotalData">0</span>
+                        </div>
+                        <div class="icon-hover mx-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#DeSource_RevenueDetailDiv" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Tải lại"]">
+                            <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); return DeSource_LoadDetail()"></i>
+                        </div>
+                        <div class="icon-hover mx-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                               onclick="event.preventDefault(); return DeSourceRevenue_Export()"></i>
+                        </div>
+                        <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                    <div class="toggle">
+                        <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                            <ul class="card card-body text-dark text-capitalize opacity-10">
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="custcodeold" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="doccustcode" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="invoicecode" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Mã hóa đơn"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="broker" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Người giới thiệu"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="branch" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Chi nhánh"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="created" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Ngày thanh toán"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="sercreated" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Ngày lên dịch vụ"]</p>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="form-check form-switch">
+                                        <input class="shtoogleRevenue form-check-input" data-name="cuscreated" type="checkbox">
+                                    </div>
+                                    <p class="text-sm">@Local["Ngày tạo hồ sơ"]</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapsesticky collapse show" id="DeSource_RevenueDetailDiv">
+                    <div class="card-body p-0">
+                        <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                            <div id="DeSource_RevenueWaiting" class="waitingdiv text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <table data-name="DeSource_RevenueGrid" class="table vt-table mb-0" id="DeSource_RevenueGrid">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">#</th>
+                                        <th style="min-width: 150px">@Local["Mã khách hàng"]</th>
+                                        <th data-name="custcodeold" style="min-width: 120px;">@Local["Mã khách hàng cũ"]</th>
+                                        <th data-name="doccustcode" style="min-width: 120px;">@Local["Mã hồ sơ"]</th>
+                                        <th data-name="custname" style="min-width: 180px;">@Local["Khách hàng"]</th>
+                                        <th data-name="custnew" style="min-width: 160px;">@Local["Khách hàng mới"]</th>
+                                        <th data-name="invoicecode">@Local["Mã hóa đơn"]</th>
+                                        <th data-name="revenueamount" style="min-width: 120px;">@Local["Thanh toán"]</th>
+                                        <th data-name="type" style="min-width: 160px;">@Local["Loại"]</th>
+                                        <th data-name="servicecat" style="min-width: 150px;">@Local["Nhóm dịch vụ"]</th>
+                                        <th data-name="service" style="min-width: 150px;">@Local["Dịch vụ"]</th>
+                                        <th data-name="source" style="min-width: 120px;">@Local["Nguồn"]</th>
+                                        <th data-name="broker" style="min-width: 160px;">@Local["Người giới thiệu"]</th>
+                                        <th data-name="branch" style="min-width: 120px;">@Local["Chi nhánh"]</th>
+                                        <th data-name="created" style="min-width: 165px;">@Local["Ngày thanh toán"]</th>
+                                        <th data-name="sercreated" style="min-width: 120px;">@Local["Ngày lên dịch vụ"]</th>
+                                        <th data-name="cuscreated" style="min-width: 120px;">@Local["Ngày tạo hồ sơ"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="DeSource_RevenueGridBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return DeSource_LoadDetail(1);">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    //#region //INIT - DEFINE
+    let DeSource_SourceID = 0, DeSource_IsRevenue = 0;
+    let DeSource_CurrentTargetID = 0, DeSource_CurrentRevenueID = 0;
+    let shtableTargetDetail, shtableRevenueDetail;
+    let xhrSourceTargetList, xhrSourceRevenueList;
+    let DeSource_DataMainTarget, DeSource_DataMainRevenue;
+    let DeSource_Limit = 500, DeSource_BeginTargetID = 0, DeSource_BeginRevenueID = 0;
+    let _dateFrom, _dateTo, _branch, _branchToken;
+    $(document).ready(function () {
+        shtable = $("#DeSource_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        DeSource_Load();
+        DeSource_HandleChangeTab();
+        Checking_TabControl_Permission();
+        shtableTargetDetail = $("#DeSource_TargetGrid").TableExpandColumn({
+            shtoogle: $('.shtoogleTarget')
+        });
+        shtableRevenueDetail = $("#DeSource_RevenueGrid").TableExpandColumn({
+            shtoogle: $('.shtoogleRevenue')
+        });
+        DeSource_EventInit();
+    });
+    //#endregion
+    //#region //MASTER GRID
+    function DeSource_Load() {
+        _dateFrom = "@Model._dateFrom";
+        _dateTo = "@Model._dateTo";
+        _branch = "@Model._branch" || "0";
+        _branchToken = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/Revenue/CustomerSource/SourceGrid/?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'branchToken': _branchToken,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas["Table"];
+
+                    DeSource_Render(data, "DeSource_GridBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    async function DeSource_Render(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let trtotal = '';
+                    let t_targetsl = 0, t_targetam = 0, t_revenuesl = 0, t_revenueam = 0;
+                    let n_targetsl = 0, n_targetam = 0, n_revenuesl = 0, n_revenueam = 0;
+                    let o_targetsl = 0, o_targetam = 0, o_revenuesl = 0, o_revenueam = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let name = '';
+                        let _item = RP_DataCustomerSource[item.Source];
+                        name = _item != undefined ? _item.Name : '';
+
+                        t_targetsl = t_targetsl + item.TotalTarget;
+                        t_targetam = t_targetam + item.TotalTargetAmount;
+                        t_revenuesl = t_revenuesl + item.TotalRevenue;
+                        t_revenueam = t_revenueam + item.TotalRevenueAmount;
+
+                        n_targetsl = n_targetsl + item.NewTarget;
+                        n_targetam = n_targetam + item.NewTargetAmount;
+                        n_revenuesl = n_revenuesl + item.NewRevenue;
+                        n_revenueam = n_revenueam + item.NewRevenueAmount;
+
+                        o_targetsl = o_targetsl + item.OldTarget;
+                        o_targetam = o_targetam + item.OldTargetAmount;
+                        o_revenuesl = o_revenuesl + item.OldRevenue;
+                        o_revenueam = o_revenueam + item.OldRevenueAmount;
+                        let tr =
+                            '<td class="vt-number-order"></td>'
+                            + '<td>'
+                            + '<a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-id="' + item.Source + '" data-name="' + name + '">'
+                            + name
+                            + '</a>'
+                            + '</td>'
+                            + '<td data-name="sales">' + formatNumber(item.TotalTarget) + '</td>'
+                            + '<td data-name="sales">' + formatNumber(item.TotalTargetAmount) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.TotalRevenue) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.TotalRevenueAmount) + '</td>'
+
+                            + '<td data-name="sales">' + formatNumber(item.NewTarget) + '</td>'
+                            + '<td data-name="sales">' + formatNumber(item.NewTargetAmount) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.NewRevenue) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.NewRevenueAmount) + '</td>'
+
+                            + '<td data-name="sales">' + formatNumber(item.OldTarget) + '</td>'
+                            + '<td data-name="sales">' + formatNumber(item.OldTargetAmount) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.OldRevenue) + '</td>'
+                            + '<td data-name="revenue">' + formatNumber(item.OldRevenueAmount) + '</td>'
+                            ;
+
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td>'
+                                + '<a href="#" class="border-1 border-white border-bottom buttonViewClass text-white" data-id="0" data-name="@Local["Tất cả"]">Total</a>'
+                                + '</td>'
+                                + '<td data-name="sales">' + formatNumber(t_targetsl) + '</td>'
+                                + '<td data-name="sales">' + formatNumber(t_targetam) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(t_revenuesl) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(t_revenueam) + '</td>'
+                                + '<td data-name="sales">' + formatNumber(n_targetsl) + '</td>'
+                                + '<td data-name="sales">' + formatNumber(n_targetam) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(n_revenuesl) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(n_revenueam) + '</td>'
+                                + '<td data-name="sales">' + formatNumber(o_targetsl) + '</td>'
+                                + '<td data-name="sales">' + formatNumber(o_targetam) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(o_revenuesl) + '</td>'
+                                + '<td data-name="revenue">' + formatNumber(o_revenueam) + '</td>'
+                                ;
+                            stringContent = stringContent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+                }
+                myNode.innerHTML = stringContent;
+                shtable.Refresh();
+                DeSource_GeneralEvent();
+            }
+        })
+    }
+    //#endregion
+
+    //#region //LOAD BY SERCAT
+    function DeSource_LoadBySerCat() {
+        _dateFrom = "@Model._dateFrom";
+        _dateTo = "@Model._dateTo";
+        _branch = "@Model._branch" || "0";
+        _branchToken = "@Model._TokenBranch";
+        $('#DeSource_SerCatGridBody').empty();
+        AjaxLoad(url = "/Report/Revenue/CustomerSource/SourceGrid/?handler=LoadataBySerCat"
+            , data = {
+                'branchID': _branch,
+                'branchToken': _branchToken,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+                'sourceID': DeSource_SourceID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    DeSource_SerCatRender(data, "DeSource_SerCatGridBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    async function DeSource_SerCatRender(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    let trtotal = '';
+                    let t_targetsl = 0, t_targetam = 0, t_revenuesl = 0, t_revenueam = 0;
+                    let n_targetsl = 0, n_targetam = 0, n_revenuesl = 0, n_revenueam = 0;
+                    let o_targetsl = 0, o_targetam = 0, o_revenuesl = 0, o_revenueam = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let source = Fun_GetName_ByID(RP_DataCustomerSource, item.Source);
+                        let sercat = DeSource_RenderGetSerCat(item.ServiceCat)
+                        t_targetsl = t_targetsl + item.TotalTarget;
+                        t_targetam = t_targetam + item.TotalTargetAmount;
+                        t_revenuesl = t_revenuesl + item.TotalRevenue;
+                        t_revenueam = t_revenueam + item.TotalRevenueAmount;
+
+                        n_targetsl = n_targetsl + item.NewTarget;
+                        n_targetam = n_targetam + item.NewTargetAmount;
+                        n_revenuesl = n_revenuesl + item.NewRevenue;
+                        n_revenueam = n_revenueam + item.NewRevenueAmount;
+
+                        o_targetsl = o_targetsl + item.OldTarget;
+                        o_targetam = o_targetam + item.OldTargetAmount;
+                        o_revenuesl = o_revenuesl + item.OldRevenue;
+                        o_revenueam = o_revenueam + item.OldRevenueAmount;
+                        let tr =
+                            '<td class="vt-number-order"></td>'
+                            + '<td>'
+                            + source
+                            + '</td>'
+                            + '<td>'
+                            + sercat
+                            + '</td>'
+                            + '<td>' + formatNumber(item.TotalTarget) + '</td>'
+                            + '<td>' + formatNumber(item.TotalTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.TotalRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.TotalRevenueAmount) + '</td>'
+
+                            + '<td>' + formatNumber(item.NewTarget) + '</td>'
+                            + '<td>' + formatNumber(item.NewTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.NewRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.NewRevenueAmount) + '</td>'
+
+                            + '<td>' + formatNumber(item.OldTarget) + '</td>'
+                            + '<td>' + formatNumber(item.OldTargetAmount) + '</td>'
+                            + '<td>' + formatNumber(item.OldRevenue) + '</td>'
+                            + '<td>' + formatNumber(item.OldRevenueAmount) + '</td>'
+                            ;
+
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                        if (data.length > 1 && i == data.length - 1) {
+                            trtotal =
+                                '<td></td>'
+                                + '<td colspan="2">'
+                                + '@Local["Tất cả"]'
+                                + '</td>'
+                                + '<td>' + formatNumber(t_targetsl) + '</td>'
+                                + '<td>' + formatNumber(t_targetam) + '</td>'
+                                + '<td>' + formatNumber(t_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(t_revenueam) + '</td>'
+                                + '<td>' + formatNumber(n_targetsl) + '</td>'
+                                + '<td>' + formatNumber(n_targetam) + '</td>'
+                                + '<td>' + formatNumber(n_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(n_revenueam) + '</td>'
+                                + '<td>' + formatNumber(o_targetsl) + '</td>'
+                                + '<td>' + formatNumber(o_targetam) + '</td>'
+                                + '<td>' + formatNumber(o_revenuesl) + '</td>'
+                                + '<td>' + formatNumber(o_revenueam) + '</td>'
+                                ;
+                            stringContent = stringContent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                        }
+                    }
+                }
+                myNode.innerHTML = stringContent;
+            }
+        })
+    }
+
+    function DeSource_RenderGetSerCat(ServiceCatID) {
+        try {
+            let result = '';
+            if (ServiceCatID == 0) {
+                result = decodeHtml('@Local["Cọc"]');
+            }
+            else if (ServiceCatID == -1) {
+                result = decodeHtml('@Local["Thẻ"]');
+            }
+            else if (ServiceCatID == -2) {
+                result = decodeHtml('@Local["Thuốc"]');
+            }
+            else {
+                result = (RP_DataServiceCat[ServiceCatID] != undefined) ? RP_DataServiceCat[ServiceCatID].Name : ''
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function DeSource_ExportSerCat() {
+        syslog_ExpExcel('e', Outlang["Sys_nguon_khach_hang"]);
+        exportToExcel("DeSource_SerCatGrid", Outlang["Sys_nguon_khach_hang"] != undefined ? Outlang["Sys_nguon_khach_hang"] : "Nguồn khách hàng");
+    }
+    //#endregion
+    //#region //EXCEL - PRINT
+    function DeSource_Export() {
+        syslog_ExpExcel('e', Outlang['Nguon_khach_hang']);
+        exportToExcel("DeSource_Grid", Outlang['Nguon_khach_hang']);
+    }
+    function DeSourceTarget_Export() {
+        syslog_ExpExcel('e', Outlang["Doanh_thu_nguon_khach_hang"]);
+        exportToExcel("DeSource_TargetGrid", Outlang["Doanh_thu_nguon_khach_hang"]);
+    }
+    function DeSourceRevenue_Export() {
+        syslog_ExpExcel('e', Outlang["Doanh_so_nguon_khach_hang"]);
+        exportToExcel("DeSource_RevenueGrid", Outlang["Doanh_so_nguon_khach_hang"]);
+    }
+    function DeSource_GeneralEvent() {
+        $("#DeSource_GridBody .buttonViewClass").unbind('click').on("click", function (event) {
+            event.preventDefault();
+            let id = $(this).attr('data-id');
+            DeSource_SourceID = id;
+            let name = $(this).attr('data-name');
+            $("#DeSource_GeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#DeSource_GeneralDetail").offset().top
+            }, 300);
+            if (id == "0") {
+                $(".DeSource_DetailStatus").html('@Local["Tất cả nguồn khách hàng"]');
+            }
+            else {
+                $(".DeSource_DetailStatus").html(name);
+            }
+            DeSource_LoadBySerCat();
+            DeSource_LoadDetail();
+        })
+    }
+    //#endregion
+
+    //#region //LOAD DATA DETAIL
+    function DeSource_LoadDetail(isLoadMore = 0) {
+        //DeSource_IsRevenue 0: Target; 1: Revenue
+        let beginID = DeSource_IsRevenue == 0 ? DeSource_BeginTargetID : DeSource_BeginRevenueID;
+        let funcRender = DeSource_IsRevenue == 0 ? DeSource_RenderTarget : DeSource_RenderRevenue;
+        let xhrList = DeSource_IsRevenue == 0 ? xhrSourceTargetList : xhrSourceRevenueList;
+        if (isLoadMore == 0) {
+            let paraTarget = {
+                'branchID': _branch,
+                'branchToken': _branchToken,
+                'sourceID': DeSource_SourceID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+                'limit': DeSource_Limit,
+                'beginID': 0,
+                'isRevenue': 0
+            }
+            let paraRevenue = { ...paraTarget, isRevenue: 1 }
+            if (DeSource_IsRevenue == 0) {
+                DeSource_DataMainTarget = null;
+                DeSource_BeginTargetID = 0;
+                $("#DeSource_TargetGridBody").empty();
+                DeSource_LoadDataDetail(xhrSourceTargetList, paraTarget, DeSource_RenderTarget);
+            }
+            else {
+                DeSource_DataMainRevenue = null;
+                DeSource_BeginRevenueID = 0;
+                $("#DeSource_RevenueGridBody").empty();
+                DeSource_LoadDataDetail(xhrSourceRevenueList, paraRevenue, DeSource_RenderRevenue);
+            }
+        }
+        else {
+            let para = {
+                'branchID': _branch,
+                'branchToken': _branchToken,
+                'sourceID': DeSource_SourceID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+                'limit': DeSource_Limit,
+                'beginID': beginID,
+                'isRevenue': DeSource_IsRevenue
+            };
+            DeSource_LoadDataDetail(xhrList, para, funcRender);
+        }
+    }
+
+    async function DeSource_LoadDataDetail(xhrList, para, funcRender) {
+        new Promise((resolve) => {
+            if (xhrList && xhrList.readyState != 4) xhrList.abort();
+            let waitingID = para.isRevenue === 0 ? "DeSource_TargetWaiting" : "DeSource_RevenueWaiting";
+            xhrList = AjaxLoad(url = "/Report/Revenue/CustomerSource/SourceGrid/?handler=LoadDetail"
+                , data = para
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        let { Table: total, Table1: detail } = data;
+                        if (detail && detail.length > 0) {
+                            if (funcRender && typeof funcRender === "function") {
+                                let id = para.isRevenue === 0 ? "DeSource_TargetGridBody" : "DeSource_RevenueGridBody";
+                                if (para.beginID === 0) {
+                                    let totalID = para.isRevenue === 0 ? "DeSource_TargetTotalData" : "DeSource_RevenueTotalData";
+                                    Count_Up(totalID, total[0]?.TotalData);
+                                }
+                                fnRenderBlock(detail, id
+                                    , blocknum = 200
+                                    , fnrender = funcRender
+                                    , fnsuccess = null
+                                );
+                            }
+                        }
+                        else {
+                            console.log(result);
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $(`#${waitingID}`).show();
+                }
+                , complete = function (e) {
+                    $(`#${waitingID}`).hide();
+                }
+            )
+            resolve()
+        })
+    }
+    //#endregion
+
+    //#region //RENDER DATA DETAIL
+
+    async function DeSource_RenderTarget(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        DeSource_DataMainTarget = DeSource_DataMainTarget ? DeSource_DataMainTarget.concat(data) : data;
+                        Count_Up("DeSource_TargetCurrentData", DeSource_DataMainTarget.length);
+                        DeSource_BeginTargetID = data[data.length - 1].ID;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = DeSource_RenderTargetEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableTargetDetail.Refresh();
+                resolve();
+            }, 100)
+        })
+    }
+    function DeSource_RenderTargetEach(item) {
+        try {
+            let isNew = item?.IsNew == 1 ? '<i class="fas fa-check text-primary"></i>' : '';
+            let tr = `
+                <tr class="vt-number" role="row">
+                    <td class="vt-number-order"></td>
+                    <td>
+                        <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}">${item.CustCode}</a>
+                    </td>
+                    <td data-name="custcodeold">${item.CustOldCode}</td>
+                    <td data-name="doccustcode">${item.DocCode}</td>
+                    <td>${item.CustName}</td>
+                    <td class="text-center">${isNew} <span class="d-none">${isNew == '' ? "" : "x"}</span></td>
+                    <td data-name="salecode">${item.SaleCode}</td>
+                    <td>${formatNumber(item.Amount)}</td>
+                    <td>${DeSource_Render_GetType(item.Type)}</td>
+                    <td>${DeSource_RenderGetSerCat(item.ServiceCat)}</td>
+                    <td>${DeSource_Render_GetName(item.Type, item.ServiceID, item.MedID, item.CardID)}</td>
+                    <td>${(RP_DataCustomerSource[item.SourceID] != undefined) ? RP_DataCustomerSource[item.SourceID].Name : ''}</td>
+                    <td data-name="broker">${item.BrokerName}</td>
+                    <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined) ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                    <td data-name="sercreated">${ConvertDateTimeUTC_DMY(item.SerCreated)}</td>
+                    <td data-name="cuscreated">${ConvertDateTimeUTC_DMY(item.CusCreated)}</td>
+                </tr>
+                `
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    async function DeSource_RenderRevenue(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        DeSource_DataMainRevenue = DeSource_DataMainRevenue ? DeSource_DataMainRevenue.concat(data) : data;
+                        Count_Up("DeSource_RevenueCurrentData", DeSource_DataMainRevenue.length);
+                        DeSource_BeginRevenueID = data[data.length - 1].ID;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = DeSource_RenderRevenueEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableRevenueDetail.Refresh();
+                resolve();
+            }, 100)
+        })
+    }
+    function DeSource_RenderRevenueEach(item) {
+        try {
+            let isNew = item?.IsNew == 1 ? '<i class="fas fa-check text-primary"></i>' : '';
+            let tr = `
+                <tr class="vt-number">
+                    <td class="vt-number-order"></td>
+                    <td>
+                        <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}">${item.CustCode}</a>
+                    </td>
+                    <td data-name="custcodeold">${item?.CustOldCode}</td>
+                    <td data-name="doccustcode">${item?.DocCode}</td>
+                    <td>${item?.CustName}</td>
+                        <td class="text-center">${isNew} <span class="d-none">${isNew == '' ? "" : "x"}</span></td>
+                    <td data-name="invoicecode">${item?.InvoiceNum}</td>
+                    <td>${formatNumber(item?.Amount)}</td>
+                    <td>${DeSource_Render_GetType(item?.Type)}</td>
+                    <td>${DeSource_RenderGetSerCat(item?.ServiceCat)}</td>
+                    <td>${DeSource_Render_GetName(item.Type, item.ServiceID, item.MedID, item.CardID)}</td>
+                    <td>${(RP_DataCustomerSource[item.SourceID] != undefined) ? RP_DataCustomerSource[item.SourceID].Name : ''}</td>
+                    <td data-name="broker">${item?.BrokerName}</td>
+                    <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined) ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                    <td data-name="created">${ConvertDateTimeUTC_DMY(item.PayCreated)}</td>
+                    <td data-name="sercreated">${ConvertDateTimeUTC_DMY(item.SerCreated)}</td>
+                    <td data-name="cuscreated">${ConvertDateTimeUTC_DMY(item.CusCreated)}</td>
+                </tr>
+                `
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function DeSource_Render_GetName(type, serid, medid, cardid) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1:
+                    result = (RP_DataService[serid] != undefined) ? RP_DataService[serid].Name : ''
+                    break;
+                case 3:
+                    result = (RP_DataMedicine[medid] != undefined) ? RP_DataMedicine[medid].Name : ''
+                    break;
+                case 4:
+                    result = (RP_DataCard[cardid] != undefined) ? RP_DataCard[cardid].Name : ''
+                    break;
+
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function DeSource_Render_GetType(type) {
+        try {
+            let result = '';
+            switch (type) {
+                case 1:
+                    result = '@Local["Dịch vụ/sản phẩm"]'
+                    break;
+                case 2:
+                    result = '@Local["Tiền cọc"]'
+                    break;
+                case 3:
+                    result = '@Local["Đơn thuốc"]'
+                    break;
+                case 4:
+                    result = '@Local["Thẻ trả trước"]'
+                    break;
+
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function DeSource_EventInit() {
+        $("#SG_colLists .chekMaster input").change(() => {
+            let num = $("#SG_colLists .chekMaster input:checked").length;
+
+            if (num > 0) {
+                $(".DS_Header").removeClass("d-none");
+                $(".DS_Header").attr("colspan", num == 1 ? "2" : "4");
+            } else {
+                $(".DS_Header").addClass("d-none");
+            }
+        })
+    }
+
+    function DeSource_HandleChangeTab() {
+        $(".DeSourceTab").unbind("change").change(function () {
+            DeSource_IsRevenue = Number($(this).val());
+            if (!DeSource_DataMainTarget || !DeSource_DataMainRevenue) {
+                DeSource_LoadDetail(isLoadMore = 0);
+            }
+            if (DeSource_IsRevenue == 0) {
+                $('#DeSource_TargetDetail').show();
+                $('#DeSource_RevenueDetail').hide();
+            }
+            else {
+                $('#DeSource_TargetDetail').hide();
+                $('#DeSource_RevenueDetail').show();
+            }
+        })
+    }
+                    //#endregion
+</script>

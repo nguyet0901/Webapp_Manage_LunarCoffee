@@ -1,0 +1,91 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Relationship.RelationshipDetailModel
+@{ Layout=null;
+}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <!-- #region header -->
+                                <h6 class="mb-0">@Local["Quan hệ"]</h6>
+                                <p>@Local["Chi tiết quan hệ"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formRelationship">
+                        <div class="field col-12 p-1">
+                            <label >@Local["Mối quan hệ"]</label>
+                            <input id="Relationship" class="form-control" name="name" type="text" placeholder="eg .@Local["Mối quan hệ"]"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formRelationship" onclick="event.preventDefault();CloseModal()">@Local["Hủy"]</button>
+                        <button id="button_Service_detail_save" form="formRelationship" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();RelationshipExecute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <script type="text/javascript">
+        var ser_RelationshipDetailID;
+
+        $(document).ready(function () {
+            ser_RelationshipDetailID = (@Model._RelationshipDetailID);
+            if (ser_RelationshipDetailID != "0") RelationshipLoadUpdate();
+            Checking_TabControl_Permission();
+        });
+
+        function RelationshipLoadUpdate() {
+            AjaxLoad(url = "/Setting/Relationship/RelationshipDetail/?handler=Loadata"
+                , data = { id: ser_RelationshipDetailID }, async = true, error = null
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    $('#Relationship').val((data[0].Name));
+                });
+        }
+
+        function RelationshipExecute() {
+            var data = new Object();
+            data.Name = $('#Relationship').val() ? $('#Relationship').val() : "";
+            $('#formRelationship').form('validate form');
+            if ($('#formRelationship').form('is valid')) {
+                AjaxLoad(url = "/Setting/Relationship/RelationshipDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_RelationshipDetailID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            if (typeof RelationshipLoad !== 'undefined' && $.isFunction(RelationshipLoad)) {
+                                RelationshipLoad();
+                                $('#DetailModal').modal('hide');
+                                $("#DetailModal_Content").html('');
+                            }
+
+                        } else if (result == "-1") {
+                            $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+            }
+            return false;
+        }
+
+    </script>
+    <script>js_require('/js/comon/initialize_setting.js')</script>
+    <script>js_require('/js/main.js')</script>
+    <script>js_require_notasync('/js/customjs/custom-validation.js')</script>

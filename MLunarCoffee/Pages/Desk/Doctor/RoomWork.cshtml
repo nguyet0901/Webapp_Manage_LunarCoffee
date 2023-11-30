@@ -1,0 +1,159 @@
+﻿@page
+@model MLunarCoffee.Pages.Desk.Doctor.RoomWorkModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Chọn phòng"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết phòng"]</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                 <div class="field col-12 px-1 mt-2 flex-grow-1" id="roomwork_roomcontent">
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessageRoom"></div>
+                        <button class="btn btn-secondary" onclick="event.preventDefault(); CloseModal()">@Local["Đóng"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault(); RoomWork_Execute();">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let roomwork_Choose = 0;
+    var deskdoc_keyroom = "Userroom";
+    $(document).ready(function(){
+        RoomWork_Init();
+    })
+
+    function RoomWork_Init(){
+        AjaxLoad(url = "/Desk/Doctor/RoomWork/?handler=LoadRoom"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataLevel = data.Table;
+                    let dataRoom = data.Table1;
+                    RoomWork_FloorRender(dataLevel, dataRoom, 'roomwork_roomcontent')
+                    RoomWork_GetRoom();
+                }
+            }
+        );
+    }
+
+    function RoomWork_GetRoom(){
+        let room = author_get(deskdoc_keyroom);
+        if (room != '') {
+            roomwork_Choose = Number(room);
+            $('#roomwork_roomcontent .roomDetail[data-id="' + room + '"]').trigger('click');
+        }
+    }
+
+
+    function RoomWork_Execute(){
+        if(roomwork_Choose == 0) {
+            $("#textShowMessageRoom").html("@Local["Chọn phòng"]");
+            return
+        }
+        author_set(deskdoc_keyroom, roomwork_Choose);
+        CloseModal();
+        if (typeof DeskDoc_CurrentRoom === 'function') DeskDoc_CurrentRoom();
+        if (typeof RS_LoadOutside === 'function') RS_LoadOutside();
+        
+    }
+
+
+    //#region // RENDER
+
+     function RoomWork_FloorRender(Level, Room, id) {
+        var myNode = document.getElementById(id);
+        let stringContent = '';
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            for (let i = 0; i < Level.length; i++) {
+                let item_level = Level[i];
+                let item_room = Room.filter(word => word["LevelID"] == item_level.ID);
+                let tr = '<div class="d-flex mb-2">'
+                    + '<div class="d-flex">'
+                    + '</div>'
+                    + '<div class="ms-3 w-100">'
+                    + '<h6 class="text-dark fw-bold text-sm my-1"><a id="fl' + item_level.ID + '">' + item_level.Name + '</a></h6>'
+                    + '<div class="row ms-n4">'
+                    + RoomWork_RoomRender(item_room)
+                    + '</div>'
+                    + '</div>'
+                    + '</div>';
+                stringContent = stringContent + tr;
+            }
+        }
+        myNode.innerHTML = stringContent;
+        RoomWork_RoomEvent();
+    }
+
+    function RoomWork_RoomRender(item_room) {
+        let res = '';
+        for (let i = 0; i < item_room.length; i++) {
+            let tr = '';
+            let item = item_room[i];
+            tr =
+                '<div class="roomDetail cursor-pointer text-dark d-inline-block m-2 '
+                + '" data-id="' + item.ID + '" id="room_' + item.ID + '">'
+                + '<div class="roomContent p-2   border-1 border border-light border-radius-md bg-gray-100 h-100">'
+                + '<div class="d-flex">'
+                + '<div class="text-sm fw-bold mb-0">' + item.NameRoom + '</div>'
+                + '</div>'
+                + '</div></div>';
+            res = res + tr;
+        }
+        return res;
+    }
+
+    function RoomWork_RoomEvent() {
+        $('#roomwork_roomcontent .roomDetail').on('click', function () {
+            if (!$(this).hasClass("busyroomstatus")) {
+                $('#roomwork_roomcontent .roomDetail').removeClass('active');
+                $(this).addClass('active');
+                roomwork_Choose = Number($(this).attr('data-id'));
+            }
+        });
+    }
+    //#endregion
+
+</script>
+
+<style>
+    .roomDetail.active .roomContent {
+        background-image: linear-gradient( 310deg, #7928CA 0%, #FF0080 100%);
+        color: white;
+    }
+
+    .roomDetail {
+        max-width: 120px;
+    }
+
+    .appdetail_disable {
+        opacity: 0.2;
+        pointer-events: none;
+        cursor: none;
+    }
+</style>

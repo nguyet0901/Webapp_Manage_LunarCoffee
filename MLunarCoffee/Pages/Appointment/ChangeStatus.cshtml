@@ -1,0 +1,837 @@
+﻿@page
+@model MLunarCoffee.Pages.Appointment.ChangeStatusModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require_notasync('/js/Calendar_Custom/datetime.js', true)</script>
+<script>js_require_notasync('/js/WorkScheduler/workscheduler.js', true)</script>
+<div class="row position-relative">
+    <div class="col-12" id="ChangeStatus_Area">
+        <div class="card">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Chuyển trạng thái"]</h6>
+                    <div class="d-flex align-items-center mt-1">
+                        <p class="text-dark mb-0 pe-2">@Local["TT Hiện tại"]</p>
+                        <h6 id="ChangeStatus_Current" class="text-primary mb-0 fw-bold "></h6>
+                    </div>
+                </div>
+                <div class="right">
+                    <div class="row text-sm">
+                        <div class="col-auto">
+                            <div class="py-1">
+                                <div id="ChangeStatus_CurrentDoctor" class="d-none"></div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="py-1">
+                                <div class="d-flex align-items-center">
+                                    <div id="ChangeStatus_AreaRoom" class="d-none">
+                                        <div>@Local["Phòng"]</div>
+                                        <div id="ChangeStatus_CurrentRoom" class="fw-bold text-primary"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="card-body pb-0 pt-2">
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="top-1 h-100">
+                            <ul id="ChangeStatus_NewArea" class="nav nav-pills flex-column  h-100 border-radius-lg p-3 ">
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="ChangeStatus_Per" class="col-lg-8 mt-lg-0 mt-0">
+                        <div class="pt-0">
+                            <div class="row px-2">
+                                <div class="field doc col-12 col-md-12 col-lg-4 p-1 flex-grow-1 d-none">
+                                    <label>@Local["Bác sĩ"]</label>
+                                    <div class="ui fluid search selection dropdown" id="ChangeStatus_DoctorID">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <i class="remove icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Bác sĩ"]</div>
+                                        <div id="ccb_ChangeStatus_DoctorID" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field ass col-12 col-md-6 col-lg-4 p-1 flex-grow-1 d-none">
+                                    <label>@Local["KTV - PT"]</label>
+                                    <div class="ui fluid search selection dropdown" id="ChangeStatus_AssistID">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <i class="remove icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["KTV - PT"]</div>
+                                        <div id="ccb_ChangeStatus_AssistID" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field forect col-12 col-md-6 col-lg-4 p-1 d-none flex-grow-1">
+                                    <label>@Local["Thời gian dự kiến"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="ChangeStatus_ForectTimeID">
+                                        <input type="hidden" name="Name" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="ChangeStatus_cbbForectTimeID" class="menu" tabindex="-1">
+                                            <div class="item" data-value="5">5 @Local["Phút"]</div>
+                                            <div class="item" data-value="10">10 @Local["Phút"]</div>
+                                            <div class="item" data-value="15">15 @Local["Phút"]</div>
+                                            <div class="item" data-value="25">25 @Local["Phút"]</div>
+                                            <div class="item" data-value="30">30 @Local["Phút"]</div>
+                                            <div class="item" data-value="45">45 @Local["Phút"]</div>
+                                            <div class="item" data-value="60">60 @Local["Phút"]</div>
+                                            <div class="item" data-value="90">90 @Local["Phút"]</div>
+                                            <div class="item" data-value="120">120 @Local["Phút"]</div>
+                                            <div class="item" data-value="150">150 @Local["Phút"]</div>
+                                            <div class="item" data-value="180">180 @Local["Phút"]</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row px-2">
+                                <div class="col-12 p-1">
+                                    <label>@Local["Ghi chú"]</label>
+                                    <textarea id="ChangeStatus_Content" rows="2" class="form-control" placeholder="eg .@Local["Ghi chú"]" name="note" type="text" />
+                                </div>
+                            </div>
+                            <div class="row px-2">
+                                <a class="doc nav-link text-sm ps-2 w-100 cursor-pointer d-none" data-bs-toggle="collapse" href="#csdocother_area">
+                                    @Local["Xem thêm"]
+                                </a>
+                                <div id="csdocother_area" class="doc collapsesticky  multi-collapse collapse">
+                                    <div class="row px-2">
+                                        <div class="field doc col-12 col-md-4 col-lg-4 p-1 flex-grow-1">
+                                            <label>@Local["Bác sĩ"] 2</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_DoctorID2">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["Bác sĩ"]</div>
+                                                <div id="ccb_ChangeStatus_DoctorID2" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field doc col-12 col-md-4 col-lg-4 p-1 flex-grow-1">
+                                            <label>@Local["Bác sĩ"] 3</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_DoctorID3">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["Bác sĩ"]</div>
+                                                <div id="ccb_ChangeStatus_DoctorID3" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field doc col-12 col-md-4 col-lg-4 p-1 flex-grow-1">
+                                            <label>@Local["Bác sĩ"] 4</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_DoctorID4">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["Bác sĩ"]</div>
+                                                <div id="ccb_ChangeStatus_DoctorID4" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field ass col-12 col-md-6 col-lg-4 p-1 flex-grow-1 d-none">
+                                            <label>@Local["KTV - PT"] 2</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_AssistID2">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["KTV - PT"]</div>
+                                                <div id="ccb_ChangeStatus_AssistID2" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field ass col-12 col-md-6 col-lg-4 p-1 flex-grow-1 d-none">
+                                            <label>@Local["KTV - PT"] 3</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_AssistID3">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["KTV - PT"]</div>
+                                                <div id="ccb_ChangeStatus_AssistID3" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field ass col-12 col-md-6 col-lg-4 p-1 flex-grow-1 d-none">
+                                            <label>@Local["KTV - PT"] 4</label>
+                                            <div class="ui fluid search selection dropdown" id="ChangeStatus_AssistID4">
+                                                <input type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["KTV - PT"]</div>
+                                                <div id="ccb_ChangeStatus_AssistID4" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="ChangeStatus_RoomArea" class="row px-2 mt-3 mx-0 position-relative" style="display: none;">
+                    <div class="vtcardheader card-header p-0">
+                        <div class="left">
+                            <ul class="bg-transparent nav nav-horizontal nav-pills pb-1 ms-n2  pt-0" role="tablist" id="csr_typeroom">
+                            </ul>
+                        </div>
+                        <div class="right">
+                            <div class="input-group flex-nowrap" id="CSR_searcharea">
+                                <div class="input-group-text input-group-text px-2">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <div class="spinner-border spinner-border-sm d-none"></div>
+                                </div>
+                                <input id="CSR_searchinput" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]">
+                                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                            </div>
+
+                             
+                        </div>
+                        
+                    </div>
+
+                    <div class="ps-0 ms-n3">
+                       
+                    </div>
+                    <div id="ct_waiting" class="position-absolute top-0 start-50 translate-middle-x z-index-3 waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">@Local["Đang tải"]</span>
+                        </div>
+                    </div>
+                    <div class="field col-12 px-1 mt-2 flex-grow-1" id="ChangeStatus_RoomContent">
+                    </div>
+                    <div id="ChangeStatus_RoomGuide" class="d-none col-12 my-2 ps-0 ms-n2">
+                        <div class="d-flex align-items-center">
+                            <div class="px-2 d-flex align-items-center">
+                                <div class="border-1 border border-light border-radius-md bg-gray-200 p-2 py-1 me-2" style=" height: 20px;">&nbsp;</div>
+                                <span class="mb-0 text-dark text-sm">@Local["Phòng trống"]</span>
+                            </div>
+                            <div class="px-2 d-flex align-items-center">
+                                <div class="roomlight border-1 border border-light border-radius-md bg-gray-200 p-2 py-1 me-2" style=" height: 20px;">&nbsp;</div>
+                                <span class="mb-0 text-dark text-sm">@Local["Phòng có khách"]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="ChangeSMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="CloseModal()">@Local["Đóng"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" id="ChangeStatus_Excute" onclick="ChangeStatus_ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //#region //  Declare, Initialize Data
+
+    var ser_PKCheckingrom = Number(@Model.sys_PKCheckingrom);
+    var ser_AppCurrent = Number(@Model._AppDetailID);
+
+    var ser_DataDoctor, ser_DataAssist;
+    var ser_BranchID = Number(@Model._BranchID);
+    var Status_IsTreatment = 0;
+    var Status_IsForectTime = 0;
+    var Status_IsCheckout = 0;
+    var Status_IsOption = 0;
+    var Status_IsChoosingRoom = 0;
+    var Status_NewStatus = {};
+    var DataComboNewStatus;
+    var DataDetailSchedule;
+    var crs_timer;
+    var SDataType = [{ID: 1, Name: "@Local["Thu ngân"]"}, {ID: 2, Name: "@Local["Điều trị"]"}
+    ,{ID:3,Name:"@Local["Khám"] - @Local["Tư vấn"]"},{ID:4,Name:"@Local["X-quang"] - @Local["Lab"]"}];
+    var SDataRoom = [];
+    var SDataLevel = [];
+
+    $(document).ready(function () {
+        if (ser_PKCheckingrom == 0) $('#ChangeStatus_RoomGuide').removeClass('d-none');
+        ChangeStatus_Initialize();
+        ChangeStatus_NextEvent();
+        CTTyperoom_render(SDataType, "csr_typeroom");
+    });
+
+    function ChangeStatus_Initialize()  {
+        if (ser_AppCurrent != 0) {
+            AjaxLoad(url = "/Appointment/ChangeStatus/?handler=Initialize"
+                , data = {
+                    'app_id': ser_AppCurrent
+                }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != undefined && result != null && result != "") {
+                        let data = JSON.parse(result);
+                        DataDetailSchedule = data.Detail;
+                        DataComboNewStatus = data.StatusNext;
+                        Status_NewStatus = DataComboNewStatus.reduce((pre, arr) => {
+                            if(arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+
+                        if (DataComboNewStatus.length != 0) {
+                            let StatusFollow = (DataComboNewStatus[0].StatusFollow).split(",");
+                            let DataComboAppointmentStatus = [];
+                            for (let i = 0; i < StatusFollow.length; i++) {
+                                let StatusID = Number(StatusFollow[i]);
+                                for (let j = 0; j < DataComboNewStatus.length; j++) {
+                                    let StatusNewID = Number(DataComboNewStatus[j].ID);
+                                    if (StatusID == StatusNewID) {
+                                        DataComboAppointmentStatus.push(DataComboNewStatus[j]);
+                                    }
+                                }
+                            }
+                            ChangeStatus_NextRender(DataComboAppointmentStatus, "ChangeStatus_NewArea");
+                        }
+                        Promise.all([ChangeStatus_LoadEmployeeByGroup(groupID = 14, 'doctor'), ChangeStatus_LoadEmployeeByGroup(groupID = 17, 'ass')])
+                            .then((results) => {
+                                ser_DataDoctor = results[0] ?? [];
+                                ser_DataAssist = results[1] ?? [];
+                                Load_Combo(ser_DataDoctor, "ccb_ChangeStatus_DoctorID", false);
+                                Load_Combo(ser_DataDoctor, "ccb_ChangeStatus_DoctorID2", false);
+                                Load_Combo(ser_DataDoctor, "ccb_ChangeStatus_DoctorID3", false);
+                                Load_Combo(ser_DataDoctor, "ccb_ChangeStatus_DoctorID4", false);
+                                Load_Combo(ser_DataAssist, "ccb_ChangeStatus_AssistID", false);
+                                Load_Combo(ser_DataAssist, "ccb_ChangeStatus_AssistID2", false);
+                                Load_Combo(ser_DataAssist, "ccb_ChangeStatus_AssistID3", false);
+                                Load_Combo(ser_DataAssist, "ccb_ChangeStatus_AssistID4", false);
+                                ChangeStatus_FillData();
+                                $('#ChangeStatus_NewArea .newstatus:first').click();
+                            });
+                    }
+                }
+            );
+        }
+    }
+    async function ChangeStatus_LoadEmployeeByGroup(groupID = 14, ver = "") {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                let currDate = new Date();
+                currDate.setHours(0, 0, 0, 0);
+                AjaxLoad(url = "/Appointment/ChangeStatus/?handler=LoadEmployee&ver=" + ver
+                    , data = {
+                        'datefrom': ConvertDateTimeUTC_YMD(currDate)
+                        , 'dateto': ConvertDateTimeUTC_YMD(currDate)
+                        , 'branchID': ser_BranchID
+                        , 'groupID': groupID
+                    }
+                    , async = true
+                    , error = function () {
+                        notiError_SW();
+                        resolve([]);
+                    }
+                    , success = function (result) {
+                        if (result != undefined && result != null && result != "") {
+                            let datas = JSON.parse(result);
+                            let dtResult = [];
+                            let { Table: dtWork, Table1: dtWorkExt, Table2: dtShift, Table3: dtEmpWork, Table4: dtEmpAll, Table5: dtEmpNonWork } = datas
+                            let dataWork = Work_Scheduler_Get_From_TokenDoc(ser_BranchID, currDate, currDate, dtWork, dtWorkExt, dtShift, dtEmpWork) ?? [];
+                            let objWorked = dataWork.reduce((pre, arr) => { if (arr.EmpID) pre[arr.EmpID] = arr; return pre; }, {});
+                            for (let i = 0; i < dtEmpAll.length; i++) {
+                                let item = dtEmpAll[i];
+                                let empWork = objWorked[item.ID];
+                                if ((empWork?.IsWork ?? 0) == 1) {
+                                    dtResult.push(item)
+                                }
+                            }
+                            dtResult = dtResult.concat(dtEmpNonWork ?? []);
+                            resolve(dtResult);
+                        }
+                        resolve([]);
+                    }
+                    , sender = null
+                    , before = null
+                    , complete = null
+                    , nolimit = true
+                );
+            }, 100)
+        })
+    }
+    function ChangeStatus_FillData() {
+        if (DataDetailSchedule) {
+            let item = DataDetailSchedule[0];
+            let statusName = author_get("UserLang") == 'en' ? item.StatusNameLangOther : item.StatusName;
+            let CurrentDoctor = item.CurrentDocReal != 0 ? item.CurrentDocReal : item.CurrentDoctor;
+            $('#ChangeStatus_Current').html(statusName);
+
+            if (CurrentDoctor != 0 || item.DoctorID != 0) {
+                $("#ChangeStatus_DoctorID").dropdown("refresh");
+                $("#ChangeStatus_DoctorID").dropdown("set selected", (CurrentDoctor != 0 ? CurrentDoctor : item.DoctorID));
+                if (DataEmployee != undefined && CurrentDoctor != 0) {
+                    let obj = Fun_GetObject_ByID(DataEmployee, CurrentDoctor);
+                    $('#ChangeStatus_CurrentDoctor').html(`<div class="d-flex align-items-center"><img class="avatar avatar-sm me-3" src="${obj.Avatar}" alt="label-image" /><div><div>@Local["Bác sĩ"]</div><div class="fw-bold text-primary">${obj.Name}</div></div></div>`)
+
+                    $('#ChangeStatus_CurrentDoctor').removeClass('d-none');
+
+                }
+            }
+            if ((item.RoomID != 0) && (item.RoomID != null)) {
+                $('#ChangeStatus_CurrentRoom').html(item.RoomName);
+                $('#ChangeStatus_AreaRoom').removeClass('d-none');
+            }
+        }
+    }
+    function ChangeStatus_NextEvent() {
+        $("#ChangeStatus_NewArea").on("click", ".newstatus", function () {
+            $("#ChangeSMessage").html("");
+            $("#ChangeStatus_NewArea .newstatus").removeClass("active");
+            $(this).addClass("active");
+            let StatusID = Number($(this).attr("data-id"));
+            let Status = DataComboNewStatus.filter(status => status.ID == StatusID);
+            Status_IsChoosingRoom = 0;
+            if (Status.length > 0) {
+                Status_IsChoosingRoom = Status[0].IsChoosingRoom;
+                if (Status_IsChoosingRoom != 1) {
+                    $("#ChangeStatus_RoomArea").hide();
+                }
+                else {
+                    $("#ChangeStatus_RoomArea").show();
+                    ChangeStatus_RoomLoad();
+                }
+                if (Status[0].IsTreatment != 1) {
+                    Status_IsTreatment = 0;
+                    $("#ChangeStatus_Per .doc").addClass('d-none');
+                    $("#ChangeStatus_Per .ass").addClass('d-none');
+                }
+                else {
+                    Status_IsTreatment = 1;
+                    $("#ChangeStatus_Per .doc").removeClass('d-none');
+                    $("#ChangeStatus_Per .ass").removeClass('d-none');
+                }
+                if (Status[0].IsForectTime != 1) {
+                    Status_IsForectTime = 0;
+                    $("#ChangeStatus_ForectTimeArea").hide();
+                    $("#ChangeStatus_Per .forect").addClass('d-none');
+                }
+                else {
+                    Status_IsForectTime = 1;
+                    let forectTime = Status[0]?.TimeExpired || 0;
+                    $("#ChangeStatus_ForectTimeID").dropdown("refresh");
+                    $("#ChangeStatus_ForectTimeID").dropdown("set selected", forectTime);
+                    $("#ChangeStatus_Per .forect").removeClass('d-none');
+                }
+                Status_IsCheckout = Number(Status[0].IsCheckout);
+                Status_IsOption = Number(Status[0].StatusOption);
+            }
+        })
+        $('#CSR_searchinput').keyup(function () {
+            if ($(this).val().length > 0) $("#CSR_searcharea .btn_clear").removeClass('opacity-1');
+            else $("#CSR_searcharea .btn_clear").addClass('opacity-1');
+            $("#CSR_searcharea .fa-search").hide();
+            $("#CSR_searcharea .spinner-border").removeClass('d-none');
+            clearTimeout(crs_timer);
+            crs_timer = setTimeout(function (e) {
+                CSR_Filter();
+            }, 500);
+        });
+        $("#CSR_searcharea").on('click', '.btn_clear', function (e) {
+            $('#CSR_searchinput').val('');
+            $("#CSR_searcharea .btn_clear").addClass('opacity-1');
+            CSR_Filter();
+
+        });
+    }
+    function ChangeStatus_NextRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let name = author_get("UserLang") == 'en' ? item.NameLangOther : item.Name;
+                    let tr = '<li class="nav-item">'
+                        + '<a data-id="' + item.ID + '" data-hover data-id="' + item.ID + '" data-index="' + i + '" class="newstatus nav-link text-dark text-sm p-2 position-relative">'
+                        + '<span class="text-sm">' + name + '</span>'
+                        + '</a>'
+                        + '</li>'
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function CTTyperoom_render (data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                stringContent =
+                    '<li class="nav-item" role="presentation">'
+                + '<a class="roomtype nav-link cursor-pointer py-1" data-bs-toggle="pill" data-id="' + 0 + '"  role="tab"><i class=" text-gradient text-primary fas fa-filter"></i></a>'
+                    + '</li>';
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent
+                        + '<li class="nav-item" role="presentation">'
+                        + '<a class="roomtype nav-link cursor-pointer nav-item-text py-1" data-bs-toggle="pill" data-id="' + item.ID + '"  role="tab">' + item.Name + '</a>'
+                        + '</li>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    //#endregion
+
+
+    //#region // Room
+
+    function ChangeStatus_RoomLoad() {
+        AjaxLoad(url = "/Appointment/ChangeStatus/?handler=InitializeData_Room"
+            , data = {}
+            , async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    SDataRoom = datas.Table1;
+                    SDataLevel = datas.Table;
+
+                    if (SDataLevel.length != 0 || SDataRoom.length != 0) {
+                        ChangeStatus_FloorRender(SDataLevel, SDataRoom, "ChangeStatus_RoomContent");
+                    }
+
+                }
+            }, sender = null
+            , before = function (e) {
+                $("#ct_waiting").show();
+            }
+            , complete = function (e) {
+                $("#ct_waiting").hide();
+            }
+        );
+
+    }
+    function ChangeStatus_FloorRender (Level, Room, id) {
+
+        var myNode = document.getElementById(id);
+        let stringContent = '';
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            for (let i = 0; i < Level.length; i++) {
+                let item_level = Level[i];
+                let item_room = Room.filter(word => word["LevelID"] == item_level.ID);
+                if (item_room && item_room.length == 0) continue;
+                let tr = `<div class="row">
+                        <div class="col-md-12 mx-auto">
+                            <div class="accordion">
+                                <div class="accordion-item mb-3">
+                                    <h5 class="accordion-header" id="cthlevel_${item_level.ID}">
+                                        <button class="accordion-button p-2 collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#ctlevel_${item_level.ID}" aria-expanded="true" aria-controls="ctlevel_${item_level.ID}">
+                                             <i class="collapse-close fa fa-plus text-xs  position-absolute start-0 me-3" aria-hidden="true"></i>
+                                            <i class="collapse-open fa fa-minus text-xs  position-absolute start-0 me-3" aria-hidden="true"></i>
+                                            <span class="text-sm text-primary fw-bold ps-2">${item_level.Name}</span>
+                                        </button>
+                                    </h5>
+                                    <div id="ctlevel_${item_level.ID}" class="accordion-collapse collapsesticky collapse show" aria-labelledby="cthlevel_${item_level.ID}">
+                                        <div class="accordion-body p-0 text-sm">
+                                              <div class="row">
+                                                ${ChangeStatus_RoomRender(item_room)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>`;
+                stringContent = stringContent + tr;
+            }
+        }
+        myNode.innerHTML = stringContent;
+        ChangeStatus_RoomEvent();
+    }
+    function ChangeStatus_RoomRender (item_room) {
+        let res = '';
+        for (let i = 0; i < item_room.length; i++) {
+            let item = item_room[i];
+            let chair = ``,isbusy=``;
+            if (Number(item.ChairID) != 0) {
+                chair = `<div class="text-nowrap fst-italic text-xs">${item.NameChair}</div>`;
+            }
+
+            if (ser_PKCheckingrom == 0 && Number(item.IsAval) == 0) {
+
+                isbusy = `busyroomstatus`;
+            }
+            let tr =
+                `<div class="roomDetail ${isbusy} cursor-pointer text-dark d-inline-block position-relative  m-1 p-0"
+                        data-IsCashier="${item.IsCashier}" data-IsTreatment="${item.IsTreatment}"
+                        data-IsXquang="${item.IsXquang}" data-IsExamination="${item.IsExamination}"
+                        data-nameroom="${item.NameRoom}" data-namechair="${item.NameChair}"
+                        data-id="${item.ID}" data-chairid="${item.ChairID}">
+
+                    <div class="roomContent p-2  border-1 border border-light border-radius-md bg-gray-200 h-100">
+                        <div class="text-sm text-center mb-0 overflow-hidden">
+                              <div class="text-nowrap ">${item.NameRoom}</div>
+                              ${chair}
+                           </div>
+                    </div>
+                </div>`  ;
+            res = res + tr;
+        }
+        return res;
+    }
+    function ChangeStatus_RoomEvent() {
+        $('#ChangeStatus_RoomContent .roomDetail').on('click', function () {
+            if (!$(this).hasClass("busyroomstatus")) {
+                $('#ChangeStatus_RoomContent .roomDetail').removeClass('active');
+                $(this).addClass('active');
+            }
+        });
+        $('#csr_typeroom .roomtype').unbind().click(function () {
+            let _ty = Number($(this).attr('data-id'));
+            switch (_ty) {
+                case 0: {
+                    $('#ChangeStatus_RoomContent .roomDetail').removeClass('d-none');
+                }
+                    break;
+                case 1: {
+                    $('#ChangeStatus_RoomContent .roomDetail').addClass('d-none');
+                    $('#ChangeStatus_RoomContent .roomDetail[data-iscashier=1]').removeClass('d-none');
+
+                }
+                    break;
+                case 2: {
+                    $('#ChangeStatus_RoomContent .roomDetail').addClass('d-none');
+                    $('#ChangeStatus_RoomContent .roomDetail[data-istreatment=1]').removeClass('d-none');
+                }
+                    break;
+                case 3: {
+                    $('#ChangeStatus_RoomContent .roomDetail').addClass('d-none');
+                    $('#ChangeStatus_RoomContent .roomDetail[data-isexamination=1]').removeClass('d-none');
+
+                }
+                    break;
+                case 4: {
+                    $('#ChangeStatus_RoomContent .roomDetail').addClass('d-none');
+                    $('#ChangeStatus_RoomContent .roomDetail[data-isxquang=1]').removeClass('d-none');
+                }
+                    break;
+            }
+        });
+    }
+    async function CSR_Filter () {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    $("#Setting_group").NavMobile('show')
+                    let textsearch = $('#CSR_searchinput').val().trim();
+                    if (textsearch == "") {
+                        $('#ChangeStatus_RoomContent .roomDetail').removeClass('d-none');
+                    }
+                    else {
+                        let search = xoa_dau(textsearch.toLowerCase());
+                        if (search == "") {
+                            $('#ChangeStatus_RoomContent .roomDetail').removeClass('d-none');
+                        }
+                        else {
+                            $('#ChangeStatus_RoomContent .roomDetail').each(function () {
+                                if (!xoa_dau($(this).attr('data-nameroom')).toLowerCase().includes(search)
+                                    && !xoa_dau($(this).attr('data-namechair')).toLowerCase().includes(search)
+                                )
+                                    $(this).addClass('d-none');
+                            });
+                        }
+                    }
+
+
+                    $("#CSR_searcharea .fa-search").show();
+                    $("#CSR_searcharea .spinner-border").addClass('d-none');
+                    resolve()
+                }
+            )
+        })
+    }
+    //#endregion
+
+
+    //#region // Excute Data.
+    function ChangeStatus_CheckMatch (obj) {
+        let _r = true;
+        for (let i = 0; i < obj.length; i++) {
+            if (obj[i] != 0) {
+                for (let j = i+1; j < obj.length; j++) {
+                    if (obj[j] != 0) {
+                        if (obj[i] == obj[j]) {
+                            _r = false;
+                            return _r;
+                        }
+
+                    }
+                }
+            }
+        }
+        return _r;
+    }
+    function ChangeStatus_ExcuteData () {
+        $("#ChangeSMessage").html("");
+
+        if ($("#ChangeStatus_NewArea .nav-link.active").length > 0) {
+            var data = new Object();
+            let forectTime = Number($('#ChangeStatus_ForectTimeID').dropdown('get value')) ? Number($('#ChangeStatus_ForectTimeID').dropdown('get value')) : 0;
+            data.StatusID = Number($("#ChangeStatus_NewArea .nav-link.active").attr("data-id"));
+            data.RoomID = $("#ChangeStatus_RoomContent .roomDetail.active").length > 0
+                    ? $("#ChangeStatus_RoomContent .roomDetail.active").attr("data-id")
+                : 0;
+            data.ChairID = $("#ChangeStatus_RoomContent .roomDetail.active").length > 0
+                ? $("#ChangeStatus_RoomContent .roomDetail.active").attr("data-chairid")
+                : 0;
+
+            data.Content = $('#ChangeStatus_Content').val() ? $('#ChangeStatus_Content').val() : "";
+            data.ForectTime = ((Status_IsForectTime == 1) ? forectTime : 0) ;
+            data.DoctorID = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_DoctorID').dropdown('get value')) ? Number($('#ChangeStatus_DoctorID').dropdown('get value')) : 0));
+            data.DoctorID2 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_DoctorID2').dropdown('get value')) ? Number($('#ChangeStatus_DoctorID2').dropdown('get value')) : 0));
+            data.DoctorID3 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_DoctorID3').dropdown('get value')) ? Number($('#ChangeStatus_DoctorID3').dropdown('get value')) : 0));
+            data.DoctorID4 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_DoctorID4').dropdown('get value')) ? Number($('#ChangeStatus_DoctorID4').dropdown('get value')) : 0));
+            data.AssistID = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_AssistID').dropdown('get value')) ? Number($('#ChangeStatus_AssistID').dropdown('get value')) : 0));
+            data.AssistID2 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_AssistID2').dropdown('get value')) ? Number($('#ChangeStatus_AssistID2').dropdown('get value')) : 0));
+            data.AssistID3 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_AssistID3').dropdown('get value')) ? Number($('#ChangeStatus_AssistID3').dropdown('get value')) : 0));
+            data.AssistID4 = ((Status_IsTreatment == 0) ? 0 : (Number($('#ChangeStatus_AssistID4').dropdown('get value')) ? Number($('#ChangeStatus_AssistID4').dropdown('get value')) : 0));
+            data.IsCheckout = Status_IsCheckout;
+            if (data.StatusID == 3) data.RoomID = 0;
+
+            if(ser_PKCheckingrom == 1 && Status_IsChoosingRoom == 1 && data.RoomID == 0){
+                $("#ChangeSMessage").html("@Local["Chọn phòng"]");
+                return;
+            }
+
+            if (!ChangeStatus_CheckMatch([data.DoctorID, data.DoctorID2, data.DoctorID3, data.DoctorID4])) {
+                $("#ChangeSMessage").html("@Local["Trùng bác sĩ"]");
+                return;
+            }
+            if (!ChangeStatus_CheckMatch([data.AssistID, data.AssistID2, data.AssistID3, data.AssistID4])) {
+                $("#ChangeSMessage").html("@Local["Trùng phụ tá"]");
+                return;
+            }
+
+            let dataMain = {};
+            dataMain.CurrentID = ser_AppCurrent;
+
+            dataMain.AppToken = typeof ser_MainAppToken === 'undefined' ? "" : ser_MainAppToken;
+            dataMain.AppPlatform = typeof ser_MainAppPlatform === 'undefined' ? "" : ser_MainAppPlatform;
+            dataMain.AppUser = typeof ser_MainApp_User === 'undefined' ? "" : ser_MainApp_User;
+            dataMain.AppDetail = data;
+            AjaxJWT(url = "/api/Customer/Appointment/ChangeStatus_Next"
+                , data = JSON.stringify(dataMain)
+                , async = true
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let Current_Status = 0;
+                        let Current_ScheduleNext = 0;
+                        if (data.length > 0) {
+                            Current_Status = Number(data[0].Result);
+                            Current_ScheduleNext = Number(data[0].ScheduleNext);
+                            if (data[0].UserOfDoctor != 0)
+                                fcm_senduser(Number(data[0].UserOfDoctor), Master_circleAvatar, sys_employeeName_Main, 'Arrive ' + data[0].CustName);
+                        }
+                        notiSuccess();
+                        if (typeof LoadScheduleAjax === 'function') LoadScheduleAjax(0);
+                        if (Current_Status != 0) {
+                            if (typeof currentStatusAppointment !== 'undefined') {
+                                currentStatusAppointment = Current_Status;
+                            }
+                            if (typeof LoadStatusSExtra === 'function') LoadStatusSExtra(ser_AppCurrent, Current_Status);
+                            if (typeof LoadAppointmentNote === 'function') LoadAppointmentNote(ser_AppCurrent);
+                            if (typeof LoadAppointmentLog === 'function') LoadAppointmentLog();
+                            if (typeof LoadStatusSmaill === 'function') LoadStatusSmaill(ser_AppCurrent);
+
+                            if(Status_IsOption != 0) {
+                                let statusID = Number($("#ChangeStatus_NewArea .nav-link.active").attr("data-id"));
+                                $("#DetailModal_Content").html('');
+                                $("#DetailModal_Content").load('/Appointment/StatusOption?CustomerID=' + ser_MainCustomerID + '&StatusID=' + statusID+ '&AppID=' + ser_AppCurrent);
+                                $('#DetailModal').modal('show');
+                            }
+                            else {
+                                CloseModal();
+                            }
+                        }
+
+                    } else {
+                       notiWarning("@Local["Đã nhận khách, không thể đổi trạng thái"]");
+                    }
+                    $("#ChangeStatus_Excute").removeClass('disabled');
+                }
+                , before = function (e) {
+                    $("#ChangeStatus_Excute").addClass('disabled');
+                }
+            );
+        }
+        else {
+            $("#ChangeStatus_NewArea").css({ "border-color": "red" });
+        }
+        return false;
+    }
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require('/js/customjs/custom-validation.js')</script>
+<style>
+    .roomDetail.active .roomContent {
+        border: 2px dashed rgb(var(--bs-primary)) !important;
+        color: rgb(var(--bs-primary)) !important;
+        background:white !important;
+        font-weight:600;
+    }
+    .roomDetail .roomContent {
+        border: 2px dashed transparent !important;
+    }
+    #ChangeStatus_RoomGuide .roomlight {
+        background: rgb(var(--bs-primary)) !important;
+        border-radius: 20px;
+    }
+
+    .busyroomstatus .roomContent {
+        background: rgb(var(--bs-primary)) !important;
+        color: white !important;
+       
+    }
+
+
+    .roomDetail {
+        max-width: 120px;
+        width: auto;
+        min-width: 100px;
+    }
+
+    .appdetail_disable {
+        opacity: 0.2;
+        pointer-events: none;
+        cursor: none;
+    }
+</style>

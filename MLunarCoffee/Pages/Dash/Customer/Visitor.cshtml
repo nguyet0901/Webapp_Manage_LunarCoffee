@@ -1,0 +1,103 @@
+﻿@page
+@model MLunarCoffee.Pages.Dash.Customer.VisitorModel
+@{
+    Layout = null;
+}
+<div class="card">
+    <div class="card-body text-center">
+ 
+        <h1 class="text-gradient text-primary">
+            <span id="VisitorTotal">0</span>
+            <span id="RateVisitoCustomer" class="text-lg ms-n2">0%</span>
+        </h1>
+        <h6 class="mb-0 font-weight-bolder">@Local["CheckedIn"]</h6>
+        <p class="opacity-8 mb-0 text-sm" id="dash_visitor_time"> </p>
+    </div>
+</div>
+
+ 
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        Dashboard_Visitor_Load(new Date());
+        Dashboard_Visitor_Time();
+    });
+
+    function Dashboard_Visitor_Time () {
+        let date_e = new Date();
+        let date_b = new Date(date_e.getFullYear(), date_e.getMonth(), 1);
+        $('#dash_visitor_time').html(("0" + date_b.getDate()).slice(-2)
+            + ' - ' + ("0" + date_e.getDate()).slice(-2) 
+            + ' ' + GetMonthName_Eng(date_e))
+    }
+    function Dashboard_Visitor_Load(_date) {
+        let _branch ='@Model._branch';
+        AjaxLoad(url="/Dash/Customer/Visitor/?handler=Loadata"
+            , data={'branchID': _branch, 'date': GetDateTime_String_DMY(_date)}
+            , async=true
+            , error=function () {notiError_SW()}
+            , success=function (result) {
+                if (result!="") {
+                    let data=JSON.parse(result);
+                    let total=0;
+                    let max=0;
+                    if (data!=undefined&&data.length!=0) {
+                        for (i=0; i<data.length; i++) {
+                            total=total+Number(data[i].NUMBER);
+                            max=(max<Number(data[i].NUMBER))? Number(data[i].NUMBER):max;
+                            data[i].Name=GetMonthName_Eng(data[i].DATE_BEGIN);
+                        }
+
+                        let Total_Customer_Month_Current=Number(data[data.length-1].NUMBER);
+                        let Total_Customer_Month_Last=Number(data[data.length-2].NUMBER);
+                        let Rate_Increase=0;
+                        if (Total_Customer_Month_Current==0) {
+                            Rate_Increase=Total_Customer_Month_Last*100
+                        }
+                        else if (Total_Customer_Month_Last==0) {
+                            Rate_Increase=Total_Customer_Month_Current*100;
+                        }
+                        else {
+                            Rate_Increase=(Math.abs((Total_Customer_Month_Current-Total_Customer_Month_Last)/Total_Customer_Month_Last)*100).toFixed(0);
+                        }
+
+                        if (Total_Customer_Month_Current>Total_Customer_Month_Last) {
+                            $("#RateVisitoCustomer").parent(".header_ratio").addClass("increase");
+                        }
+                        else {
+                            $("#RateVisitoCustomer").parent(".header_ratio").addClass("reduced");
+                        }
+
+                        if (total!=0) {
+                            if (document.getElementById('VisitorTotal')) {
+                                const countUp = new CountUp('VisitorTotal', Total_Customer_Month_Current);
+                                if (!countUp.error) countUp.start();
+
+                            }
+                            if (Total_Customer_Month_Current >= Total_Customer_Month_Last) {
+                                $("#RateVisitoCustomer").html('<i class="fas fa-arrow-up text-gradient text-success"> ' + Rate_Increase + ' %</i>');
+                            }
+                            else {
+                                $("#RateVisitoCustomer").html('<i class="fas fa-arrow-down text-gradient text-danger"> ' + Rate_Increase + ' %</i>');
+
+                            }
+  
+                        }
+ 
+                    }
+
+                }
+            }
+            
+        );
+
+    
+    }
+
+
+
+
+</script>
+ 

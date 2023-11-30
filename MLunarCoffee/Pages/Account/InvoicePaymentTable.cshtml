@@ -1,0 +1,1545 @@
+﻿@page
+@model MLunarCoffee.Pages.Account.InvoicePaymentTableModel
+@{
+    Layout = null;
+}
+<div id="IPT_Container">
+    <div class="vtcardheader card-header px-0 pt-1 pb-2">
+        <div class="left pe-2">
+            <div class="input-group flex-nowrap" id="InvoicePay_SortDiv">
+                <div class="input-group-text input-group-text px-2">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <div class="spinner-border spinner-border-sm d-none"></div>
+                </div>
+                <input id="InvoicePay_ipSearch" type="text" class="form-control" placeholder="eg .@Local["Mã phiếu"], @Local["Số điện thoại, tên hoặc mã khách hàng"].ToLower()">
+                <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                <a id="InvoicePay_btnSortType" title="sort by type" class="input-group-text">
+                    <i class="text-lg text-dark fas fa-layer-group"></i>
+                </a>
+                <a id="InvoicePay_btnSortDate" title="sort by date" class="input-group-text">
+                    <i class="text-lg text-dark fas fa-clock"></i>
+                </a>
+            </div>
+        </div>
+        <div class="right overflow-auto">
+            <div class="text-danger text-end me-2 text-gradient text-sm font-weight-bold mt-2" style="display:none;" id="IPShowMessenge">@Local["Tối đa 31 ngày"]</div>            
+            @*Sync*@
+            <div class="position-relative d-lg-inline _tab_control_" data-tab="account_btn_sync_invoice" id="IPT_BtnSyncAccount" onclick="event.preventDefault(); IPT_SyncAccountMulti()">
+                <button class="btn btn-dark position-relative mb-0 text-nowrap py-2">
+                    @Local["Đồng bộ"] <span id="IPT_lbTotalSync"></span>
+                </button>
+            </div>
+            @*Export*@
+            <div class="btn-group _tab_control_" data-tab="export_excel">
+                <button class="btn btn-dark btn-sm px-3 py-1 pe-none mb-0">
+                    <i class="ni vtt-icon  vttech-icon-export-ex text-white text-xs"></i>
+                </button>
+                <button class="btn btn-dark border-start border-light px-3 py-2 mb-0 text-nowrap" onclick="event.preventDefault();return InvoicePay_ExportPayment(0);">@Local["Tất cả"]</button>
+                <button class="btn btn-dark border-start border-light btn-sm px-3 py-2 mb-0 text-nowrap" onclick="event.preventDefault();return InvoicePay_ExportPayment(1);">@Local["Tùy chọn"]</button>
+            </div>
+            <button class="btn btn-dark position-relative dropdown-toggle mb-0 py-2" data-bs-toggle="collapse" data-bs-target="#IPFillColLists">
+                @Local["Lọc"]
+            </button>
+            <button class="btn btn-dark position-relative dropdown-toggle mb-0 py-2" data-bs-toggle="collapse" data-bs-target="#IPcolLists">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+        <div class="toggle">
+            <div class="collapse collapsesticky position-absolute z-index-3 end-1 top-100 mt-2" id="IPFillColLists" style="min-width:300px;">
+                <div class="card card-body text-dark text-capitalize opacity-10">
+                    <div class="position-relative w-100">
+                        <span class="bg-body fw-bold py-0 text-dark text-xs">
+                            @Local["Loại hóa đơn thanh toán"]
+                        </span>
+                    </div>
+                    <div class="field col-12 mt-2">
+                        <div class="ui fluid search selection dropdown form-control" id="IDInvoicePaymentType">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Loại hóa đơn thanh toán"]"</div>
+                            <div class="menu" tabindex="-1">
+                                <div class="item" data-value="0">@Local["Tất cả"]</div>
+                                <div class="item" data-value="1">@Local["Thu tiền khách hàng"]</div>
+                                <div class="item" data-value="2">@Local["Chi tiền khách hàng"]</div>
+                                <div class="item" data-value="5">@Local["Thu khác"]</div>
+                                <div class="item" data-value="6">@Local["Chi khác"]</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field col-12 mt-2">
+                        <div class="ui fluid search selection dropdown form-control" id="IDAccountReason">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Loại thanh toán"]</div>
+                            <div id="cbbAccountReason" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="position-relative w-100">
+                        <hr class="dark horizontal mt-2 my-1">
+                        <span class="bg-body fw-bold py-0 text-dark text-xs">
+                            @Local["Hình thức thanh toán"]
+                        </span>
+                    </div>
+                    <div class="field col-12 mt-2">
+                        <div class="ui fluid search selection dropdown form-control" id="IPT_MethodID">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Hình thức"]</div>
+                            <div id="cbbIPT_MethodID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field col-12 mt-2">
+                        <div class="ui fluid search selection dropdown form-control" id="IPT_MethodTypeID">
+                            <input type="hidden" name="branch" class="input payment" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Chi tiết"]</div>
+                            <div id="cbbIPT_MethodTypeID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="position-relative w-100">
+                        <hr class="dark horizontal  mt-2 my-1">
+                        <span class="bg-body fw-bold py-0 text-dark text-xs">
+                            @Local["Tích hợp"]
+                        </span>
+                    </div>
+                    <div class="field col-12 mt-2 d-none" id="IPT_AccountingTypeFilter">
+                        <div class="ui fluid search selection dropdown form-control" id="IPT_AccountingType">
+                            <input type="hidden" name="accounttype" value="-1">
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="text">@Local["Dữ liệu kế toán"]</div>
+                            <div class="menu" tabindex="-1" id="IPT_ccbAccountingType">
+                                <div class="item active selected" data-value="-1">@Local["Dữ liệu kế toán"]</div>
+                                <div class="item" data-value="0">@Local["Đang đồng bộ"]</div>
+                                <div class="item" data-value="1">@Local["Đã đồng bộ"]</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mt-3" onclick="InvoicePay_CloseCollap();">@Local["Đóng"]</button>
+                </div>
+            </div>
+
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="IPcolLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="custcreatedname" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người tạo hồ sơ"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="cust_code" type="checkbox" checked>
+                        </div>
+                        <p class="text-sm">@Local["Mã khách hàng"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="cust_code_old" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã khách hàng cũ"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="cust_doc_code" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="phone" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Điện thoại"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="address" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Địa chỉ"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="city" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Thành phố"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="district" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Quận huyện"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="commune" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Phường xã"]</p>
+                    </li>
+                    <li class="d-flex" id="per_Invoice_FileAttach">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="fileattach" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Tệp đính kèm"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="carestaff" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Nhân viên chăm sóc"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="applicant" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người nộp"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="receiver" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người nhận"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="applicantOther" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người nộp khác"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="receiverOther" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người nhận khác"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="actualamount" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Thực tế"] (@Local["Thu"]/@Local["Chi"])</p>
+                    </li>
+
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi tiết"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="paymenttype" type="checkbox" checked="checked">
+                        </div>
+                        <p class="text-sm">@Local["Hình thức"]</p>
+                    </li>
+
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="bank_InvoicePay_code" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã hóa đơn ngân hàng"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="content" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Nội dung"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="type" type="checkbox" checked="checked">
+                        </div>
+                        <p class="text-sm">@Local["Loại"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="CusSource" type="checkbox" checked="checked">
+                        </div>
+                        <p class="text-sm">@Local["Nguồn khách hàng"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="branch" type="checkbox" checked="checked">
+                        </div>
+                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="thirdaccounting" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Dữ liệu kế toán"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="check" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Kiểm tra"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="timecheck" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Thời gian kiểm tra"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="w-100" onclick="event.preventDefault(); IPT_Print()">
+                            <button class="btn btn-dark w-100 mb-0 text-nowrap py-2">
+                                @Local["In"] 
+                            </button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card-body p-0 position-relative">
+        <div id="InvoicePay_DivShowMore" class="position-absolute z-index-3 max-width-400 w-100" style="display: none;"></div>
+        <div id="InvoicePay_Waiting" class="waitingdiv position-absolute top-0 start-50 translate-middle-x" style="display:none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">@Local["Đang tải"]...</span>
+            </div>
+        </div>
+        <div id="IPT_ckbAllowChooseDataDiv" class="col-auto my-auto _tab_control_" data-tab="account_choose_multi_invoice">
+            <div class="form-check d-flex px-0 p-2">
+                <input class="form-check-input m-0" type="checkbox" id="IPT_ckbAllowChooseData" onchange="event.preventDefault();return IPT_SelectAll();">
+                <label class="ms-2 mt-0">@Local["Tùy chọn dữ liệu"]</label>
+            </div>
+        </div>
+        <div class="m-0 my-0 mobile-responsive position-relative">
+            <table data-name="InvoicePaymentTable" class="table vt-table mb-0" id="dtContentInvoicePaymentList">
+                <thead>
+                    <tr>
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
+                        <th class="text-center">
+                            <div class="form-check text-lg d-inline-flex p-2">
+                                <input id="IPT_ckbChooseAll" class="form-check-input m-0 text-sm IPT_ckbRowItem" name="ticketAll" type="checkbox" checked disabled onchange="event.preventDefault();return IPT_SelectAll();">
+                                <label class="form-check-label text-sm font-weight-bold"></label>
+                            </div>
+                        </th>
+                        <th style="width:15px;">@Local["#"]</th>
+                        <th style="min-width: 120px;">@Local["Mã phiếu"]</th>
+                        <th style="min-width: 120px;">@Local["Ngày tạo"]</th>
+                        <th data-name="custcreatedname" style="min-width: 120px;">@Local["Người tạo hồ sơ"]</th>
+                        <th data-name="cust_code" style="min-width: 150px;">@Local["Mã khách hàng"]</th>
+                        <th data-name="cust_code_old" style="min-width: 170px;">@Local["Mã khách hàng cũ"]</th>
+                        <th data-name="cust_doc_code" style="min-width: 140px;">@Local["Mã hồ sơ"]</th>
+                        <th style="min-width: 150px;">@Local["Khách hàng"]</th>
+                        <th data-name="phone" style="min-width: 120px;">@Local["Điện thoại"]</th>
+                        <th data-name="address" style="min-width: 200px;">@Local["Địa chỉ"]</th>
+                        <th data-name="commune" style="min-width: 200px;">@Local["Phường xã"]</th>
+                        <th data-name="district" style="min-width: 200px;">@Local["Quận huyện"]</th>
+                        <th data-name="city" style="min-width: 200px;">@Local["Thành phố"]</th>
+                        <th data-name="fileattach" style="min-width: 75px;">@Local["Tệp đính kèm"]</th>
+                        <th data-name="carestaff" style="min-width: 150px;">@Local["Nhân viên chăm sóc"]</th>
+                        <th style="min-width: 150px;">@Local["Thu ngân"]</th>
+                        <th data-name="applicant">@Local["Người nộp"]</th>
+                        <th data-name="receiver">@Local["Người nhận"]</th>
+                        <th data-name="applicantOther">@Local["Người nộp khác"]</th>
+                        <th data-name="receiverOther">@Local["Người nhận khác"]</th>
+                        <th>@Local["Số tiền"]</th>
+                        <th data-name="actualamount">@Local["Thực tế"] (@Local["Thu"]/@Local["Chi"])</th>
+                        <th data-name="detail" style="min-width: 100px">@Local["Chi tiết"]</th>
+                        <th data-name="paymenttype">@Local["Hình thức"]</th>
+                        <th data-name="bank_InvoicePay_code" style="min-width: 150px;">@Local["Mã hóa đơn ngân hàng"]</th>
+                        <th data-name="content">@Local["Nội dung"]</th>
+                        <th data-name="type" style="min-width:120px;">@Local["Loại"]</th>
+                        <th data-name="CusSource">@Local["Nguồn khách hàng"]</th>
+                        <th data-name="branch" style="min-width:120px;">@Local["Chi nhánh"]</th>
+                        <th data-name="thirdaccounting" style="min-width: 150px;">@Local["Dữ liệu kế toán"]</th>
+                        <th data-name="check">@Local["Kiểm tra"]</th>
+                        <th data-name="timecheck">@Local["Thời gian kiểm tra"]</th>
+                        <th data-name="">@Local["Xử lý"]</th>
+                    </tr>
+                </thead>
+                <tbody id="dtContentInvoicePaymentListBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button id="btnInvoiceLoadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1" onclick="InvoicePay_RenderMore()">@Local["Xem thêm"]</button>
+</div>
+
+<script type="text/javascript">
+
+    //#region //  DECLARE && INIT
+
+    var _BranchID = "@Model._BranchID";
+    let _BranchToken = "@Model._BranchToken";
+    let _CashierID = "@Model._CashierID";
+    var _DateFrom = "@Model._DateFrom";
+    var _DateTo = "@Model._DateTo";
+    let InvoicePay_DataUser, InvoicePay_DataEmployee, InvoicePay_DataBranch;
+    let InvoicePay_DataMethod = {}, InvoicePay_DataMethodType = {};
+    var InvoicePay_DataList = [], InvoicePay_DataListSlice = [];
+    let IPT_dataMethod = [];
+    let IPT_dataMethodType = [];
+    var InvoicePay_DataFilterList = [];
+    let InvoicePay_Limit = 10000;
+    let InvoicePay_Index = 0, InvoicePay_RenderBlock = 500;
+    let shtable;
+    let InvoicePay_dataAccReason;
+    let InvoicePay_ReasonType = 0, InvoicePay_Reason = 0, InvoicePay_TextSearch = '', InvoicePay_AccountingType = -1;
+    let IPT_MethodID = 0, IPT_MethodTypeID = 0;
+    let InvoicePay_SortType, InvoicePay_SortDate;
+    let InvoicePay_TimerSearch;
+    let InvoicePay_DataDetail = [];
+    let isPerApiAccount = 0;
+    let IPT_isAllowChoose = 0;
+    let IPT_isSync = 0;
+    let IPT_totalSync = 0;
+    let IPT_syncLimit = 100;
+    let IPT_dataReasonRoot = [];
+    $(document).ready(function () {
+        IPT_dataReasonRoot = [
+            //Type - 1: revenue, -2 expenditure;
+            { ID: -1, Name: '@Local["Dịch vụ"] (@Local["Thu"])', NameNoSign: '', TypeCheck: 1 },
+            { ID: -2, Name: '@Local["Dịch vụ"] (@Local["Chi"])', NameNoSign: '', TypeCheck: 2 },
+            { ID: -3, Name: '@Local["Cọc"] (@Local["Thu"])', NameNoSign: '', TypeCheck: 1 },
+            { ID: -4, Name: '@Local["Cọc"] (@Local["Chi"])', NameNoSign: '', TypeCheck: 2 },
+            { ID: -5, Name: '@Local["Thẻ"] (@Local["Thu"])', NameNoSign: '', TypeCheck: 1 },
+            { ID: -6, Name: '@Local["Thẻ"] (@Local["Chi"])', NameNoSign: '', TypeCheck: 2 },
+            { ID: -7, Name: '@Local["Thuốc"] (@Local["Thu"])', NameNoSign: '', TypeCheck: 1 },
+            //{ ID: -8, Name: '@Local["Thuốc"] (@Local["Chi"])', NameNoSign: '', TypeCheck: 2 },
+            { ID: -9, Name: 'Hoa hồng giới thiệu', NameNoSign: '', TypeCheck: 2 },
+            { ID: -10, Name: 'Chi mua hàng', NameNoSign: '', TypeCheck: 2 },
+            { ID: -11, Name: 'Chi mua labo', NameNoSign: '', TypeCheck: 2 },
+            { ID: -12, Name: 'Chi tiền cọc mua hàng', NameNoSign: '', TypeCheck: 2 },
+        ]
+        InvoicePay_Event();
+        Master_IndexDB_Reads(_Session_Data, [_Session_User, _Session_Employee, _Session_Branch]
+            , function (data) {
+                InvoicePay_DataUser = data[0];
+                InvoicePay_DataEmployee = data[1];
+                InvoicePay_DataBranch = data[2];
+                InvoicePay_Initialize();
+            })
+
+        $("#IDInvoicePaymentType").dropdown('refresh');
+        $("#IDInvoicePaymentType").dropdown('set selected', '0');
+        CheckPermissionControlInPage(sys_PerControlMH, "@Model._CurrentPath");
+        if (syn_Accountbrand && syn_Accountbrand != "") {
+            isPerApiAccount = $('#IPT_BtnSyncAccount').length > 0;
+            if (isPerApiAccount)
+                $('#IPT_AccountingTypeFilter').removeClass('d-none');
+        }
+
+    });
+
+    async function InvoicePay_Initialize() {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Account/InvoicePaymentTable/?handler=Initialize"
+                , data = {
+
+                }
+                , async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        IPT_dataMethod = data.Method;
+                        IPT_dataMethodType = data.MethodType;
+                        InvoicePay_dataAccReason = [...IPT_dataReasonRoot, ...data.AccountReason];
+
+                        Load_Combo(InvoicePay_dataAccReason, 'cbbAccountReason', true, '@Local["Tất cả loại"]')
+                        $("#IDAccountReason").dropdown("refresh");
+                        $("#IDAccountReason").dropdown("set selected", '0');
+
+                        Load_Combo(data.Method, 'cbbIPT_MethodID', true, '@Local["Hình thức"]')
+                        $("#IPT_MethodID").dropdown("refresh");
+                        $("#IPT_MethodID").dropdown("set selected", '0');
+
+                        let objDropdown = {
+                            onShow: function () {
+                                let ui_drop = $(this);
+                                Dropdown_Set_Position(ui_drop);
+                            },
+                            onHide: function () {
+                                let ui_drop = $(this);
+                                Dropdown_Remove_Position(ui_drop);
+                            },
+                            allowCategorySelection: true,
+                            forceSelection: false
+                        };
+                        $("#IDAccountReason, #IDInvoicePaymentType").dropdown(objDropdown);
+
+                        for (let i = 0; i < IPT_dataMethod.length; i++) {
+                            InvoicePay_DataMethod[IPT_dataMethod[i].ID] = IPT_dataMethod[i]
+                        }
+                        for (let j = 0; j < IPT_dataMethodType.length; j++) {
+                            InvoicePay_DataMethodType[IPT_dataMethodType[j].ID] = IPT_dataMethodType[j]
+                        }
+                        InvoicePay_LoadData();
+                    }
+                },
+                sender = null,
+                before = function (e) {
+                },
+                complete = function (e) {
+                }
+            );
+            resolve();
+        })
+    }
+    //#endregion
+
+    //#region LOADDATA
+    async function InvoicePay_LoadData(currentid = 0, type = 0, isSync = 0) {
+        new Promise((resolve, reject) => {
+            if (currentid == 0) {
+                InvoicePay_ReasonType = 0, InvoicePay_Reason = 0, InvoicePay_TextSearch = '';
+                InvoicePay_SortType = 'asc', InvoicePay_SortDate = 'desc';
+                InvoicePay_Index = 0;
+                $("#dtContentInvoicePaymentListBody").empty();
+                InvoicePay_DataDetail = [];
+            }
+
+            AjaxLoad(url = "/Account/InvoicePaymentTable/?handler=LoadataReceipt"
+                , data = {
+                    'dateTo': _DateTo,
+                    'dateFrom': _DateFrom,
+                    'branchid': _BranchID,
+                    'branchtoken': _BranchToken,
+                    'cashierid': _CashierID,
+                    'limit': InvoicePay_Limit,
+                    'currentid': currentid,
+                    'type': type
+                }
+                , async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        let dataList = data.Master;
+                        InvoicePay_DataDetail = data.Detail;
+                        if (dataList && dataList.length != 0) {
+                            if (currentid != 0) {
+                                let item = dataList[0];
+                                let idRow = 'InvoicePay_' + item.ID + '_' + item.Type_Check;
+                                let elementRow = $("#" + idRow);
+                                let stringContent = InvoicePay_RenderItem(item, isSync);
+                                if (elementRow.length != 0) {
+                                    elementRow.html(stringContent);
+                                    InvoicePay_DataList = InvoicePay_DataList.reduce((acc, obj) => {
+                                        if (obj.ID == currentid && item.Type_Check == obj.Type_Check)
+                                            acc.push(item);
+                                        else acc.push(obj);
+                                        return acc;
+                                    }, [])
+                                }
+                                else {
+                                    let tr = '<tr id=' + idRow + ' class="vt-number">' + stringContent + '</tr>'
+                                    $("#dtContentInvoicePaymentListBody").prepend(tr);
+                                    InvoicePay_DataList.unshift(item);
+                                }
+                            }
+                            else {
+                                InvoicePay_DataList = dataList;
+                                InvoicePay_DataListSlice = sliceIntoChunks(JSON.parse(JSON.stringify(dataList)), InvoicePay_RenderBlock);
+                                fnRenderBlock(InvoicePay_DataListSlice[InvoicePay_Index], "dtContentInvoicePaymentListBody"
+                                    , blocknum = 100
+                                    , fnrender = InvoicePay_RenderData
+                                    , fnsuccess = null
+                                );
+
+                            }
+                            $("#btnInvoiceLoadMore").removeClass('d-none');
+                            shtable.Refresh();
+                        }
+                        else {
+                            if (currentid != 0)
+                                InvoicePay_DataList = InvoicePay_DataList.filter((invoice) => invoice.ID != currentid);
+                        }
+                        InvoicePay_DataFilterList = [...InvoicePay_DataList];
+
+                        IPT_totalSync = InvoicePay_DataFilterList.length;
+                        let strSync = IPT_totalSync > IPT_syncLimit ? `<b class="text-warning">${IPT_totalSync}</b>` : IPT_totalSync
+                        if ($('#IPT_lbTotalSync').length > 0) $('#IPT_lbTotalSync').html(`(${strSync}/${ IPT_syncLimit })`);
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    if (currentid == 0) $("#InvoicePay_Waiting").show();
+                }
+                , complete = function (e) {
+                    if (currentid == 0) $("#InvoicePay_Waiting").hide();
+                }
+            );
+            resolve();
+        });
+    }
+
+
+    function InvoicePay_RenderMore() {
+        InvoicePay_Index += 1;
+        if (InvoicePay_DataListSlice && InvoicePay_DataListSlice[InvoicePay_Index]) {
+            fnRenderBlock(InvoicePay_DataListSlice[InvoicePay_Index], "dtContentInvoicePaymentListBody"
+                , blocknum = 100
+                , fnrender = InvoicePay_RenderData
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // RENDER DATA
+
+    async function InvoicePay_RenderData(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let rowID = 'InvoicePay_' + item.ID + '_' + item.Type_Check;
+                            let tr = '<tr id=' + rowID + ' class="vt-number">' + InvoicePay_RenderItem(item) + '</tr>';
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+
+                shtable.Refresh();
+                //Checking_TabControl_Permission();
+                Checking_TabControl_Permission_Exe(PermissionTable_TabControl);
+            }, 10);
+        });
+    }
+
+    function InvoicePay_RenderItem(item, isSync = 0) {
+
+        let obj = Fun_GetObject_ByID(InvoicePay_DataUser, item.Created_By);
+        let name = (obj != null) ? obj.Name : '@Local["Không xác định"]';
+        let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+        let methodPay = (InvoicePay_DataMethod[item.Method_ID] != undefined ? InvoicePay_DataMethod[item.Method_ID].Name : '')
+        let methodPayType = (InvoicePay_DataMethodType[item.Method_POS_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[item.Method_POS_ID].Name : '')
+            + (InvoicePay_DataMethodType[item.Method_Transfer_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[item.Method_Transfer_ID].Name : '')
+            + (InvoicePay_DataMethodType[item.Method_Detail_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[item.Method_Detail_ID].Name : '')                   
+        let detail = item.Type_Check == 1 ? `<span class="btnShowMore btn btnsysmore m-0 p-0  text-xs text-primary fw-bold" data-type="${item.Type_Check}" data-code="${item.Code}" data-id="${item.ID}">@Local["Xem thêm"]</span>` : '';
+        let ThirdAccount = InvoicePay_RenderAPIAccount(item?.AccountingRefid, item?.AccountingIsSuccess);
+        let tr = `
+                    <td class="d-none">${item.ID}</td>
+                    <td class="d-none">${item.Type_Check}</td>
+                    <td class="d-none">${item.TypeInOut}</td>
+                    <td class="text-center" for="${item.ID}">
+                       <div class="form-check text-lg d-inline-flex p-2" data-children-count="1">
+                           <input type="checkbox" data-id="${item.ID}" data-type="${item.Type_Check}" data-typeinout="${item.TypeInOut}" class="form-check-input IPT_ckbRowItem m-0  text-sm" checked disabled >
+                           <label class="form-check-label text-sm font-weight-bold"></label>
+                       </div>
+                    </td>
+                    <td class="text-center vt-number-order"></td>
+                    <td>
+                        ${(item.IsChange == 1
+                        ? `<a class="text-decoration-underline fw-bold buttonEditClass" href="#"> ${item.Code} </a>`
+                        : `${item.Code}`)}
+                    </td>
+                    <td class="text-center">
+                        <span data-sortvalue="${ConvertDateTime_To_Timespan_TimeZone(item.Created)}"> ${ConvertDateTimeUTC_DMY(item.Created)}</span>
+                    </td>
+                    <td data-name="custcreatedname">${MTDataEmployee[item.CustCreatedBy] != undefined ? MTDataEmployee[item.CustCreatedBy].Name : ''}</td>
+                    <td data-name="cust_code">
+                        ${((item.CustID != 0)
+                        ? `<a class="fw-bold" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustCode}</a>`
+                        : ``)}
+                    </td>
+                    <td data-name="cust_code_old">
+                        ${((item.CustCodeOld != '')
+                        ? `<a class="fw-bold" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item.CustCodeOld}</a>`
+                        : ``)}
+                    <td data-name="cust_doc_code">${item.CustDocCode}</td>
+                    </td>
+                    <td>${item.CustName}</td>
+                    <td data-name="phone" class="_tab_control_" data-tab="phone_customer">${item.CustPhone}</td>
+                    <td data-name="address">${item.CustAddress}</td>
+                    <td data-name="commune">${item.CustCommune}</td>
+                    <td data-name="district">${item.CustDistrict}</td>
+                    <td data-name="city">${item.CustCity}</td>
+                    <td data-name="fileattach" data-code="${item.Code}" data-createdcode="${item.Created}" class="btnAttachFile text-center cursor-pointer font-weight-bold">
+                        <button class="position-relative btn btn-link text-dark text-sm mb-0 px-0">
+                            <i class="fas fa-file text-sm me-1" aria-hidden="true"></i>
+                            <span id="File_${item.Code.replace(/\W/g, "_")}_${ConvertDateTime_To_YMDInt(item.Created)}" class="badge badge-circle bg-light ms-n2 position-absolute text-dark btnAttachFileIcon" >${item?.FileAttach ?? 0}</span>
+                        </button>
+                    </td>
+                    <td data-name="carestaff">${MTDataEmployee[item.CCStaffID] != undefined ? MTDataEmployee[item.CCStaffID].Name : ''}</td>
+                    <td >${InvoicePay_DataEmployee[item.Cashier] != undefined ? InvoicePay_DataEmployee[item.Cashier].Name : ''}</td>
+                    <td data-name="applicant">${item.Type_Check == 5 ? item.Reciever : ''}</td>
+                    <td data-name="receiver">${item.Type_Check == 6 ? item.Reciever : ''}</td>
+                    <td data-name="applicantOther">${item.Type_Check == 5 ? item.RecieverOther : ''}</td>
+                    <td data-name="receiverOther">${item.Type_Check == 6 ? item.RecieverOther : ''}</td>
+                    <td>
+                        <span data-sortvalue="${item.Amount}">${formatNumber(item.Amount)}</span>
+                    </td>
+                    <td data-name="actualamount">
+                        <span data-sortvalue="${item.Amount}">${formatNumber(InvoicePay_RenderAmount(item.Type_Check, item.Amount))}</span>
+                    </td>
+                    <td data-name="detail" class="text-center cursor-pointer">${detail}</td>
+                        <td data-name="paymenttype" class="">
+                        <span>${methodPay}</span>${(methodPayType != '') ? `<span>${methodPayType}</span>` : ''}
+                    </td>
+                    <td data-name="bank_InvoicePay_code">${item.BankInvoiceCode}</td>
+                    <td data-name="content"><span class="text-sm content_line_clamp">${item.Reason == '' ? item.Content : `${item.Reason} </br> ${item.Content}`}</span></td>
+                    <td data-name="type">${item.Name}</td>
+
+                    <td data-name="CusSource">${item.CustSource}</td>
+                    <td data-name="branch">${InvoicePay_DataBranch[item.BranchID] != undefined ? InvoicePay_DataBranch[item.BranchID].Name : ''}</td>
+                    <td id="ThirdAccount_${item.ID}_${item.Type_Check}" class="${ThirdAccount.status}" data-code="${item.Code}" data-refid="${item.AccountingRefid}" data-type="${item.AccountingVoucherType}" data-name="thirdaccounting">${ThirdAccount.value}</td>
+                    <td class="text-center" data-name="check">
+                        <div class="form-check d-inline-block">
+                            <input type="checkbox" data-id="${item.ID}" class="form-check-input Censorship" ${(item.IsCheck == 1) ? ('checked') : ('')} />
+                            <label class="form-check-label text-sm font-weight-bold"></label>
+                        </div>
+                        <span class="d-none" id="IPCheckboxX${item.ID}">${(item.IsCheck == 1) ? 'X' : ''}</span>
+                    </td>
+                    <td data-name="timecheck" data-sortvalue="${ConvertDateTime_To_Timespan_TimeZone(new Date(item.Checked))}">
+                        <span id="TimeCheck_${item.ID}_${item.Type_Check}">${(item.IsCheck == 1) ? ConvertDateTimeUTC_DMYHM(item.Checked) : ('')}</span>
+                    </td>
+                    <td><div class="text-nowrap">
+                        ${InvoicePay_RenderButton(item.ID, item.Code, item.IsChange, item.Type_Check, item.TypeInOut, isSync)}
+                    </div></td>
+                    `
+        return tr;
+
+    }
+
+    function InvoicePay_RenderAmount(type, amount) {
+        switch(type) {
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+                amount *= -1;
+            break;
+        }
+        return amount;
+    }
+
+    function InvoicePay_RenderAPIAccount(refid, issuccess) {
+        let result = { status: '', value: '' };
+        refid ??= '', issuccess ??= 0;
+        if (refid != '') {
+            if (issuccess == 1) {
+                result.value = decodeHtml('@Local["Đã đồng bộ"]')
+                result.status = 'text-success'
+            }
+            else {
+                result.value = decodeHtml('@Local["Đang đồng bộ"]')
+                result.status = 'text-secondary'
+            }
+        }
+        return result;
+    }
+
+    function InvoicePay_RenderButton(id, code, isChange, type, typeinout, isSync = 0) {
+        let button = [];
+        if (isChange == 1) {
+            button.push('<button class="buttonGrid" value="' + id + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+        }
+        if (type == 5 || type == 6 || type == 7 || type == 8 || type == 9) {
+            button.push('<button class="buttonGrid"><i data-type="' + type + '" data-id="' + id + '" data-code="' + code + '" class="buttonPrintClass vtt-icon vttech-icon-print"></i></button>')
+        }
+        if (syn_Accountbrand && syn_Accountbrand != '' && isPerApiAccount) {
+            if(isSync == 1) {
+                button.push('<button class="buttonGrid"><i class="fas fa-check"></i></button>')
+
+            }
+            else {
+                button.push('<button class="buttonGrid"><i data-type="' + type + '" data-typeinout="' + typeinout + '" data-id="' + id + '" class="buttonSyncAccount fas fa-sync"></i></button>')
+            }
+        }
+
+        return Render_Button_Grid(button);
+    }
+
+    function InvoicePay_FileReRender(code, date, total) {
+        try {
+             $(`#File_${code.replace(/\W/g, "_")}_${ConvertDateTime_To_YMDInt(date)}`)?.html(total);
+        }
+        catch (e) {
+            console.error(e.message);
+        }
+    }
+    //#endregion
+
+    //#region // CRUD
+
+    function InvoicePay_HandleEdit(id, type) {
+        if (AccountGeneralEdit && typeof AccountGeneralEdit == 'function') {
+            AccountGeneralEdit(id, type)
+        }
+    }
+
+    function InvoicePay_HandleDelete(id, type, typeinout) {
+        const promise = notiConfirm();
+        promise.then(function () { InvoicePay_ExecuteHandleDelete(id, type, typeinout); }, function () { });
+    }
+
+    async function InvoicePay_ExecuteHandleDelete(id, type, typeinout) {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Account/InvoicePaymentTable/?handler=Delete"
+                , data = {
+                    "ID": id
+                }
+                , async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        syslog_acc('d', result);
+                        if (typeof InvoiceDetail_DelThirdAccounting === 'function') InvoiceDetail_DelThirdAccounting(id, type, typeinout)
+                        let row = $('#InvoicePay_' + id + '_' + type);
+                        if (row.length != 0) {
+                            row.remove();
+                        }
+                        InvoicePay_DataList = InvoicePay_DataList.filter((word) => {
+                            return word.ID != id && word.Type_Check != type
+                        })
+                        InvoicePay_DataFilterList = InvoicePay_DataFilterList.filter((word) => {
+                            return word.ID != id && word.Type_Check != type
+                        })
+                    }
+                }
+                , sender = null
+            );
+            resolve();
+        })
+    }
+
+    //#region //ThirdAccount Delete
+    function InvoiceDetail_DelThirdAccounting(id, typecheck, typeinout) {
+        let type = APIAccount_getVoucherType(typecheck, typeinout);
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != ""){
+            APIAccount_Excute(id, type, action = "del"
+                , beforefunc = function () { }
+                , successfunc = function (e) {}
+                , failfunc = function (message) { notiWarning(message) }
+                , completefunc = function () { }
+            );
+        }
+    }
+    //#endregion
+    //#endregion
+
+    //#region // EVENT
+
+    function InvoicePay_Event() {
+        //Table Event
+        shtable = $("#dtContentInvoicePaymentList").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $("#dtContentInvoicePaymentList").on('click', '.Censorship', function (event) {
+            let IsCheck = this.checked ? 1 : 0;
+            let CheckID = Number($(this).closest('tr').children('td')[0].innerHTML);
+            let Type = Number($(this).closest('tr').children('td')[1].innerHTML);
+            (IsCheck == 1 ? ($('#IPCheckboxX' + CheckID).html('X')) : ($('#IPCheckboxX' + CheckID).html(' ')));
+            InvoicePay_Censorship(IsCheck, CheckID, Type, this);
+        });
+        $('#dtContentInvoicePaymentList').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr').children('td')[0].innerHTML);
+            let Type = Number($(this).closest('tr').children('td')[1].innerHTML);
+            Type = (Type == 5) ? 1 : 0;
+            InvoicePay_HandleEdit(ID, Type);
+        });
+
+        $('#dtContentInvoicePaymentList').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr').children('td')[0].innerHTML);
+            let Type = Number($(this).closest('tr').children('td')[1].innerHTML);
+            let TypeInOut = Number($(this).closest('tr').children('td')[2].innerHTML);
+            InvoicePay_HandleDelete(ID, Type, TypeInOut);
+        });
+
+        $('#dtContentInvoicePaymentList').on('click', '.btnAttachFile', function () {
+            let ID = Number($(this).closest('tr').children('td')[0].innerHTML);
+            let Code = encodeURIComponent($(this).attr('data-code'));
+            let CreatedCode = encodeURIComponent($(this).attr('data-createdcode'));
+            if (Code != "") {
+                $("#DetailModal_Content").html('');
+                $("#DetailModal_Content").load(`/Library/LibraryAttach/LibraryAttachDetail?OriginID=${ID}&OriginCode=${Code}&CreatedCode=${CreatedCode}&ver=${versionofWebApplication}`
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            if (typeof LAD_Init === 'function')
+                                LAD_Init(InvoicePay_FileReRender);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+
+                $('#DetailModal').modal('show');
+            }
+            else {
+                notiWarning("@Local["Không có mã"]");
+            }
+        });
+
+        $('#dtContentInvoicePaymentList').on('click', '.buttonPrintClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            let type = Number($(this).attr('data-type'));
+            let Code = $(this).attr('data-code');
+            syslog_acc('p', Code);
+
+            $("#DetailModal_Content").html('');
+            switch (type) {
+                case 5:
+                    $("#DetailModal_Content").load('/Print/print?Type=receipt_voucher&DetailID=' + ID);
+                    break;
+                case 6:
+                    $("#DetailModal_Content").load('/Print/print?Type=payment_voucher&DetailID=' + ID);
+                    break;
+                case 7:
+                    $("#DetailModal_Content").load('/Print/print?Type=invoice_supplier&DetailID=' + ID);
+                    break;
+                case 8:
+                    $("#DetailModal_Content").load('/Print/print?Type=invoice_lab&DetailID=' + ID);
+                    break;
+                case 9:
+                    $("#DetailModal_Content").load('/Print/print?Type=broker_commission&DetailID=' + ID);
+                    break;
+            }
+
+            $('#DetailModal').modal('show');
+        });
+
+        $('#dtContentInvoicePaymentList').on('click', '.buttonSyncAccount', function () {
+            let $this = $(this);
+            let ID = Number($this.attr('data-id'));
+            let type = Number($this.attr('data-type'));
+            let typeinout = $this.attr('data-typeinout');
+
+            if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "" && isPerApiAccount) {
+                APIAccount_Excute(currentID = ID, type = APIAccount_getVoucherType(type, typeinout), action = "save"
+                    , beforefunc = function () {
+                        $this.replaceWith('<i class="fas fa-check"></i>');
+                    }
+                    , successfunc = function (e) {
+                        if (typeof InvoicePay_LoadData == 'function') InvoicePay_LoadData(ID, type, isSync = 1);
+                    }
+                    , failfunc = function (message) { }
+                    , completefunc = function () {}
+                );
+            }
+        });
+
+        $('#dtContentInvoicePaymentList').on('change', '.IPT_ckbRowItem', function () {
+            let isCheck = $(this).is(":checked");
+            let name = $(this).attr("name") ?? '';
+            if (name != 'ticketAll') {
+                IPT_totalSync = IPT_totalSync + (isCheck ? 1 : -1);
+                let strSync = IPT_totalSync > IPT_syncLimit ? `<b class="text-warning">${IPT_totalSync}</b>` : IPT_totalSync
+                if ($('#IPT_lbTotalSync').length > 0 ) $('#IPT_lbTotalSync')?.html(`(${strSync}/${IPT_syncLimit})`);
+            }
+
+
+        });
+
+        //Sort * Filter
+        $("#IDInvoicePaymentType").unbind('change').change(function () {
+            if (InvoicePay_dataAccReason && InvoicePay_dataAccReason.length > 0) {
+                let dataReason = [];
+                InvoicePay_ReasonType = (Number($(this).dropdown('get value')) ? Number($(this).dropdown('get value')) : 0);
+                if (InvoicePay_ReasonType == 0) {
+                    dataReason = [...InvoicePay_dataAccReason]
+                }
+                else {
+                    if (InvoicePay_ReasonType == 5 || InvoicePay_ReasonType == 6) {
+                        let Type = InvoicePay_ReasonType == 5 ? 1 : 0;
+                        dataReason = InvoicePay_dataAccReason.filter(word => word?.Type === Type);
+                    }
+                    else {
+                        dataReason = InvoicePay_dataAccReason.filter(word => word?.TypeCheck === InvoicePay_ReasonType);
+                    }
+                }
+                Load_Combo(dataReason, 'cbbAccountReason', false, '@Local["Tất cả loại"]');
+                $("#IDAccountReason").dropdown("refresh");
+                $("#IDAccountReason").dropdown("set selected", '0');
+                InvoicePay_Filter();
+            }
+        })
+
+        $("#IPT_MethodID").unbind('change').change(function () {
+            if (IPT_dataMethod && IPT_dataMethod.length > 0) {
+                IPT_MethodID = $("#IPT_MethodID").dropdown("get value") ? Number($("#IPT_MethodID").dropdown("get value")) : 0;
+                $("#cbbIPT_MethodTypeID").dropdown("clear");
+                $("#cbbIPT_MethodTypeID").html("");
+
+                let Data = IPT_dataMethodType.filter(word => { return word["Type"] == IPT_MethodID });
+                Load_Combo(Data, "cbbIPT_MethodTypeID", true, '@Local["Chi tiết"]');
+
+
+                if (Data.length > 0) {
+                    $("#IPT_MethodTypeID").removeClass('disabled');
+                    $("#IPT_MethodTypeID").dropdown("set selected", '0');
+                    $("#IPT_MethodTypeID input.payment").attr('name', "paymentMethodType");
+                }
+                else {
+                    $("#IPT_MethodTypeID").addClass('disabled');
+                    $("#IPT_MethodTypeID input.payment").attr('name', "");
+                }
+                InvoicePay_Filter();
+            }
+        })
+
+        $("#IPT_MethodTypeID").unbind('change').change(function () {
+            if (IPT_dataMethodType && IPT_dataMethodType.length > 0) {
+                IPT_MethodTypeID = $("#IPT_MethodTypeID").dropdown("get value") ? Number($("#IPT_MethodTypeID").dropdown("get value")) : 0;
+                InvoicePay_Filter();
+            }
+        })
+
+
+        $("#IDAccountReason").unbind('change').change(function () {
+            InvoicePay_Reason = (Number($(this).dropdown('get value')) ? Number($(this).dropdown('get value')) : 0);
+            InvoicePay_Filter();
+        })
+
+        $("#IPT_AccountingType").unbind('change').change(function () {
+            InvoicePay_AccountingType = (Number($(this).dropdown('get value')) ? Number($(this).dropdown('get value')) : 0);
+            InvoicePay_Filter();
+        })
+
+        $('#InvoicePay_ipSearch').keyup(function () {
+            InvoicePay_TextSearch = $(this).length ? ($(this).val() ?? "") : "";
+            if (InvoicePay_TextSearch.length > 0) $("#InvoicePay_SortDiv .btn_clear").removeClass('opacity-1');
+            else $("#InvoicePay_ipSearch .btn_clear").addClass('opacity-1');
+            $("#InvoicePay_SortDiv .fa-search").hide();
+            $("#InvoicePay_SortDiv .spinner-border").removeClass('d-none');
+            clearTimeout(InvoicePay_TimerSearch);
+            InvoicePay_TimerSearch = setTimeout(function (e) {
+                InvoicePay_Filter(InvoicePay_TextSearch, InvoicePay_ReasonType, InvoicePay_Reason, InvoicePay_AccountingType, { type: '', state: '' });
+                $("#InvoicePay_SortDiv .fa-search").show();
+                $("#InvoicePay_SortDiv .spinner-border").addClass('d-none');
+            }, 500);
+        });
+        $("#InvoicePay_SortDiv").on('click', '.btn_clear', function (e) {
+            $('#InvoicePay_ipSearch').val('');
+            $("#InvoicePay_SortDiv .btn_clear").addClass('opacity-1');
+            InvoicePay_TextSearch = '';
+            InvoicePay_Filter(objsort = { type: '', state: '' });
+        });
+        $("#InvoicePay_btnSortType").unbind().click(function (e) {
+            InvoicePay_SortType = (InvoicePay_SortType == 'desc') ? 'asc' : 'desc';
+            InvoicePay_Filter(objsort = { type: 'type', state: InvoicePay_SortType });
+        });
+        $("#InvoicePay_btnSortDate").unbind().click(function (e) {
+            InvoicePay_SortDate = (InvoicePay_SortDate == 'desc') ? 'asc' : 'desc';
+            InvoicePay_Filter(objsort = { type: 'date', state: InvoicePay_SortDate });
+        });
+
+        $("#dtContentInvoicePaymentListBody").on("click", ".btnShowMore", function (){
+            let Type = $(this).attr("data-type");
+            let Code = $(this).attr("data-code");
+            let ID = $(this).attr("data-id");
+
+            let pos_top = $(this).parent().position().top + $(this).parent().height() + 10;
+            let pos_left = $(this).parent().position().left - 320;
+            $("#InvoicePay_DivShowMore").css({
+                "display": "block"
+                , "left": pos_left
+                , "top": pos_top
+            }).animate({
+                left: pos_left
+                , top: pos_top
+            }, 300);
+
+            $("#InvoicePay_DivShowMore").load("/Account/InvoicePaymentShowDetail?CurrentID=" + ID + "&Type=" + Type+ "&Code=" + Code + "&ver=" + versionofWebApplication);
+        })
+    }
+
+    async function InvoicePay_ExportPayment(isOption = 0) {
+        let isAll = (isOption == 0);
+        let eleContainer = $('#IPT_Container');
+        let dataDetail = InvoicePay_DataDetail.reduce((pre, arr) => {
+            if(pre[`${arr.ID}_${arr.Type_Check}`])
+                pre[`${arr.ID}_${arr.Type_Check}`] += ', ' + arr.SerName;
+            else pre[`${arr.ID}_${arr.Type_Check}`] = arr.SerName;
+            return pre
+            }
+            , {})
+        var dataHeader = {
+            "#": ["@Local["#"]", (value, { }, index) => { return index + 1; }],
+            "Code": ["@Local["Số phiếu"]"],
+            "Created": ["@Local["Ngày tạo"]", (v) => { return ConvertDateTimeUTC_DMY(v) }],
+            "CustCreatedBy": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='custcreatedname']`)).is(":checked"),
+                data: ["@Local["Người tạo hồ sơ"]", (CustCreatedBy) => { return MTDataEmployee[CustCreatedBy] != undefined ? MTDataEmployee[CustCreatedBy].Name : '' }]
+            },
+            "CustCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='cust_code']`)).is(":checked"),
+                data: ["@Local["Mã khách hàng"]"]
+            },
+            "CustCodeOld": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='cust_code_old']`)).is(":checked"),
+                data: ["@Local["Mã khách hàng cũ"]"]
+            },
+            "CustDocCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='cust_doc_code']`)).is(":checked"),
+                data: ["@Local["Mã hồ sơ"]"]
+            },
+            "CustName": { data: ["@Local["Khách hàng"]"] },
+            "CustPhone": {
+                dataNamePer: 'phone',
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='phone']`)).is(":checked"),
+                data: ["@Local["Điện thoại"]", null, 'phone_customer']
+            },
+            "CustAddress": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='address']`)).is(":checked"),
+                data: ["@Local["Địa chỉ"]"]
+            },
+            "CustCommune": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='commune']`)).is(":checked"),
+                data: ["@Local["Phường xã"]"]
+            },
+            "CustDistrict": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='district']`)).is(":checked"),
+                data: ["@Local["Quận huyện"]"]
+            },
+            "CustCity": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='city']`)).is(":checked"),
+                data: ["@Local["Thành phố"]"]
+            },
+            "FileAttach": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='fileattach']`)).is(":checked"),
+                data: ["@Local["Tệp đính kèm"]"]
+            },
+            "CCStaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='carestaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên chăm sóc"]", (CCStaffID) => { return MTDataEmployee[CCStaffID] != undefined ? MTDataEmployee[CCStaffID].Name : '' }]
+            },
+            "Cashier": ["@Local["Thu ngân"]", (value) => { return InvoicePay_DataEmployee[value] != undefined ? InvoicePay_DataEmployee[value].Name : '' }],
+            "Reciever": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='applicant']`)).is(":checked"),
+                data: ["@Local["Người nộp"]", (value, { Type_Check, Reciever }) => { return Type_Check == 5 ? Reciever : '' }]
+            },
+            "Reciever1": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='receiver']`)).is(":checked"),
+                data: ["@Local["Người nhận"]", (value, { Type_Check, Reciever }) => { return Type_Check == 6 ? Reciever : '' }]
+            },
+            "RecieverOther": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='applicantOther']`)).is(":checked"),
+                data: ["@Local["Người nộp khác"]", (value, { Type_Check, RecieverOther }) => { return Type_Check == 5 ? RecieverOther : '' }]
+            },
+            "RecieverOther1": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='receiverOther']`)).is(":checked"),
+                data: ["@Local["Người nhận khác"]", (value, { Type_Check, RecieverOther }) => { return Type_Check == 6 ? RecieverOther : '' }]
+            },
+            "Amount": ["@Local["Số tiền"]"],
+            "ActualAmount": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='actualamount']`)).is(":checked"),
+                data: ["@Local["Thực tế"] (@Local["Thu"]/@Local["Chi"])", (value, {Amount, Type_Check}) => {return InvoicePay_RenderAmount(Type_Check, Amount)}]
+            },
+            "Detail": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='detail']`)).is(":checked"),
+                data: ["@Local["Chi tiết"]", (v, { ID, Type_Check }) => {
+                    return dataDetail[`${ID}_${Type_Check}`] != undefined ? dataDetail[`${ID}_${Type_Check}`] : '';
+                }]
+            },
+            "Method_ID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='paymenttype']`)).is(":checked"),
+                data: ["@Local["Hình thức"]", (v, { Method_Transfer_ID,Method_POS_ID,Method_Detail_ID }) => {
+                    return InvoicePay_DataMethod[v].Name  
+                    + (InvoicePay_DataMethodType[Method_Transfer_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_Transfer_ID].Name : '')  
+                    + (InvoicePay_DataMethodType[Method_POS_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_POS_ID].Name : '')  
+                    + (InvoicePay_DataMethodType[Method_Detail_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_Detail_ID].Name : '')  
+                }]
+            },
+            "BankInvoiceCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='bank_InvoicePay_code']`)).is(":checked"),
+                data: ["@Local["Mã hóa đơn ngân hàng"]"]
+            },
+            "Content": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='content']`)).is(":checked"),
+                data: ["@Local["Nội dung"]"]
+            },
+            "Reason": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='content']`)).is(":checked"),
+                data: ["@Local["Lý do"]"]
+            },
+            "Name": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='type']`)).is(":checked"),
+                data: ["@Local["Loại"]"]
+            },
+            "CustSource": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='CusSource']`)).is(":checked"),
+                data: ["@Local["Nguồn khách hàng"]"]
+            },
+            "BranchID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                data: ["@Local["Chi nhánh"]", (value) => { return InvoicePay_DataBranch[value] != undefined ? InvoicePay_DataBranch[value].Name : '' }]
+            },
+            "AccountingRefid": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='thirdaccounting']`)).is(":checked"),
+                data: ["@Local["Dữ liệu kế toán"]", (value, { AccountingRefid, AccountingIsSuccess }) => { return InvoicePay_RenderAPIAccount(AccountingRefid, AccountingIsSuccess).value }]
+            }
+            , "IsCheck": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='timecheck']`)).is(":checked"),
+                data: ["@Local["Thời gian kiểm tra"]", (v, { Checked }) => { return (v == 1) ? ConvertDateTimeUTC_DMYHM(Checked) : ('') }]
+            }
+        }
+        dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'dtContentInvoicePaymentListBody', PermissionTable_TabControl);
+        exportJsonToExcel(Outlang['Lich_su_thu_chi'], InvoicePay_DataFilterList, dataHeader);
+        syslog_acc('e', val = '');
+    }
+
+    async function IPT_Print(){
+        try { 
+            if (InvoicePay_DataList && InvoicePay_DataList.length != 0) {
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "Code": ["@Local["Mã phiếu"]"],
+                    "Created": ["@Local["Ngày tạo"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(value); }
+                    }],
+                    "CustCreatedBy": ["@Local["Người tạo hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='custcreatedname']`).is(":checked"),
+                        callbackRenderValue: (v) => {
+                            return MTDataEmployee[v] != undefined ? MTDataEmployee[v].Name : '';
+                        }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='CustCode']`).is(":checked")
+                    }],
+                    "CustCodeOld": ["@Local["Mã khách hàng cũ"]", {
+                        isShow: $(`.shtoogle[data-name='cust_code_old']`).is(":checked")
+                    }],
+                    "CustDocCode": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='cust_doc_code']`).is(":checked")
+                    }],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "CustSource": ["@Local["Nguồn khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='CusSource']`).is(":checked")
+                    }],
+                    "CustPhone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]", { isShow: $(`.shtoogle[data-name='phone']`).is(":checked") }]
+                    },
+                    "CustAddress": ["@Local["Địa chỉ"]", {
+                        isShow: $(`.shtoogle[data-name='address']`).is(":checked")
+                    }],
+                    "CustCommune": ["@Local["Phường xã"]", {
+                        isShow: $(`.shtoogle[data-name='commune']`).is(":checked")
+                    }],
+                    "CustDistrict": ["@Local["Quận huyện"]", {
+                        isShow: $(`.shtoogle[data-name='district']`).is(":checked")
+                    }],
+                    "CustCity": ["@Local["Thành phố"]", {
+                        isShow: $(`.shtoogle[data-name='city']`).is(":checked")
+                    }],
+                    "CCStaffID": ["@Local["Nhân viên chăm sóc"]", {
+                        isShow: $(`.shtoogle[data-name='carestaff']`).is(":checked"),
+                        callbackRenderValue: (v) => {
+                            return MTDataEmployee[v] != undefined ? MTDataEmployee[v].Name : '';
+                        }
+                    }],
+                    "Cashier": ["@Local["Thu ngân"]", {
+                        callbackRenderValue: (value) => { return InvoicePay_DataEmployee[value] != undefined ? InvoicePay_DataEmployee[value].Name : ''; }
+                    }],
+                    "Reciever": ["@Local["Người nộp"]", {
+                        isShow: $(`.shtoogle[data-name='applicant']`).is(":checked"),
+                        callbackRenderValue: (v, { Type_Check }) => {
+                            return Type_Check == 5 ? v : ''
+                        }
+                    }],
+                    "Reciever1": ["@Local["Người nhận"]", {
+                        isShow: $(`.shtoogle[data-name='receiver']`).is(":checked"),
+                        callbackRenderValue: (v, { Type_Check, Reciever }) => {
+                            return Type_Check == 6 ? Reciever : ''
+                        }
+                    }],
+                    "RecieverOther": ["@Local["Người nộp khác"]", {
+                        isShow: $(`.shtoogle[data-name='applicantOther']`).is(":checked"),
+                        callbackRenderValue: (v, { Type_Check }) => {
+                            return Type_Check == 5 ? v : ''
+                        }
+                    }],
+                    "RecieverOther1": ["@Local["Người nhận khác"]", {
+                        isShow: $(`.shtoogle[data-name='receiverOther']`).is(":checked"),
+                        callbackRenderValue: (v, { Type_Check, RecieverOther }) => {
+                            return Type_Check == 6 ? RecieverOther : ''
+                        }
+                    }],
+                    "Amount": ["@Local["Số tiền"]"],
+                    "actualamount": ["@Local["Thực tế"] (@Local["Thu"]/@Local["Chi"])", {
+                        isShow: $(`.shtoogle[data-name='actualamount']`).is(":checked"),
+                        callbackRenderValue: (v, { Type_Check, Amount }) => {
+                            return InvoicePay_RenderAmount(Type_Check, Amount)
+                        }
+                    }],
+                    "Method_ID": ["@Local["Hình thức"]", {
+                        isShow: $(`.shtoogle[data-name='actualamount']`).is(":checked"),
+                        callbackRenderValue: (v, { Method_POS_ID, Method_Transfer_ID, Method_Detail_ID }) => {
+                            return (InvoicePay_DataMethod[v] != undefined ? InvoicePay_DataMethod[v].Name : '') 
+                                + (InvoicePay_DataMethodType[Method_POS_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_POS_ID].Name : '')
+                                + (InvoicePay_DataMethodType[Method_Transfer_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_Transfer_ID].Name : '')
+                                + (InvoicePay_DataMethodType[Method_Detail_ID] != undefined ? ' - ' + InvoicePay_DataMethodType[Method_Detail_ID].Name : '')
+                        }
+                    }],
+                    "BankInvoiceCode": ["@Local["Mã hóa đơn ngân hàng"]", {
+                        isShow: $(`.shtoogle[data-name='bank_InvoicePay_code']`).is(":checked")
+                    }],
+                    "Content": ["@Local["Nội dung"]", {
+                        isShow: $(`.shtoogle[data-name='content']`).is(":checked") 
+                    }],
+                    "Reason": ["@Local["Lý do"]", {
+                        isShow: $(`.shtoogle[data-name='content']`).is(":checked")
+                    }],
+                    "Name": ["@Local["Loại"]", {
+                        isShow: $(`.shtoogle[data-name='type']`).is(":checked")
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (v) => {
+                            return InvoicePay_DataBranch[v] != undefined ? InvoicePay_DataBranch[v].Name : ''
+                        }
+                    }],
+                    "IsCheck": ["@Local["Thời gian kiểm tra"]", {
+                        isShow: $(`.shtoogle[data-name='timecheck']`).is(":checked"),
+                        callbackRenderValue: (v, { Checked }) => {
+                            return (v == 1) ? ConvertDateTimeUTC_DMYHM(Checked) : ('')
+                        }
+                    }]
+                }                
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'dtContentInvoicePaymentListBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + ConvertDateTimeUTC_DMY(_DateFrom) + '&dateTo=' + ConvertDateTimeUTC_DMY(_DateTo) + '&branch=' + _BranchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                             $("#MainSendMail").addClass('active');
+                             let options = {
+                                 empName: sys_employeeName_Main
+                             }
+                             if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = "@Local["Lịch sử thu chi"]", InvoicePay_DataList, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+
+        }
+        catch(ex){
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+    function InvoicePay_CloseCollap() {
+        $('#IPFillColLists').collapse('hide');
+    }
+
+    //#endregion
+
+    //#region //SORT & FILTER
+    function InvoicePay_Filter(objsort = { type: '', state: '' }) {
+        let txtSearch = InvoicePay_TextSearch, reasonType = InvoicePay_ReasonType, reason = InvoicePay_Reason, accountType = InvoicePay_AccountingType;
+        let method = IPT_MethodID, methodType = IPT_MethodTypeID;
+        $("#InvoicePay_Waiting").show();
+        let dataFilter = [...InvoicePay_DataList];
+        let search = (txtSearch != undefined) ? xoa_dau(txtSearch.toLowerCase()).trim() : "";
+        dataFilter = dataFilter.filter((word) => {
+            let condition = (reasonType == 0 || word.TypeInOut == reasonType)
+                && (reason == 0 || word.VoucherType == reason)
+                && (method == 0 || word.Method_ID == method)
+                && (methodType == 0 || word.Method_POS_ID == methodType || word.Method_Transfer_ID == methodType || word.Method_Detail_ID == methodType)
+                && (accountType == -1 || word.AccountingIsSuccess == accountType)
+                && (search == ""
+                    || xoa_dau(word?.Code).toLowerCase().includes(search)
+                    || xoa_dau(word?.CustCode).toLowerCase().includes(search)
+                    || xoa_dau(word?.CustName).toLowerCase().includes(search)
+                    || word.CustPhone.includes(search)
+                )
+            return condition;
+        })
+
+        dataFilter = InvoicePay_Sort(data = dataFilter, objsort);
+        InvoicePay_Index = 0;
+        $("#dtContentInvoicePaymentListBody").empty();
+        InvoicePay_DataFilterList = [...dataFilter];
+        InvoicePay_LoaddataFilter(dataFilter);
+
+        IPT_totalSync = InvoicePay_DataFilterList.length;
+        let strSync = IPT_totalSync > IPT_syncLimit ? `<b class="text-warning">${IPT_totalSync}</b>` : IPT_totalSync
+        if ($('#IPT_lbTotalSync').length > 0) $('#IPT_lbTotalSync').html(`(${strSync}/${IPT_syncLimit})`);
+
+    }
+
+    async function InvoicePay_LoaddataFilter(data) {
+        return new Promise((resolve, reject) => {
+            if (data && data.length > 0) {
+                InvoicePay_DataListSlice = sliceIntoChunks(JSON.parse(JSON.stringify(data)), InvoicePay_RenderBlock);
+                fnRenderBlock(InvoicePay_DataListSlice[InvoicePay_Index], "dtContentInvoicePaymentListBody"
+                    , blocknum = 100
+                    , fnrender = InvoicePay_RenderData
+                    , fnsuccess = null
+                );
+            }
+            $("#InvoicePay_Waiting").hide();
+        });
+    }
+
+    function InvoicePay_Sort(data, { type, state }) {
+        switch (type) {
+            case "type":
+                if (state == 'desc')
+                    data.sort((a, b) => (a.Name < b.Name) ? 1 : ((b.Name < a.Name) ? -1 : 0));
+                else data.sort((a, b) => (a.Name > b.Name) ? 1 : ((b.Name > a.Name) ? -1 : 0));
+                break;
+            case "date":
+                if (state == 'desc')
+                    data.sort((a, b) => (a.Created < b.Created) ? 1 : ((b.Created < a.Created) ? -1 : 0));
+                else data.sort((a, b) => (a.Created > b.Created) ? 1 : ((b.Created > a.Created) ? -1 : 0));
+                break;
+            default: 
+                break;
+        }
+        return data;
+    }
+    //#endregion
+
+
+    //#region //Handle List
+
+    async function InvoicePay_Censorship (Value, CurentID, TypeCensorship, elm) {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Account/InvoicePaymentTable/?handler=AccountantCensorship"
+                , data = {
+                    "Value": Value,
+                    "CurentID": CurentID,
+                    "TypeCensorship": TypeCensorship
+                }
+                , async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "[]") {
+                        let data = JSON.parse(result)[0];
+                        let rowTimeCheck = $("#TimeCheck_" + CurentID + '_' + TypeCensorship);
+                        if (rowTimeCheck.length != 0) {
+                            rowTimeCheck.html(Value ? ConvertDateTimeUTC_DMYHM(data.Checked) : '');
+                            rowTimeCheck.parent().attr('data-sortValue', ConvertDateTime_To_Timespan_TimeZone(new Date(data.Checked)))
+                        }
+                        let index = InvoicePay_DataList.findIndex(word => word.ID == CurentID && word.Type_Check == TypeCensorship);
+                        InvoicePay_DataList[index].Checked = data.Checked;
+                        InvoicePay_DataList[index].IsCheck = data.isCheck;
+                    }
+                    else {
+                        elm.checked = false;
+                    }
+                }
+                , sender = null
+            );
+            resolve();
+        })
+    }
+
+    //#endregion
+
+    //#region // Select
+    function IPT_SyncAccountMulti() {
+
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "" && isPerApiAccount && IPT_isSync == 0) {
+            if (InvoicePay_DataFilterList && InvoicePay_DataFilterList.length > 0) {
+                let objRowAcc = [];
+                let isCheckAll = $("#IPT_ckbChooseAll").length ? $("#IPT_ckbChooseAll").is(":checked") : true;
+                if (!IPT_isAllowChoose || isCheckAll) {
+                    let objFil = InvoicePay_DataFilterList.reduce((pre, arr) => {
+                        let type = APIAccount_getVoucherType(arr.Type_Check, arr.TypeInOut);
+                        if (arr.ID && type != 0) {
+                            pre[arr.ID] = {
+                                ID: arr.ID, Type: type
+                            }
+                        }
+
+                        return pre;
+                    }, {});
+                    objRowAcc = Object.values(objFil);
+                }
+                else {
+                    $(".IPT_ckbRowItem").each(function () {
+                        let isChecked = $(this).is(":checked");
+                        let ID = Number($(this).attr('data-id'));
+                        let type = Number($(this).attr('data-type'));
+                        let typeinout = $(this).attr('data-typeinout');
+                        let acctype = APIAccount_getVoucherType(type, typeinout);
+                        if (isChecked && acctype != 0) {
+                            objRowAcc.push({
+                                ID, Type: acctype
+                            })
+
+                        }
+                    });
+                }
+                if (objRowAcc && objRowAcc.length > 0 && objRowAcc.length < IPT_syncLimit) {
+                    APIAccount_ExcuteMulti(data = JSON.stringify(objRowAcc), action = "save"
+                        , beforefunc = function () {}
+                        , successfunc = function (e) {
+                            notiSuccess();
+                            if (typeof InvoicePay_LoadData == 'function') InvoicePay_LoadData(0, 0, isSync = 1);
+                            IPT_isSync = 1;
+                        }
+                        , failfunc = function (message) { }
+                        , completefunc = function () { }
+                    );
+                }
+                else {
+                    if (objRowAcc.length > IPT_syncLimit) {
+
+                        notiWarning(`@Local["Số lượng tối đa"]: ${IPT_syncLimit}`);
+                    }
+
+                }
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để chuyển"]!');
+            }
+        }
+    }
+
+
+    function IPT_SelectAll () {
+        IPT_isAllowChoose = $("#IPT_ckbAllowChooseData").length ? $("#IPT_ckbAllowChooseData").is(":checked") : false;
+        let isCheck = $("#IPT_ckbChooseAll").is(":checked") || !IPT_isAllowChoose;
+        $(".IPT_ckbRowItem").prop("checked", isCheck);
+        $(".IPT_ckbRowItem").prop("disabled", !IPT_isAllowChoose);
+
+        IPT_totalSync = (isCheck ? InvoicePay_DataFilterList.length : 0);
+        let strSync = IPT_totalSync > IPT_syncLimit ? `<b class="text-warning">${IPT_totalSync}</b>` : IPT_totalSync
+        $('#IPT_lbTotalSync').html(`(${strSync}/${IPT_syncLimit})`);
+
+    }
+    //#endregion
+</script>
+<style>
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+
+    tbody .btnAttachFile .btnAttachFileIcon {
+        margin-top: 1.6rem;
+        width: 0.75rem;
+        height: 0.75rem;
+        font-size: 0.65rem;
+    }
+</style>
+<script>js_require('/js/main.js')</script>
+<script>js_require('/js/customjs/custom-validation.js')</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>

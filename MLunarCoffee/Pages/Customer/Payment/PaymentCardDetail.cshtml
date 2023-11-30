@@ -1,0 +1,448 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Payment.PaymentCardDetailModel
+@{
+    Layout = null;
+}
+
+
+<div class="row m-2 me-0 form3" id="form3">
+    <div class="col-md-4 px-1">
+        <div class="mb-2">
+
+            <div class="card-body pt-2 ">
+                <div class="row px-1">
+                    <div class="field px-1 mt-2">
+                        <label>@Local["Thẻ trả trước"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="CustomerCard" onchange="event.preventDefault();return ChangeCustomerCard();">
+                            <input type="hidden" name="paymentMethod" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Thẻ trả trước"]</div>
+                            <div id="ccbCustomerCard" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Giá"]</label>
+                        <input id="PriceDiscounted" value="0" type="text" class="form-control money" disabled />
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Đã thanh toán"]</label>
+                        <input id="AmountPaid" name="discountOther" value="0" type="text" class="form-control money" disabled />
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Tiền phải thanh toán"]</label>
+                        <input id="AmountPaymentReal" class="form-control money" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 mt-md-0 px-1 form3">
+        <div class="card" id="CheckBoxDepositCard" style="display: none;">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+
+                            <h6 class="mb-0">@Local["Thông tin cọc"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết tiền cọc"]</p>
+
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <div class="form-check">
+                            <input id="PaymentDepositCard" class="form-check-input pr-2" type="checkbox" onchange="return ChangingEvent()" checked>
+                            <label class="custom-control-label" for="PaymentDepositCard">@Local["Cấn trừ tiền cọc"]</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body pt-2 ">
+
+                <div class="row px-1">
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Tiền cấn trừ"]</label>
+                        <input id="AmountDepositCard" type="text" class="form-control money" disabled />
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Tiền cọc còn lại"]</label>
+                        <input id="AmountDepositCardLeft" type="text" class="form-control money" disabled />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="card mt-2">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Thông tin thanh toán"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết thông tin thanh toán"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 ">
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Chi nhánh"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="BranchID">
+                            <input type="hidden" name="branch" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chi nhánh"]</div>
+                            <div id="ccbBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Hình thức"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="Method">
+                            <input type="hidden" name="paymentMethod" onchange="event.preventDefault();return Change_Payment_Method();" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Hình thức"]</div>
+                            <div id="ccbMethod" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Chi tiết"]</label>
+                        <div class="ui fluid search selection dropdown form-control disabled" id="MethodType">
+                            <input type="hidden" name="paymentMethodType" class="input payment" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chi tiết"]</div>
+                            <div id="ccbMethodType" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Mã ngân hàng"]</label>
+                        <input id="bankInvoiceCode" class="form-control" placeholder="eg .@Local["Mã ngân hàng"]" type="text" disabled="disabled" />
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2">
+                        <label>@Local["Mã hóa đơn"]</label>
+                        <input type="text" class="form-control" placeholder="eg .@Local["Mã hóa đơn"]" id="txtBillCode" />
+                    </div>
+                </div>
+
+                <div class="row px-1">
+                    <div class="field col-12 col-xl-6 px-1 mt-2 flex-grow-1" id="dateCreated" style="display: none;">
+                        <label>@Local["Ngày tạo"]</label>
+                        <input id="dateCreatedExt" class="form-control flatpickr detail" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                    </div>
+                    <div class="field col-12 col-xl-6 px-1 mt-2 flex-grow-1">
+                        <label>@Local["Thành tiền"]</label>
+                        <input id="AmountPayment" value="0" name="discountOther" type="text" class="form-control money"
+                               onchange="event.preventDefault();return ChangingEvent();" />
+                    </div>
+                </div>
+
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>@Local["Nội dung"]</label>
+                        <textarea class="form-control" id="txtContentPayment" rows="3" name="content" />
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-botombutton pe-2">
+    <div class="action_Save">
+        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage_PaymentCard"></div>
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary" form="form3" onclick="CancelPaymentCardDetail()">@Local["Đóng"]</button>
+            <button id="button_save_card_detail" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteData_PaymentCard()">@Local["Lưu"]</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var Pay_DataCard = [];
+    let ischange = 0;
+    var data_payment_method = {};
+    var data_payment_method_type = [];
+    var _PaymentCustomerID = '@Model._PaymentCustomerID';
+    var ser_DepositCard = 0;
+    let xhrPaymentDetail;
+
+    $(document).ready(function () {
+        $(".flatpickr.detail").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+        InitializeCustomerPaymentCard();
+    });
+
+    function InitializeCustomerPaymentCard() {
+        AjaxLoad(url = "/Customer/Payment/PaymentCardDetail/?handler=LoadInitialize"
+            , data = {
+                'CustomerID': ser_MainCustomerID
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                data_payment_method = (data.Method).reduce((pre, arr) => {if(arr.ID) pre[arr.ID] = arr; return pre}, {});
+                data_payment_method_type = data.MethodType;
+                let dataDeposit = data.CustDeposit;
+
+                Load_Combo(data.Branch, "ccbBranch", true);
+                $("#BranchID").dropdown("refresh");
+                $("#BranchID").dropdown("set selected", Master_branchID);
+
+                Pay_DataCard = (data.CustCard).reduce((pre, arr) => {
+                    if (arr.ID) {
+                        arr.Name = `
+                            <div class="d-flex flex-column">
+                                <h1 class="mb-0 text-dark text-sm fw-bold">${arr.CardName}</h1>
+                                <p class="text-xs pb-0 mb-0">${ConvertDateTimeUTC_DMY(arr.Created)}</p>
+                            </div>
+                            `
+                        pre[arr.ID] = arr;
+                    }
+                    return pre;
+                }, {});
+
+                Load_Combo(Object.values(Pay_DataCard), "ccbCustomerCard", true);
+                $("#CustomerCard").dropdown("refresh");
+
+                Load_Combo(data.Method, "ccbMethod", true);
+                $("#Method").dropdown("refresh");
+                ser_DepositCard = dataDeposit[0]['Deposit'];
+
+                if (ser_DepositCard <= 0) {
+                    $("#CheckBoxDepositCard").hide();
+                } else {
+                    $("#CheckBoxDepositCard").show();
+                }
+
+                $('#AmountDepositCard').val(0);
+                $('#AmountDepositCardLeft').val(Number(ser_DepositCard));
+
+                let _ChooseDateCustomer = '@Model._ChooseDateCustomer';
+                if (_ChooseDateCustomer == "1") {
+                    $("#dateCreated").show();
+                }
+
+                $('.money').divide();
+                ischange = 1;
+            }
+
+        );
+    }
+
+    function Change_Payment_Method() {
+        let idMethod = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+        $("#MethodType").dropdown("clear");
+        $("#ccbMethodType").html("");
+
+        let data = data_payment_method_type.filter(a => a.Type == idMethod);
+
+        Load_Combo(data, "ccbMethodType", true);
+        if (idMethod == 5)
+            $("#bankInvoiceCode").prop('disabled', false);
+        else
+            $("#bankInvoiceCode").prop('disabled', true);
+
+        if (data.length > 0) {
+            $("#MethodType").removeClass('disabled');
+            $("#MethodType input.payment").attr('name', "paymentMethodType");
+
+            $("#MethodType").dropdown("refresh");
+            $("#MethodType").dropdown("set selected", data[0].ID.toString());
+        }
+        else {
+            $("#MethodType").addClass('disabled');
+            $("#MethodType input.payment").attr('name', "");
+        }
+    }
+    function ChangeCustomerCard() {
+
+        if (ischange == 1) {
+            $('#textShowMessage_PaymentCard').html('');
+            $('#CustomerCard').css('background-color', 'white');
+            $('#Method').css('background-color', 'white');
+            $('#CustomerCard').css('background-color', 'white');
+            $('#AmountPayment').css('background-color', 'white');
+            let ID = Number($('#CustomerCard').dropdown('get value')) ? Number($('#CustomerCard').dropdown('get value')) : 0;
+            if (ID != 0) {
+                let itemCard = Pay_DataCard[ID];
+                if (itemCard != undefined) {
+                    let AmountOwe = itemCard.PriceDiscounted - itemCard.AmountPaid;
+                    $('#AmountPaid').val(itemCard.AmountPaid);
+                    $('#PriceDiscounted').val(itemCard.PriceDiscounted);
+                    $('#AmountPayment').val(AmountOwe);
+                }
+                else {
+                    $('#textShowMessage_PaymentCard').html('@Local["Chọn thẻ trả trước"]');
+                    $('#CustomerCard').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                $('#textShowMessage_PaymentCard').html('@Local["Chọn thẻ trả trước"]');
+                $('#CustomerCard').css('background-color', 'rgb(255 216 216)');
+            }
+        }
+    }
+
+    function ChangingEvent() {
+        if (ischange == 1) {
+            $('#textShowMessage_PaymentCard').html('');
+            $('#CustomerCard').css('background-color', 'white');
+            $('#Method').css('background-color', 'white');
+            $('#PosType').css('background-color', 'white');
+            $("#PosType").dropdown("refresh");
+            $('#TransferType').css('background-color', 'white');
+            $("#TransferType").dropdown("refresh");
+            $('#CustomerCard').css('background-color', 'white');
+            $('#AmountPayment').css('background-color', 'white');
+            let ID = Number($('#CustomerCard').dropdown('get value')) ? Number($('#CustomerCard').dropdown('get value')) : 0;
+            if (ID != 0) {
+                let itemCard = Pay_DataCard[ID];
+                if (itemCard != undefined) {
+                    let AmountOwe = itemCard.PriceDiscounted - itemCard.AmountPaid;
+                    let Amount = Number($('#AmountPayment').val()) ? Number($('#AmountPayment').val()) : 0;
+                    if (Amount > AmountOwe || Amount <= 0) {
+                        $('#textShowMessage_PaymentCard').html('@Local["Số tiền thanh toán lớn hơn 0 và nhỏ hơn số tiền phải thanh toán"]');
+                        $('#AmountPayment').css('background-color', 'rgb(255 216 216)');
+                    }
+                    if ($("#CheckBoxDepositCard").is(":visible") && document.getElementById('PaymentDepositCard').checked) {
+                        if (Amount >= ser_DepositCard) {
+                            $('#AmountDepositCardLeft').val(0);
+                            $('#AmountDepositCard').val(ser_DepositCard);
+                            $('#AmountPaymentReal').val(Amount - ser_DepositCard);
+                        }
+                        else {
+                            $('#AmountDepositCardLeft').val(ser_DepositCard - Amount);
+                            $('#AmountDepositCard').val(Amount);
+                            $('#AmountPaymentReal').val(0);
+                        }
+                    }
+                    else {
+                        $('#AmountDepositCard').val(0);
+                        $('#AmountDepositCardLeft').val(Number(ser_DepositCard));
+                        $('#AmountPaymentReal').val(Amount);
+                    }
+                }
+                else {
+                    $('#textShowMessage_PaymentCard').html('@Local["Chọn thẻ trả trước"]');
+                    $('#CustomerCard').css('background-color', 'rgb(255 216 216)');
+                }
+            }
+            else {
+                $('#textShowMessage_PaymentCard').html('@Local["Chọn thẻ trả trước"]');
+                $('#CustomerCard').css('background-color', 'rgb(255 216 216)');
+            }
+        }
+    }
+
+    function ExcuteData_PaymentCard() {
+        ChangingEvent();
+        let Method_Type = Number($('#MethodType').dropdown('get value')) ? Number($('#MethodType').dropdown('get value')) : 0;
+        let method = Number($('#Method').dropdown('get value')) ? Number($('#Method').dropdown('get value')) : 0;
+        if (document.getElementById("textShowMessage_PaymentCard").innerHTML === "") {
+            if (method == 0) {
+                $('#Method').css('background-color', 'rgb(255 216 216)');
+                $('#textShowMessage_PaymentCard').html('@Local["Chọn hình thức thanh toán"]');
+            }
+            else {
+                $('#form3').form('validate form');
+                if ($('#form3').form('is valid')) {
+                    let obj = new Object();
+                    obj.CardID = Number($('#CustomerCard').dropdown('get value')) ? Number($('#CustomerCard').dropdown('get value')) : 0;
+                    obj.BranchID = Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0;
+                    obj.Amount = Number($('#AmountPayment').val()) ? Number($('#AmountPayment').val()) : 0;
+                    obj.MethodID = method;
+                    obj.PosTypeID = (method == 5 ? Method_Type : 0);
+                    obj.TransferTypeID = (method == 4 ? Method_Type : 0);
+                    obj.MedthodDetail = ((method != 4 && method != 5) ? Method_Type : 0);
+                    obj.DateCreated = $('#dateCreatedExt').val() ? $('#dateCreatedExt').val() : new Date();
+                    obj.Content = $('#txtContentPayment').val() ? $('#txtContentPayment').val() : '';
+                    obj.BillCode = $('#txtBillCode').val() ? $('#txtBillCode').val() : '';
+                    let totalPaidFinal = $('#AmountPaymentReal').val() ? $('#AmountPaymentReal').val() : 0;
+                    obj.AmountDeposit = 0;
+                    obj.BankInvoiceCode = $('#bankInvoiceCode').val() ? $('#bankInvoiceCode').val() : "";
+                    if ($("#CheckBoxDepositCard").is(":visible") && document.getElementById('PaymentDepositCard').checked) {
+                        obj.AmountDeposit = obj.Amount - totalPaidFinal;
+                    }
+                    if (xhrPaymentDetail && xhrPaymentDetail.readyState != 4) xhrPaymentDetail.abort();
+                        xhrPaymentDetail = AjaxLoad(url = "/Customer/Payment/PaymentCardDetail/?handler=ExcuteData"
+                            , data = {
+                                'customerID': ser_MainCustomerID
+                                , 'data': JSON.stringify(obj)
+                            }
+                            , async = true
+                            , error = function () { notiError_SW() }
+                            , success = function (result) {
+                                if (result != "0") {
+                                    let datar = JSON.parse(result);
+ 
+                                    if (datar != undefined && datar.length == 1 && datar[0]["Result"] != "0") {
+                                        let idInserted = datar[0]["Result"];
+                                        if (idInserted == "-1") document.getElementById("textShowMessage_PaymentCard").innerHTML = "@Local["Đã chốt sổ, không thể thêm thanh toán trước thời gian chốt"]";
+                                        else {
+                                            notiSuccess();
+                                            if (typeof LoadPaymentCardAjax === 'function') LoadPaymentCardAjax(idInserted, 0);
+                                            if (typeof LoadCustomerPaymentInfo === 'function') LoadCustomerPaymentInfo();
+                                            if (typeof LoadTabDepositAjax === 'function') LoadTabDepositAjax();
+                                            if (typeof SMSSYS_AfterPaid === 'function')
+                                                SMSSYS_AfterPaid(_customerid = ser_MainCustomerID, _objCurrentID = { PaymentCardID: idInserted });
+                                            if (typeof PaymentCard_Detail_UpdateThirdAccount === 'function')
+                                                PaymentCard_Detail_UpdateThirdAccount(idInserted);
+                                            if (typeof CancelPaymentCardDetail === 'function') CancelPaymentCardDetail();
+
+                                            fcm_sendtopic("payment", Master_circleAvatar, sys_employeeName_Main, formatNumber(obj.Amount - obj.AmountDeposit));
+                                            let paymethod = Fun_GetName_ByID(data_payment_method, datar[0]["PayMethod"]);
+                                            let amount = formatNumber(datar[0]["Amount"]);
+                                            syslog_cutpaid('i', datar[0]["Code"], ser_MainCustomerID, `${paymethod} ${amount} `);
+                                        }
+                                    }
+                                    else notiError_SW();
+                                }
+                                else notiError_SW();
+
+                            }
+                            , sender = $("#button_save_card_detail")
+                        );
+                }
+            }
+        }
+        return false;
+    }
+    //#region //ThirdAccount
+    function PaymentCard_Detail_UpdateThirdAccount(id) {
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+            APIAccount_Excute(currentID = id, type = 5, action = "save"
+                , beforefunc = function () { }
+                , successfunc = function (e) {
+                    if (typeof LoadPaymentCardAjax == 'function') LoadPaymentCardAjax(id, 0);
+                }
+                , failfunc = function (message) { }
+                , completefunc = function () { }
+            );
+        }
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+

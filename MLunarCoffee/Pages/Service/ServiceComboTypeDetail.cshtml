@@ -1,0 +1,109 @@
+﻿@page
+@model MLunarCoffee.Pages.Service.ServiceComboTypeDetailModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Combo"]</h6>
+                                <p class="mb-0">@Local["Chi tiết combo dịch vụ"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="SCBTD_Form">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên"]</label>
+                            <input id="SCBTD_Name" class="form-control" name="name" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="SCBTD_Form" onclick="event.preventDefault();CloseModal()">@Local["Hủy"]</button>
+                        <button id="SCBTD_btndelete" type="button" class="d-none btn bg-gradient-danger mt-2 me-2" onclick="event.preventDefault();return SCBTD_Delete();">@Local["Xóa"]</button>
+                        <button form="SCBTD_Form" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();SCBTD_Execute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </div>
+</div>
+<script type="text/javascript">
+    var ser_ComboCurrentID;
+
+    $(document).ready(function () {
+        ser_ComboCurrentID = (@Model._CurrentID);
+        if (ser_ComboCurrentID != "0") SCBTD_LoadUpdate();
+    });
+
+    function SCBTD_LoadUpdate() {
+        AjaxLoad(url = "/Service/ServiceComboTypeDetail/?handler=Loadata"
+            , data = {id: ser_ComboCurrentID }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                $('#SCBTD_Name').val((data[0].Name));
+                $('#SCBTD_btndelete').removeClass('d-none');
+            });
+    }
+
+    function SCBTD_Execute() {
+        var data = new Object();
+        data.Name = $('#SCBTD_Name').val() ? $('#SCBTD_Name').val() : "";
+        $('#SCBTD_Form').form('validate form');
+        if ($('#SCBTD_Form').form('is valid')) {
+            AjaxLoad(url = "/Service/ServiceComboTypeDetail/?handler=ExecuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_ComboCurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        if (typeof SVCL_LoadComboType === 'function') SVCL_LoadComboType();
+                        CloseModal();
+                    }
+                    else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        return false;
+    }
+    function SCBTD_Delete () {
+        const promise = notiConfirm();
+        promise.then(function () {SCBTD_DeleteExe(ser_ComboCurrentID);}, function () { });
+    }
+    function SCBTD_DeleteExe (id) {
+        AjaxLoad(url = "/Service/ServiceComboTypeDetail/?handler=DeleteComboType"
+            , data = {id: id}, async = false, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    SVCL_LoadComboType();
+                } else {
+                    notiError_SW();
+                }
+        });
+    }
+</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

@@ -1,0 +1,467 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.FilterCustomerMoveMultiModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div id="FCMMulti_LoaderDiv" class="bg-gray-900 opacity-5 position-fixed w-100 z-index-3" style="display: none;">
+    <div id="FCMMulti_Loader" class="waitingdiv text-center position-absolute top-50 start-50 translate-middle z-index-3">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+</div>
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="h-100">
+                            <h6 class="font-weight-bolder mb-0">@Local["Chia dữ liệu chăm sóc"]</h6>
+                            <p class="text-sm mb-0 text-danger">@Local["Kiểm tra dữ liệu trước khi thao tác"]. @Local["Sau khi chuyển, dữ liệu sẽ không thể hoàn tác"]!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2">
+                        <div class="field col-12 p-1">
+                            <div class="row px-2">
+                                <div class="field col-12 col-sm-12 p-1">
+                                    <label>@Local["Nhóm"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="FCMMulti_TeleGroup" onchange="event.preventDefault(); return FCMMulti_TeleGroup_Change();">
+                                        <input type="hidden" name="" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Nhóm"]</div>
+                                        <div id="cbbFCMMulti_TeleGroup" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 px-1">
+                            <div class="d-lg-flex">
+                                <div class="w-70 col-auto my-auto">
+                                    <label>@Local["Danh sách nhân viên"]</label>
+                                </div>
+                                <div class="ms-auto">
+                                    <div class="d-flex">
+                                        <label class="form-check-label mb-0">
+                                            <small>@Local["Tự động"]</small>
+                                        </label>
+                                        <div class="form-check form-switch ms-2">
+                                            <input id="FCMMulti_Tele_DevideAuto" class="form-check-input" type="checkbox" checked="checked" onchange="event.preventDefault(); FCMMulti_Tele_AutoDevided();">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="FCMMulti_Tele_WattingDiv" class="waitingdiv text-center d-none " style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="FCMMulti_WattingSaveDiv" class="waitingdiv text-center" style="display: none;">
+                                <div>
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                    <span class="text-sm ps-1">Lưu...</span>
+                                </div>
+                            </div>
+
+                            <div class="ps-0">
+                                <div class="m-0 mobile-responsive" style="max-height: 60vh">
+                                    <table id="FCMMulti_Tele_dtTable" class="table mb-0 ">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-2 px-1 text-center" style="width: 50px;">
+                                                    <div class="form-check">
+                                                        <input id="FCMMulti_Tele_ckbCheckAll" class="form-check-input mt-2" checked name="teleAll" type="checkbox" onchange="event.preventDefault();return FCMMulti_Tele_CheckAll();" style="">
+                                                    </div>
+                                                </th>
+                                                <th class="ps-2">
+                                                    <p class="mb-0 text-sm text-dark fw-bold">@Local["Nhân viên"]</p>
+                                                </th>
+                                                <th class="ps-2">
+                                                    <div class="mb-0 text-sm text-dark fw-bold">@Local["Cấp bậc"]</div>
+                                                </th>
+                                                <th class="ps-2">
+                                                    <div class="mb-0 text-sm text-dark fw-bold">@Local["Nhóm"]</div>
+                                                </th>
+                                                <th class="ps-2">
+                                                    <span class="mb-0 text-sm text-dark fw-bold">@Local["Số lượng chia"]</span>
+                                                    (<span class="mb-0 text-sm text-primary fw-bold" id="FCMMulti_Customer_Quantity">
+                                                        <span id="FCMMulti_Customer_Current">0</span>
+                                                        /
+                                                        <span id="FCMMulti_Customer_Total">0</span>
+
+                                                    </span>)
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="FCMMulti_Tele_dtTableContent">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save m-3">
+                    <div class="action_Save-Content">
+                        <div class="text-danger text-gradient text-sm font-weight-bold mt-2 pt-1" id="textShowMessage"></div>
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); CloseModal()">@Local["Đóng"]</button>
+                        <button id="FCMMulti_btnSave" form="formConfigOption" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault(); FCMMulti_SaveData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    //#region // DECLARE && INITIALIZE
+    var FCMMulti_whenAvailable;
+    let FCMMulti_dataTele = {};
+    let FCMMulti_dataCust = [];
+    var FCMMulti_cbLoadData;
+    let FCMMulti_Tele_xhrLoad;
+    let FCMMulti_totalCust = 0, FCMMulti_devidedTicket = 0, FCMMulti_tokenTeleDevided = ''
+    $(document).ready(function () {
+        FCMMulti_Init();
+    })
+
+    function FCMMulti_Init() {
+        FCMMulti_whenAvailable = FCMMulti_LoaddataTeleGroup();
+    }
+    //#endregion
+    //#region //LOAD COMBO
+    async function FCMMulti_LoaddataTeleGroup() {
+        return new Promise((resolve) => {
+            AjaxLoad(url = "/Marketing/FilterCustomerMoveMulti?handler=Init"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0 && data[0]?.RESULT == undefined) {
+                        if (data[0].IsManager == 1) {
+                            data.unshift({ ID: "0", Name: "@Local["Tất cả nhóm"]", IsManager: 1 })
+                        }
+                        Load_Combo(data, "cbbFCMMulti_TeleGroup", true);
+                        $("#FCMMulti_TeleGroup").dropdown("refresh");
+                        $("#FCMMulti_TeleGroup").dropdown("set selected", data[0].ID);
+                    }
+                    resolve();
+                }
+                , sender = null
+                , before = function () {
+                    $("#FCMMulti_Loader").show();
+                }
+                , complete = function (e) {
+                    $("#FCMMulti_Loader").hide();
+                }
+            );
+        });
+    }
+    //#endregion
+    //#region //FUNC RECEIPT DATA TICKET
+    async function FCMMulti_GetDataTicket(data, cbLoadData) {
+        return new Promise((resolve) => {
+            FCMMulti_whenAvailable
+                .then(() => {
+                    FCMMulti_cbLoadData = cbLoadData;
+                    FCMMulti_dataCust = data;
+                    FCMMulti_totalCust = data?.length ?? 0;
+                    FCMMulti_devidedTicket = data?.length ?? 0;
+                    $("#FCMMulti_Customer_Total").html(FCMMulti_totalCust);
+                    $("#FCMMulti_Customer_Current").html(FCMMulti_devidedTicket);
+                    FCMMulti_Tele_LoadData();
+                })
+                .catch(e => console.warn("Error"));
+        })
+    }
+    //#endregion
+
+    //#region //EVENT
+    function FCMMulti_Tele_Event() {
+        $('#FCMMulti_Tele_dtTableContent').on('click', '.FCMMulti_Tele_ckbCheckItem', function () {
+            let ID = Number($(this).closest('tr').find('.FCMMulti_Tele_ID')[0].innerHTML);
+            if ($(this).is(":checked")) {
+                FCMMulti_dataTele[ID].isCheck = 1;
+                FCMMulti_Tele_AutoDevided()
+            }
+            else {
+                FCMMulti_dataTele[ID].isCheck = 0;
+                if (FCMMulti_Tele_AutoDevided()) return
+                FCMMulti_devidedTicket -= FCMMulti_dataTele[ID].quantity;
+                FCMMulti_dataTele[ID].quantity = 0;
+                $(`#FCMMulti_Tele_Quantity_${ID}`).val(0);
+                $("#FCMMulti_Customer_Current").html(FCMMulti_devidedTicket);
+
+                FCMMulti_Tele_CheckValidTicket();
+            }
+        });
+        $('#FCMMulti_Tele_dtTableContent').on('change', '.FCMMulti_Tele_txtQuantity', function () {
+            let ID = Number($(this).closest('tr').find('.FCMMulti_Tele_ID')[0].innerHTML);
+            let val = $(this).val() != '' ? Number($(this).val()) : 0;
+            FCMMulti_devidedTicket = FCMMulti_devidedTicket - FCMMulti_dataTele[ID].quantity + val;
+            FCMMulti_dataTele[ID].quantity = val;
+            $("#FCMMulti_Customer_Current").html(FCMMulti_devidedTicket);
+            FCMMulti_Tele_CheckValidTicket();
+        });
+    }
+
+    function FCMMulti_TeleGroup_Change() {
+        FCMMulti_dataTele = {};
+        $('#FCMMulti_Tele_ckbCheckAll').prop('checked', true);
+        FCMMulti_Tele_LoadData();
+    }
+
+    function FCMMulti_Tele_AutoDevided() {
+        if ($('#FCMMulti_Tele_DevideAuto').is(":checked")) {
+            let data = Object.values(FCMMulti_dataTele).filter(item => { item.quantity = 0; return item.isCheck == 1 });
+            $('.FCMMulti_Tele_txtQuantity').val(0);
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let quantity = Math.floor(FCMMulti_totalCust / data.length);
+                quantity = (i < data.length - 1) ? quantity : quantity + FCMMulti_totalCust % data.length;
+                $(`#FCMMulti_Tele_Quantity_${item.ID}`).val(quantity);
+                FCMMulti_dataTele[item.ID].quantity = quantity;
+            }
+
+            $('.FCMMulti_Tele_txtQuantity').attr('disabled', true)
+            FCMMulti_devidedTicket = Object.values(FCMMulti_dataTele).reduce((pre,arr) => {return (arr.isCheck == 1) ? pre + arr.quantity : pre}, 0)
+            $("#FCMMulti_Customer_Current").html(FCMMulti_devidedTicket);
+            FCMMulti_Tele_CheckValidTicket();
+            return true;
+        }
+        else {
+            $('.FCMMulti_Tele_txtQuantity').removeAttr('disabled')
+            return false;
+        }
+    }
+
+    function FCMMulti_Tele_CheckAll() {
+        if ($('#FCMMulti_Tele_ckbCheckAll').is(":checked")) {
+            FCMMulti_Tele_UpdateMulti(value = 1, field = 'isCheck');
+            $('.FCMMulti_Tele_ckbCheckItem').prop('checked', true);
+        }
+        else {
+            FCMMulti_Tele_UpdateMulti(value = 0, field = 'isCheck');
+            FCMMulti_Tele_UpdateMulti(value = 0, field = 'quantity');
+            $('.FCMMulti_Tele_ckbCheckItem').prop('checked', false);
+            $('.FCMMulti_Tele_txtQuantity').val(0);
+            FCMMulti_devidedTicket = 0;
+            $("#FCMMulti_Customer_Current").html(FCMMulti_devidedTicket);
+            FCMMulti_Tele_CheckValidTicket()
+        }
+        FCMMulti_Tele_AutoDevided();
+    }
+
+    function FCMMulti_Tele_UpdateMulti(value, field = '') {
+        let data = Object.values(FCMMulti_dataTele);
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            if (item[field] != undefined) item[field] = value;
+        }
+    }
+
+    function FCMMulti_Tele_CheckValidTicket() {
+        if (FCMMulti_devidedTicket > 0 && FCMMulti_devidedTicket < FCMMulti_totalCust) {
+            $('#FCMMulti_Customer_Quantity').removeClass('text-primary text-danger').addClass('text-warning');
+            return 0;
+        }
+        else if (FCMMulti_devidedTicket == 0 || FCMMulti_devidedTicket > FCMMulti_totalCust) {
+            $('#FCMMulti_Customer_Quantity').removeClass('text-primary text-warning').addClass('text-danger');
+            return -1
+        }
+        else {
+            $('#FCMMulti_Customer_Quantity').removeClass('text-danger text-warning').addClass('text-primary');
+            return 1;
+        }
+    }
+    //#endregion
+
+    //#region //LOADDATA TELE
+    function FCMMulti_Tele_LoadData() {
+        let groupID = (Number($('#FCMMulti_TeleGroup').dropdown('get value')) ? Number($('#FCMMulti_TeleGroup').dropdown('get value')) : 0);
+        $("#FCMMulti_Tele_dtTableContent").empty();
+        if (FCMMulti_Tele_xhrLoad && FCMMulti_Tele_xhrLoad.readyState != 4) FCMMulti_Tele_xhrLoad.abort();
+        FCMMulti_Tele_xhrLoad = AjaxLoad(url = "/Marketing/FilterCustomerMoveMulti/?handler=LoadData"
+            , data = {
+                'groupID': groupID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    if (data[0]?.RESULT == undefined) {
+                        FCMMulti_dataTele = (JSON.parse(result)).reduce((pre, arr) => { if (arr.ID) pre[arr.ID] = arr; return pre; }, {});
+                        $("#FCMMulti_Tele_dtTableContent").empty();
+                        FCMMulti_Tele_RenderData(data, 'FCMMulti_Tele_dtTableContent');
+                    }
+                    else {
+                        $("#FCMMulti_Customer_Current").html('0')
+                        notiWarning('@Local["Không có dữ liệu"]!');
+                    }
+                }
+                else if (result == "[]") {
+                    $("#FCMMulti_Customer_Current").html('0')
+                    notiWarning('@Local["Không có dữ liệu"]!');
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#FCMMulti_Tele_WattingDiv").show();
+            }
+            , complete = function (e) {
+                $("#FCMMulti_Tele_WattingDiv").hide();
+            }
+        );
+    }
+
+    async function FCMMulti_Tele_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        let dtLength = data.length;
+                        for (let i = 0; i < dtLength; i++) {
+                            let item = data[i];
+                            let quantity = Math.floor(FCMMulti_totalCust / dtLength);
+                            quantity = (i < dtLength - 1) ? quantity : quantity + FCMMulti_totalCust % dtLength;
+
+                            FCMMulti_dataTele[item.ID].quantity = quantity;
+                            FCMMulti_dataTele[item.ID].isCheck = 1;
+
+                            let tr = `<tr class="vt-number" role="row" id="FCMMulti_Tele_Item_${item.ID}">
+                                            <td class="d-none FCMMulti_Tele_ID"> ${item.ID} </td>
+                                            <td class="text-center text-dark">
+                                                <div class="form-check mt-1">
+                                                        <input id="FCMMulti_Tele_ckbCheckItem_${item.ID}" checked class="form-check-input FCMMulti_Tele_ckbCheckItem" name="ticketItem" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td class="pt-3 text-dark text-sm">
+                                                ${item.EmpName}
+                                            </td>
+                                            <td class="pt-3 text-dark text-sm">
+                                                ${item.LevelName}
+                                            </td>
+                                            <td class="pt-3 text-dark text-sm">
+                                                ${item.GroupID != 0 ? item.GroupName : "@Local["Tất cả nhóm"]"}
+                                            </td>
+                                            <td class="text-dark text-sm">
+                                                    <input id="FCMMulti_Tele_Quantity_${item.ID}" disabled type="number" class="d-block form-control FCMMulti_Tele_txtQuantity" placeholder="eg. @Local["Số lượng"]" value="${quantity}">
+                                            </td>
+                                    </tr>`
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        FCMMulti_Tele_Event();
+                    }
+                }
+                resolve();
+            }, 10)
+        })
+    }
+    //#endregion
+
+    //#region //EXCUTE
+    function FCMMulti_SaveData() {
+        //0: nho hon tong ticket; 1: bang tong ticket; -1: lon hon tong ticket
+        let validFlag = FCMMulti_Tele_CheckValidTicket();
+        if (validFlag == 1) {
+            FCMMulti_Confirm("@Local["Bạn có chắc muốn chia"]?");
+        }
+        else if (validFlag == 0) {
+            FCMMulti_Confirm("@Local["Số lượng khách hàng được chuyển nhỏ hơn số khách hàng đã lọc. Bạn có chắc muốn chuyển khách hàng"]?");
+        }
+        else {
+            if(FCMMulti_devidedTicket == 0) {
+                $('#textShowMessage').html('@Local["Số lượng phải lớn hơn 0"]!');
+            }
+            else{
+                $('#textShowMessage').html('@Local["Số lượng chia đã vượt quá"]!');
+            }
+        }
+    }
+    function FCMMulti_MatchingDataTele() {
+        let dataTicket = sliceIntoChunks(JSON.parse(JSON.stringify(FCMMulti_dataCust)), 500);
+        let IndexDataTicket = 0;
+        let dataResult = [];
+        let dataTeleDevided = {};
+        while (dataTicket[IndexDataTicket] != undefined) {
+            let data = dataTicket[IndexDataTicket];
+            let dataTele = Object.values(FCMMulti_dataTele);
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+
+                for(let j = 0; j < dataTele.length; j++) {
+                    if (dataTele[j].quantity > 0) {
+                        let EmpID = dataTele[j]?.EmpID;
+                        let e = {
+                            CustID: item.ID,
+                            EmpID: EmpID
+                        }
+                        dataResult.push(e);
+                        dataTeleDevided[EmpID] = dataTeleDevided[EmpID] != undefined ? dataTeleDevided[EmpID] + 1 : 0;
+                        dataTele[j].quantity--;
+                        break;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+            }
+            IndexDataTicket++;
+        }
+        FCMMulti_tokenTeleDevided = dataTeleDevided;
+        return dataResult;
+    }
+    function FCMMulti_Confirm(noti) {
+        const promise = notiConfirm(noti);
+        promise.then(function () { FCMMulti_SaveDataDB(); }, function () { });
+    }
+    function FCMMulti_SaveDataDB() {
+        let data = FCMMulti_MatchingDataTele();
+        if (data && data.length) {
+            AjaxLoad(url = "/Marketing/FilterCustomerMoveMulti/?handler=Execute"
+                , data = {
+                    'dtcust': JSON.stringify(data)
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        if(typeof FCMMulti_cbLoadData == 'function') FCMMulti_cbLoadData(0);
+                        CloseModal();
+                        //let dataUser = Object.keys(FCMMulti_tokenTeleDevided);
+                        //for (let i = 0; i < dataUser.length; i++) {
+                        //    let key = dataUser[i];
+                        //    let quantity = FCMMulti_tokenTeleDevided[key];
+                        //    fcm_senduser(Number(key), Master_circleAvatar, sys_employeeName_Main, 'Receipt Data (' + quantity + ' records)');
+                        //}
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        else {
+            $('#textShowMessage').html("@Local["Số lượng phải lớn hơn 0"]");
+        }
+        return false;
+    }
+    //#endregion
+</script>

@@ -1,0 +1,217 @@
+﻿@page
+@model MLunarCoffee.Pages.Myinfo.MySetting
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-body" id="profile">
+            <div class="row  align-items-center">
+                <div class="col-sm-auto col-4">
+                    <div class="avatar avatar-xl position-relative">
+                        <img id="myset_avatar" src="#" alt="profile_image" class="w-100 border-radius-lg shadow-sm">
+                    </div>
+                </div>
+                <div class="col-sm-auto col-8 my-auto">
+                    <div class="h-100">
+                        <h5 id="myset_name" class="mb-1 font-weight-bolder">
+                        </h5>
+                        <p id="myset_position" class="mb-0 font-weight-bold text-sm">
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-6 col-xl-6 mt-4">
+                <div class="card h-100">
+                    <div class="card-header pb-0 px-4">
+                        <h6 class="mb-0 fw-bold">@Local["Thông báo"]</h6>
+                        <hr class="horizontal dark my-2">
+                    </div>
+                    <div class="card-body p-3 pt-0">
+                        <ul class="list-group rounded-0" id="myset_notification">
+                        </ul>
+                        <hr class="horizontal dark mt-1 mb-2">
+                        <div class="form-check form-switch px-2 mt-3">
+                            <input id="myset_personal" class="noti form-check-input ms-auto" type="checkbox">
+                            <label for="myset_personal" class="form-check-label text-body ms-3 text-gradient fw-bold text-primary text-truncate w-80 mb-0">@Local["Thông báo cá nhân"]</label>
+                        </div>
+                        <div class="form-check form-switch px-2 mt-2">
+                            <input id="myset_mutesound" class="noti form-check-input ms-auto" type="checkbox">
+                            <label for="myset_mutesound" class="form-check-label text-body ms-3 text-gradient fw-bold text-primary text-truncate w-80 mb-0">@Local["Âm thanh thông báo"]</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-6 mt-4">
+                <div class="card h-100">
+                    <div class="card-header pb-0 px-4">
+                        <h6 class="mb-0 fw-bold">@Local["Thông tin cá nhân"]</h6>
+                        <hr class="horizontal dark my-2">
+                    </div>
+                    <div class="card-body p-3 pt-0">
+                        <ul class="list-group rounded-0">
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Tên đầy đủ"]</p>
+                                <h6 id="myset_fullname" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Điện thoại"]</p>
+                                <h6 id="myset_phone" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Email"]</p>
+                                <h6 id="myset_email" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Ngày sinh"]</p>
+                                <h6 id="myset_birthday" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Ngày tham gia"]</p>
+                                <h6 id="myset_created" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                            <li class="list-group-item border-0 ps-2 pt-2 text-sm rounded-2">
+                                <p class="text-dark mb-0 text-sm d-inline fw-bold">@Local["Địa chỉ"]</p>
+                                <h6 id="myset_address" class="text-dark ps-2 d-inline text-sm"></h6>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    let SettingUser = {};
+
+    $(document).ready(function() {
+        AjaxLoad(url = "/Myinfo/MySetting/?handler=GetData"
+            , data = {}, async = true, error = null
+            , success = function(result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let data = datas.Table;
+                    if (data != undefined && data.length != 0) {
+                        $("#myset_email").html(data[0].Email);
+                        $("#myset_birthday").html(data[0].Birth.includes('1900') ? '' : GetDateTime_String_DMY(data[0].Birth));
+                        $("#myset_phone").html(data[0].Phone);
+                        $("#myset_address").html(data[0].Address);
+                        $("#myset_fullname").html(data[0].Name);
+                        $("#myset_created").html(GetDateTime_String_DMY(data[0].Created));
+                        $("#myset_name").html(data[0].Name);
+                        $("#myset_position").html(data[0].GroupName);
+                        $("#myset_avatar").attr('src', data[0].Avatar != "" ? data[0].Avatar : Master_Default_Pic);
+                        SettingUser = data[0].SettingUser != "" ? JSON.parse(data[0].SettingUser) : {};
+                    }
+                    MySetting_Settings(datas.Table1, "myset_notification");
+                    MySetting_FillData(datas.Table1);
+                    SettingUser['user'] = sys_userID_Main;
+                    MySetting_Event();
+                }
+            }
+        );
+    });
+
+    function MySetting_Settings(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let state = '';
+                if (item.ISREGIS == 0) state = "disabled";
+                let idTopic = 'userTopic_' + i;
+                let tr = `
+                    <li class="list-group-item border-0 px-2 rounded-2">
+                        <div class="form-check form-switch ps-0 mb-0">
+                            <input id="${idTopic}" class="noti form-check-input ms-auto" type="checkbox" data-value="${item.Topic}" ${state} />
+                            <label for="${idTopic}" class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="">${item.Note}</label>
+                        </div>
+                    </li>
+                `
+                stringContent = stringContent + tr;
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+    function MySetting_FillData(data) {
+        if (SettingUser != {}) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                if (item.ISREGIS == 1) {
+                    if (SettingUser[item.Topic] != undefined && SettingUser[item.Topic] != null) {
+                        if (SettingUser[item.Topic] == 1) {
+                            $("#myset_notification input[data-value='" + item.Topic + "']").prop('checked', true);
+                        }
+                    }
+                    else {
+                        $("#myset_notification input[data-value='" + item.Topic + "']").prop('checked', true);
+                    }
+                }
+            }
+        }
+        if (SettingUser['personal'] == 0) {
+            $("#myset_personal").prop('checked', false);
+        } else {
+            $("#myset_personal").prop('checked', true);
+        }
+        if (SettingUser['mutesound'] == 1) {
+            $("#myset_mutesound").prop('checked', false);
+        } else {
+            $("#myset_mutesound").prop('checked', true);
+            SettingUser['mutesound'] = 0;
+        }
+    }
+
+    function MySetting_Event() {
+        $('#myset_personal').change(function() {
+            if ($(this).is(":checked")) {
+                SettingUser['personal'] = 1;
+            }
+            else SettingUser['personal'] = 0;
+            MySetting_Update();
+        });
+        $('#myset_mutesound').change(function () {
+            if ($(this).is(":checked")) {
+                SettingUser['mutesound'] = 0;
+            }
+            else SettingUser['mutesound'] = 1;
+            MySetting_Update();
+        });
+        
+
+
+
+        $('#myset_notification .noti').change(function() {
+            let value = $(this).attr("data-value");
+            if ($(this).is(":checked")) {
+                SettingUser[value] = 1;
+            }
+            else SettingUser[value] = 0;
+            MySetting_Update();
+        });
+    }
+
+    function MySetting_Update() {
+        AjaxLoad(url = "/Myinfo/MySetting/?handler=UpdateSetting"
+            , data = {
+                'data': JSON.stringify(SettingUser)
+            }
+            , async = true, error = null
+            , success = function(result) {
+                if (result == "1") {
+                    author_set('setting', JSON.stringify(SettingUser));
+                }
+            }
+        );
+    }
+</script>

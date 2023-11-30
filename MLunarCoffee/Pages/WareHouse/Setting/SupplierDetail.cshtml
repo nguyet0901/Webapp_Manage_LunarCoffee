@@ -1,0 +1,197 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Setting.SupplierDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0" id="WSSupD_Container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Nhà cung cấp"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết nhà cung cấp"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="formSupplierDetail">
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Tên"]</label>
+                            <input id="NameSup" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Mã"]</label>
+                            <input id="CodeSup" name="code" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Số điện thoại"]</label>
+                            <input id="PhoneSup" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>Email</label>
+                            <input id="EmailSup" name="email" type="email" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Ký quỹ"]</label>
+                            <input id="DepositSup" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Trang web"]</label>
+                            <input id="WebsiteSup" name="Website" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Ngân hàng"]</label>
+                            <input id="Bank_code" name="Bank_code" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Số tài khoản"]</label>
+                            <input id="Bank_number" name="Bank_number" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Người đại diện"]</label>
+                            <input id="PersonSup" name="PersonSup" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Địa chỉ"]</label>
+                            <input id="NoteSup" name="content" type="text" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú các mặt hàng cung cấp"]</label>
+                            <div class="ui fluid multiple search selection dropdown form-control" id="tokenProduct">
+                                <input type="hidden" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchtokenProduct" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Ghi chú các mặt hàng cung cấp"]</div>
+                                <div id="cbbtokenProduct" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="WSSupD_btnSave" data-tab="edit_tab_supplier" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" onclick="return ExcuteDataSupplier()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+            <!-- #endregion -->
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    let ser_SupplierDetailID = "@Model._SupplierDetailID";
+
+    $(document).ready(function () {
+        Initialize_Supplier_Detail();
+        Checking_TabControl_Permission();
+    });
+
+    function ExcuteDataSupplier() {
+        var data = new Object();
+        data.Name = $('#NameSup').val() ? $('#NameSup').val() : "";
+        data.Code = $('#CodeSup').val() ? $('#CodeSup').val() : "";
+        data.Phone = $('#PhoneSup').val() ? $('#PhoneSup').val() : "";
+        data.Email = $('#EmailSup').val() ? $('#EmailSup').val() : "";
+        data.Person = $('#PersonSup').val() ? $('#PersonSup').val() : "";
+        data.Note = $('#NoteSup').val() ? $('#NoteSup').val() : "";
+        data.Bank_number = $('#Bank_number').val() ? $('#Bank_number').val() : "";
+        data.Bank_code = $('#Bank_code').val() ? $('#Bank_code').val() : "";
+        data.Website = $('#WebsiteSup').val() ? $('#WebsiteSup').val() : "";
+        data.Deposit = $('#DepositSup').val() ? $('#DepositSup').val().replace(',', '') : 0;
+        data.Product = $('#tokenProduct').dropdown('get value');
+        $('#formSupplierDetail').form('validate form');
+        if ($('#formSupplierDetail').form('is valid')) {
+            AjaxLoad(url = "/WareHouse/Setting/SupplierDetail/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify(data),
+                    'CurrentID': ser_SupplierDetailID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            let IDComplete = data[0].RESULT;
+                            let Code = data[0].CODE;
+                            if (IDComplete != 0) {
+                                notiSuccess();
+                                if (typeof LoadSupplierAjax === 'function') LoadSupplierAjax();
+                                if (typeof LoadSupplierDetail === 'function') LoadSupplierDetail(IDComplete);
+                                if (typeof ItemDetail_AddSupplier === 'function') ItemDetail_AddSupplier(IDComplete);
+                                CloseModal();
+                                syslog_whr((ser_SupplierDetailID != "0" ? 'u' : 'i'), Code);
+                            }
+                            else {
+                                document.getElementById("textShowMessage").innerHTML = "@Local["Trùng dữ liệu"]";
+                            }
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+
+        }
+        return false;
+    }
+
+
+    function Initialize_Supplier_Detail() {
+        AjaxLoad(url = "/WareHouse/Setting/SupplierDetail/?handler=Initialize"
+            , data = { 'CurrentID': ser_SupplierDetailID }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data.cbbProduct, "cbbtokenProduct", true);
+                    LoadDataUpdateSupplier(data.dataDetail);
+                    $('#DepositSup').divide();
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+
+    function LoadDataUpdateSupplier(dataSupplier) {
+        if (dataSupplier && dataSupplier.length > 0) {
+            $('#NameSup').val((dataSupplier[0].Name));
+            $('#CodeSup').val((dataSupplier[0].Code));
+            $('#PhoneSup').val((dataSupplier[0].Phone));
+            $('#EmailSup').val((dataSupplier[0].Email));
+            $('#PersonSup').val((dataSupplier[0].Person));
+            $('#NoteSup').val((dataSupplier[0].Note));
+            $('#Bank_number').val((dataSupplier[0].Bank_number));
+            $('#Bank_code').val((dataSupplier[0].Bank_code));
+            $('#WebsiteSup').val((dataSupplier[0].Website));
+            $('#DepositSup').val((dataSupplier[0].Deposit));
+            if (dataSupplier[0].Product != undefined && dataSupplier[0].Product != null && dataSupplier[0].Product != "") {
+                $('#tokenProduct').dropdown('refresh');
+                $('#tokenProduct').dropdown('set selected', dataSupplier[0].Product.split(","));
+            }
+            $('#DepositSup').divide();
+        }
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

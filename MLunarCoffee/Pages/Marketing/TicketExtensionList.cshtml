@@ -1,0 +1,147 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketExtensionListModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Bổ sung"]</h6>
+                        <p class="text-sm mb-0">@Local["Thông tin bổ sung tổng đài cung cấp"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="btnAddNewTicketExtension" class="btn bg-gradient-primary btn-sm mt-1" onclick="return AddNewTicketExtension()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="waiting_extension" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentTicketSource">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["#"]</th>
+                                    <th>@Local["Bổ sung"]</th>
+                                    <th>@Local["Mật khẩu"]</th>
+                                    <th id="grColumnDeleteTicketSource">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentTicketSourceBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadTicketExtensionAjax();
+
+        $('#dtContentTicketSource tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditTicketExtension(ID);
+        });
+        $('#dtContentTicketSource tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteTicketExtension(ID)
+        });
+
+    });
+    function LoadTicketExtensionAjax() {
+        AjaxLoad(url = "/Marketing/TicketExtensionList/?handler=LoadData"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                RenderTableTicketSource(data, 'dtContentTicketSourceBody');
+            }
+            , sender = null
+            , before = function (e) {
+                $("#waiting_extension").show();
+            }
+            , complete = function (e) {
+                $("#waiting_extension").hide();
+            }
+        );
+    }
+
+    function RenderTableTicketSource(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass">' + item.Extension + '</a></td>'
+                        + '<td>' + item.Password + '</td>'
+                        + ((item.DeleteButton === 1)
+                            ? ('<td class="text-center"><button class="buttonGrid _tab_control_" data-tab="delete_tab_ticket_extension" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Hover_Edit(id);
+        Checking_TabControl_Permission();
+    }
+
+    function DeleteTicketExtension(id) {
+        const promise = notiConfirm();
+        promise.then(function () { DeleteTicketExtensionEX(id); }, function () { });
+    }
+
+    function DeleteTicketExtensionEX(id) {
+        AjaxLoad(url = "/Marketing/TicketExtensionList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadTicketExtensionAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+
+    function AddNewTicketExtension() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/TicketExtensionDetail?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EditTicketExtension(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/TicketExtensionDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js');</script>

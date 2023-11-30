@@ -1,0 +1,65 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json;
+using Fanpage.Comon.Session;
+
+namespace Fanpage.Pages.Facebook.Setting
+{
+    public class MessageTemplateModel : PageModel
+    {
+        public void OnGet()
+        {
+        }
+         public async Task<IActionResult> OnPostLoadData()
+        { 
+            try
+            {
+                DataTable dt = new DataTable();
+                var user = Session.GetUserSession(HttpContext);
+                using (Models.ExecuteDataBase confunc = new Models.ExecuteDataBase())
+                {
+                    dt =await  confunc.ExecuteDataTable("[MLU_sp_pageFacebook_Message_Template_LoadList]", CommandType.StoredProcedure);
+                }
+                if (dt != null)
+                {
+                    return Content(JsonConvert.SerializeObject(dt));
+                }
+                else
+                {
+                    return Content("");
+                }
+            }
+            catch(Exception ex)
+            {
+                return Content("0");
+            }
+        }
+        
+         public async Task<IActionResult> OnPostDeleteItem(int id)
+        {
+            try
+            {
+                var user = Session.GetUserSession(HttpContext);
+                using (Models.ExecuteDataBase connFunc = new Models.ExecuteDataBase())
+                {
+                    connFunc.ExecuteDataTable("[MLU_sp_pageFacebook_Message_Template_Delete]", CommandType.StoredProcedure,
+                        "@CurrentID", SqlDbType.Int, id,
+                        "@Datenow", SqlDbType.DateTime, Comon.Comon.GetDateTimeNow(),
+                        "@userID", SqlDbType.Int, user.sys_userid
+                    );
+                }
+                return Content("1");
+            }
+            catch (Exception ex)
+            {
+                return Content("0");
+            }
+
+        }
+    }
+}

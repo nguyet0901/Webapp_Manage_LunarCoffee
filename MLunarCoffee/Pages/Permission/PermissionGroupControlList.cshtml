@@ -1,0 +1,226 @@
+﻿@page
+@model MLunarCoffee.Pages.Permission.PermissionGroupControlListModel
+@{ Layout=null;
+}
+
+<div class="sixteen wide tablet ten wide computer column">
+    <div class="ui segments" style="background-color: white">
+
+        <div class="ui form segment form3" style="border: none; box-shadow: none;">
+            <h2 class="ui center aligned header" style="padding-top: 10px; font-family: 'Times New Roman'">@Local["Phân quyền nhóm theo"] control</h2>
+
+            <div class="five fields" style="margin: 0px;">
+                <div class="field">
+                    <button class="ui teal button" data-value="fade up" onclick="return AddNewPermissionGroupControl()">@Local["Thêm mới"]</button>
+                </div>
+                <div class="field">
+                </div>
+
+                <div class="field" style="min-width: 70px">
+                    <div class="ui fluid search selection dropdown" id="GroupUser" onchange="LoadGroupControlListAjax()">
+                        <input type="hidden" name="branch" />
+                        <input class="search" autocomplete="off" tabindex="0" />
+                        <div class="default text">@Local["Nhóm người sử dụng"]</div>
+                        <div id="cbbGroupUser" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field" style="min-width: 100px">
+                    <div class="ui fluid search selection dropdown" id="GroupPage" onchange="OnLoadGroupPageChange()">
+                        <input type="hidden" name="branch" />
+                        <input class="search" autocomplete="off" tabindex="0" />
+                        <div class="default text">@Local["Nhóm trang"]</div>
+                        <div id="cbbGroupPage" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="field" style="min-width: 150px">
+                    <div class="ui fluid search selection dropdown" id="PagePer" onchange="LoadGroupControlListAjax()">
+                        <input type="hidden" name="branch" />
+                        <input class="search" autocomplete="off" tabindex="0" />
+                        <div class="default text">@Local["Chọn trang"]</div>
+                        <div id="cbbPagePer" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="ui segment" style="border: none;">
+            <div class="ui grid dataTables_wrapper  no-footer">
+                <div class="sixteen wide column" style="padding-bottom: 1rem;">
+                    <table id="dtContentPerGroupControlList" class="ui compact selectable striped celled table tablet stackable dataTable no-footer" role="grid" aria-describedby="data_table_info" style="width: 100%;">
+                        <thead>
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th style="text-align: center; width: 25px;">@Local["#"]</th>
+                                <th style="text-align: center">@Local["Tên trang"]</th>
+                                <th style="text-align: center">@Local["Giá trị"] (*)</th>
+                                <th style="text-align: center">@Local["Điều khiển"]</th>
+                                <th style="text-align: center">@Local["Giá trị"] (*)</th>
+                                <th style="text-align: center">@Local["Loại điều khiển"]</th>
+                                <th style="text-align: center" width="50px">@Local["Sửa"]</th>
+                                <th style="text-align: center" width="50px">@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentPerGroupControlListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var dataGroup;
+    var dataGroupPage;
+    var dataPage;
+
+    function LoadGroupControlListAjax() {
+        AjaxLoad(url = "/Permission/PermissionGroupControlList/?handler=LoadDataGroupControlList"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                var groupuser = Number($('#GroupUser').dropdown('get value'))
+                    ? Number($('#GroupUser').dropdown('get value'))
+                    : 0;
+                var grouppage = Number($('#GroupPage').dropdown('get value'))
+                    ? Number($('#GroupPage').dropdown('get value'))
+                    : 0;
+                var page = Number($('#PagePer').dropdown('get value'))
+                    ? Number($('#PagePer').dropdown('get value'))
+                    : 0;
+
+                if (groupuser !== 0 && grouppage !== 0 && page !== 0) {
+
+                    data = data.filter(word => word["GroupUserID"] === groupuser);
+                    data = data.filter(word => word["GroupPageID"] === grouppage);
+                    data = data.filter(word => word["PageID"] === page);
+
+                    RenderPerGroupControl(data, "dtContentPerGroupControlListBody");
+                    $('#dtContentPerGroupControlList tbody').on('click',
+                        '.buttonEditClass',
+                        function () {
+                            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                            EditPermissionGroupControl(ID);
+                        });
+                    $('#dtContentPerGroupControlList tbody').on('click',
+                        '.buttonDeleteClass',
+                        function () {
+                            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                            DeletePermissionGroupControl(ID)
+                        });
+                }
+            });
+        //GetDataPermissionGroupControlList("/Permission/PermissionGroupControlList/LoadDataGroupControlList",
+        //    function (data) {
+
+        //    });
+    }
+    function RenderPerGroupControl(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td>' + item.PageName + '</td>'
+                        + '<td>' + item.PageValue + '</td>'
+                        + '<td>' + item.ControlName + '</td>'
+                        + '<td>' + item.ControlValue + '</td>'
+                        + '<td>' + item.ControlType + '</td>'
+
+                        + '<td><button class="buttonGrid" value="'
+                        + ((item.EditButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button></td>')
+                            : '<td></td>')
+                        + ((item.DeleteButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function DeletePermissionGroupControl(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeletePermissionGroupControl(id) }, function () { });
+    }
+    function ExecuteDeletePermissionGroupControl(id) {
+        AjaxLoad(url = "/Permission/PermissionGroupControlList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadGroupControlListAjax();
+                } else {
+                    notiError();
+                }
+            });
+    }
+
+    function AddNewPermissionGroupControl() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionGroupControlDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function EditPermissionGroupControl(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Permission/PermissionGroupControlDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function OnLoadGroupPageChange() {
+
+        var GroupPageid = Number($('#GroupPage').dropdown('get value'))
+            ? Number($('#GroupPage').dropdown('get value'))
+            : 0;
+        let data = dataPage.filter(word => word["GroupID"] === GroupPageid);
+
+        Load_Combo(data, "cbbPagePer", true);
+        $("#PagePer").dropdown("refresh");
+        if (data.length != 0) $("#PagePer").dropdown("set selected", Number(data[0].ID));
+        LoadGroupControlListAjax();
+    }
+    $(document).ready(function () {
+        AjaxLoad(url = "/Permission/PermissionGroupControlList/?handler=LoadComboMain"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                dataGroup = data._dataGroup;
+                dataGroupPage = data._dataGroupPage;
+                dataPage = data._dataPage;
+
+                Load_Combo(dataGroup, "cbbGroupUser", true);
+                $("#GroupUser").dropdown("refresh");
+                $("#GroupUser").dropdown("set selected", Number(dataGroup[0].ID));
+
+
+                Load_Combo(dataGroupPage, "cbbGroupPage", true);
+                $("#GroupPage").dropdown("refresh");
+                $("#GroupPage").dropdown("set selected", Number(dataGroupPage[0].ID));
+            });
+        LoadGroupControlListAjax();
+    });
+
+</script>
+
+<script>js_require('/assests/dist/semantic.min.js');</script>
+<script>js_require('/js/comon/load_datasource.js');</script>
+

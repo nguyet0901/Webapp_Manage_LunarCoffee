@@ -1,0 +1,196 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.ProfileBanner.ProfileBannerListModel
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0 BLcapitalize">@Local["Nội dung"] @Local["Hồ sơ"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+                <div class="right">
+                    <div class="form-check mt-2 me-2">
+                        <input class="form-check-input pr-2" id="PB_AllShow" type="checkbox">
+                        <label>@Local["Hiển thị tất cả"]</label>
+                    </div>
+                    <button class="btn bg-gradient-primary btn-sm mt-1" onclick="PBanner_OpentDetail(0)">@Local["Thêm mới"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <table class="table vt-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>@Local["Hình ảnh"]</th>
+                                <th>@Local["Tiêu đề"]</th>
+                                <th>@Local["Nội dung"]</th>
+                                <th>@Local["Xóa"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="PB_BodyGrid" class="eventDisabled">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    //#region //Load
+    $(document).ready(function () {
+        PBanner_Load();
+        PBanner_EventInit();
+    })
+
+    function PBanner_Load () {
+        $("#PB_BodyGrid").empty();
+        AjaxLoad(url = "/Setting/AppCustomer/ProfileBanner/ProfileBannerList/?handler=LoadList"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+
+                        PBanner_Render(data, "PB_BodyGrid");
+                    }
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //Render
+    async function PBanner_Render (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                <tr class="vt-number ${item.IsDisabled == 1 ? "disabled bg-gray-200" : ""}">
+                                    <td class="vt-number-order"></td>
+                                    <td class="text-center"><img src="${item.FeatureImage}" onerror="Master_OnLoad_Error_Image(this)" style="max-width: 400px;"></td>
+                                    <td><span class="text-sm border-bottom border-primary text-primary btnEdit cursor-pointer" data-id="${item.ID}">${item.Title}</span></td>
+                                    <td>${item.Content}</td>
+                                    <td class="text-nowrap cursor-pointer">${PBanner_Button(item.IsDisabled, item.ID)}</td>
+                                </tr>
+                            `;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    PBanner_Event();
+                }
+            }, 100)
+        })
+    }
+
+    function PBanner_Button (isdisabled, ID) {
+        try {
+            let buttons = [];
+            if (isdisabled == 0) {
+                buttons.push(`<button class="buttonGrid btnDelete" data-id="${ID}"><i class="vtt-icon vttech-icon-delete"></i></button>`);
+            }
+
+            buttons.push(`<button class="buttonGrid">`+
+                ((isdisabled === 1) ? `<i class="vtt-icon vttech-icon-hide btnHide" data-id="${ID}" isHide="1"></i>` : `<i class="vtt-icon vttech-icon-nohide btnHide" data-id="${ID}" isHide="0"></i>`)
+                + '</button>');
+
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //Event
+
+    function PBanner_EventInit () {
+        $("#PB_AllShow").on("change", function () {
+            let IsCheck = $(this).prop("checked");
+            if (IsCheck) {
+                $("#PB_BodyGrid").removeClass("eventDisabled");
+            } else {$("#PB_BodyGrid").addClass("eventDisabled");}
+        })
+    }
+
+    function PBanner_Event () {
+        $("#PB_BodyGrid .btnEdit").unbind("click").click(function () {
+            let ID = $(this).attr("data-id") ? Number($(this).attr("data-id")) : 0;
+            if (ID != 0) {
+                PBanner_OpentDetail(ID);
+            }
+        })
+        $("#PB_BodyGrid .btnHide").unbind("click").click(function () {
+            let ID = $(this).attr("data-id");
+            let IsHide = $(this).attr("isHide");
+            PBanner_Hide(ID, 0, IsHide);
+        })
+        $("#PB_BodyGrid .btnDelete").unbind("click").click(function () {
+            let ID = $(this).attr("data-id");
+            PBanner_Hide(ID, 1);
+        })
+    }
+
+    //#endregion
+
+    //#region //Orther
+
+    function PBanner_Hide (id, IsDel, IsHide = 0) {
+        const promise = notiConfirm();
+        promise.then(function () {PBanner_ExecutedHide(id, IsDel, IsHide)}, function () { });
+    }
+    function PBanner_ExecutedHide (ID, IsDel, IsHide) {
+        AjaxLoad(url = "/Setting/AppCustomer/ProfileBanner/ProfileBannerList/?handler=Hide"
+            , data = {
+                "id": ID
+                , "IsDelete": IsDel
+                , "IsHide": IsHide
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    if (result == "1") {
+                        notiSuccess();
+                        PBanner_Load();
+                    } else if (result == "2") {
+                        notiWarning("@Local["Hiển thị tối đa"] 3");
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //Detail
+
+    function PBanner_OpentDetail (ID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/AppCustomer/ProfileBanner/ProfileBannerDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //#endregion
+</script>
+<style>
+    .BLcapitalize {
+        text-transform: lowercase;
+    }
+    .BLcapitalize::first-letter {
+        text-transform: capitalize;
+    }
+    .eventDisabled .disabled {
+        display: none;
+    }
+</style>

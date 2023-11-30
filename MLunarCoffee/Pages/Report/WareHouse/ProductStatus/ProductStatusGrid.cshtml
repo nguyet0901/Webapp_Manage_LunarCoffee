@@ -1,0 +1,768 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.WareHouse.ProductStatus.ProductStatusGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div id="PSG_MainContainer">
+    <div id="PSG_MasterContainer">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-0">
+                <div class="left">
+                    <div class="ms-n3 ps-1">
+                        <div class="ui dropdown text-dark fw-bold text-sm border-0" id="PSG_ExpiredMonth" tabindex="0" onchange="event.preventDefault(); PSG_Load()">
+                            <i class="dropdown icon"></i>
+                            <input type="hidden" value="0">
+                            <div class="text">@Local["Giảng viên"]</div>
+                            <div id="cbbPSG_ExpiredMonth" class="menu transition hidden" tabindex="-1">
+                                <div class="item active selected" data-value="0">@Local["Tình trạng"]</div>
+                                <div class="item" data-value="-1">@Local["Hết hạn"]</div>
+                                <div class="item" data-value="1">@Local["Còn hạn"] (1 @Local["Tháng"])</div>
+                                <div class="item" data-value="3">@Local["Còn hạn"] (3 @Local["Tháng"])</div>
+                                <div class="item" data-value="6">@Local["Còn hạn"] (6 @Local["Tháng"])</div>
+                                <div class="item" data-value="12">@Local["Còn hạn"] (12 @Local["Tháng"])</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="right">
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#PSG_GridArea" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Tải lại"]">
+                        <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); return PSG_Load()"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); PSG_PrintReport()"></i>
+                    </div>
+                    <div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return PSG_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return PSG_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="costprice" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Giá vốn"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="unit" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Đơn vị"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="totalamount" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Tổng giá"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="avgamount" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Đơn giá trung bình"]</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <div class="collapsesticky collapse show" id="PSG_GridArea">
+                <div class="card-body p-0 pt-3">
+                    <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                        <table class="table vt-table mb-0" id="PSG_Grid">
+                            <thead>
+                                <tr role="row">
+                                    <th>@Local["#"]</th>
+                                    <th style="min-width:150px;">@Local["Mã lô hàng"]</th>
+                                    <th style="min-width:200px;">@Local["Sản phẩm"]</th>
+                                    <th data-name="costprice">@Local["Giá vốn"]</th>
+                                    <th data-name="unit">@Local["Đơn vị"]</th>
+                                    <th>@Local["Tình trạng"]</th>
+                                    <th>@Local["Ngày hết hạn"]</th>
+                                    <th style="min-width:120px;">@Local["Số lượng nhập"]</th>
+                                    <th style="min-width:120px;" data-name="totalamount">@Local["Tổng giá"]</th>
+                                    <th style="min-width:120px;" data-name="avgamount">@Local["Đơn giá trung bình"]</th>
+                                    <th style="min-width:120px;">@Local["Số lượng xuất"]</th>
+                                    <th style="min-width:120px;">@Local["Tồn"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="PSG_GridBody">
+                            </tbody>
+                            <tfoot id="PSG_GridFoot" class="position-sticky bottom-0">
+                                <tr class="vt-number text-white bg-gradient bg-primary mt-2 SSBCourse_RowTotal" role="row">
+                                    <td></td>
+                                    <td class="text-start">
+                                        <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white" data-id="0">@Local["Tất cả"]</a>
+                                    </td>
+                                    <td>-</td>
+                                    <td class="toogleitem" data-name="costprice">-</td>
+                                    <td class="toogleitem" data-name="unit">-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td id="PSG_totalImport">0</td>
+                                    <td class="toogleitem" id="PSG_totalAmount" data-name="totalamount">0</td>
+                                    <td class="toogleitem" id="PSG_totalAvg" data-name="avgamount">0</td>
+                                    <td id="PSG_totalExport">0</td>
+                                    <td id="PSG_totalStock">0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="PSG_DetailContainer" class="mt-3" style="display:none;">
+       <div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0 pt-0">
+        <div class="left">
+            <p id="PSG_DetailHeader" class="text-md text-dark font-weight-bold mb-1"></p>
+        </div>
+        <div class="right">
+            <div class="text-primary fw-bold d-inline me-2 text-nowrap mt-1">
+                <span id="PSG_DetailCurrentData">0</span>
+                <span class="mx-2">/</span>
+                <span id="PSG_DetailTotalData">0</span>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#PSG_DetailGridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return PSG_DetailLoadData()"></i>
+            </div>
+            <div class="icon-hover mx-1 mt-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["In báo cáo"]">
+                <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); PSG_DetailPrintReport()"></i>
+            </div>
+            <div>
+                <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                    <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Xuất excel"]">
+                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                    </div>
+                    <div class="input-group-text icon-hover w-auto vttech-input-item">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return PSG_ExportDetail(0)">@Local["Tất cả"]</i>
+                    </div>
+                    <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return PSG_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colListsdetail">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colListsdetail" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="code" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã phiếu"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="ordertype" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Loại"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="istreat" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Điều trị"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="unit" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Đơn vị"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="ware" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Kho"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="suppliercode" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã nhà cung cấp"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogledetail form-check-input" data-name="supplier" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Nhà cung cấp"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="PSG_DetailGridArea">
+        <div class="card-body p-0 mt-3">
+            <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                <table class="table vt-table mb-0" id="PSG_DetailGrid">
+                    <thead>
+                        <tr role="row">
+                            <th>@Local["#"]</th>
+                            <th style="min-width:150px;">@Local["Mã lô hàng"]</th>
+                            <th style="min-width:150px;" data-name="code">@Local["Mã phiếu"]</th>
+                            <th style="min-width:150px;" data-name="ordertype">@Local["Loại"]</th>
+                            <th style="min-width:150px;" data-name="istreat">@Local["Điều trị"]</th>
+                            <th style="min-width:150px;">@Local["Sản phẩm"]</th>
+                            <th style="min-width:150px;">@Local["Số lượng"]</th>
+                            <th style="min-width:150px;" data-name="unit">@Local["Đơn vị"]</th>
+                            <th style="min-width:150px;">@Local["Đơn giá"]</th>
+                            <th style="min-width:150px;">@Local["Ngày xử lý"]</th>
+                            <th data-name="ware" style="min-width:120px;">@Local["Kho"]</th>
+                            <th style="min-width:200px;" data-name="suppliercode">@Local["Mã nhà cung cấp"]</th>
+                            <th style="min-width:200px;" data-name="supplier">@Local["Nhà cung cấp"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="PSG_DetailGridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return PSG_DetailRenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+
+    </div>
+</div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT
+    let DataReportMain;
+    let xhrLoadList, xhrLoadDetail;
+    let DataReportDetail, DataReportDetailSlice;
+    let IndexReportDetail = 0;
+    let shtable, shtableDetail;
+    let timeoutCountDetail;
+    let PSG_DetailID = 0;
+    let PSG_totalImport = 0; PSG_totalExport = 0, PSG_totalStock = 0, PSG_totalAmount = 0, PSG_totalAvg = 0;
+    $(document).ready(function () {
+        $("#PSG_ExpiredMonth").dropdown("refresh");
+        $("#PSG_ExpiredMonth").dropdown("set selected", "0");
+        shtable = $("#PSG_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        shtableDetail = $("#PSG_DetailGrid").TableExpandColumn({
+            shtoogle: $('.shtoogledetail')
+        });
+        ToolPopper();
+        PSG_Load();
+        Checking_TabControl_Permission();
+    });
+    //#endregion
+
+    //#region //LOAD DATA
+    function PSG_Load() {
+        PSG_totalImport = 0; PSG_totalExport = 0, PSG_totalStock = 0, PSG_totalAmount = 0, PSG_totalAvg = 0;
+        $('#PSG_totalImport').html(0)
+        $('#PSG_totalAmount').html(0)
+        $('#PSG_totalAvg').html(0)
+        $('#PSG_totalExport').html(0)
+        $('#PSG_totalStock').html(0)
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _wareID = "@Model._wareID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _monthExpired = Number($('#PSG_ExpiredMonth').dropdown('get value')) ? Number($('#PSG_ExpiredMonth').dropdown('get value')) : 0;
+        $("#PSG_GridBody").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/WareHouse/ProductStatus/ProductStatusGrid/?handler=Loadata"
+            , data = {
+                'wareID': _wareID
+                , 'monthExpired': _monthExpired
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    DataReportMain = JSON.parse(result);
+
+                    if (data && data.length != 0) {
+                        fnRenderBlock(data, "PSG_GridBody"
+                            , blocknum = 100
+                            , fnrender = PSG_Render
+                            , fnsuccess = null
+                        );
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+
+    //#endregion
+
+    //#region // RENDER
+
+    async function PSG_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let avgAmount = item.TotalImport != 0 ? (item.ImportAmount / item.TotalImport).toFixed(2) : 0; 
+                            PSG_totalImport += item.TotalImport;
+                            PSG_totalExport += item.TotalExport + item.TotalExportTS;
+                            PSG_totalStock += item.TotalImport - (item.TotalExport + item.TotalExportTS)
+                            PSG_totalAmount += (item.ImportAmount);
+                            PSG_totalAvg += Number(avgAmount);
+                            let epiredStatus = (item?.ExpiredStatus ?? 0) ? `<span class="text-dark">@Local["Còn hạn"]</span>` : `<span class="text-danger">@Local["Hết hạn"]</span>`;
+                            let tr = `
+                                                                         <td class="vt-number-order"></td>
+                                                                         <td>
+                                                                             <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-id="${item.ID}" data-name="${item.PackageNumber}">
+                                                                                ${item.PackageNumber}
+                                                                             </a>
+                                                                         </td>
+                                                                         <td>
+                                                                            ${item.ProName}
+                                                                         </td>
+                                                                         <td data-name="costprice">${formatNumber(item.CostPrice)}</td>
+                                                                         <td data-name="unit">${item.Unit}</td>
+                                                                         <td>${epiredStatus}</td>
+                                                                         <td>${ConvertDateTimeUTC_DMY_Remove1900(item.DateExpired)}</td>
+                                                                         <td >${formatNumber(item.TotalImport)}</td>
+                                                                         <td data-name="totalamount">${formatNumber(item.ImportAmount)}</td>
+                                                                         <td data-name="avgamount">${formatNumber(avgAmount)}</td>
+                                                                         <td >${formatNumber(item.TotalExport + item.TotalExportTS)}</td>
+                                                                         <td >${formatNumber(item.TotalImport - (item.TotalExport + item.TotalExportTS))}</td>
+                                                                        `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        $('#PSG_totalImport').html(`${formatNumber(PSG_totalImport)}`)
+                        $('#PSG_totalAmount').html(`${formatNumber(PSG_totalAmount)}`)
+                        $('#PSG_totalAvg').html(`${formatNumber(PSG_totalAvg)}`)
+                        $('#PSG_totalExport').html(`${formatNumber(PSG_totalExport)}`)
+                        $('#PSG_totalStock').html(`${formatNumber(PSG_totalStock)}`)
+                        PSG_GeneralEvent();
+                        shtable.Refresh();
+                        Checking_TabControl_Permission();
+                    }
+                }
+            }, 100);
+        })
+    }
+    //#endregion
+
+    //#region //LOAD DETAIL
+    function PSG_DetailLoadData() {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        let _wareID = "@Model._wareID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _monthExpired = Number($('#PSG_ExpiredMonth').dropdown('get value')) ? Number($('#PSG_ExpiredMonth').dropdown('get value')) : 0;
+        IndexReportDetail = 0;
+        $("#PSG_DetailGridBody").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/WareHouse/ProductStatus/ProductStatusGrid/?handler=LoadDataDetail"
+            , data = {
+                'wareID': _wareID
+                , 'monthExpired': _monthExpired
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+                , 'packageID': PSG_DetailID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    DataReportDetail = JSON.parse(result);
+                    DataReportDetailSlice = sliceIntoChunks(JSON.parse(result), 500);
+                    if (DataReportDetailSlice && DataReportDetailSlice.length != 0) {
+                        fnRenderBlock(DataReportDetailSlice[IndexReportDetail], "PSG_DetailGridBody"
+                            , blocknum = 100
+                            , fnrender = PSG_DetailRender
+                            , fnsuccess = null
+                        );
+                    }
+
+                    Count_Up("PSG_DetailTotalData", data.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    function PSG_DetailRenderMore() {
+        IndexReportDetail += 1;
+        if (DataReportDetailSlice && DataReportDetailSlice[IndexReportDetail]) {
+            fnRenderBlock(DataReportDetailSlice[IndexReportDetail], "PSG_DetailGridBody"
+                , blocknum = 100
+                , fnrender = PSG_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+    //#endregion
+
+    //#region //RENDER DETAIL
+    async function PSG_DetailRender(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let type = item.Type == 1 ? '@Local["Phiếu xuất kho"]' : '@Local["Phiếu nhập kho"]'
+                            let isTreat = item.IsTreatment != 0 ? '<i class="fas fa-check text-success"></i>' : ''
+                            let tr = `
+                                                          <td class="vt-number-order"></td>
+                                                          <td>${item.PackageNumber}</td>
+                                                          <td data-name="code">${item.Code}</td>
+                                                          <td data-name="ordertype">${type}</td>
+                                                          <td data-name="istreat">${isTreat}</td>
+                                                          <td >${Fun_GetName_ByID(RP_DataProduct, item.ProductID)}</td>
+                                                          <td >${formatNumber(item.Number)}</td>
+                                                          <td data-name="unit">${item.UnitName}</td>
+                                                          <td >${formatNumber(item.Amount)}</td>
+                                                              <td>${ConvertDateTimeUTC_DMYHM(item.DateExecute)}</td>
+                                                          <td data-name="ware" >${Fun_GetName_ByID(RP_DataWarehouse, item.WareID)}</td>
+                                                          <td data-name="suppliercode">${item.SupCode}</td>
+                                                          <td data-name="supplier">${item.SupName}</td>
+                                                          `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtableDetail.Refresh();
+                        Checking_TabControl_Permission();
+                        clearTimeout(timeoutCountDetail);
+                        timeoutCountDetail = setTimeout(() => {
+                            Count_Up("PSG_DetailCurrentData", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+            }, 100);
+        })
+    }
+    //#endregion
+
+    //#region //EVENT
+    function PSG_GeneralEvent() {
+        $("#PSG_GridBody .buttonViewClass").unbind('click').on("click", function () {
+            PSG_DetailID = $(this).attr('data-id');
+            let name = $(this).attr('data-name');
+            $("#PSG_DetailContainer").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#PSG_DetailContainer").offset().top
+            }, 300);
+            if (PSG_DetailID == "0") {
+                $("#PSG_DetailHeader").html('@Local["Tất cả nhà cung cấp"]');
+            }
+            else {
+                $("#PSG_DetailHeader").html(name);
+            }
+            PSG_DetailLoadData();
+        })
+    }
+    //#endregion
+
+    //#region // EXPORT - PRINT
+    async function PSG_Export(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#PSG_MasterContainer');
+
+                var dataHeader = {
+                    "STT": ["STT", (value, { }, idx) => { return idx + 1 }],
+                    "PackageNumber": ["@Local["Mã lô hàng"]"],
+                    "ProName": ["@Local["Sản phẩm"]"],
+                    "CostPrice": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='costprice']`)).is(":checked"),
+                        data: ["@Local["Giá vốn"]"]
+                    },
+                    "Unit": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='unit']`)).is(":checked"),
+                        data: ["@Local["Đơn vị"]"]
+                    },
+                    "ExpiredStatus": ["@Local["Tình trạng"]", (value) => { return (value ?? 0) ? decodeHtml('@Local["Còn hạn"]') : decodeHtml('@Local["Hết hạn"]') }],
+                    "DateExpired": ["@Local["Ngày hết hạn"]", (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }],
+                    "TotalImport": ["@Local["Số lượng nhập"]"],
+                    "ImportAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='totalamount']`)).is(":checked"),
+                        data: ["@Local["Tổng giá"]"]
+                    },
+                    "ImportAmount": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='avgamount']`)).is(":checked"),
+                        data: ["@Local["Đơn giá trung bình"]", (value, { TotalImport, ImportAmount }) => { return TotalImport != 0 ? (ImportAmount / TotalImport).toFixed(2) : 0; }]
+                    },
+                    "TotalExport": ["@Local["Số lượng xuất"]", (value, { TotalExport, TotalExportTS }) => { return TotalExport + TotalExportTS }],
+                    "Stock": ["@Local["Tồn"]", (value, { TotalImport, TotalExport, TotalExportTS }) => { return TotalImport - (TotalExport + TotalExportTS) }]
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'PSG_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang['Bao_cao_tinh_trang_san_pham']);
+                exportJsonToExcel(Outlang['Bao_cao_tinh_trang_san_pham'], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không xuất được file"]');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]');
+        }
+    }
+    async function PSG_PrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = 0;
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["STT", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "PackageNumber": ["@Local["Mã lô hàng"]"],
+                    "ProName": ["@Local["Sản phẩm"]"],
+                    "CostPrice": ["@Local["Giá vốn"]", {
+                        isShow: $(`.shtoogle[data-name='costprice']`).is(":checked"),
+                    }],
+                    "Unit": ["@Local["Đơn vị"]", {
+                        isShow: $(`.shtoogle[data-name='unit']`).is(":checked"),
+                    }],
+                    "ExpiredStatus": ["@Local["Tình trạng"]", {
+                        callbackRenderValue: (value) => { return (value ?? 0) ? decodeHtml('@Local["Còn hạn"]') : decodeHtml('@Local["Hết hạn"]') }
+                    }],
+                    "DateExpired": ["@Local["Ngày hết hạn"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }
+                    }],
+                    "TotalImport": ["@Local["Số lượng nhập"]", {
+                        isTotalFooter: true
+                    }],
+                    "ImportAmount": ["@Local["Tổng giá"]", {
+                        isShow: $(`.shtoogle[data-name='totalamount']`).is(":checked"),
+                        isTotalFooter: true
+                    }],
+                    "ImportAmount": ["@Local["Đơn giá trung bình"]", {
+                        isShow: $(`.shtoogle[data-name='avgamount']`).is(":checked"),
+                        callbackRenderValue: (value, { TotalImport, ImportAmount }) => { return TotalImport != 0 ? (ImportAmount / TotalImport).toFixed(2) : 0; },
+                        isTotalFooter: true
+                    }],
+                    "TotalExport": ["@Local["Số lượng xuất"]", {
+                        callbackRenderValue: (value, { TotalExport, TotalExportTS }) => { return TotalExport + TotalExportTS },
+                        isTotalFooter: true
+                    }],
+                    "Stock": ["@Local["Tồn"]", {
+                        callbackRenderValue: (value, { TotalImport, TotalExport, TotalExportTS }) => { return TotalImport - ( TotalExport + TotalExportTS )},
+                        isTotalFooter: true
+                    }],
+
+                };
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'PSG_GridBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang['Bao_cao_tinh_trang_san_pham'], DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+    async function PSG_ExportDetail(isOption = 0) {
+        try {
+            if (DataReportDetail && DataReportDetail.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#PSG_DetailContainer');
+                var dataHeader = {
+                    "STT": ["STT", (value, { }, idx) => { return idx + 1 }],
+                    "PackageNumber": ["@Local["Mã lô hàng"]"],
+                    "Code": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='code']`)).is(":checked"),
+                        data: ["@Local["Mã phiếu"]"]
+                    },
+                    "Type": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='ordertype']`)).is(":checked"),
+                        data: ["@Local["Loại"]", (value) => { return value == 1 ? '@Local["Phiếu xuất kho"]' : '@Local["Phiếu nhập kho"]' }]
+                    },
+                    "IsTreatment": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='istreat']`)).is(":checked"),
+                        data: ["@Local["Điều trị"]", (value) => { return value != 0 ? 'x' : '' }]
+                    },
+                    "ProductID": {
+                        data: ["@Local["Sản phẩm"]", (value) => { return Fun_GetName_ByID(RP_DataProduct, value) }]
+                    },
+                    "Number": ["@Local["Số lượng"]"],
+                    "UnitName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='unit']`)).is(":checked"),
+                        data: ["@Local["Đơn vị"]"]
+                    },
+                    "Amount": ["@Local["Đơn giá"]"],
+                    "DateExecute": {
+                        data: ["@Local["Ngày xử lý"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "WareID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='ware']`)).is(":checked"),
+                        data: ["@Local["Kho"]", (value) => { return Fun_GetName_ByID(RP_DataWarehouse, value) }]
+                    },
+                    "SupCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='suppliercode']`)).is(":checked"),
+                        data: ["@Local["Mã nhà cung cấp"]"],
+                    },
+                    "SupName": {
+                        isShow: isAll || (eleContainer.find(`.shtoogledetail[data-name='supplier']`)).is(":checked"),
+                        data: ["@Local["Nhà cung cấp"]"]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'PSG_DetailGridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang['Bao_cao_tinh_trang_san_pham']);
+                exportJsonToExcel(Outlang['Bao_cao_tinh_trang_san_pham'], DataReportDetail, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không xuất được file"]');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]');
+        }
+    }
+    async function PSG_DetailPrintReport() {
+        try {
+            if (DataReportDetail && DataReportDetail.length != 0) {
+                let _branchID = 0;
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["STT", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "PackageNumber": ["@Local["Mã lô hàng"]"],
+                    "Code": ["@Local["Mã phiếu"]", {
+                        isShow: $(`.shtoogledetail[data-name='code']`).is(":checked"),
+                    }],
+                    "Type": ["@Local["Loại"]", {
+                        isShow: $(`.shtoogledetail[data-name='ordertype']`).is(":checked"),
+                        callbackRenderValue: (value) => { return value == 1 ? '@Local["Phiếu xuất kho"]' : '@Local["Phiếu nhập kho"]' }
+                    }],
+                    "IsTreatment": ["@Local["Điều trị"]", {
+                        isShow: $(`.shtoogledetail[data-name='istreat']`).is(":checked"),
+                        callbackRenderValue: (value) => { return value != 0 ? 'x' : '' }
+                    }],
+                    "ProductID": ["@Local["Sản phẩm"]", {
+                        callbackRenderValue: (value) => { return Fun_GetName_ByID(RP_DataProduct, value) }
+                    }],
+                    "Number": ["@Local["Số lượng"]"],
+                    "UnitName": ["@Local["Đơn vị"]", {
+                        isShow: $(`.shtoogledetail[data-name='unit']`).is(":checked"),
+                    }],
+                    "Amount": ["@Local["Đơn giá"]"],
+                    "DateExecute": ["@Local["Ngày xử lý"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "WareID": ["@Local["Kho"]", {
+                        isShow: $(`.shtoogledetail[data-name='ware']`).is(":checked"),
+                        callbackRenderValue: (value) => { return Fun_GetName_ByID(RP_DataWarehouse, value) }
+                    }],
+                    "SupCode": ["@Local["Mã nhà cung cấp"]", {
+                        isShow: $(`.shtoogledetail[data-name='suppliercode']`).is(":checked"),
+                    }],
+                    "SupName": ["@Local["Nhà cung cấp"]", {
+                        isShow: $(`.shtoogledetail[data-name='supplier']`).is(":checked"),
+                    }]
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang['Bao_cao_tinh_trang_san_pham'], DataReportDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+
+                                                //#endregion
+
+</script>

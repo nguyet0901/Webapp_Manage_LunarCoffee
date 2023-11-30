@@ -1,0 +1,415 @@
+﻿@page
+@model ServiceStatus.Warranty.WarrantyGrid
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div id="WG_General" class="mt-3">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Bảo hành"]</h6>
+            <p class="text-sm mb-0">@Local["Báo cáo bảo hành dịch vụ/sản phẩm khách hàng sử dụng"]</p>
+        </div>
+        <div class="right">
+            <div class="wrap">
+                <div class="wrapblock">
+                    <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                        <span id="WG_currentdata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="WG_totaldata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#WarrantyDiv" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Tải lại"]">
+                        <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); return WG_LoadData()"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); WG_DetailPrintReport()"></i>
+                    </div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return WG_Export(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return WG_Export(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="warrantymonth" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Thời hạn bảo hành"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Ngày tạo"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="createdby" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người tạo"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row m-0">
+        <div class="col-lg-4 px-0 pe-lg-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column">
+                        <h6 class="text-sm text-primary text-gradient mb-0">@Local["Tổng ca"]</h6>
+                        <h6 class="font-weight-bolder" id="WG_AmountTotal">0</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 px-0 pe-lg-2">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column">
+                        <h6 class="text-sm text-primary text-gradient mb-0">@Local["Còn bảo hành"]</h6>
+                        <h6 class="font-weight-bolder" id="WG_AmountLimited">0</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 px-0">
+            <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column">
+                        <h6 class="text-sm text-primary text-gradient mb-0">@Local["Hết bảo hành"]</h6>
+                        <h6 class="font-weight-bolder" id="WG_AmountExpired">0</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="WarrantyDiv">
+        <div class="card-body p-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table data-name="WG_Grid" class="table vt-table mb-0" id="WG_Grid">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th style="min-width: 140px">@Local["Mã khách hàng"]</th>
+                            <th data-name="custname" style="min-width: 180px">@Local["Khách hàng"]</th>
+                            <th data-name="service" class="text-break">@Local["Dịch vụ/sản phẩm"]</th>
+                            <th data-name="warrantystart" style="min-width: 140px">@Local["Ngày bắt đầu bảo hành"]</th>
+                            <th data-name="warrantyend" style="min-width: 140px">@Local["Ngày kết thúc bảo hành"]</th>
+                            <th style="min-width: 150px" data-name="warrantymonth">@Local["Thời hạn bảo hành (tháng)"]</th>
+                            <th>@Local["Tình trạng"]</th>
+                            <th data-name="branch" style="min-width: 120px">@Local["Chi nhánh"]</th>
+                            <th data-name="created" style="min-width: 150px">@Local["Ngày tạo"]</th>
+                            <th data-name="createdby">@Local["Người tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="WG_GridBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return WG_RenderMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let xhrLoadList, xhrLoad;
+    let shtable;
+    let DataEmp;
+    let DataReportMain, DataReportMainSlice;
+    let IndexReport = 0;
+    let timeoutCount;
+    $(document).ready(function () {
+        shtable = $("#WG_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        WG_Load();
+        Checking_TabControl_Permission();
+    });
+
+    //#region // LOAD EMPLOYEE
+    function WG_Load() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmp = data[0];
+            });
+        WG_LoadData();
+    }
+    //#endregion
+    //#region // LOAD  AND RENDER
+    function WG_LoadData() {
+        if (xhrLoad && xhrLoad.readyState != 4) xhrLoad.abort();
+        let _branchID = "@Model._branchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        IndexReport = 0;
+        xhrLoad = AjaxLoad(url = "/Report/ServiceStatus/Warranty/WarrantyGrid/?handler=Loadata"
+            , data = {
+                'branchID': _branchID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result)['Table1'];
+                    let dataGeneral = JSON.parse(result)['Table'];
+                    DataReportMain = JSON.parse(JSON.stringify(data));
+                    DataReportMainSlice = sliceIntoChunks(data, 500);
+                    $("#WG_GridBody").empty();
+                    if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "WG_GridBody"
+                            , blocknum = 100
+                            , fnrender = WG_DetailRender
+                            , fnsuccess = null
+                        );
+                    }
+
+                    WG_RenderTotal(dataGeneral);
+                    Count_Up("WG_totaldata", DataReportMain.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    function WG_RenderTotal(data) {
+        let amountLimited = 0;
+        let amountExpired = 0;
+        let amountTotal = 0;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].WarrantyState == 1) amountLimited = data[i].TotalState;
+            if (data[i].WarrantyState == 0) amountExpired = data[i].TotalState;
+        }
+        amountTotal = amountLimited + amountExpired;
+
+        Count_Up("WG_AmountTotal", formatNumber(amountTotal));
+        Count_Up("WG_AmountLimited", formatNumber(amountLimited));
+        Count_Up("WG_AmountExpired", formatNumber(amountExpired));
+    }
+    function WG_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "WG_GridBody"
+                , blocknum = 100
+                , fnrender = WG_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+    async function WG_DetailRender(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let obj = Fun_GetObject_ByID(DataEmp, item.CreatedBy);
+                            let CreatedName = (obj != null) ? obj.Name : 'unknown';
+                            let status = item.WarrantyState == 1 ? '<span class="text-primary fw-bold">@Local["Còn bảo hành"]</span>' : '<span class="text-secondary">@Local["Hết bảo hành"]</span>';
+                            let tr = `<tr class="vt-number" role="row">
+                                                          <td class="vt-number-order"></td>
+                                                          <td data-name="custcode">
+                                                              <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                                                 ${item.CustCode}
+                                                              </a>
+                                                          </td>
+                                                          <td data-name="custname">${item.CustName}</td>
+                                                          <td data-name="service">${(RP_DataService[item.ServiceID] != undefined ? RP_DataService[item.ServiceID].Name : '')}</td>
+                                                          <td>${ConvertDateTimeUTC_DMY(item.StartTimeWarranty)}</td>
+                                                          <td>${ConvertDateTimeUTC_DMY(item.EndTimeWarranty)}</td>
+                                                          <td data-name="warrantymonth">${item.MonthWarranty}</td>
+                                                          <td>${status}</td>
+                                                          <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '')}</td>
+                                                          <td data-name="created">${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                                          <td data-name="createdby">${CreatedName}</td>
+                                                      </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtable.Refresh();
+                clearTimeout(timeoutCount);
+                timeoutCount = setTimeout(() => {
+                    Count_Up("WG_currentdata", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+
+        })
+    }
+    //#endregion
+
+    //#region // Event
+    function WG_Render_Status(Status) {
+        return Status == 1 ? decodeHtml('@Local["Còn bảo hành"]') : decodeHtml('@Local["Hết bảo hành"]');
+    }
+
+    async function WG_Export(isOption = 0) {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#WG_General');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "ServiceID": ["@Local["Dịch vụ/sản phẩm"]", (value, { ServiceID }) => {
+                        return (RP_DataService[ServiceID] != undefined ? RP_DataService[ServiceID].Name : '');
+                    }],
+                    "StartTimeWarranty": ["@Local["Ngày bắt đầu bảo hành"]", (value) => { return ConvertDateTimeUTC_DMY(value) }],
+                    "EndTimeWarranty": ["@Local["Ngày kết thúc bảo hành"]", (value) => { return ConvertDateTimeUTC_DMY(value) }],
+                    "MonthWarranty": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='warrantymonth']`)).is(":checked"),
+                        data: ["@Local["Thời hạn bảo hành (tháng)"]"]
+                    },
+                    "WarrantyState": ["@Local["Tình trạng"]", (value, { WarrantyState }) => {
+                        return WG_Render_Status(WarrantyState);
+                    }],
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }]
+                    },
+                    "Created": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "CreatedBy": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='createdby']`)).is(":checked"),
+                        data: ["@Local["Người tạo"]", (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'WG_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Bao_cao_bao_hanh"]);
+                exportJsonToExcel(Outlang["Bao_cao_bao_hanh"], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function WG_DetailPrintReport() {
+        try {
+            if (DataReportMain && DataReportMain.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "ServiceID": ["@Local["Dịch vụ/sản phẩm"]", {
+                        callbackRenderValue: (value, { ServiceID }) => {
+                            return (RP_DataService[ServiceID] != undefined ? RP_DataService[ServiceID].Name : '');
+                        }
+                    }],
+                    "StartTimeWarranty": ["@Local["Ngày bắt đầu bảo hành"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(value) }
+                    }],
+                    "EndTimeWarranty": ["@Local["Ngày kết thúc bảo hành"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY(value) }
+                    }],
+                    "MonthWarranty": ["@Local["Thời hạn bảo hành (tháng)"]", {
+                        isShow: isAll || $(`.shtoogle[data-name='warrantymonth']`).is(":checked")
+                    }],
+                    "WarrantyState": ["@Local["Tình trạng"]", {
+                        callbackRenderValue: (value, { WarrantyState }) => {
+                            return WG_Render_Status(WarrantyState);
+                        }
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: isAll || $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }
+                    }],
+                    "Created": ["@Local["Ngày tạo"]", {
+                        isShow: isAll || $(`.shtoogle[data-name='created']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "CreatedBy": ["@Local["Người tạo"]", {
+                        isShow: isAll || $(`.shtoogle[data-name='createdby']`).is(":checked"),
+                        callbackRenderValue: (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Bao_cao_bao_hanh"], DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                    //#endregion
+
+</script>

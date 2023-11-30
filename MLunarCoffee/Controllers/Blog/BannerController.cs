@@ -109,7 +109,7 @@ namespace MLunarCoffee.Controllers
         //            {
         //                using (Models.ExecuteDataBase connFunc = new Models.ExecuteDataBase())
         //                {
-        //                    dt = await connFunc.ExecuteDataTable("YYY_sp_Banner_Insert" ,CommandType.StoredProcedure
+        //                    dt = await connFunc.ExecuteDataTable("MLU_sp_Banner_Insert" ,CommandType.StoredProcedure
         //                        ,"@Image", SqlDbType.NVarChar,DataMain.Image
         //                        ,"@TypeID" , SqlDbType.Int,DataMain.TypeID
         //                        ,"@Media" , SqlDbType.NVarChar,DataMain.Media
@@ -135,7 +135,7 @@ namespace MLunarCoffee.Controllers
         //            {
         //                using (Models.ExecuteDataBase connFunc = new Models.ExecuteDataBase())
         //                {
-        //                    dt = await connFunc.ExecuteDataTable("YYY_sp_Banner_Update" ,CommandType.StoredProcedure
+        //                    dt = await connFunc.ExecuteDataTable("MLU_sp_Banner_Update" ,CommandType.StoredProcedure
         //                        ,"@Image" ,SqlDbType.NVarChar ,DataMain.Image
         //                        ,"@TypeID" ,SqlDbType.Int ,DataMain.TypeID
         //                        ,"@Media" ,SqlDbType.NVarChar ,DataMain.Media

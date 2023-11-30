@@ -1,0 +1,218 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Employee.Punish.PunishEmployeeDetailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+</head>
+
+<body>
+    <div class="row mb-3" id="customerDetailDiv">
+        <form class="form" id="formcustomer" onsubmit="event.preventDefault(); return false;">
+            <div class="card p-3 border-radius-xl bg-white" data-animation="FadeIn">
+                <div class="row">
+                    <div class="h-100">
+                        <h6 class="font-weight-bolder mb-0">@Local["Xử phạt nhân viên"]</h6>
+                        <p class="mb-0 text-sm">@Local["Chi tiết xử phạt nhân viên"]</p>
+                    </div>
+                </div>
+                <div class="nav-wrapper position-relative end-0 form3" id="form3">
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label><span>@Local["Nhân viên"]</span></label>
+                            <div class="ui fluid search selection dropdown" id="Employee_ID">
+                                <input type="hidden" name="Employee" />
+                                <i class="dropdown icon"></i>
+                                <input id="searchEmployee" class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Nhân viên"]</div>
+                                <div id="cbbEmployee" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label>@Local["Ngày xử phạt"]</label>
+                            <input class="flatpickr form-control" id="Date_from" type="text" placeholder="@Local["Chọn ngày"].." />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label><span>@Local["Loại xử phạt"]</span></label>
+                            <div class="ui fluid search selection dropdown" id="PunishType" onchange="OnChangePunishTypeDetail()">
+                                <input type="hidden" name="statusType" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Loại xử phạt"]</div>
+                                <div id="ccbPunishType" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label>@Local["Loại phạt chi tiết"]</label>
+                            <div class="ui fluid search selection dropdown" id="PunishTypeDetail">
+                                <input type="hidden" name="statusType" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Loại phạt chi tiết"]</div>
+                                <div id="cbbPunishTypeDetail" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label>@Local["Mức xử phạt"]</label>
+                            <div class="ui fluid search selection dropdown" id="typeIsPunishMoney" onchange="OnchangeIsPunishMoney()">
+                                <input type="hidden" name="branch" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <i class="dropdown icon"></i>
+                                <div class="default text">@Local["Mức độ"]</div>
+                                <div id="cbbcustomerCareType" class="menu" tabindex="-1">
+                                    <div class="item" data-value="2">@Local["Không phạt tiền"]</div>
+                                    <div class="item" data-value="1">@Local["Phạt tiền"]</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                            <label>@Local["Số tiền xử phạt"]</label>
+                            <input class="form-control" id="txtPunishAmount" name="Price" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="fixed-botombutton">
+        <div class="action_Save">
+            <div class="action_Save-Content">
+                <div class="_tab_control_" data-tab="edit_tab_customer">
+                    <button class="btn btn-secondary" form="formcustomer" onclick="event.preventDefault(); CloseModal()">@Local["Đóng"]</button>
+                </div>
+                <div class="_tab_control_" data-tab="edit_tab_customer">
+                    <button form="formcustomer" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();ExcuteData()">@Local["Lưu"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/js/customjs/custom-validation.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        //var _DataCombo = [];
+        var ser_PunishDetailCurrentID = "@Model._PunishDetailCurrentID";
+        var DataComboTypeStatus;
+
+        $(document).ready(function () {
+            $("#Date_from").flatpickr({
+                defaultDate: "today",
+                dateFormat: "d-m-Y"
+            });
+            Punish_Load_Initialize();
+            $('#txtPunishAmount').divide();
+        })
+
+        function Punish_Load_Initialize() {
+            AjaxLoad(url = "/HR/Employee/Punish/PunishEmployeeDetail/?handler=LoadInitialize"
+                , data = {
+                    CurrentID: ser_PunishDetailCurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+
+                        Load_Combo(data.ComboUserEmployee, "cbbEmployee", true);
+                        DataComboTypeStatus = data.ComboHRType;
+
+                        let dataType = DataComboTypeStatus.filter(word => word["ParentID"] == 0);
+
+                        Load_Combo(dataType, "ccbPunishType", true);
+                        if (dataType && dataType.length > 0) {
+                            $("#PunishType").dropdown("set selected", dataType[0].ID);
+                        }
+
+                        Punish_Load_DataUpdate(data.dataDetail);
+
+                    } else {
+                        notiError_SW();
+                    }
+                });
+        }
+
+        function Punish_Load_DataUpdate(dataPunish) {
+            if (dataPunish && dataPunish.length > 0) {
+                $("#Employee_ID ").dropdown("refresh");
+                $("#Employee_ID ").dropdown("set selected", dataPunish[0].EmpID);
+
+                $("#PunishType").dropdown("refresh");
+                $("#PunishType").dropdown("set selected", dataPunish[0].ParentID);
+
+                $("#typeIsPunishMoney").dropdown("refresh");
+                $("#typeIsPunishMoney").dropdown("set selected", Number(dataPunish[0].IsPunishMoney));
+
+                $("#PunishTypeDetail").dropdown("refresh");
+                $("#PunishTypeDetail").dropdown("set selected", dataPunish[0].PunishType);
+
+                $('#txtPunishAmount').val((dataPunish[0].PunishAmount));
+                $('#Date_from').val((ConvertDateTimeUTC_DMY(dataPunish[0].PunishDate)));
+            }
+        }
+
+        function ExcuteData() {
+            var data = new Object();
+            data.Employee_ID = Number($('#Employee_ID').dropdown('get value')) ? Number($('#Employee_ID').dropdown('get value')) : 0;
+            data.typeIsPunishMoney = Number($('#typeIsPunishMoney').dropdown('get value')) ? Number($('#typeIsPunishMoney').dropdown('get value')) : 0;
+            data.PunishTypeDetail = Number($('#PunishTypeDetail').dropdown('get value')) ? Number($('#PunishTypeDetail').dropdown('get value')) : 0;
+            data.PunishAmount = Number($('#txtPunishAmount').val()) ? Number($('#txtPunishAmount').val()) : 0;
+            data.PunishDate = $('#Date_from').val() ? $('#Date_from').val() : "";
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/HR/Employee/Punish/PunishEmployeeDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_PunishDetailCurrentID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            CloseModal();
+                            Punish_LoadDataEmp();
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+            }
+            return false;
+        }
+
+        function OnChangePunishTypeDetail() {
+            let numberMasterStatus = Number($('#PunishType').dropdown('get value'));
+            let data = DataComboTypeStatus.filter(word => word["ParentID"] == numberMasterStatus);
+            if (data != undefined && data != null && data.length != 0) {
+
+                Load_Combo(data, "cbbPunishTypeDetail", true);
+                $("#PunishTypeDetail").dropdown("refresh");
+                $("#PunishTypeDetail").dropdown("set selected", data[0].ID);
+            }
+        }
+
+        function OnchangeIsPunishMoney() {
+            let numberIsPunishMoney = Number($('#typeIsPunishMoney').dropdown('get value'));
+            if (numberIsPunishMoney == 2) {
+                $('#txtPunishAmount').attr("disabled", "disabled");
+                $('#txtPunishAmount').val("0");
+            }
+            else {
+                $('#txtPunishAmount').removeAttr("disabled");
+                $('#txtPunishAmount').val("");
+            }
+        }
+
+    </script>
+</body>
+
+</html>
+
+

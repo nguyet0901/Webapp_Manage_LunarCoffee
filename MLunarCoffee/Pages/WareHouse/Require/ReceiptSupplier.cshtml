@@ -1,0 +1,561 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Require.ReceiptSupplier
+@{
+    Layout=null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row m-0 viewcontent border-dashed border-1 border-secondary border-radius-md p-0">
+    <div class="col-12">
+        <div id="resubwait" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="resubmaster" class="mb-3">
+            <div class="card-header p-3 pb-0">
+                <div class="text-md font-weight-bold text-center position-relative">
+                    <span class="text-md text-primary text-uppercase">@Local["Phiếu nhận hàng từ nhà cung cấp"]</span>
+                    <div>
+                        <span id="resubh_ordercode" class="text-xs ps-2 text-primary "></span>
+                    </div>
+                    <i class="position-absolute text-gradient text-primary fas fa-redo end-1 top-0" onclick="event.preventDefault(); return ResupReload();"></i>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-md-12 col-xl-8 px-1 mt-2">
+                        <div class="text-md text-dark mt-3">
+                            <span class="text-sm text-secondary">@Local["Kho đề xuất"]</span>
+                            <span id="resubh_warename" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark">
+                            <span class="text-sm text-secondary">@Local["Người đề xuất"]</span>
+                            <span id="resubh_createname" class="text-sm text-dark font-weight-bold ms-2"></span>
+                            <span id="resubh_createdate" class="text-sm text-dark ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-2 my-3">
+                <div id="resup_blockinfo" class=" row mb-3">
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                        <label>@Local["Nhà cung cấp"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="resub_supplier">
+                            <input type="hidden" name="ware" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg .@Local["Nhà cung cấp"]</div>
+                            <div id="cbbresub_supplier" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                        <label>@Local["Ngày nhận hàng"]</label>
+                        <input id="resub_dateimport" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày nhận hàng"]" />
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-3 px-1 mt-2">
+                        <label>@Local["Số hóa đơn"]</label>
+                        <input id="resub_invoicenumber" class="form-control" placeholder="eg .@Local["Số hóa đơn"]" type="text" maxlength="50">
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-3 px-1 mt-2">
+                        <label>@Local["Số hợp đồng"]</label>
+                        <input id="resub_contractnumber" class="form-control" placeholder="eg .@Local["Số hợp đồng"]" type="text" maxlength="50">
+                    </div>
+                </div>
+
+                <div id="resup_watingapprove" class="mt-2 mb-2" style="display:none;">
+                    <div class="form-check" id="resup_reall" style="display:none;">
+                        <input id="checkedCompleteall" class="form-check-input pr-2 " type="checkbox">
+                        <label class="mt-1 custom-control-label text-uppercase">@Local["Nhận tất cả"]</label>
+                    </div>
+                    <div id="resup_redone" style="display:none;">
+                        <i class="text-success fas fa-check pe-2" aria-hidden="true"></i>
+                        <label class="mt-1 custom-control-label text-uppercase">@Local["Đã nhận hết"]</label>
+                    </div>
+                </div>
+                <ul class="list-group mt-0" id="resubContent">
+                </ul>
+                <div class="d-flex  mt-3">
+                    <div class="d-flex ms-auto my-auto mt-1">
+                        <div id="resubh_approve" class="text-center text-md text-dark" style="min-width: 250px;display:none;">
+                            <span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Duyệt phiếu yêu cầu"]</span>
+                            <div style="height: 100px;">
+                                <img id="resubh_approveimg" style="height: 100px;" src="/default.png" />
+                            </div>
+                            <span id="resubh_approvename" class="text-sm text-dark font-weight-bold"></span>
+                            <div id="resubh_approvedate" class="text-center text-sm text-dark"> </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action_Save mt-3">
+
+                    <div class="action_Save-Content">
+                        <div class="mt-1 me-1 text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <button id="btnReSub_Cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();ReSub_Cancel()">@Local["Đóng"]</button>
+                        <button id="btnReSub_Import" style="display:none" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return ReSub_Import()">@Local["Nhập kho"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let data_supplier;
+
+    let data_resup = {};
+    let IsPackageNumber = 0;
+        let resup_DetailID = "@Model._Detail";
+
+    //#region // Load
+    $(document).ready(function () {
+        Resup_GetInitialize();
+    });
+    function ResupReload () {
+        Resup_GetData(resup_DetailID);
+    }
+    function Resup_GetInitialize () {
+        AjaxLoad(url = "/WareHouse/Require/ReceiptSupplier/?handler=Initialize"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    data_supplier = data.Supplier;
+                    Load_Combo(data_supplier, "cbbresub_supplier" , true);
+                    Resup_GetData(resup_DetailID);
+                }
+            }
+        );
+        return false;
+    }
+    function Resup_GetData (id) {
+        data_resup = {};
+        IsPackageNumber = 0;
+        $("#resubContent").html('');
+        $("#resubh_approve").hide();
+        $("#textShowMessage").html();
+        $("#btnReSub_Import").show();
+        $("#resup_reall").hide();
+        $("#resup_redone").hide();
+        $("#resup_watingapprove").hide();
+        AjaxLoad(url = "/WareHouse/Require/ReceiptSupplier/?handler=GetInfo"
+            , data = {'DetailID': id}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result).Table;
+                    let datadetail = JSON.parse(result).Table1;
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        let lastestLock = new Date(item.LastetLock);
+                        IsPackageNumber = item.IsPackageNumber;
+                        $("#resubh_ordercode").html(item.Code);
+                        $("#resubh_warename").html(item.WareRequire);
+                        $("#resubh_createname").html(item.CreatedName);
+                        $("#resubh_createdate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.CreatedDate));
+
+                        if (item.IsApprove == 1) {
+                            $("#resup_watingapprove").show();
+                            $("#resubh_approve").show();
+                            $("#btnReSub_Import").show();
+                            if (item.ApproveSignName != "") {
+                                $("#resubh_approvedate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.ApproveSignDate));
+                                $("#resubh_approvename").html(item.ApproveSignName);
+                                $("#resubh_approveimg").attr("src", item.ApproveSignData);
+                            }
+                            else {
+                                $("#resubh_approveimg").attr("src", "data:image/png;base64," + preload_circleAvatar);
+                            }
+                        }
+                        else {
+                            $("#resubh_approve").hide();
+                            $("#btnReSub_Import").hide();
+
+                        }
+                        $("#resub_dateimport").flatpickr({
+                            dateFormat: 'd-m-Y H:i:s',
+                            enableTime: true,
+                            time_24hr: true,
+                            maxDate: new Date(),
+                            minDate: lastestLock,
+                            defaultDate: new Date(),
+                        });
+                        if (IsPackageNumber == 1) {
+                            $("#resubpackage").show();
+                        }
+                        else {
+                            $("#resubpackage").hide();
+                        }
+
+                    }
+
+                    let isReceiptDone = 1;
+                    if (datadetail != undefined && datadetail.length != 0) {
+                        for (let i = 0; i < datadetail.length; i++) {
+                            let element = {};
+                            if (datadetail[i].IsReceipt == 0) isReceiptDone = 0;
+                            element.current = datadetail[i].ID;
+                            element.productID = datadetail[i].ProductID;
+                            element.productName = datadetail[i].ProductName;
+                            element.supName = datadetail[i].SupName;
+                            element.unitName = datadetail[i].UnitName;
+                            element.number = datadetail[i].Number;
+                            element.amount = datadetail[i].Amount;
+                            element.supID = datadetail[i].SupID;
+                            element.expiredDay = datadetail[i].ExpiredDay;
+                            element.package = datadetail[i].PackageNumber;
+                            element.isreceipt = datadetail[i].IsReceipt;
+                            element.receipt = datadetail[i].Receipt;
+                            data_resup[datadetail[i].ID] = element;
+                            ReSub_RenderRow(datadetail[i].ID, element, 'resubContent');
+                        }
+                        ReSub_EventRow();
+                    }
+                    if (isReceiptDone == 1) {
+                        $("#btnReSub_Import").hide();
+                        $("#resup_redone").show();
+                        $("#resup_blockinfo").hide();
+                    }
+                    else {
+                        $("#resup_reall").show();
+                    }
+                }
+            }, sender = null
+            , before = function (e) {
+                $("#resubmaster").hide();
+                $("#resubwait").show();
+            }
+            , complete = function (e) {
+                $("#resubwait").hide();
+                $("#resubmaster").show();
+            }
+        );
+    }
+    //#endregion
+
+    //#region // Render
+    function ReSub_RenderRow (key, value, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let ex = '<span><span class="text-dark text-sm fw-bold text-uppercase">' + value.productName + '</span>'
+                + '<span class="text-sm text-secondary ps-2 mt-1 font-italic">'
+                + formatNumber(Math.round(Number(value.number) * 100) / 100) + " " + value.unitName + " - " + formatNumber(value.amount) + " "
+                + value.supName
+                + '</span></span></span>';
+            let tr =
+                '<div class="text-dark row w-100 px-2">'
+                + '<div class="col-12 p-1">'
+                + AddCell_CheckComplete(key, value.isreceipt)
+                + ex
+                + '<div id="receiptdiv_' + key + '" style="display:none;">'
+
+                + '<div class="row  px-1 py-2">'
+                //+ '<div class="field col-12 col-sm-12 col-md-12 col-xl-6 p-1">'
+                //+ AddCell_Supplier(key)
+                //+ '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + AddCell_Number(key, value.unitName)
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + AddCell_Price(key)
+                + '</div>'
+                + '</div>'
+
+                + '<div class="row  px-1   pb-2">'
+
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + ((IsPackageNumber == 1) ? AddCell_Package(key) : '')
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + AddCell_Dateexpired(key)
+                + '</div>'
+
+                + '</div>'
+
+                + '</div>'
+                + '</div>'
+                + '</div>';
+            tr = '<li  class="mb-2 d-flex mt-2">' + tr + '</li>'
+                + '<hr class="horizontal dark my-0">';
+            myNode.innerHTML += tr;
+        }
+        ReSub_FillData(key, value);
+        
+    }
+
+    function AddCell_CheckComplete (randomNumber, value) {
+        if (value == 1) return '<i class="text-success fas fa-check pe-3"></i>';
+        let resulf = '<div class="d-inline-block form-check">'
+            + '<input class="form-check-input pr-2 checkedComplete" id="checkedComplete_' + randomNumber + '" type="checkbox" value="' + randomNumber + '">'
+            + '<label class="custom-control-label"></label>'
+            + '</div>'
+            ;
+        return resulf;
+    }
+
+    function AddCell_Package (randomNumber) {
+        let resulf = ' <div class="input-group">'
+            + '<span class="input-group-text">@Local["Số lô"]</span>'
+            + '<input class=" packageNumber form-control" placeholder="eg .@Local["Số lô"]" '
+            + ' id="packageNumber_' + randomNumber + '"  type="text" />'
+            + '</div>'
+
+        return resulf;
+    }
+
+    function AddCell_Dateexpired (randomNumber) {
+        let resulf = ' <div class="input-group">'
+            + '<span class="input-group-text">@Local["Ngày hết hạn"]</span>'
+            + '<input class="flatpickr dateexpired form-control" placeholder="eg .@Local["Ngày hết hạn"]" '
+            + ' id="dateexpired_' + randomNumber + '"  type="text" />'
+            + '</div>'
+        return resulf;
+    }
+
+    function AddCell_Number (randomNumber, unitname) {
+        let resulf = ' <div class="input-group">'
+            + '<input class="numberreceipt form-control" value="0" id="numberreceipt_' + randomNumber + '" />'
+            + '<span class="input-group-text">' + unitname + '</span>'
+            + '</div>'
+
+        return resulf;
+    }
+
+    function AddCell_Price (randomNumber) {
+        let resulf = ' <div class="input-group">'
+
+            + '<input type="text" class="priceReceive form-control" value="0" id="priceReceive_' + randomNumber + '" />'
+            + '<span class="input-group-text"><i class="fas fa-comment-dollar"></i></span>'
+            + '</div>'
+
+        return resulf;
+    }
+
+    function ReSub_FillData (key, value) {
+        $('#packageNumber_' + key).attr('value', value.package.replace("-" + value.productID, ''));
+        $('#numberreceipt_' + key).attr('value', value.number);
+        $('#priceReceive_' + key).attr('value', value.amount);
+    }
+
+    function ReSub_EventRow () {
+        $('#resubContent .ui.dropdown').dropdown({});
+        $("#resubContent .dateexpired").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            time_24hr: true
+        });
+        $("#resubContent .dateexpired").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("dateexpired_", "")
+            let expiredDay = $('#' + idcom).val() ? $('#' + idcom).val() : '01-01-1900'
+            data_resup[id].expiredDay = expiredDay;
+
+        });
+
+        $("#resubContent .priceReceive").unbind('change').change(function () {
+            let id = this.id.replace("priceReceive_", "")
+            data_resup[id].amount = this.value;
+        });
+        $("#resubContent .numberreceipt").unbind('change').change(function () {
+            let id = this.id.replace("numberreceipt_", "")
+            data_resup[id].number = this.value;
+        });
+        $("#resubContent .packageNumber").unbind('change').change(function () {
+            let id = this.id.replace("packageNumber_", "")
+            data_resup[id].package = this.value + "-" + data_resup[id].productID;
+            ReSub_GetExpiredDate(id, data_resup[id].productID, data_resup[id].package)
+        });
+        $("#checkedCompleteall").unbind().change(function () {
+            if ($("#checkedCompleteall")[0].checked == true) {
+                $(".checkedComplete").prop('checked', true);
+                for ([key, value] of Object.entries(data_resup)) {
+                    if (value.isreceipt == 0) {
+                        $("#receiptdiv_" + key).show();
+                        value.receipt = 1;
+                    }
+
+                }
+            }
+            else {
+                $(".checkedComplete").prop('checked', false);
+                for ([key, value] of Object.entries(data_resup)) {
+                    if (value.isreceipt == 0) {
+                        $("#receiptdiv_" + key).hide();
+                        value.receipt = 0;
+                    }
+
+                }
+            }
+        });
+        $("#resubContent .checkedComplete").unbind().change(function () {
+            let id = this.id.replace("checkedComplete_", "")
+            if ($("#checkedComplete_" + id)[0].checked == true) {
+                data_resup[id].receipt = 1;
+                $("#receiptdiv_" + id).show();
+
+            }
+            else {
+                data_resup[id].receipt = 0;
+                $("#receiptdiv_" + id).hide();
+            }
+        });
+    }
+    function ReSub_GetExpiredDate (id, productid, packagenumber) {
+        AjaxLoad(url = "/WareHouse/Require/ReceiptSupplier/?handler=GetExpiredDate"
+            , data = {
+                'productid': productid
+                , 'packagenumber': packagenumber
+
+            }, async = true, error = null
+            , success = function (result) {
+                let isexp = 0;
+                if (result != "0") {
+                    let dte = JSON.parse(result);
+                    if (dte != undefined && dte.length != 0) {
+                        let dexp = dte[0].Expired;
+                        if (!dexp.includes('1900')) {
+                            isexp = 1;
+                            $("#dateexpired_" + id).flatpickr({
+                                dateFormat: 'd-m-Y',
+                                enableTime: false,
+                                defaultDate: new Date(dexp),
+                            });
+                            $("#dateexpired_" + id).prop('disabled', true);
+                        }
+                    }
+                }
+                if (isexp == 0) {
+                    $("#dateexpired_" + id).flatpickr({
+                        dateFormat: 'd-m-Y',
+                        enableTime: false,
+                        defaultDate: new Date(),
+                    });
+                    $("#dateexpired_" + id).prop('disabled', false);
+                }
+
+                data_resup[id].expiredDay = $('#dateexpired_' + id).val();
+
+            }
+        );
+    }
+    //#endregion
+
+    //#region // Main Event
+    function ReSub_Check () {
+        $('#textShowMessage').html('')
+        let nonvalid = 0;
+        let SupplierID = Number($("#resub_supplier").dropdown('get value')) ? Number($("#resub_supplier").dropdown('get value')) : 0;
+        if (SupplierID == 0) {
+            $("#resub_supplier").addClass("error"); nonvalid = 1;
+        }
+        else $("#resub_supplier").removeClass("error");
+
+        for ([key, value] of Object.entries(data_resup)) {
+
+            if ((!$.isNumeric(value.number) || Number(value.number) <= 0)  && value.receipt == 1) {
+                $('#numberreceipt_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#numberreceipt_' + key).removeClass('error');
+            if ((!$.isNumeric(value.amount) || Number(value.amount) < 0) &&  value.receipt == 1) {
+                $('#priceReceive_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#priceReceive_' + key).removeClass('error');
+
+            if (IsPackageNumber == 1 && value.receipt == 1 && (value.expiredDay == "" || value.expiredDay.includes('1900'))) {
+                $('#dateexpired_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#dateexpired_' + key).removeClass('error');
+            }
+
+            if (IsPackageNumber == 1 && value.receipt == 1 && (value.package == "" || value.package == "-" + value.productID)) {
+                $('#packageNumber_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#packageNumber_' + key).removeClass('error');
+            }
+        }
+        if (nonvalid == 1) $('#textShowMessage').html("@Local["Kiểm tra dữ liệu"]");
+    }
+
+    function ReSub_Import () {
+        let arrayobj = Object.values(data_resup);
+        let datafilter = arrayobj.filter(function (item) {
+            if (item["receipt"] == 1) return true;
+            return false;
+        });
+        if (datafilter != undefined && datafilter.length > 0) {
+            $("#textShowMessage").html("");
+            ReSub_Check();
+        }
+        else $("#textShowMessage").html("@Local["Chọn hàng nhận"]");
+
+        if ($("#textShowMessage").html() == "") {
+            const promise = notiConfirm('@Local["Nhận hàng vào kho"]');
+            promise.then(function () {
+                let SupplierID = Number($("#resub_supplier").dropdown('get value')) ? Number($("#resub_supplier").dropdown('get value')) : 0;
+                let DateExecute = $('#resub_dateimport').val() ? $('#resub_dateimport').val() : "";
+                let InvoiceNumber = $("#resub_invoicenumber").val() ? $("#resub_invoicenumber").val() : "";
+                let ContractNumber = $("#resub_contractnumber").val() ? $("#resub_contractnumber").val() : "";
+
+                for ([key, value] of Object.entries(data_resup)) {
+                    value.supID = SupplierID;
+                }
+
+                AjaxLoad(url = "/WareHouse/Require/ReceiptSupplier/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(Object.values(data_resup))
+                        , 'SupplierID': SupplierID
+                        , 'InvoiceNumber': InvoiceNumber
+                        , 'ContractNumber': ContractNumber
+                        , 'DateExecute': DateExecute
+                        , 'IsPackageNumber': IsPackageNumber
+                        , 'CurrentID': resup_DetailID
+                    }
+                    , async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccessMess("@Local["Chứng từ nhập kho"] " + result);
+                            RequireList_Load(ismore = 0, curid = resup_DetailID, 1);
+                            Resup_GetData(resup_DetailID);
+                        }
+                        else {
+                            notiWarning('@Local["Ngày nhập hàng không hợp lệ hoặc đơn hàng đã được nhập"]');
+                        }
+                    }
+                );
+            }, function () {
+
+            });
+        }
+    }
+
+    function ReSub_Cancel () {
+        $('#re_view').empty()
+    }
+
+    //#endregion
+
+</script>
+
+<style>
+    #resubContent li input[type=text] {
+        display: block;
+    }
+
+    #resubContent .error {
+        background: #fff6f6 !important;
+        border-color: #e0b4b4 !important;
+    }
+
+    #resubContent .buttonDeleteClass:hover {
+        opacity: 1 !important;
+    }
+</style>

@@ -1,0 +1,136 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Todo.TodoTemplateListModel
+@{ Layout=null;
+}
+<div class="pusher">
+    <div class="row" style="background-color: white">
+        <div class="ui segments">
+            <div class="ui segment headerSegmentReport">
+                <div class="headerReport header_form_main">
+                    Todo Template
+                    <a style="float: right; cursor: pointer" onclick="event.preventDefault();LoadDataTodoTemplateAjax()"><i class="refresh icon" title="Reload" style="font-size: 13px"></i></a>
+                </div>
+            </div>
+            <div class="ui segment">
+                <div style="height: 33px;">
+                    <button id="btnNewTypeAccount" style="min-width: 100px; float: right" class="ui teal button button_create_new setting_projectclosure" data-value="fade up" onclick="return AddNewTodoTemplate()">Thêm Mới</button>
+                </div>
+                <div class="scrollx">
+                    <table id="dtContentTodoTemplate" class="ui selectable celled table">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th style="width: 40px;">STT</th>
+                                <th style="min-width: 300px">Tên Loại</th>
+                                <th style="min-width: 200px">Mã Màu</th>
+                                <th style="min-width: 150px">Người Tạo</th>
+                                <th style="min-width: 150px">Người Sửa</th>
+                                <th style="width: 70px;">Sửa</th>
+                                <th class="setting_projectclosure" style="width: 70px;">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentTodoTemplateBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+
+    function LoadDataTodoTemplateAjax() {
+        AjaxLoad(url = "/Setting/Todo/TodoTemplateList/?handler=LoadData"
+            , data = {  }, async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                RenderTableTodoTemplate(data, "dtContentTodoTemplateBody");
+            });
+    }
+
+
+    function RenderTableTodoTemplate(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td style="display:none !important">' + item.ID + '</td>'
+                        + '<td>' + (i+1) + '</td>'
+                        + '<td>' + item.Name + '</td>'
+                        + '<td><div style="background:' + item.ColorCode +';padding:2px 5px">' + item.ColorCode + '</div></td>'
+                        + '<td>'
+                        + '<span style="color:#00b5ad;">' + item.Created_By + '</span>' + '</br>'
+                        + '<span>' + item.Created + '</span>'
+                        + '</td>'
+                        + '<td>'
+                        + '<span style="color:#00b5ad;">' + item.Modified_By + '</span>' + '</br>'
+                        + '<span>' + item.Modified + '</span>'
+                        + '</td>'
+                        + ((item.EditButton === 1)
+                            ? ('<td><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button></td>')
+                            : '<td></td>')
+                        + ((item.DeleteButton === 1)
+                            ? ('<td class="setting_projectclosure"><button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td class="setting_projectclosure"></td>')
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    $(document).ready(function () {
+        LoadDataTodoTemplateAjax();
+        $('#dtContentTodoTemplate tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditTodoTeplate(ID);
+        });
+        $('#dtContentTodoTemplate tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteTodoTemplate(ID)
+        });
+    });
+
+    function EditTodoTeplate(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Todo/TodoTemplateDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function AddNewTodoTemplate() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Todo/TodoTemplateDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function DeleteTodoTemplate(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteTodoTemplate(id); }, function () { });
+    }
+
+    function ExecuteDeleteTodoTemplate(id) {
+        AjaxLoad(url = "/Setting/Todo/TodoTemplateList/?handler=DeleteItem"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadDataTodoTemplateAjax();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+</script>
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>

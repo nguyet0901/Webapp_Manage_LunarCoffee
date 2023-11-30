@@ -1,0 +1,240 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Certificate.CertificateListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0" id="stCertificate_master">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chứng chỉ"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="return stCertificate_add()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="stCertificate_wating" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+
+                        </div>
+                        <table class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Ghi chú"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                    <th>@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stCertificate_gnlist">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="stCertificate_detail">
+</div>
+<script type="text/javascript">
+    var DataEmployee;
+    let xhrLoadList;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                stCertificate_load();
+            });
+    });
+
+    //#region // LOAD
+    function stCertificate_load(idDetail = 0) {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        xhrLoadList = AjaxLoad(url = "/Student/Settings/Certificate/CertificateList?handler=LoadData"
+            , data = {
+                "IdDetail": idDetail
+            }
+            , async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    if (idDetail == 0) {
+                        let data = JSON.parse(result);
+                        fnRenderBlock(data, "stCertificate_gnlist", blocknum = 30, fnrender = stCertificate_renderlist, fnsuccess = null);
+                    } else {
+                        let data = JSON.parse(result);
+                        let newTr = stCertificate_renderEach(data[0]);
+                        let nodeTr = $(`#stCertificate_gnlist tr[data-id=${idDetail}]`);
+                        if (nodeTr.length > 0) {
+                            nodeTr.replaceWith(newTr);
+                        } else {
+                            $('#stCertificate_gnlist').append(newTr);
+                        }
+                        stCertificate_EventBinding();
+                    }
+                }
+            },
+            sender = null
+            , before = function () {
+                $('#stCertificate_wating').show();
+            }
+            , complete = function () {
+                $('#stCertificate_wating').hide();
+            }
+
+        );
+    }
+
+    //#endregion
+
+    //#region / RENDER
+    async function stCertificate_renderlist(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let myNode = document.getElementById(id);
+                let stringHtml = "";
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = stCertificate_renderEach(item);
+                    stringHtml += tr;
+                }
+                myNode.insertAdjacentHTML('beforeend', stringHtml);
+                stCertificate_EventBinding();
+            }, 150);
+            resolve();
+        });
+    }
+
+    function stCertificate_renderEach(item) {
+        let objCreated = DataEmployee[item.ModifiedBy] != undefined ? DataEmployee[item.ModifiedBy] : '';
+        return `
+            <tr data-id=${item.ID} class="vt-number" role="row">
+                <td class="vt-number-order text-center"></td>
+                <td class=" text-primary w-25">
+                    <div>
+                        <img class="avatar avatar-xs me-2" src="${item.Avatar != '' ? item.Avatar : Master_Default_Pic}" alt="label-image">
+                        <a class="text-decoration-underline fw-bold title">${item.Name}</a>
+                    </div>
+                </td>
+                <td><span class="content_line_clamp">${item.Note}</span></td>
+                <td>
+                    <div class="d-flex">
+                        <div class="icon icon-shape icon-sm me-2 text-center align-items-center">
+                            <img class="avatar avatar-xs mt-2" src="${objCreated.Avatar != '' ? objCreated.Avatar : Master_Default_Pic}" alt="label-image">
+                        </div>
+                        <div class="d-flex flex-column">
+                            <h6 class="text-dark text-sm mb-0">${objCreated.Name || 'unknown'}</h6>
+                                <span class="text-xs">${ConvertDateTimeUTC_YMD(item.Modified)}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center"><i class="buttonDeleteClass vtt-icon vttech-icon-delete cursor-pointer"></i></td>
+            </tr>
+        `;
+    }
+
+    //#endregion
+
+    //#region / EVENT
+    function stCertificate_EventBinding() {
+        $('#stCertificate_gnlist tr .title').unbind("click").click(function () {
+            event.preventDefault();
+            event.stopPropagation();
+
+            let Id = $(this).parents('tr').attr("data-id");
+            stCertificate_showDetail(Id);
+        });
+
+        $('#stCertificate_gnlist tr .buttonDeleteClass').unbind("click").click(function () {
+            event.preventDefault();
+            event.stopPropagation();
+
+            let Id = $(this).parents("tr").attr("data-id");
+
+            const promise = notiConfirm();
+            promise.then(function () {
+                stCertificate_delete(Id, 0);
+            }, function () { });
+        });
+
+    }
+
+    //#endregion
+
+    //#region / DELETE
+
+    function stCertificate_delete(Id) {
+        AjaxLoad(
+            url = "/Student/Settings/Certificate/CertificateList?handler=Delete"
+            , data = {
+                "IdDetail": Id,
+            }
+            , async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    $(`#stCertificate_gnlist [data-id=${Id}]`).remove();
+                } else {
+                    notiError_SW("Error");
+                }
+            }
+            , sender = null
+        );
+    }
+
+    //#endregion
+
+    //#region LoadDetail
+    function stCertificate_OpenDetail() {
+        $("#stCertificate_detail").empty();
+        $("#stCertificate_master").hide();
+        $("#stCertificate_detail").html('');
+    }
+
+    function stCertificate_Close() {
+        $("#stCertificate_detail").html('');
+        $("#stCertificate_master").show();
+        $("#stCertificate_detail").hide();
+    }
+    //#endregion
+
+    //#region // ADD
+
+    function stCertificate_add() {
+        stCertificate_OpenDetail();
+        $('#stCertificate_detail').load('/Student/Settings/Certificate/CertificateDetail');
+        $('#stCertificate_detail').show();
+    }
+
+    //#endregion
+    function stCertificate_showDetail(Id) {
+        stCertificate_OpenDetail();
+        $('#stCertificate_detail').load('/Student/Settings/Certificate/CertificateDetail?CurrentID=' + Id);
+        $('#stCertificate_detail').show();
+    }
+</script>
+
+<style>
+    .table-active {
+        display: none;
+    }
+
+    .showAll .table-active {
+        display: table-row;
+
+    }
+</style>

@@ -1,4 +1,4 @@
-﻿const fcmfaceicon = 'ttps://MLUechsolution.com/faceicon.svg';
+﻿const fcmfaceicon = 'ttps://LunarCoffee.com/faceicon.svg';
 const fcmicon = (typeof _SoftwareSmallLogo !== 'undefined' && _SoftwareSmallLogo != '')
     ? _SoftwareSmallLogo
     : '/default.png';

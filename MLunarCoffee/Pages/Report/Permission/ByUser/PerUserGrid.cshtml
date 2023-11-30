@@ -1,0 +1,190 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Permission.ByUser.PerUserGridModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="" id="pug_containerList">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0">
+            <div class="left">
+                <div class="vtcondition">
+                    <a class="sign" data-open="Hiển thị" data-close="Thu gọn" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row">
+                            <div class="col-auto p-1">
+                                <ul class="nav nav-pills nav-horizontal p-1 bg-transparent" role="tablist" id="pug_menuLeft">
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right overflow-auto">
+
+
+
+                <button class="btn btn-dark position-relative dropdown-toggle mb-0 py-2 collapsed" data-bs-toggle="collapse" data-bs-target="#pug_viewColLists" aria-expanded="false">
+                    @Local["Chọn view"]
+                </button>
+
+            </div>
+            <div class="toggle">
+                <div class="collapsesticky position-absolute z-index-3 end-1 top-100 mt-2 collapse" id="pug_viewColLists" style="min-width: 300px;">
+                    <div class="card card-body text-dark text-capitalize opacity-10">
+                        <div class="row">
+                            <div class="field col-12 col-md-6 mt-2">
+                                <div class="form-check ">
+                                    <input id="pug_ckbFollowUser" class="form-check-input" type="radio" name="pug_viewst" value="user" checked onclick="pug_changeView()">
+                                    <label class="form-check-label" for="pug_ckbCreditBranch">@Local["Theo user"]</label>
+                                </div>
+                            </div>
+
+                            <div class="field col-12 col-md-6 mt-2">
+                                <div class="form-check ">
+                                    <input id="pug_ckbFollowRole" class="form-check-input" type="radio" name="pug_viewst" value="role" onclick="pug_changeView()">
+                                    <label class="form-check-label" for="pug_ckbCreditBranch">@Local["Theo quyền"]</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-sm mt-3" onclick="pug_closeCollapse();">Đóng</button>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+        <div class="card-body p-0" id="pug_mainContainer">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //#region //INIT - DECLARE
+    var pug_DataUser = [];
+    var pug_DataUserGroup = [];
+    var pug_DataAllMenu = [];
+    var pug_DataAllControl = [];
+    var pug_DataAllReport = [];
+    var pug_DataAllAction = [];
+    var pug_objUser = {};
+    var pug_objUserByGroup = {};
+    var pug_objUserGroup = {};
+    var pug_serView = "user";
+    var pug_currentLink = '';
+    $(document).ready(function () {
+        pug_Loaddata();
+    });
+
+    function pug_Loaddata() {
+        AjaxLoad(url = "/Report/Permission/ByUser/PerUserGrid/?handler=Loaddata"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let datas = JSON.parse(result);
+                pug_DataUser = datas?.User ?? [];
+                pug_objUser = pug_DataUser.reduce((pre, arr) => { if (arr["ID"]) pre[arr["ID"]] = arr; return pre }, {});
+                pug_objUserByGroup = pug_DataUser.reduce((pre, arr) => {
+                    if (arr["GroupID"]) {
+                        if (!pre[arr["GroupID"]]) pre[arr["GroupID"]] = [];
+                        pre[arr["GroupID"]].push(arr);
+                    } return pre
+                }, {});
+
+
+                pug_DataUserGroup = datas?.UserGroup ?? [];
+                pug_objUserGroup = pug_DataUserGroup.reduce((pre, arr) => { if (arr["ID"]) pre[arr["ID"]] = arr; return pre }, {});
+
+                pug_DataAllMenu = (datas?.AllMenu ?? []);
+
+                pug_DataAllMenu.sort((a, b) => {
+                    return Number(a.GroupID) - Number(b.GroupID)
+                });
+
+                pug_DataAllReport = (datas?.AllReport ?? []);
+
+                pug_DataAllAction = (datas?.AllAction ?? []);
+
+                pug_DataAllControl = (datas?.AllControl ?? []);
+
+                pug_DataAllControl.sort((a, b) => {
+                    return Number(a.GroupID) - Number(b.GroupID)
+                });
+
+                pug_renderData(datas.PerType, "pug_menuLeft");
+                pug_event();
+                $('#pug_menuLeft a:first').trigger('click');
+                $('#pug_menuLeft a:first').tab('show');
+            });
+    }
+    //#endregion
+
+    //#region //RENDER
+    function pug_renderData(data, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let link = pug_getLink(item.Name);
+                    stringContent += `
+                            <li class="nav-item" role="presentation">
+                            <a class="pug_clsPerType nav-item-text nav-link cursor-pointer" data-bs-toggle="pill" data-link="${link}"  role="tab">${Outlang[item.TextLangKey]}</a>
+                            </li>`;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function pug_getLink(namePer) {
+        let link = '';
+        switch (namePer) {
+            case "menurole":
+                link = '/Report/Permission/ByUser/PerMenuDetail'
+                break
+            case "controlrole":
+                link = '/Report/Permission/ByUser/PerControlDetail'
+                break
+            case "reportlrole":
+                link = '/Report/Permission/ByUser/PerReportDetail'
+                break
+            case "editrole":
+                link = '/Report/Permission/ByUser/PerEditDetail'
+                break
+        }
+        return link;
+    }
+    //#endregion
+
+    //#region //EVENT
+    function pug_event() {
+        $(".pug_clsPerType").unbind('click').click(function (event) {
+            event.preventDefault();
+            $(".pug_clsPerType").removeClass('active');
+            $(this).addClass('active');
+            pug_currentLink = $(this).attr('data-link');
+            $("#pug_mainContainer").empty();
+            if (pug_currentLink != "") {
+                $("#pug_mainContainer").load(pug_currentLink + "?ver=" + versionofWebApplication);
+
+            }
+        });
+    }
+
+    function pug_closeCollapse() {
+        $('#pug_viewColLists').collapse('hide');
+    }
+
+    function pug_changeView() {
+        pug_serView = ($('input[name="pug_viewst"]:checked').val()).toLowerCase();
+        $(".pug_clsPerType.active").trigger('click');
+        $(".pug_clsPerType.active").tab('show');
+    }
+
+    //#endregion
+</script>

@@ -1,0 +1,527 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.ComplaintListModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 pt-3">
+                <div class="d-lg-flex">
+                    <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link cursor-pointer  " data-bs-toggle="collapse" href="#TCCL_infodes">
+                                <i class="text-gradient text-lg text-primary fas fa-info-circle"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="TCCL_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-4 mt-2 multi-collapse collapse">
+                    <h6 class="text-primary mb-0">@Local["Lịch sử phàn nàn của khách hàng"]</h6>
+                    <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa"]</p>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="row">
+                    <div class="m-0 position-relative">
+                        <div id="TCCL_Master_WaitingDiv" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x z-index-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">@Local["Đang tải"]...</span>
+                            </div>
+                        </div>
+                        <div id="TCCL_MasterContent" class="row px-2 h-100">
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-4 p-1">
+                                <div class="align-items-center d-flex my-2 ps-1">
+                                    <div class="d-flex text-nowrap">
+                                        <div class="TCCL_btnFilterStatus align-items-center border-1 border-dashed border-radius-md border-secondary cursor-pointer d-inline-flex h-100 justify-content-center px-2" data-status="1">
+                                            <h4 class="text-primary text-gradient mb-0" id="TCCL_Status_1">0</h4>
+                                            <h6 class="text-sm text-dark mt-2 ps-2">@Local["Đã xử lý"]</h6>
+                                        </div>
+                                        <div class="TCCL_btnFilterStatus align-items-center border-1 border-dashed border-radius-md border-secondary cursor-pointer d-inline-flex h-100 justify-content-center ms-2 px-2" data-status="0">
+                                            <h4 class="text-primary text-gradient mb-0" id="TCCL_Status_0">0</h4>
+                                            <h6 class="text-sm text-dark mt-2 ps-2">@Local["Chưa xử lý"]</h6>
+                                        </div>
+                                    </div>
+                                    <div class="align-items-center d-flex ms-auto">
+                                        <button class=" btn btn-sm bg-gradient-primary mb-0" type="button" name="button" onclick="event.preventDefault(); return TCCL_ExcuteData(0);">
+                                            @Local["Thêm mới"]
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="TCCL_MasterList" class="overflow-auto stickytable" style="height:calc(100vh - 330px);">
+                                    <ul id="TCCL_Master_dtContentBody" class="list-group">
+                                    </ul>
+                                    <button class="btn btn-secondary btnsysmore w-100 p-1 mt-2 mb-0 position-sticky top-100" onclick="event.preventDefault(); TCCL_RenderMore();">@Local["Xem thêm"]</button>
+
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-8 col-xl-8 p-1 ps-3" id="TCCL_DetailContainer">
+                                <div id="TCCL_DetailContent" class="card card-plain max-height-vh-70 d-none mt-2">
+                                    <div class="card-header p-0">
+                                        <div class=" d-flex">
+                                            <div class="align-items-center">
+                                                <h6 class="mb-0 fw-bold text-sm"></h6>
+                                            </div>
+                                            <div class="align-items-center d-flex ms-auto">
+                                                <button class=" btn btn-sm bg-gradient-primary mb-0" type="button" name="button" onclick="event.preventDefault(); return TCCL_ExcuteData();">
+                                                    @Local["Xử lý"]
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="TCCL_DetailArea" class="p-0 card-body overflow-auto overflow-x-hidden" style="height:calc(100vh - 330px);">
+                                        <div id="TCCL_DetailLoading" class="waitingdiv text-center position-absolute top-0 statust-50 translate-middle-x" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                        <table id="TCCL_DetailDtContent" class="table mb-3 mt-1">
+                                            <thead>
+                                                <tr>
+                                                    <th class="ps-1" colspan="3" style="min-width: 200px">
+                                                        <p class="mb-0 text-sm text-dark fw-bold">@Local["Người xử lý"]</p>
+                                                    </th>
+                                                    <th class="ps-1">
+                                                        <div class="mb-0 text-sm text-dark fw-bold">@Local["Nội dung"]</div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="TCCL_DetailDtContentBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button id="TCCL_DetailbtnLoadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0  position-absolute bottom-0" onclick="event.preventDefault(); return TCCL_DetailRenderMore();">
+                                        @Local["Xem thêm"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    //#region //INIT - DEFINE
+
+    let ser_ComplaintCustomerID = '@Model._ComplaintCustomerID';
+    let TCCL_DataStatusCall;
+    let TCCL_DataMainSlice, TCCL_IndexTable = 0;
+    let TCCL_Detail_DataMainSlice, TCCL_Detail_IndexTable = 0, TCCL_xhrRequest;
+    let TCCL_currentID = 0;
+    let TCCL_StatusArr = [];
+    let TCCL_DataMain = [];
+    $(document).ready(function () {
+        ToolPopper();
+        TCCL_Initialization();
+    })
+    function TCCL_Initialization() {
+        AjaxLoad(url = "/Customer/ComplaintList/?handler=Initialization"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+
+                if (result != '') {
+                    let data = JSON.parse(result);
+                    TCCL_DataStatusCall = data.reduce((pre, arr) => { if (!pre[arr.ID]) pre[arr.ID] = arr; return pre }, {});
+                    TCCL_LoadData();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //LOAD MASTER DATA
+    function TCCL_LoadData(currentID = 0) {
+        TCCL_currentID = currentID;
+        $('#TCCL_DetailContent').addClass('d-none');
+        AjaxLoad(url = "/Customer/ComplaintList/?handler=Loadata"
+            , data = { 'CustomerID': ser_ComplaintCustomerID, 'currentID': currentID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let datas = JSON.parse(result);
+                let dataTotal = datas.Table;
+                let data = datas.Table1;
+                TCCL_RenderTotal(dataTotal);
+                if (data.length != 0) {
+                    let stringContent = '';
+                    if (currentID == 0) {
+                        TCCL_ResetMasterData();
+                        TCCL_DataMain = [...data];
+                        TCCL_DataMainSlice = sliceIntoChunks(data, 50);
+                        if (TCCL_DataMainSlice && TCCL_DataMainSlice.length != 0) {
+
+                            fnRenderBlock(TCCL_DataMainSlice[TCCL_IndexTable], "TCCL_Master_dtContentBody"
+                                , blocknum = 30
+                                , fnrender = TCCL_RenderData
+                                , fnsuccess = null
+                            );
+                        }
+                    }
+                    else {
+
+                        let _id = $('#TCCL_MasterRow_' + currentID);
+                        if (_id != undefined && _id.length != 0) {
+                            stringContent = TCCL_RenderEach(data[0]);
+                            _id.replaceWith(stringContent);
+                            TCCL_DataMain = TCCL_DataMain.reduce((pre, arr) => {
+                                if (arr.ID == data[0].ID) arr = data[0];
+                                pre.push(arr);
+                                return pre;
+                            }, []);
+                        }
+                        else {
+                            stringContent = TCCL_RenderEach(data[0]);
+                            $('#TCCL_Master_dtContentBody').prepend(stringContent);
+                            TCCL_DataMain = TCCL_DataMain.concat(data[0]);
+
+                        }
+                        TCCL_Master_Event();
+                        $('#TCCL_MasterRow_' + currentID).trigger('click');
+                    }
+                }
+                else {
+                    if (currentID != 0) {
+                        let _id = 'TCCL_MasterRow_' + currentID;
+                        $("#" + _id).remove();
+                        TCCL_DataMain = TCCL_DataMain.filter(word => {
+                            return word.ID != currentID
+                        })
+                    }
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#TCCL_Master_WaitingDiv").show();
+            }
+            , complete = function (e) {
+                $("#TCCL_Master_WaitingDiv").hide();
+            }
+        );
+    }
+
+    function TCCL_ResetMasterData() {
+        TCCL_DataMain = [];
+        TCCL_IndexTable = 0;
+        TCCL_DataMainSlice = [];
+        $('#TCCL_Master_dtContentBody').empty();
+    }
+
+    async function TCCL_RenderData(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = TCCL_RenderEach(item);
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                        TCCL_Master_Event();
+                    }
+                }
+                if (TCCL_currentID == 0) {
+                    $('.TCCL_Class_MasterRow:first-child').trigger('click');
+                }
+                Checking_TabControl_Permission();
+                ToolPopper();
+                resolve();
+            }, 10)
+        });
+    }
+
+    function TCCL_RenderMore() {
+        TCCL_IndexTable += 1;
+        if (TCCL_DataMainSlice && TCCL_DataMainSlice[TCCL_IndexTable]) {
+            fnRenderBlock(TCCL_DataMainSlice[TCCL_IndexTable], "TCCL_Master_dtContentBody"
+                , blocknum = 100
+                , fnrender = TCCL_RenderData
+                , fnsuccess = null
+            );
+        }
+    }
+
+    function TCCL_RenderEach(item) {
+        let tr = '';
+        if (item && Object.keys(item).length > 0) {
+            let statusName = item.IsDone == 1 ? `@Local["Đã xử lý"]` : `@Local["Chưa xử lý"]`;
+            let statusIcon = item.IsDone == 1 ? `fa-check-circle` : `fa-circle`;
+            let btnDel = item.DeleteButton == 1 ? `<div class="ms-auto">
+                                                           <div data-id="${item.ID}" class="TCCL_MasterRow_btnDel icon-hover mx-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="">
+                                                               <i class="fas fa-times text-sm cursor-pointer"></i>
+                                                           </div>
+                                                      </div>` : '';
+            tr = `<li id="TCCL_MasterRow_${item.ID}" data-id="${item.ID}" class="TCCL_Class_MasterRow border-0 border-radius-lg mt-2 py-0 cursor-pointer justify-content-between list-group-item mt-1 px-2">
+                                      <div class="d-flex w-100 mt-2">
+                                          <div   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="${statusName}">
+                                                  <span class="badge badge-dot  py-0 ">
+                                                <i class="fas ${statusIcon} pe-2 TCCL_clsBagdeDot" style="color: ${item.ColorCode}"></i>
+                                              </span>
+                                          </div>
+                                          <div class="row px-2 w-100">
+                                              <div class="px-0">
+                                                  <div class="d-flex">
+                                                      <a class="aligns-item-center col-auto fw-bold ms-2 py-1 text-sm border-bottom border-1 TCCL_MasterRow_btnEdit"
+                                                        style="color: ${item.ColorCode}; border-color:  ${item.ColorCode} !important"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="${statusName}"
+                                                        data-id="${item.ID}" data-isEdit="${item.EditButton}">
+                                                      ${item.StatusParentName || '@Local["Trạng thái"]'}
+                                                      </a>
+                                                      <a class="aligns-item-center col-auto ms-2 py-1 text-dark text-sm"> ${item.StatusName}</a>
+                                                          ${btnDel}
+                                                  </div>
+                                                  <div class="px-0 text-dark">
+                                                      <div class="d-flex ms-2 px-0">
+                                                          <div class="d-inline me-2">
+                                                              <i class="fa-user far text-secondary text-sm text-xs"></i>
+                                                                  <span class="font-italic mt-2 text-xs">${item.CreatedName}</span>
+                                                          </div>
+                                                          <div class="d-inline me-2">
+                                                              <span class="font-italic mt-2 text-sm text-xs">
+                                                                     ${ConvertDateTimeUTC_DMYHM(item.CreatedDate)}
+                                                              </span>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                                  <div class="ellipsis_one_line text-secondary text-sm ps-0 ms-2 my-2">${item.Content}</div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <hr class="dark horizontal my-0">
+                                      </li>`
+        }
+        return tr;
+    }
+    //#endregion
+
+    //#region //LOAD DETAIL DATA
+    async function TCCL_LoadDetail(CurrentID) {
+        return new Promise((resolve, reject) => {
+            $("#TCCL_DetailDtContentBody").empty();
+
+            if (TCCL_xhrRequest && TCCL_xhrRequest.readyState != 4) TCCL_xhrRequest.abort();
+            TCCL_Detail_IndexTable = 0;
+            TCCL_Detail_DataMainSlice = [];
+            TCCL_xhrRequest = AjaxLoad(url = "/Customer/ComplaintList/?handler=LoadataDetail"
+                , data = {
+                    'CurrentID': CurrentID
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data != undefined) {
+                        TCCL_Detail_DataMainSlice = sliceIntoChunks(data, 500);
+                        if (TCCL_Detail_DataMainSlice && TCCL_Detail_DataMainSlice.length != 0) {
+                            fnRenderBlock(TCCL_Detail_DataMainSlice[TCCL_Detail_IndexTable], "TCCL_DetailDtContentBody"
+                                , blocknum = 100
+                                , fnrender = TCCL_RenderDetail
+                                , fnsuccess = null
+                            );
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $('#TCCL_Master_WaitingDiv').show();
+                }
+                , complete = function (e) {
+                    $('#TCCL_Master_WaitingDiv').hide();
+                }
+            );
+
+        });
+    }
+
+    function TCCL_Detail_RenderMore() {
+        TCCL_Detail_IndexTable += 1;
+        if (TCCL_Detail_DataMainSlice && TCCL_Detail_DataMainSlice[TCCL_Detail_IndexTable]) {
+            fnRenderBlock(TCCL_DataMainSlice[TCCL_Detail_IndexTable], "TCCL_DetailDtContentBody"
+                , blocknum = 100
+                , fnrender = TCCL_RenderDetail
+                , fnsuccess = null
+            );
+        }
+    }
+
+    function TCCL_RenderTotal (data) {
+        $('#TCCL_Status_0').html('0');
+        $('#TCCL_Status_1').html('0');
+        if (data && data.length > 0) {
+            for(let i =0; i < data.length; i++) {                 
+                let item = data[i] ?? {};
+                $(`#TCCL_Status_${item?.IsCare ?? 0}`).html(item?.NumCare ?? 0);
+            }
+
+        }
+    }
+
+    async function TCCL_RenderDetail(data, id) {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let statusParentName = TCCL_DataStatusCall[item.Status]?.Name != undefined ? `${TCCL_DataStatusCall[item.Status].Name}` : '';
+                            let statusName = TCCL_DataStatusCall[item.StatusCall]?.Name ?? '';
+                            let tr = `<tr>
+                                        <td class="ps-0" colspan="3">
+                                            <div class="d-flex">
+                                                <div class="icon icon-shape icon-sm me-2 text-center">
+                                                    <img class="avatar avatar-xs mt-2" src="${item.EmpAvatar || (Master_Default_Pic || '/default.png')}" alt="label-image">
+                                                </div>
+                                                <div class="d-flex flex-column">
+                                                    <h6 class="text-dark text-sm mb-0">${item.EmpName}</h6>
+                                                    <span class="text-xs"> ${ConvertDateTimeUTC_DMYHM(item.Created)} </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="ps-1 text-dark text-sm">
+                                            <div>
+                                            <span class="text-sm fw-bold" style="color: ${item.ColorCode}">${statusParentName}</span>
+                                            <span class="text-sm text-dark"> ${statusName}</span>
+                                            </div>
+                                            <div>
+                                            <span class="text-sm text-dark font-italic text-xs">${item.RepeatCallStatus}</span>
+                                            <span class="text-sm text-dark font-italic text-xs">${ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(item.RepeatDate) ?? '')}</span>
+                                            </div>
+                                            <p class="mb-0 text-sm mt-1 text-wrap" style="">
+                                                ${item.Content}
+                                            </p>
+                                        </td>
+                                      </tr>`;
+                            myNode.insertAdjacentHTML("beforeend", tr);
+                        }
+                        TCCL_Master_Event();
+                    }
+                }
+                Checking_TabControl_Permission();
+                ToolPopper();
+                resolve();
+            }, 10)
+        });
+    }
+    //#endregion
+
+    //#region //EVENT
+    function TCCL_Master_Event() {
+        $('#TCCL_Master_dtContentBody .TCCL_Class_MasterRow').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            TCCL_currentID =  $(this).attr("data-id");
+            let id = $(this).attr("data-id");
+            $('#TCCL_DetailContent').removeClass('d-none');
+            $('#TCCL_DetailEmpty').addClass('d-none');
+            $('.TCCL_Class_MasterRow').removeClass('active');
+            $('#TCCL_MasterRow_' + id).addClass('active');
+            TCCL_LoadDetail(id);
+        });
+
+        $('#TCCL_Master_dtContentBody .TCCL_MasterRow_btnDel').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = $(this).attr("data-id");
+            TCCL_Delete(id);
+        });
+        $('#TCCL_Master_dtContentBody').unbind('click').on('click', '.TCCL_MasterRow_btnEdit', function () {
+            let isEdit = $(this).attr("data-isEdit");
+            if (!isEdit) return;
+            let id = $(this).attr("data-id");
+            TCCL_ExcuteData(id, 1);
+        });
+
+        $(".TCCL_btnFilterStatus").unbind('click').on('click', function () {
+            if ($(this).hasClass("active") == false) {
+                $(this).addClass("active");
+                let status = Number($(this).attr("data-status"));
+                TCCL_StatusArr.push(status);
+            }
+            else {
+                $(this).removeClass("active");
+                let status = Number($(this).attr("data-status"));
+                let index = TCCL_StatusArr.indexOf(status);
+                if (index !== -1) {
+                    TCCL_StatusArr.splice(index, 1);
+                }
+            }
+            TCCL_Filter();
+        })
+    }
+
+    function TCCL_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { TCCL_DeleteExcute(id); }, function () { });
+    }
+    function TCCL_DeleteExcute(id) {
+        AjaxLoad(url = "/Customer/ComplaintList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    syslog_cutccc('d', ser_MainCustomerID, '');
+                    notiSuccess();
+                    TCCL_LoadData(id);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TCCL_ExcuteData(ID, IsEditMaster = 0) {
+        ID ??= TCCL_currentID;
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/CallDetailInput?MasterID=" + ID + "&CustomerID=" + ser_ComplaintCustomerID + "&IsEditMaster=" + IsEditMaster + "&Type=" + 6 + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+
+    function TCCL_Filter() {
+        for (let i = 0; i < TCCL_DataMain.length; i++) {
+            let value = TCCL_DataMain[i];
+            if ((TCCL_StatusArr.length == 0
+                    || TCCL_StatusArr.includes(value["IsDone"]))
+            ) {
+                TCCL_FilterShowLine(value["ID"]);
+            }
+            else {
+                TCCL_FilterHideLine(value["ID"]);
+            }
+        }
+    }
+
+    function TCCL_FilterHideLine(id) {
+        if (!$('#TCCL_MasterRow_' + id).hasClass('d-none')){
+            $('#TCCL_MasterRow_' + id).addClass("d-none");
+        }
+    }
+    function TCCL_FilterShowLine(id) {
+        if ($('#TCCL_MasterRow_' + id).hasClass('d-none')){
+            $('#TCCL_MasterRow_' + id).removeClass("d-none");
+        }
+    }
+                            //#endregion
+</script>
+<style>
+    .TCCL_clsBagdeDot {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    .TCCL_btnFilterStatus.active {
+        background-image: linear-gradient( 310deg, #ffffff, #d6edff);
+    }
+</style>

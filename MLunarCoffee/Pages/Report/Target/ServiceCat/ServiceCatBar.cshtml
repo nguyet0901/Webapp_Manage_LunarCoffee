@@ -1,0 +1,73 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Target.ServiceCat.ServiceCatBarModel
+@{
+    Layout = null;
+}
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0 pt-3">
+        <div class="left">
+            <p class="text-md text-dark font-weight-bold mb-1">@Local["Top 5 doanh số theo nhóm dịch vụ"]</p>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#ServiceCatBarDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadData_ReportServiceCatBar()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="ServiceCatBarDiv">
+        <div class="card-body p-0">
+            <div class="my-0" style="overflow-x: auto; overflow-y: hidden;">
+                <div class="chart" style="min-width:1200px;height:300px;">
+                    <canvas id="ServiceCatBar" class="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+ ToolPopper();
+        LoadData_ReportServiceCatBar();
+    });
+    function LoadData_ReportServiceCatBar() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branch = "@Model._branch";
+        AjaxLoad(url = "/Report/Target/ServiceCat/ServiceCatBar/?handler=Loadata"
+            , data = { 'branchID': _branch, 'dateFrom': _dateFrom, 'dateTo': _dateTo }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result)["Table"];
+                    for (let i = 0; i < data.length; i++) {
+                        data[i]['Amount'] = Number(data[i]['Amount']);
+
+                    }
+                    rp_bar("ServiceCatBar", data, 'Name', 'Amount')
+ 
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<style>
+    #ServiceCatBar {
+        height: 300px !important
+    }
+</style>

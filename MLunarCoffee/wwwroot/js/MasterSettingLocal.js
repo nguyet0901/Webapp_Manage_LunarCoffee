@@ -346,8 +346,6 @@ function Master_Load_JS (callback) {
         js_require_notasync('/js/comon/Signation.js');
         js_require_notasync('/js/customjs/custom-tablefixer.js');
         js_require_notasync('/js/table_responsive.js');
-        js_require('/js/Todo/Todo_Detail.js');
-        js_require('/js/Labo/LaboPopup.js');
         js_require_notasync('/js/main-sidebar.js');
         js_require('/js/main.js');
         js_require_notasync('/assests/dist/plugins/cookie/js.cookie.js');

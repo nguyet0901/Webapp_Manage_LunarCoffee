@@ -13,7 +13,7 @@
 
 				<div class="col-md-7 col-sm-12 text-center ftco-animate">
 					<h1 class="mb-3 mt-5 bread">Checkout</h1>
-					<p class="breadcrumbs"><span class="mr-2"><a href="/Index">Home</a></span> <span>Checout</span></p>
+					<p class="breadcrumbs"><span class="mr-2"><a href="/Index">Home</a></span> <span>Checkout</span></p>
 				</div>
 
 			</div>
@@ -204,39 +204,296 @@
 		</div>
 	</div>
 </section>
-<script>
-	$(document).ready(function () {
+<script type="text/javascript">
+    //#region //INIT
+    var ckt_DataCart = {};
+    var ckt_DataPro = {};
+    $(document).ready(function () {
 
-		var quantitiy = 0;
-		$('.quantity-right-plus').click(function (e) {
+        ckt_DataCart = cart_getCartList();
+        ckt_loadDataSale();
+        ckt_loadPro();
+    });
 
-			// Stop acting like a button
-			e.preventDefault();
-			// Get the field name
-			var quantity = parseInt($('#quantity').val());
+    async function ckt_loadPro(id = 0) {
+        let para = {
+            'TypeID': 0,
+            'ProductID': id,
+            'HasDisable': 0,
+            'PagingNumber': 1,
+            'IsBestSeller': 1,
+            'IsMaterial': 0,
+            'TextSearch': "",
+            'TokenID': Object.keys(ckt_DataCart).join(','),
+            'Limit': 1000
+        };
 
-			// If is not undefined
+        apipro_getList(
+            para,
+            beforefunc = function () {
 
-			$('#quantity').val(quantity + 1);
+            }
+            , successfunc = function (_rr) {
+                if (_rr != "0" && _rr != "") {
+                    let datas = JSON.parse(_rr);
+                    let dataMain = datas.Table1;
+                    let data = Object.values(ckt_DataCart);
+                    if (id == 0) {
+                        $('#ckt_dtContentBody').empty();
+                        ckt_DataPro = dataMain.reduce((pre, arr) => {
+                            pre[arr.ID] = arr; return pre;
+                        }, {});
 
+                        ckt_render(data, 'ckt_dtContentBody')
+                    }
+                    else {
+                        let dtFilt = data.filter(e => e.ID == id);
+                        let item = dtFilt[0];
+                        ckt_DataPro[item.ID] = dataMain[0];
+                        let tr = ckt_renderEach(item);
+                        let ele = $(`#ckt_row${item.ID}`);
+                        if (ele.length > 0) {
 
-			// Increment
+                            ele.replaceWith(tr);
+                        }
+                        else {
+                            $('#ckt_dtContentBody').prepend(tr);
+                        }
+                        $('.ckt_txtQuantity').divide()
+                        ckt_cartEvent();
+                    }
+                    ckt_calTotal();
 
-		});
+                }
+            }
+            , failurefunc = function () {
 
-		$('.quantity-left-minus').click(function (e) {
-			// Stop acting like a button
-			e.preventDefault();
-			// Get the field name
-			var quantity = parseInt($('#quantity').val());
+                notiError_SW();
+            }
+            , completefunc = function (e) {
 
-			// If is not undefined
+            }
+        );
+    }
 
-			// Increment
-			if (quantity > 0) {
-				$('#quantity').val(quantity - 1);
-			}
-		});
+    async function ckt_render(data, id) {
+        new Promise(resolve => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
 
-	});
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = ckt_renderEach(item);
+                        myNode.insertAdjacentHTML("beforeend", tr);
+                    }
+                }
+            }
+            $('.ckt_txtQuantity').divide()
+            ckt_cartEvent();
+            resolve();
+        })
+    }
+
+    function ckt_renderEach(item) {
+        let objPro = ckt_DataPro[item.ID];
+        let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+        let discount = `<spa>(- formatNumber(item.DiscountAmount) <span class="fw-bold text-secondary">${item.DiscountPercent > 0 ? item.DiscountPercent + '%' : ''}</span>)<span>`
+        let total = Number(priceDiscounted) * Number(item.Quantity);
+        return ` <tr id="ckt_row${item.ID}" class="text-center" data-id="${item.ID}">
+                        <td class="product-remove"><a class="ckt_btnDel"><span class="icon-close"></span></a></td>
+
+                                    <td class="image-prod"><div class="img" style="background-image:url(${objPro.Image || '/default.png'});"></div></td>
+
+                        <td class="product-name">
+                                <h3>${objPro.Name}</h3>
+                                    <p class="text-secondary">${objPro.Description}</p>
+                        </td>
+
+                            <td class="price">${formatNumber(item.Price)}/${objPro.Unit}</td>
+                        <td class="price">${formatNumber(priceDiscounted)}</td>
+
+                        <td class="quantity">
+                            <div class="input-group mb-3">
+                                    <span class="input-group-text ckt_btnPlus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-plus"></i></span>
+                                <input type="text" name="quantity" id="ckt_txtQuantity${item.ID}" class="quantity ckt_txtQuantity form-control input-number" value="${item.Quantity}" min="1" max="100">
+                                        <span class="input-group-text ckt_btnMinus cursor-pointer" style="background:#c49b63; color: white"><i class="fas fa-minus"></i></span>
+                            </div>
+                        </td>
+
+                                <td id="ckt_lbTotal${item.ID}" class="total">${formatNumber(total)}</td>
+                    </tr><!-- END TR-->`
+    }
+
+    function ckt_cartEvent() {
+        $('.ckt_btnDel').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            ckt_deleteCart(id);
+
+        });
+
+        $('.ckt_btnPlus').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#ckt_txtQuantity${id}`)[0].value.replace(',', ''));
+            $(`#ckt_txtQuantity${id}`).attr('value', quant);
+            quant += 1;
+            $(`#ckt_txtQuantity${id}`).val(formatNumber(quant));
+            $(`#ckt_txtQuantity${id}`).attr('value', quant);
+            $(`#ckt_txtQuantity${id}`).change();
+        });
+
+        $('.ckt_btnMinus').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#ckt_txtQuantity${id}`)[0].value.replace(',', ''));
+            if (quant == 1) return
+            quant -= 1;
+            $(`#ckt_txtQuantity${id}`).val(formatNumber(quant));
+            $(`#ckt_txtQuantity${id}`).attr('value', quant);
+            $(`#ckt_txtQuantity${id}`).change();
+        });
+        $('.ckt_txtQuantity').unbind('change').on('change', function (e) {
+            e.preventDefault();
+            let id = Number($(this).closest('tr').attr("data-id"));
+            let quant = Number($(`#ckt_txtQuantity${id}`)[0].value.replace(',', ''));
+            cart_editCart({
+                ID: id
+                , Quantity: quant
+            });
+            let item = ckt_DataCart[id];
+            item.Quantity = quant;
+            let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+            let total = Number(priceDiscounted) * Number(item.Quantity);
+            $(`#ckt_lbTotal${item.ID}`).html(formatNumber(total));
+            ckt_calTotal();
+        });
+    }
+
+    function ckt_deleteCart(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ckt_excDeleteCart(id); }, function () { });
+    }
+    function ckt_excDeleteCart(id) {
+        cart_deleteCart(id);
+        $(`#ckt_row${id}`).remove();
+        delete ckt_DataCart[id];
+        ckt_calTotal();
+    }
+
+    async function ckt_calTotal() {
+        new Promise(resolve => {
+            let data = Object.values(ckt_DataCart);
+            let totalPrice = 0, totalDis = 0, total = 0;
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let objPro = ckt_DataPro[item.ID];
+                    totalPrice += Number(item.Price) * Number(item.Quantity);
+                    totalDis += Number(item.DiscountAmount) * Number(item.Quantity);
+                    let priceDiscounted = Number(item.Price) - Number(item.DiscountAmount);
+                    total += Number(priceDiscounted) * Number(item.Quantity);
+                }
+
+            }
+            $('#ckt_subTotal').html(formatNumber(totalPrice));
+            $('#ckt_discount').html(formatNumber(totalDis));
+            $('#ckt_total').html(formatNumber(total));
+            resolve();
+        })
+    }
+
+    async function ckt_loadDataSale() {
+        new Promise(resolve => {
+            let objGBType = Object.groupBy(Object.values(ckt_DataCart), ({ TypeID }) => TypeID);
+            let type = Object.keys(objGBType)?.join(',');
+            let para = {
+                'TypeID': 0,
+                'ProductID': 0,
+                'HasDisable': 0,
+                'PagingNumber': 1,
+                'IsBestSeller': 1,
+                'IsMaterial': 0,
+                'TokenTypeID': type ?? "",
+                'TextSearch': "",
+                'Limit': 4
+            };
+
+            apipro_getList(
+                para,
+                beforefunc = function () {
+
+                }
+                , successfunc = function (_rr) {
+                    if (_rr != "0" && _rr != "") {
+                        let datas = JSON.parse(_rr);
+                        let dataMain = datas.Table1;
+                        ckt_renderPro(dataMain, "ckt_dtProduct");
+                    }
+                }
+                , failurefunc = function () {
+
+                    notiError_SW();
+                }
+                , completefunc = function (e) {
+
+                }
+            );
+            resolve();
+        })
+    }
+
+    async function ckt_renderPro(data, id) {
+        new Promise(resolve => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `<div class="col-md-3">
+                                            <div class="menu-entry">
+                                                    <a href="/ProductDetail/${item.ID}" class="img" style="background-image: url(${item.Image || '/default.png'});"></a>
+                                                <div class="text text-center pt-4">
+                                                        <h3><a href="/ProductDetail/${item.ID}">${item.Name}</a></h3>
+                                                        <p>${item.Description}</p>
+                                                    <p class="price"><span>${formatNumber(item.PriceToSale)}</span></p>
+                                                            <p><a class="btn btn-primary btn-outline-primary ckt_btnAddCart" data-id="${item.ID}" data-typeid="${item.TypeID}" data-price="${item.PriceToSale}">Add to Cart</a></p>
+                                                </div>
+                                            </div>
+                                        </div>`
+                        stringContent = stringContent + tr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+
+            ckt_productEvent();
+            resolve();
+        })
+    }
+
+    function ckt_productEvent() {
+        $('.ckt_btnAddCart').unbind('click').on('click', function (e) {
+            e.preventDefault();
+            let productID = Number($(this).attr("data-id"));
+            let typeid = Number($(this).attr("data-typeid"));
+            let PriceToSale = Number($(this).attr("data-price"));
+            let item = {
+                ID: productID,
+                TypeID: typeid,
+                Quantity: 1,
+                Price: PriceToSale
+            }
+            cart_addToCart(item);
+            ckt_DataCart = cart_getCartList(); debugger
+            ckt_loadPro(productID);
+            ckt_calTotal();
+        });
+
+    }
+
 </script>

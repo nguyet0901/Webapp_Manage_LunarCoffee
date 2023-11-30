@@ -1,0 +1,591 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Payment.PaymentClassStudentModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="card">
+    <div id="PayClassStu_MainContent" class="row m-2">
+        <div class="col-md-7 col-xl-8 px-1">
+            <div class="card card-plain">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Thanh toán"]</h6>
+                                <p class="text-sm mb-0">@Local["Học viên thanh toán khóa đào tạo"]</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+                            <div id="InsbtnAuto" class="d-flex">
+                                <label class="form-check-label mb-0">
+                                    <small>@Local["Tự động"]</small>
+                                </label>
+                                <div class="form-check form-switch ms-2">
+                                    <input id="PayClassStu_DetailAuto" class="form-check-input" type="checkbox" checked="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="pt-4 ps-0">
+                        <ul id="PayClassStu_List" class="list-group">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 col-xl-4 mt-md-0 mt-4  px-1">
+            <div class="card card-plain">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 fw-bold" id="PayClassStu_Code"></h6>
+                                <p class="text-sm mb-0" id="PayClassStu_Name"></p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1"></div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="row px-1">
+                        <div class="field col-12 col-xl-12 px-1 mt-2">
+                            <label>@Local["Công nợ"]</label>
+                            <input id="PayClassStu_Left" type="text" class="form-control disabled text-danger fw-bold" disabled="disabled" />
+                        </div>
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Chi nhánh"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="PayClassStu_Branch">
+                                <input type="hidden" name="branch" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Chi nhánh"]</div>
+                                <div id="cbbPayClassStu_Branch" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field col-12 col-xl-12 px-1 mt-2">
+                            <label>@Local["Hình thức thanh toán"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="PayClassStu_Method">
+                                <input type="hidden" name="paymentMethod" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg. @Local["Hình thức"]</div>
+                                <div id="cbbPayClassStu_Method" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-xl-12 px-1 mt-2">
+                            <label>@Local["Tổng tiền"]</label>
+                            <input id="PayClassStu_Amount" type="text" class="form-control money" placeholder="eg .@Local["Tổng tiền"]" />
+                        </div>
+                        <div class="field col-12 col-xl-12 px-1 mt-2">
+                            <label>@Local["Nội dung"]</label>
+                            <textarea class="form-control" id="PayClassStu_Content" placeholder="eg .@Local["Nội dung"]" rows="3" name="content" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fixed-botombutton pe-2  mb-3">
+        <div class="action_Save">
+            <div class="action_Save-Content">
+                <div class="text-danger text-gradient text-sm font-weight-bold" id="PayClassStu_ShowMessage"></div>
+                <button onclick="PCS_Cancel()" class="btn btn-secondary">@Local["Đóng"]</button>
+                <button id="InsbtnSave" onclick="event.preventDefault(); return PCS_Execute()" type="button" class="btn bg-gradient-primary mt-2 me-2">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    let PCS_StudentID = "@Model.StudentID";
+    let PCS_DataSubject = {};
+    let PCS_IsAuto = 1, PCS_IsError = 0;
+    let PCS_DataPayMain = {}
+    let PCS_TotalLeft = 0;
+
+    let PayClassStu_Timer;
+    let PCS_IsStopEvent = 0;
+
+    let PCS_KeySMS = {};
+    let PCS_InfoSms = {};
+    let PCS_PhoneStu = 0;
+
+    $(document).ready(function () {
+        PCS_Init();
+        PCS_Event();
+    });
+
+
+    //#reigon // INIT
+
+    function PCS_Init() {
+        AjaxLoad(url = "/Student/Payment/PaymentClassStudent/?handler=LoadInit"
+            , data = { }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    let dataBranch = data.Branch;
+                    let dataMethod = data.Method;
+                    let dataSubject = data.Subject;
+                    PCS_InfoSms = data.InfoSms;
+                    PCS_DataSubject = dataSubject.reduce((pre, arr) => {
+                        if (arr.ID) pre[arr.ID] = arr;
+                        return pre;
+                    }, {});
+
+                    Load_Combo(dataBranch, "cbbPayClassStu_Branch", true);
+                    $("#PayClassStu_Branch").dropdown("refresh");
+                    $("#PayClassStu_Branch").dropdown("set selected", Master_branchID);
+
+                     Load_Combo(dataMethod, "cbbPayClassStu_Method", true);
+                    $("#PayClassStu_Method").dropdown("refresh");
+                    $("#PayClassStu_Method").dropdown("set selected", Number(dataMethod[0].ID));
+
+                    PCS_LoadPay();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+
+    //#region // Load data
+
+    function PCS_LoadPay() {
+        if (isNaN(Number(PCS_StudentID))) return;
+        AjaxLoad(url = "/Student/Payment/PaymentClassStudent/?handler=LoadPayment"
+            , data = {
+                "StudentID": PCS_StudentID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataInfo = data.Table;
+                    let dataListPay = data.Table1;
+                    if (dataInfo && dataInfo.length != 0) {
+                        let itemInfo = dataInfo[0];
+                        PCS_TotalLeft = itemInfo.TotalPrice - itemInfo.TotalPaid;
+                        $("#PayClassStu_Left").val(formatNumber(PCS_TotalLeft));
+                        $("#PayClassStu_Name").html(itemInfo.Name)
+                        $("#PayClassStu_Code").html('#' + itemInfo.Code)
+                    }
+
+                    for (let i = 0; i < dataListPay.length; i++) {
+                        let item = dataListPay[i];
+                        let e = {};
+                        e.ID = item.ID
+                        e.Left = item.Price - item.Paid;
+                        e.Paid = 0;
+                        e.MethodID = 0;
+                        PCS_DataPayMain[item.ID] = e;
+                    }
+                    //sms - begin
+                    PCS_KeySMS = {
+                        "StudentCode": dataInfo[0].Code
+                        , "StudentName": dataInfo[0].Name
+                        , "Amount": 0
+                    }
+                    PCS_PhoneStu = dataInfo[0].Phone
+
+                    //sms - end
+
+                    PCS_Render(dataListPay, 'PayClassStu_List');
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+
+    //#reigon // RENDER
+
+    async function PCS_Render (data, id) {
+        new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let amoutleft = item.Price - item.Paid;
+                        let _disabled = (PCS_IsAuto == 1) ? 'disabled' : '';
+                        let _nameClass = Fun_GetName_ByID(PCS_DataSubject, item.SubjectID);
+                        stringContent = stringContent +
+                            `
+                            <li id="payitemCurrent_${item.ID}" class="px-2 payitemCurrent checklist-item list-group-item border-0 d-flex justify-content-between border-radius-lg">
+                                <div class="d-flex w-100">
+                                    <div class="row px-2 w-100 align-items-center">
+                                        <div class="col-12 col-sm-12 col-md-12 col-xl-8 p-1 flex-grow-1">
+                                        <div class="ms-4 col-12 row align-items-center">
+                                            <div class="col-12 col-sm-12 col-md-4 col-xl-4 ps-1 mt-2 mt-lg-0">
+                                                <p class="text-sm mb-0 text-primary">${item.Code}</p>
+                                                <span class="text-sm fw-bold text-dark">${_nameClass != '' ? _nameClass : 'unknown'  }</span>
+                                            </div>
+                                            <div class="col-12 col-sm-12 col-md-4 col-xl-4 ps-1 mt-2 mt-lg-0">
+                                                <p class="text-sm mb-0 text-secondary">@Local["Tổng tiền"]</p>
+                                                <span class="text-sm fw-bold text-dark">${formatNumber(item.Price)}</span>
+                                            </div>
+                                            <div class="col-12 col-sm-12 col-md-4 col-xl-4 ps-1 mt-2 mt-lg-0">
+                                                <p class="text-sm mb-0 text-secondary">@Local["Đã thanh toán"]</p>
+                                                <span class="ttext-sm fw-bold text-dark">${formatNumber(item.Paid)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1 flex-grow-1">
+                                        <div class="ms-4 input-group flex-nowrap">
+                                            <div class="bg-gray-100 input-group-text input-group-text px-3">
+                                                <h6 class="mb-0 text-dark text-sm"><i class="fas fa-dollar-sign"></i></h6>
+                                            </div>
+                                            <input id="payCurrent_${item.ID}" data-id="${item.ID}" data-paid="${item.Paid}" data-left="${amoutleft}" class="ps-2 form-control money payCurrent d-block" value="0" type="text" ${_disabled}>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <hr class="horizontal dark my-0">
+                        `;
+                    }
+                }
+                myNode.insertAdjacentHTML("beforeend", stringContent);
+                PCS_EventGrid();
+            }
+            resolve();
+        });
+    }
+
+    //#endregion
+
+    //#region // EVENT
+
+    function PCS_Event() {
+        $('#PayClassStu_Amount').keyup(function () {
+            if (PCS_IsAuto == 1) {
+                clearTimeout(PayClassStu_Timer);
+                PayClassStu_Timer = setTimeout(function (e) {
+                    PCS_Devide();
+                }, 500);
+            }
+        });
+
+        $('#PayClassStu_DetailAuto').unbind('change').change(function () {
+            if ($(this).is(':checked')) {
+                $('#PayClassStu_Amount').prop('disabled', false);
+                $('.payCurrent').prop('disabled', true);
+                PCS_IsAuto = 1;
+            }
+            else {
+                $('#PayClassStu_Amount').prop('disabled', true);
+                $('.payCurrent').prop('disabled', false);
+                PCS_IsAuto = 0;
+            }
+            InsError = false;
+            PCS_Reset()
+        });
+
+        $('.money').divide();
+    }
+
+    async function PCS_Devide() {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    InsError = false;
+                    $('.payitemCurrent').removeClass('checklist-item-success checklist-item-warning').addClass('checklist-item-secondary');
+                    $('#PayClassStu_Amount').removeClass('error');
+                    let amount = $('#PayClassStu_Amount').val();
+                    if (!isNaN(amount) && Number(amount) > 0) {
+                        amount = Number(amount);
+                        if (amount > PCS_TotalLeft) InsError = true;
+                        else {
+                            for ([key, value] of Object.entries(PCS_DataPayMain)) {
+                                value.Paid = 0;
+                                if (amount > 0) {
+                                    if (amount >= value.Left) {
+                                        value.Paid = value.Left;
+                                        $('#payitemCurrent_' + key).removeClass('checklist-item-secondary').addClass('checklist-item-success');
+                                    }
+                                    else {
+                                        value.Paid = amount;
+                                        $('#payitemCurrent_' + key).removeClass('checklist-item-secondary').addClass('checklist-item-warning');
+                                    }
+
+                                    amount = amount - value.Paid;
+                                }
+                                $('#payCurrent_' + key).val(value.Paid);
+                            }
+                            if (amount > 0) InsError = true;
+                        }
+                    }
+                    else InsError = true;
+                    if (InsError) $('#PayClassStu_Amount').addClass('error');
+                    resolve();
+                }
+            )
+        })
+    }
+
+    //#endreion
+
+    //#reigon // EVENT HANDLE CHANGE GRID
+
+    function PCS_EventGrid() {
+        $('#PayClassStu_List .payCurrent').unbind('change').change(function () {
+            if (PCS_IsAuto == 0 && PCS_IsStopEvent == 0) {
+                PCS_IsStopEvent = 1;
+                $('.payitemCurrent').removeClass('error');
+                let amount = $(this).val();
+                let dataid = Number($(this).attr('data-id'));
+                let dataleft = Number($(this).attr('data-left'));
+                if (!isNaN(amount) && Number(amount) > 0) {
+                    if (amount > dataleft) {
+                        PCS_DataPayMain[dataid].Paid = dataleft;
+                    }
+                    else {
+                        PCS_DataPayMain[dataid].Paid = amount;
+                    }
+                    $(this).val(PCS_DataPayMain[dataid].Paid);
+                }
+                else {
+                    PCS_DataPayMain[dataid].Paid = 0;
+                    $(this).val(0);
+                }
+                let totalAmount = 0;
+                for ([key, value] of Object.entries(PCS_DataPayMain)) {
+                    totalAmount = totalAmount + Number(value.Paid);
+                }
+                $('#PayClassStu_Amount').val(totalAmount);
+                PCS_SetColor(dataid, dataleft, PCS_DataPayMain[dataid].Paid);
+                PCS_IsStopEvent = 0;
+            }
+        });
+        $('#PayClassStu_List .money').divide();
+    }
+
+    function PCS_Reset() {
+        $('#PayClassStu_Amount').removeClass('error');
+        $('.payCurrent').removeClass('error');
+        if (PCS_IsAuto == 1) {
+            for ([key, value] of Object.entries(PCS_DataPayMain)) {
+                value.Paid = 0;
+            }
+            $('#PayClassStu_Amount').val(0);
+            $('.payCurrent').val(0);
+
+            $(".payCurrent").each(function (index) {
+                PCS_SetColor($(this).attr('data-id'), $(this).attr('data-left'), $(this).attr('data-paid'));
+            });
+
+           // PCS_SetColor();
+
+        }
+    }
+
+    async function PCS_SetColor(_id, _left, _paid) {
+        new Promise((resolve, reject) => {
+            $('#payitemCurrent_' + _id).removeClass('checklist-item-success checklist-item-warning checklist-item-secondary');
+            if (Number(_left) == 0) $('#payitemCurrent_' + _id).addClass('checklist-item-success');
+            else if (Number(_paid) != 0)
+                $('#payitemCurrent_' + _id).addClass('checklist-item-warning');
+            else $('#payitemCurrent_' + _id).addClass('checklist-item-secondary');
+            resolve();
+        });
+    }
+
+    //#endregion
+
+    //#region // OTHER
+
+    function PCS_Cancel() {
+        if (typeof Genstu_CloseDetail === 'function') Genstu_CloseDetail();
+        if (typeof smain_closeDetailDiv === 'function') smain_closeDetailDiv();
+    }
+
+    //#endregion
+
+    //#reigon // EXECUTE
+
+    async function PCS_Execute() {
+
+        if (PCS_IsError) return;
+        $('#PayClassStu_Amount').removeClass('error');
+        $('#PayClassStu_ShowMessage').html('');
+
+        let totalPaid = $('#PayClassStu_Amount').val() ? Number($('#PayClassStu_Amount').val()) : 0;
+        if (isNaN(totalPaid) || totalPaid <= 0) {
+            $('#PayClassStu_ShowMessage').html('@Local["Tổng tiền không được nhỏ hơn hoặc bằng 0"]');
+            $('#PayClassStu_Amount').addClass('error');
+            return;
+        }
+
+        let isValid = await PCS_CheckValidPayment(); // Check State && Total Payment In DB
+        if (isValid != 1) {
+            notiError("@Local["Có lỗi xảy ra. Tải lại trang"].");
+            return;
+        }
+
+        let MethodID = Number($('#PayClassStu_Method').dropdown('get value')) ? Number($('#PayClassStu_Method').dropdown('get value')) : 0;
+
+        let dataDetail = [];
+        for ([key, value] of Object.entries(PCS_DataPayMain)) {
+            if (Number(value.Paid) != 0) {
+                let ele = {};
+                ele.ID = Number(key);
+                ele.Amount = Number(value.Paid);
+                ele.MethodID = MethodID;
+                dataDetail.push(ele);
+            }
+        }
+        
+        let obj = {};
+        obj.content = $('#PayClassStu_Content').val() ? $('#PayClassStu_Content').val() : "";
+        obj.branchid = Number($('#PayClassStu_Branch').dropdown('get value')) ? Number($('#PayClassStu_Branch').dropdown('get value')) : 0;
+        obj.method = MethodID;
+        obj.amount = totalPaid;
+
+
+        AjaxLoad(url = "/Student/Payment/PaymentClassStudent/?handler=ExcuteData"
+            , data = {
+                'studentID': PCS_StudentID
+                , 'data': JSON.stringify(obj)
+                , 'dataDetail': JSON.stringify(dataDetail)
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        let item = data[0];
+                        let IsComplete = Number(item.RESULT);
+                        if (!isNaN(IsComplete) && IsComplete == 1) {
+                            notiSuccess();
+                            fcm_sendtopic("payment", Master_circleAvatar, sys_employeeName_Main, formatNumber(totalPaid));
+                            syslog_stpaid('i', item.Code);
+                            if (typeof smain_Loadpayment === 'function') smain_Loadpayment();
+                            if (typeof Studesk_payload === 'function') Studesk_payload();
+                            if (typeof Student_MailTemplate === 'function') Student_MailTemplate("ST_Email_AfterPayment", 0, item.PaymentID);
+
+                            PCS_ActiveSMS(totalPaid);
+                            
+                            if (typeof Genstu_MailTemplate === 'function') Genstu_MailTemplate("ST_Email_AfterPayment", 0, item.PaymentID)
+                            if (typeof smain_MailTemplate === 'function') smain_MailTemplate("ST_Email_AfterPayment", 0, item.PaymentID)
+                            PCS_Cancel();
+                        }
+                        else notiError_SW();
+                    }
+                    else notiError_SW();
+                }
+                else notiError_SW();
+            }
+            , sender = null
+        );
+
+    }
+
+    async function PCS_CheckValidPayment() {
+        return new Promise((resolve) => {
+            let dataDetail = [];
+            for ([key, value] of Object.entries(PCS_DataPayMain)) {
+                if (Number(value.Paid) != 0) {
+                    let ele = {};
+                    ele.ID = Number(key);
+                    ele.Amount = Number(value.Paid);
+                    dataDetail.push(ele);
+                }
+            }
+            if (dataDetail && Object.keys(dataDetail).length == 0) resolve(1);
+
+            AjaxLoad(url = "/Student/Payment/PaymentClassStudent/?handler=CheckValidPayment"
+                , data = {
+                    'dataDetail': JSON.stringify(dataDetail)
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        resolve(1)
+                    }
+                    else resolve(0)
+                }
+                , sender = null
+            );
+        })
+    }
+    //#endregion
+
+    //#region //EXECUTE -> sms
+    async function PCS_ActiveSMS (Amount) {
+        return new Promise((resolve) => {
+            if (Amount != null && Amount > 0 && Object.keys(PCS_InfoSms).length > 0) {
+                PCS_KeySMS.Amount = formatNumber(Amount);
+                let SMS_Conten = PCS_GetTemp(PCS_KeySMS, PCS_InfoSms[0].ValueSMS);
+                let SMS_Branch = PCS_InfoSms[0].BranchName;
+                if (SMS_Conten != '' && PCS_InfoSms[0].IsSendCompletePay == 1) {
+                    PCS_SendSMS(PCS_PhoneStu, SMS_Conten, SMS_Branch);
+                }
+            }
+        })
+    }
+
+    function PCS_GetTemp (DtKey, Temp) {
+        try {
+            let result = Temp;
+            if (Object.entries(DtKey).length != 0) {
+                for ([key, value] of Object.entries(DtKey)) {
+                    let GetKey = '#' + key + '#';
+                    result = result.replaceAll(GetKey, value);
+                }
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function PCS_SendSMS (PhoneStu, Cont, bran) {
+        AjaxJWT(url = "/api/SMS/Send"
+            , data = JSON.stringify({'phone': PhoneStu, 'content': Cont, 'brandname': bran, 'znssms': 0 })
+            , async = true
+            , success = function (result) {
+                if (result == "1") {
+                    console.log('111');
+                }
+            }
+        );
+    }
+    //#endregion
+
+</script>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<style>
+
+    #InsDetailList li input[type=text] {
+        display: block;
+    }
+
+    #PayClassStu_Area input.error {
+        background-color: rgb(255, 216, 216);
+    }
+
+    #InsDetailList li.list-group-item:hover {
+        background-color: unset !important;
+    }
+</style>

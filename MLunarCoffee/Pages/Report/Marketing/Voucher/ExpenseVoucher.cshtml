@@ -1,0 +1,321 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Marketing.Voucher.ExpenseVoucherModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card-header p-3">
+    <div class="d-lg-flex">
+        <div class="w-50 col-auto my-auto">
+            <h6 class="mb-0">@Local["Hiệu quả voucher"]</h6>
+            <p class="text-sm mb-0">@Local["Tình trạng sử dụng, chi phí, doanh thu, doanh số"]</p>
+        </div>
+        <div class="ms-auto my-auto d-flex align-items-center">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#EV_div" aria-expanded="true"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="collapsesticky collapse show" id="EV_div">
+    <div class="card-body p-3 pt-0">
+        <div class="d-lg-flex mt-2 row">
+            <div class="col-12 col-lg-4 col-sm-4">
+                <div class="position-relative" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="EV_Pie" class="chart-canvas" height="150"></canvas>
+                    </div>
+                    <h4 class="text-center font-weight-bold position-absolute top-50 start-50 translate-middle">
+                        <p class="text-xs text-muted mb-0 ">@Local["Phát hành"]</p>
+                        @*<p class="text-xs text-muted mb-0 ">@Local["Sử dụng"]</p>*@
+                        <span class="fs-3" id="EV_PieTotal"></span>
+                    </h4>
+                </div>
+                <div class="mt-2  table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <tbody id="EV_PieList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-12 col-lg-8 col-sm-8">
+                <div class="chart mx-3">
+                    <canvas id="EV_Bar" class="ps-0 ps-lg-3 chart-canvas" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card-header p-3 pb-0">
+    <div class="d-lg-flex">
+        <div class="ms-auto my-auto d-flex align-items-center">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#EV_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return EV_Load()"></i>
+            </div>
+            <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                </div>
+                <div class="input-group-text icon-hover w-auto vttech-input-item">
+                    <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return EV_Export(0)">@Local["Tất cả"]</i>
+                </div>
+                <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                    <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return EV_Export(1)">@Local["Tùy chọn"]</i>
+                </div>
+            </div>
+            <div class="position-relative d-inline ms-2" id="EV_ViewMore">
+                <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle"
+                        data-bs-toggle="collapse" data-bs-target="#colListsmaster">
+                    @Local["Xem thêm"]
+                </button>
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colListsmaster" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="mastershtoogle form-check-input" data-name="vouchercode"
+                                       type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã voucher"]</p>
+
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="mastershtoogle form-check-input" data-name="branch"
+                                       type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Chi nhánh"]</p>
+
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mx-0 px-1">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+            <h6 class="text-sm text-primary text-gradient mb-0" data-fontchanged="true">@Local["Chi phí"]</h6>
+            <h6 class="font-weight-bolder"> <span id="EV_TotalExpense">0</span></h6>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+            <h6 class="text-sm text-primary text-gradient mb-0" data-fontchanged="true">@Local["Doanh số"]</h6>
+            <h6 class="font-weight-bolder"> <span id="EV_TotalTarget">0</span></h6>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+            <h6 class="text-sm text-primary text-gradient mb-0" data-fontchanged="true">@Local["Doanh thu"]</h6>
+            <h6 class="font-weight-bolder"> <span id="EV_TotalRevenue">0</span></h6>
+        </div>
+    </div>
+</div>
+<div class="collapsesticky collapse show m-0" id="EV_GridArea">
+    <div class="card-body p-3 pt-0">
+        <div class="m-0 my-3 mobile-responsive position-relative">
+            <div id="EV_Waiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <table class="table vt-table mb-0" id="EV_Grid">
+                <thead>
+                    <tr>
+                        <th class="d-none">ID</th>
+                        <th>@Local["#"]</th>
+                        <th>@Local["Khách hàng"]</th>
+                        <th>@Local["Mã khách hàng"]</th>
+                        <th data-name="vouchercode">@Local["Mã voucher"]</th>
+                        <th>@Local["Tên voucher"]</th>
+                        <th>@Local["Dịch vụ"]</th>
+                        <th>@Local["Giá tiền"]</th>
+                        <th>@Local["Chi phí voucher"]</th>
+                        <th>@Local["Tiền sau giảm"]</th>
+                        <th data-name="branch">@Local["Chi nhánh"]</th>
+                    </tr>
+                </thead>
+                <tbody id="EV_GridBody">
+                </tbody>
+            </table>
+        </div>
+        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return EV_RenderMore();">
+            @Local["Xem thêm"]
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let shtablemaster;
+    let xhrLoadList
+    let IndexReport = 0;
+    let EV_DataReportMain, EV_DataReportMainSlide;
+    $(document).ready(function (e) {
+        shtablemaster = $("#EV_Grid").TableExpandColumn({
+            shtoogle: $('.mastershtoogle')
+        });
+        EV_LoadData();
+    });
+    //#region Init
+    function EV_LoadData() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._BranchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        $("#RM_GridBody").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/Marketing/Voucher/ExpenseVoucher/?handler=Loadata"
+            , data = {
+                'BranchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataPie = data["Table"];
+                    let dataBar = data["Table1"];
+                    EV_DataReportMain = data["Table2"];
+                    EV_RenderChart(dataPie,dataBar);
+                    if (EV_DataReportMain && EV_DataReportMain.length != 0) {
+                        EV_DataReportMainSlide = sliceIntoChunks(data["Table2"], 500);
+                        fnRenderBlock(EV_DataReportMainSlide[IndexReport], "EV_GridBody"
+                            , blocknum = 100
+                            , fnrender = EV_RenderTable
+                            , fnsuccess = null
+                        );
+                        //Count_Up("RM_totaldata", dataList.length);
+                    }
+                    if (dataBar && dataBar.length > 0) {
+                        Count_Up("EV_TotalExpense", dataBar[0].Expense, 1);
+                        Count_Up("EV_TotalTarget", dataBar[0].Target, 1);
+                        Count_Up("EV_TotalRevenue", dataBar[0].Revenue, 1);
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+
+    //#endregion
+    //#region Render
+    function EV_RenderChart(dataPie,dataBar) {
+        let dataBarNew = [];
+        let _e = { "Name": decodeHtml("@Local["Chi phí"]"), "Total": dataBar[0].Expense };
+        let _e2 = { "Name": "@Local["Doanh thu"]", "Total": dataBar[0].Revenue };
+        let _e1 = { "Name": decodeHtml("@Local["Doanh số"]"), "Total": dataBar[0].Target };
+        dataBarNew.push(_e);
+        dataBarNew.push(_e1);
+        dataBarNew.push(_e2);
+        rp_bar('EV_Bar', dataBarNew, "Name", "Total");
+
+        let dataPieNew = [];
+        _e1 = { "Name": decodeHtml("@Local["Sử dụng"]"), "Total": dataPie[0].SumCustUsed };
+        _e2 = { "Name": decodeHtml("@Local["Còn lại"]"), "Total": dataPie[0].SumLeft };
+        dataPieNew.push(_e1);
+        dataPieNew.push(_e2);
+        ReportPie_Description(dataPieNew, 'Name', 'Total', 'EV_PieList');
+        rp_pie("EV_Pie", dataPieNew, 'Name', 'Total');
+        Count_Up("EV_PieTotal", dataPie[0].SumIssueQty);
+    }
+    function EV_RenderTable(data,ID) {
+        let MyNode = document.getElementById(ID);
+        if(MyNode != null){
+            let str = '';
+            if(data && data.length != 0 ){
+                for (let i = 0; i < data.length ; i++){
+                    let item = data[i];
+                    str = `
+                        <tr role="row" class="vt-number">
+                            <td class="d-none">${item.ID}</td>
+                            <td class="vt-number-order"></td>
+                            <td>
+                                <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}" class="cursor-pointer border-1 border-primary border-bottom buttonViewClass">${item.CustName}</a>
+                            </td>
+                            <td>${item.CustCode}</td>
+                            <td data-name="vouchercode" class="text-center">
+                                ${item.VoucherCode != '' ? `<svg class="barcodeExVoucher" jsbarcode-background="transparent" jsbarcode-value=${item.VoucherCode} jsbarcode-fontsize="14" jsbarcode-width="1" jsbarcode-height="30">` : ''}
+                            </td>
+                            <td>${item.VoucherName}</td>
+                            <td>${RP_DataService[item.ServiceID] != undefined ? RP_DataService[item.ServiceID].Name : ''}</td>
+                            <td>${formatNumber(item.PriceRoot)}</td>
+                            <td>${formatNumber(item.VourcherAmount)}</td>
+                            <td>${formatNumber(item.PriceDiscounted)}</td>
+                            <td data-name="branch">${RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name:''}</td>
+                        </tr>
+                    `
+                    MyNode.insertAdjacentHTML('beforeend', str);
+                }
+                JsBarcode(".barcodeExVoucher").init();
+            }
+        }
+        shtablemaster.Refresh();
+    }
+    function EV_RenderMore () {
+        IndexReport += 1;
+        if (EV_DataReportMainSlide && EV_DataReportMainSlide[IndexReport]) {
+            fnRenderBlock(EV_DataReportMainSlide[IndexReport], "RM_GridBody"
+                , blocknum = 100
+                , fnrender = RMedi_Render
+                , fnsuccess = null
+            );
+        }
+    }
+    //#endregion
+    //#region Event
+    function EV_Export(isOption = 0) {
+        try {
+            if (EV_DataReportMain && EV_DataReportMain.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#EV_ViewMore');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "VoucherCode": {
+                        isShow: isAll || (eleContainer.find(`.mastershtoogle[data-name='vouchercode']`)).is(":checked"),
+                        data: ["@Local["Mã voucher"]"]
+                    },
+                    "ServiceID": ["@Local["Dịch vụ"]", (value, { ServiceID }) => { return RP_DataService[ServiceID] != undefined ? RP_DataService[ServiceID].Name : '' }],
+                    "PriceRoot": ["@Local["Giá tiền"]", (value, { PriceRoot }) => { return PriceRoot }],
+                    "PriceRoot": ["@Local["Giá tiền"]", (value, { PriceRoot }) => { return PriceRoot }],
+                    "PriceRoot": ["@Local["Giá tiền"]", (value, { PriceRoot }) => { return PriceRoot }],
+                    "PriceRoot": ["@Local["Giá tiền"]", (value, { PriceRoot }) => { return PriceRoot }],
+                    "VoucherName": {
+                        isShow: isAll || (eleContainer.find(`.mastershtoogle[data-name='phone']`)).is(":checked"),
+                        data: ["@Local["Số điện thoại"]"]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RP_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Hieu_qua_voucher"]);
+                exportJsonToExcel(Outlang["Hieu_qua_voucher"], EV_DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    //#endregion
+</script>

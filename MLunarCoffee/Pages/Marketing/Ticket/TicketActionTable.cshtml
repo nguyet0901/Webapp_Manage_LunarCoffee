@@ -1,0 +1,479 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.Ticket.TicketActionTable
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/Todo/Todo_Detail.js');</script>
+<script>js_require_notasync('/js/TicketAction/executed.js', true);</script>
+
+<div class="row mt-8 d-none" id="Ticket_Action_Denied">
+    <div class="col-md-6 mx-auto text-center">
+        <h2>@Local["Quyền bị từ chối"]</h2>
+        <p>@Local["Bạn không có quyền xem hồ sơ này"]. </p>
+    </div>
+</div>
+<div class="row m-0 d-none" id="Ticket_Action_Table">
+    <div class="col-12 col-md-7 col-xl-8 mt-2 px-1">
+        <div class="card h-100">
+            <div class="card-header pb-0 p-3">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto mr-3">
+                        <span class="text-primary font-weight-bold" id="actionticket_name"></span>
+                        <span class="text-primary font-weight-bold d-none cursor-pointer" data-bs-toggle="tooltip" title="@Local["Mã khách hàng"]" id="actionticket_custcode"></span>
+                        <span class="text-primary font-weight-bold d-none" data-bs-toggle="tooltip" title="@Local["Mã ticket"]" id="actionticket_ticketcode"></span>
+                    </div>
+                    <div class="ms-auto my-auto mt-lg-0 mt-4">
+                        <div class="mx-1 icon-hover" onclick="TicketAction_IniData();" data-bs-toggle="tooltip" title="@Local["Tải lại"]">
+                            <i class="vtt-icon vttech-icon-refesh text-sm text-secondary"></i>
+                        </div>
+                        <a id="actionTicket_DeleteTicket" class="ms-1 icon-hover _tab_control_ d-none" data-tab="delete_ticket" onclick="event.preventDefault();return TicketAction_DeleteTicket();" data-bs-toggle="tooltip" title="@Local["Xóa"]">
+                            <i class="vtt-icon vttech-icon-clear text-sm text-secondary"></i>
+                        </a>
+                        <span id="per_Ticket_CreatCustomer">
+                            <a id="actionTicket_CreatCustomer" class="ms-1 icon-hover" onclick="event.preventDefault();return TicketAction_NewCustomer();" data-bs-toggle="tooltip" title="@Local["Tạo khách hàng"]">
+                                <i class="vtt-icon vttech-icon-profile text-sm text-secondary"></i>
+                            </a>
+                        </span>
+                        <a id="actionTicket_CreatAppointment" class="ms-1 icon-hover" onclick="event.preventDefault();return TicketAction_SchedulerNew();" data-bs-toggle="tooltip" title="@Local["Tạo lịch hẹn"]">
+                            <i class="vtt-icon vttech-icon-creat-app text-sm text-secondary"></i>
+                        </a>
+                        <a id="actionTicket_SMS" class="ms-1 icon-hover" onclick="event.preventDefault();return TicketAction_SendSMS();" data-bs-toggle="tooltip" title="SMS">
+                            <i class="vtt-icon vttech-icon-sms_action text-sm text-secondary"></i>
+                        </a>
+                        <a id="actionTicket_Call" class="ms-1 icon-hover" onclick="event.preventDefault();return TicketAction_Call();" data-bs-toggle="tooltip" title="@Local["Gọi"]">
+                            <i class="vtt-icon vttech-icon-call text-sm text-secondary"></i>
+                        </a>
+                        <a id="actionTicket_EditTicket" class="ms-1 icon-hover" onclick="event.preventDefault();return TicketAction_Edit();" data-bs-toggle="tooltip" title="@Local["Chỉnh sửa"]">
+                            <i class="vtt-icon vttech-icon-edit text-sm text-secondary"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body py-3 pt-2 px-0">
+                <ul class="list-group text-dark mt-2 rounded-0">
+
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Số điện thoại"]</span> &nbsp;:
+                        <span class="text-dark _tab_control_ " id="actionticket_phone" data-tab="phone_customer" data-tab-change="1"></span>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Ngày sinh"]</span>&nbsp;:
+                        <span class="text-dark" id="actionticket_birthday"></span>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Giới tính"]</span> &nbsp;:
+                        <span class="text-dark" id="actionticket_gender"></span>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Nguồn"]</span>&nbsp;:
+                        <span class="text-dark" id="actionticket_source"></span>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Quan tâm"]</span>&nbsp;:
+                        <span class="text-dark border-bottom border-primary" data-bs-toggle="tooltip" title="@Local["Dịch vụ quan tâm đại diện"]" id="actionticket_RepresentService"></span>
+                        <span class="text-dark" id="actionticket_servicecare"></span>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Địa chỉ"]</span>&nbsp;:
+                        <span class="text-dark _tab_control_" data-tab="address_customer" data-tab-change="1" id="actionticket_address"></span>
+                    </li>
+                    <li class="list-group-item border-0">
+                        <span class="text-sm">@Local["Mạng xã hội"]</span> &nbsp;:
+                        <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0" href="javascript:;">
+                            <i id="actionticket_facebook" data-link="" class="vtt-icon vttech-icon-face"></i>
+                        </a>
+                        <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0 d-none" href="javascript:;">
+                            <i id="actionticket_mess" data-link="" class="vtt-icon vttech-icon-mess"></i>
+                        </a>
+                        <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0" href="javascript:;">
+                            <i id="actionticket_viber" data-link="" class="vtt-icon vttech-icon-viber"></i>
+                        </a>
+                        <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0" href="javascript:;">
+                            <i id="actionticket_ins" data-link="" class="vtt-icon vttech-icon-instagram"></i>
+                        </a>
+                        <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0" href="javascript:;">
+                            <i id="actionticket_zalo" data-link="" class="vtt-icon vttech-icon-zalo"></i>
+                        </a>
+                    </li>
+                    <li class="list-group-item border-0 text-sm">
+                        <span class="text-sm">@Local["Ghi chú"]</span>&nbsp;:
+                        <span class="text-dark content_line_clamp d-inline" data-tab-change="1" id="actionticket_note"></span>
+                    </li>
+                </ul>
+                <hr class="horizontal dark">
+                <div class="d-flex px-3 flex-wrap">
+                    <div class="d-flex me-4 mt-2">
+                        <div class="avatar avatar-sm">
+                            <img onclick="TicketAction_ChangeGroup();" class="cursor-pointer icon icon-shape icon-sm me-2 shadow text-center" onerror="Master_OnLoad_Error_Image(this)" id="actionticket_group_img" src="/default.png" alt="label-image">
+                        </div>
+                        <div class="text-dark ms-2 my-auto text-sm">
+                            <h6 class="mb-0 text-xs text-secondary">@Local["Nhóm khách hàng"]</h6>
+                            <a onclick="TicketAction_ChangeGroup();" class="cursor-pointer">
+                                <span id="actionticket_group"></span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="d-flex me-4 mt-2" id="per_tagChoose">
+                        @*permission id per_tagChoose*@
+                        <div id="ColorTag" class="icon icon-shape icon-sm me-2 ms-0 shadow text-center" style="min-width:32px;">
+                        </div>
+                        <div class="text-dark my-auto text-sm">
+                            <h6 class="mb-0 text-xs text-secondary">Tag</h6>
+                            <a onclick="TicketAction_ChangeTag();" class="cursor-pointer">
+                                <span id="actionticket_Tag">@Local["Chưa gán tag"]</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center overflow-hidden mt-2" id="per_ticketTodoNote">
+                        @*permission id per_ticketTodoNote*@
+                        <div id="color_todo" class="icon icon-shape icon-sm me-2 ms-0 shadow text-center" style="min-width:32px;">
+                        </div>
+                        <div class="text-dark my-auto text-sm" onclick="TicketAction_TodoOpen(this)" id="ticketAction_popup_todo">
+                            <h6 class="mb-0 text-xs text-secondary">@Local["Ghi chú"]</h6>
+                            <a class="cursor-pointer">
+                                <span id="content_todo">@Local["Chưa có ghi chú"]</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-5 col-xl-4 mt-2 px-1">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="align-items-center bg-gray-100 border-radius-lg d-flex justify-content-between px-0 p-3">
+                            <div class="d-flex">
+                                <div>
+                                    <img id="ticketaction_staffcurrent_image" src="/default.png" onerror="Master_OnLoad_Error_Image(this)" class="avatar avatar-sm me-2" alt="avatar image">
+                                </div>
+                                <div class="d-flex flex-column justify-content-center">
+                                    <h6 id="ticketaction_staffcurrentname" class="mb-0 text-sm"></h6>
+                                    <p id="actionticket_ticketdate" class="text-xs mb-0"></p>
+                                </div>
+                            </div>
+                            <div class="h-100">
+                                <div onclick="event.preventDefault(); return TicketAction_Move()" class="p-2 icon-hover" data-bs-toggle="tooltip" title="" data-bs-original-title="@Local["Chuyển ticket"]">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ticketaction_divStaffOld" class="d-flex justify-content-start py-1 d-none">
+                            <div class="ms-1">
+                                <span class="text-sm text-secondary">@Local["Telesales cũ"]: </span>
+                                <span id="ticketaction_staffoldname" class="text-sm ps-1 fw-bold"></span>
+                            </div>
+                        </div>
+                        <div id="ticketaction_divDevide" class="d-flex justify-content-start py-1 d-none">
+                            <div class="ms-1">
+                                <span class="text-sm text-secondary">@Local["Người chia"]: </span>
+                                <span id="ticketaction_devidename" class="text-sm ps-1 fw-bold"></span>
+                            </div>
+                        </div>
+                        <div id="ticketaction_divCreated" class="d-flex justify-content-start py-1 d-none">
+                            <div class="ms-1">
+                                <span class="text-sm text-secondary">@Local["Người tạo"]: </span>
+                                <span id="ticketaction_createdname" class="text-sm ps-1 fw-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mt-2">
+                        <div class="border-1 border-dashed card card-plain">
+                            <div class="p-2 card-body text-center">
+                                <h2 class="text-gradient text-primary">
+                                    <span id="actionticket_numapp" class="fw-bold"></span>
+                                </h2>
+                                <h6 class="mb-0 font-weight-bolder">@Local["Lịch hẹn"]</h6>
+                                <p class="opacity-8 mb-2 text-sm">@Local["Tổng phát sinh"]</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-2">
+                        <div class="border-1 border-dashed card card-plain">
+                            <div class="p-2 card-body text-center">
+                                <h2 class="text-gradient text-primary">
+                                    <span id="actionticket_numapp_checked" class="fw-bold"></span>
+                                </h2>
+                                <h6 class="mb-0 font-weight-bolder">@Local["Đã đến"]</h6>
+                                <p class="opacity-8 mb-2 text-sm">@Local["Tổng tại cơ sở"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mt-3">
+                        <div class="border-1 border-dashed card card-plain">
+                            <div class="p-2 card-body text-center">
+                                <h2 class="opacity-5">
+                                    <i id="actionticket_custdate"></i>
+                                </h2>
+                                <h6 class="mb-0 font-weight-bolder">@Local["Thanh toán"]</h6>
+                                <p class="opacity-8 mb-2 text-sm">@Local["Phát sinh"]</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <div class="border-1 border-dashed card card-plain">
+                            <div class="p-2 card-body text-center">
+                                <h2 class="text-gradient text-primary">
+                                    <span id="actionticket_numexecute" class="fw-bold"></span>
+                                </h2>
+                                <h6 class="mb-0 font-weight-bolder">@Local["Xử lý"]</h6>
+                                <p class="opacity-8 mb-2 text-sm">@Local["Tổng tương tác"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-2 ms-0 px-1">
+        <div class="card">
+            <div class="card-header d-flex p-1">
+                <div class="nav-wrapper position-relative">
+                    <ul id="ticketactiontab" class="nav nav-pills nav-fill p-1 bg-transparent" role="tablist">
+                        <li class="nav-item ">
+                            <a class="nav-link mb-0 px-3  py-1 active" datatab="history" data-bs-toggle="tab" href="#tictaction_history" role="tab" aria-selected="true">
+                                @Local["Tương tác"]
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link mb-0 px-3 py-1" datatab="sms" data-bs-toggle="tab" href="#tictaction_sms" role="tab" aria-selected="false">
+                                SMS
+                            </a>
+                        </li>
+                        <li id="per_tab_appointment" class="nav-item">
+                            <a class="nav-link mb-0 px-3 py-1" datatab="app" data-bs-toggle="tab" href="#tictaction_scheduler" role="tab" aria-selected="false">
+                                @Local["Lịch hẹn"]
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link mb-0 px-3 py-1" datatab="record" data-bs-toggle="tab" href="#tictaction_record" role="tab" aria-selected="false">
+                                @Local["Lịch sử cuộc gọi"]
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="card-body m-0 p-0 px-n2">
+                <div class="tab-content">
+                    <div class="tab-pane fade position-relative border-radius-lg active show" id="tictaction_history" role="tabpanel">
+                        <div class="card-header p-1">
+                            <div class="d-flex">
+                                <div class="ms-auto my-auto">
+                                    @*permission id per_tagChoose*@
+                                    <button id="per_DeleteHistoryTele" data-tab="delete_history_tele" class="btn bg-gray-100 bg-gradient-danger btn-sm mt-1 _tab_control_ d-none" onclick="TicketAction_HistoryTeleDelete()">@Local["Xóa tất cả lịch sử của tele"]</button>
+                                    <div class="position-relative d-inline" style="z-index:100">
+                                        <div id="ticketaction_typecare" class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle ui pointing dropdown"
+                                             onchange="TicketAction_HistoryFilter()">
+                                            <input type="hidden" name="customerCareType" />
+                                            <div class="default text">eg. @Local["Loại"]</div>
+                                            <div id="cbbcustomerCareType" class="text-sm menu overflow-y" tabindex="-1" style="max-height: 200px;">
+                                                <div class="item" data-value="0">
+                                                    <span>@Local["Tất cả"]</span>
+                                                </div>
+                                                <div class="item" data-value="1">
+                                                    <span>@Local["Nhắc lịch hẹn"]</span>
+                                                </div>
+                                                <div class="item" data-value="2">
+                                                    <span>@Local["Đến không phát sinh dịch vụ"]</span>
+                                                </div>
+                                                <div class="item" data-value="3">
+                                                    <span>@Local["Chăm sóc sinh nhật"]</span>
+                                                </div>
+                                                <div class="item" data-value="4">
+                                                    <span>@Local["Đặt lịch nhưng không đến"]</span>
+                                                </div>
+                                                <div class="item" data-value="5">
+                                                    <span>@Local["Chăm sóc khách hàng sau điều trị"]</span>
+                                                </div>
+                                                <div class="item" data-value="6">
+                                                    <span>@Local["Khách hàng phàn nàn"]</span>
+                                                </div>
+                                                <div class="item" data-value="7">
+                                                    <span>@Local["Telesale follow"]</span>
+                                                </div>
+                                                <div class="item" data-value="8">
+                                                    <span>@Local["Lịch sử khách hàng"]</span>
+                                                </div>
+                                                <div class="item" data-value="9">
+                                                    <span>@Local["Chăm sóc"]</span>
+                                                </div>
+                                                <div class="item" data-value="10">
+                                                    <span>@Local["Hủy lịch hẹn"]</span>
+                                                </div>
+                                                <div class="item" data-value="11">
+                                                    <span>@Local["Fanpage"]</span>
+                                                </div>
+                                                <div class="item" data-value="12">
+                                                    <span>@Local["Khách hàng"]</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button id="actionTicket_AddDetail" class="btn bg-gradient-primary btn-sm mt-1" onclick="TicketAction_NewInput()">@Local["Thêm mới"]</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="ui pagination menu flex-wrap justify-content-end">
+                                <ul id="TicketAction_History" class="w-100 list-group">
+                                </ul>
+                                <button id="btnTicketHistory" class="btn btnsysmore btn-secondary w-100 p-1 mb-0 mt-1 position-relative" onclick="TicketAction_HistoryLoad(1)">
+                                    @Local["Xem thêm"]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade position-relative border-radius-lg" id="tictaction_sms" role="tabpanel">
+                        <div class="card-body pt-2 px-3">
+                            <ul id="actionticket_sms" class="w-100 list-group">
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade position-relative border-radius-lg" id="tictaction_scheduler" role="tabpanel">
+                        <div class="card-body pt-2 px-3">
+                            <div class="w-100" id="actionticket_Scheduler">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade position-relative border-radius-lg" id="tictaction_record" role="tabpanel">
+                        <div class="card-body p-2">
+                            <div class="w-100" id="actionticket_CallHistory">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var ser_ActionCustomerGroupID;
+    var ser_ActionCustomerID;
+    var ser_ActionCustomerCode;
+    var ser_ActionTicketID;
+    var ser_ActionMaster;
+    var ser_ActionType;
+    var ser_ActionTemporary_Type;
+    var ser_ActionAppID;
+    var ser_ActionHeader;
+    var ser_TreatmentID;
+    var ser_TreatmentDate = '';
+    var ser_TypeCallUsing = '';
+    var ser_UserID;
+    var DataServiceCare;
+    var ta_begincc = 0;
+    var ta_beginval = 0;
+    var ta_beginhis = 0;
+    var ta_beginnote = 0;
+
+    $(document).ready(function () {
+
+        ser_ActionCustomerID = @Model._CustomerID;
+        ser_ActionTicketID = @Model._TicketID;
+        ser_ActionMaster = @Model._MasterID;
+        ser_ActionType = @Model._Type_Care;
+        ser_ActionAppID = @Model._AppID;
+        ser_ActionHeader = '@Model._HeaderTicketAction';
+        ser_TreatmentID = @Model._TreatmentID;
+        ser_TreatmentDate = '@Model._TreatmentDate';
+        ser_TypeCallUsing = '@Model._TypeCallUsing';
+        ser_ActionTemporary_Type = ser_ActionType;
+        ser_UserID = @Model._UserID;
+        Master_IndexDB_Reads(_Session_Data, [_Session_ServiceCare]
+            , function (data) {
+                DataServiceCare = data[0];
+                TicketAction_IniData();
+            }
+        );
+        $("#ticketaction_typecare").dropdown("refresh");
+        $("#ticketaction_typecare").dropdown("set selected", ser_ActionType);
+        $('#ticketactiontab a').click(function () {
+            let datatab = $(this).attr('datatab');
+            switch (datatab) {
+                case 'history':
+                    break;
+                case 'sms':
+                    TicketAction_SMSLoad();
+                    break;
+                case 'app':
+                    TicketAction_SchedulerLoad();
+                    break;
+                case 'record':
+                    break;
+            }
+        })
+        ToolPopper();
+        CheckPermissionControlInPage(sys_PerControl, '@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+    });
+
+    function TicketAction_IniData() {
+        AjaxLoad(url = "/Marketing/Ticket/TicketActionTable/?handler=Loadata"
+            , data = {
+                'TicketID': ser_ActionTicketID,
+                'CustomerID': ser_ActionCustomerID
+                , 'UserTeleLevel': sys_TeleLevel
+                , 'UserTeleGroup': sys_TeleGroup
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    $('#ticketactiontab li:first-child a').tab('show');
+                    TicketAction_LoadInfo();
+                    TicketAction_HistoryLoad();
+                    TicketAction_TodoLoad();
+                    TicketAction_TagLoad();
+                    TicketAction_TodoEvent();
+                    $('#Ticket_Action_Denied').addClass('d-none');
+                    $('#Ticket_Action_Table').removeClass('d-none');
+                }
+                else {
+                    $('#Ticket_Action_Denied').removeClass('d-none');
+                    $('#Ticket_Action_Table').addClass('d-none');
+                    return;
+                }
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+
+    function TicketAction_Outside(custid, ticketid, masterid, appid, treatdate, type) {
+
+        ser_ActionCustomerID = (custid != null) ? custid : 0;;
+        ser_ActionTicketID = (ticketid != null) ? ticketid : 0;
+        ser_ActionMaster = (masterid != null) ? masterid : 0;
+        ser_ActionAppID = (appid != null) ? appid : 0;
+        ser_TreatmentDate = (treatdate != null) ? treatdate : '';
+        ser_ActionTemporary_Type = type;
+        ta_begincc = 0;
+        ta_beginval = 0;
+        ta_beginhis = 0;
+        ta_beginnote = 0;
+        TicketAction_IniData();
+
+    }
+
+</script>
+<script>css_require('/css/ticketaction.css')</script>
+<script>css_require('/assests/dist/css/chat-page.css');</script>
+<script>js_require_notasync('/assests/dist/Step/dist/js/jquery.smartWizard.min.js', true);</script>
+<style>
+    .nolink {
+        opacity: 0.1;
+        cursor: default;
+    }
+</style>

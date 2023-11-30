@@ -1,0 +1,411 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.TreatmentSale.ExportList
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Danh sách xuất"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách xuất vật tư bán hàng, điều trị"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="d-lg-flex">
+                        <div class="col-w-400 mx-auto">
+                            <div class="card-body p-0">
+                                <div id="divMaterialLoad" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="vtcondition pb-3">
+                                    <a class="sign" data-open="@Local[" Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                                    <div class="fulllap collapse collapsesticky show">
+                                        <div class="input-group flex-nowrap" id="divSearchexport">
+                                            <div class="input-group-text input-group-text px-2">
+                                                <i class="fas fa-search" aria-hidden="true"></i>
+                                                <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                            </div>
+
+                                            <input id="txtexportmat_Filter" type="text" class="form-control ps-2" placeholder="eg .@Local[" Lọc dữ liệu"]" />
+                                            <div class="input-group-text p-0">
+                                                <div class="position-relative d-inline">
+                                                    <a class="cursor-pointer px-2" data-bs-toggle="collapse" role="tab" data-bs-target="#colListsEL">
+                                                        <i class=" text-gradient text-primary pe-2 fw-bold fas fa-filter"></i>
+                                                    </a>
+                                                    <div class="collapsesticky collapse position-absolute z-index-3 end-1 top-100 mt-1" id="colListsEL" style="min-width:250px;">
+                                                        <div class="card card-body text-dark text-capitalize opacity-10">
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="ui fluid search selection dropdown form-control" id="WareBranch" onchange="event.preventDefault(); return WareHouse_Load(0, 0);">
+                                                                    <input type="hidden" name="branch" />
+                                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                                    <div class="default text">eg .@Local["Chi nhánh"]</div>
+                                                                    <div id="cbbWareBranch" class="menu" tabindex="-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field col-12 mt-2">
+                                                                <input id="WareDate" class="flatpickr form-control" type="text" placeholder="eg .@Local[" Ngày"]" onchange="event.preventDefault(); return WareHouse_Load(0, 0);" />
+                                                            </div>
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="ui fluid search selection dropdown form-control" id="TypeExport" onchange="OnExportMat_FilterAsync()">
+                                                                    <input type="hidden" name="branch" />
+                                                                    <i class="dropdown icon"></i>
+                                                                    <div class="default text">eg .@Local["Loại"]</div>
+                                                                    <div id="cbbTypeExport" class="menu" tabindex="-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="ui fluid search selection dropdown form-control" id="TypeService" onchange="OnExportMat_FilterAsync()">
+                                                                    <input type="hidden" name="branch" />
+                                                                    <i class="dropdown icon"></i>
+                                                                    <div class="default text">eg .@Local["Loại"]</div>
+                                                                    <div id="cbbTypeService" class="menu" tabindex="-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="ui fluid search selection dropdown form-control" id="el_CountDetail" onchange="OnExportMat_FilterAsync()">
+                                                                    <i class="dropdown icon"></i>
+                                                                    <input type="hidden" name="branch" value="0">
+
+                                                                    <input class="search" autocomplete="off" tabindex="0">
+                                                                    <div class="text">@Local["Chi tiết"]</div>
+                                                                    <div id="el_cbbCountDetail" class="menu transition hidden" tabindex="-1">
+                                                                        <div class="item active" data-value="0">@Local["Chi tiết"]</div>
+                                                                        <div class="item" data-value="1">@Local["Có"]</div>
+                                                                        <div class="item" data-value="2">@Local["Không"]</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field col-12 mt-2">
+                                                                <button class="btn btn-dark btn-sm my-2 w-100" onclick="OnExportMat_HideCollapse()">@Local["Đóng"]</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="input-group-text">
+                                                <i class="text-gradient text-primary fas fa-redo cursor-pointer" onclick="return WareHouse_Load(0,0)" aria-hidden="true"></i>
+                                            </div>
+                                            <div class="input-group-text border-end">
+                                                <i class="btn_clear fas fa-minus-circle opacity-1 cursor-pointer"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="ContentMaterialList" class="overflow-y min-height-300">
+                                    <ul class="list-group" id="divMaterialList">
+                                    </ul>
+                                </div>
+                                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-3 mb-0 cursor-pointer transform-scale-10" onclick="event.preventDefault(); return WareHouse_Load(1,0);">@Local["Xem thêm"]</button>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ">
+                            <div class="mx-2">
+                                <div id="divMaterialDetail">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+
+
+    let idbegin
+    let limit = 200;
+    let WareData = {};
+    var DetailID = 0;
+    var dataWareFo_User = [];
+    var data_TimerOnchange;
+    let flagExport = 0;
+    var EL_DataTypeExport = [{ ID: 1, Name: "@Local["Đã xuất"]" }, { ID: 2, Name: "@Local["Chưa xuất kho"]" }];
+    var EL_DataTypeService = [{ ID: 1, Name: "@Local["Điều trị"]" }, { ID: 2, Name: "@Local["Thuốc"]" }, { ID: 3, Name: "@Local["Bán hàng"]" }];
+    var DataProduct;
+    var DataUnitProduct;
+
+    $(document).ready(function () {
+        WareHouse_Initialize();
+        WareHouse_M_Event();
+        ToolPopper();
+    });
+
+    function WareHouse_Load(ismore, detailid) {
+        if (flagExport == 1) {
+            if (ismore == 0) { idbegin = 0; $("#divMaterialDetail").empty() }
+            let WareBranch = Number($('#WareBranch').dropdown('get value')) ? Number($('#WareBranch').dropdown('get value')) : 0;
+            let date = $('#WareDate').val() ? $('#WareDate').val() : new Date();
+            let dateFrom;
+            let dateTo;
+
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "#");
+                dateFrom = date.split('#')[0];
+                dateTo = date.split('#')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+            AjaxLoad(url = "/WareHouse/TreatmentSale/ExportList/?handler=LoadData"
+                , data = {
+                    'DetailID': detailid
+                    , 'BranchID': WareBranch
+                    , 'dateFrom': dateFrom
+                    , 'dateTo': dateTo
+                    , 'idbegin': idbegin
+                    , 'limit': limit
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (ismore != 1) WareData = {};
+
+                        idbegin = (data != undefined && data.length != 0) ? data[data.length - 1].ID : idbegin;
+                        for (let i = 0; i < data.length; i++) {
+                            WareData[data[i].ID] = data[i];
+                        }
+                        $("#divMaterialList").html('');
+                        WareHouse_Render_List(Object.values(WareData), "divMaterialList");
+                        if (detailid != '0') {
+                            $("#exmet_" + detailid).trigger("click");
+                        }
+                        OnExportMat_FilterAsync();
+                    }
+                },
+                before = function () {
+                    $("#divMaterialList").hide();
+                    $("#divMaterialLoad").show();
+                },
+                complete = function (e) {
+                    $("#divMaterialList").show();
+                    $("#divMaterialLoad").hide();
+                }
+            );
+        }
+    }
+    function WareHouse_Render_Type(type) {
+        if (type == 0) return '<span class="text-dark fw-bold mb-0 text-sm">@Local["Bán hàng"]</span>';
+        else if (type == 1) return '<span class="text-dark fw-bold mb-0 text-sm">@Local["Điều trị"]</span>';
+        else if (type == 2) return '<span class="text-dark fw-bold mb-0 text-sm">@Local["Thuốc"]</span>';
+        else return '';
+    }
+    function WareHouse_Render_List(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            data = data.sort(function (a, b) {
+                return b.Created.localeCompare(a.Created);
+            });
+            
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let isExport = item.Export == 1 ? 'checklist-item checklist-item-success' : 'checklist-item checklist-item-secondary';
+                let hasDetail = item.HasConsumable == 1 ? 'text-primary' : '';
+                let tr = '<div class="ms-2 py-0 align-items-center flex-grow-1">'
+                    + '<div class="d-flex align-items-center">'
+                    + '<span class="cursor-pointer border-bottom border-primary code col-auto fw-bold mb-0 mt-0 my-auto text-primary text-sm">' + item.CustCode + '</span>'
+                    + '<span class="mb-0 text-dark ms-2 text-sm fw-bold ellipsis_one_line">' + item.CustName + '</span>'
+                    + '<span class="ms-auto text-sm ' + hasDetail +'">' + ConvertDateTimeUTC_DMY(item.Created) + '</span>'
+                    + '</div>'
+                    + '<span class="align-items-center d-flex mt-2 text-dark">'
+                    + WareHouse_Render_Type(item.Type)
+                    + '<span class="text-sm text-dark ellipsis_one_line ms-2">' + item.PurchaseName + '</span>'
+                    + '</span>'
+                    + '</div>'
+                    ;
+                stringContent = stringContent + '<li id="exmet_' + item.ID + '" class=" ' + isExport + ' exmeterial border-radius-lg ms-0 p-2 m-1 border-0 d-flex border-radius-lg position-relative EL-status" data-id="' + item.ID + '">'
+                    + tr
+                    + '<hr class="horizontal dark my-0" />'
+                    + '</li>';
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        WareHouse_EventGrid();
+        $("#divMaterialList li").first().click();
+    }
+
+    function WareHouse_Initialize() {
+        let offsetTop = $("#ContentMaterialList").offset().top + 170;
+        $("#ContentMaterialList").css("height", 'calc(100vh - ' + offsetTop + 'px)');
+
+        Load_Combo(EL_DataTypeExport, "cbbTypeExport", true, "@Local["Trạng thái"]");
+        $("#TypeExport").dropdown('refresh');
+        $("#TypeExport").dropdown('set selected', '0');
+
+        Load_Combo(EL_DataTypeService, "cbbTypeService", true, "@Local["Loại"]");
+        $("#TypeService").dropdown('refresh');
+        $("#TypeService").dropdown('set selected', '0');
+
+        $("#el_CountDetail").dropdown('refresh');
+        $("#el_CountDetail").dropdown('set selected', '0');
+        AjaxLoad(url = "/WareHouse/TreatmentSale/ExportList/?handler=Initialize"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    dataWareFo_User = data.Branch;
+                    DataProduct = data.Product;
+                    DataUnitProduct = data.UnitProduct;
+
+                    Load_Combo(dataWareFo_User, "cbbWareBranch", true);
+                    $("#WareBranch").dropdown("clear");
+                    $("#WareBranch").dropdown("refresh");
+                    $("#WareBranch").dropdown("set selected", Master_branchID);
+                    var firstDay = new Date();
+                    $("#WareDate").flatpickr({
+                        mode: "range",
+                        dateFormat: 'd-m-Y',
+                        enableTime: false,
+                        onClose: function (selectedDates, dateStr, instance) {
+                            if (selectedDates.length == 1) {
+                                instance.setDate([selectedDates[0], selectedDates[0]], true);
+                            }
+                            else if (selectedDates.length != 1) {
+                                var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                                if (diffDays > 31) instance.setDate([selectedDates[0], selectedDates[0]], true);
+                            }
+                        }
+                    });
+                    $("#WareDate").val(formatDateClient(firstDay));
+                    flagExport = 1;
+                    WareHouse_Load(0, 0);
+                }
+            }
+        );
+        return false;
+    }
+
+    function WareHouse_EventGrid() {
+        $("#divMaterialList .EL-status").unbind("click").bind('click', function () {
+            $("#divMaterialList .EL-status").removeClass('active');
+            $(this).addClass('active');
+            DetailID = $(this).attr("data-id");
+            if (typeof Met_GetInfo !== 'undefined' && $.isFunction(Met_GetInfo)) {
+                let link = '/WareHouse/TreatmentSale/ExportDetail' + '?ver=' + versionofWebApplication;
+                $('#divMaterialDetail').load(link);
+                $('#divMaterialDetail').fadeIn(100);
+            }
+            else {
+                let link = '/WareHouse/TreatmentSale/ExportDetail' + '?ver=' + versionofWebApplication;
+                $('#divMaterialDetail').load(link);
+                $('#divMaterialDetail').fadeIn(100);
+            }
+        });
+        //$("#divMaterialList .sign").unbind("click").bind('click', function (event) {
+        //    event.preventDefault();
+        //    let id = $(this).attr("data-id");
+        //    WareHouse_Sign(id, WareData[id].SignData);
+        //});
+    }
+
+    //async function WareHouse_Sign(id, signdata) {
+    //    await Signature_Action(signdata, 1);
+    //    if (Signature_ResultSignation != "") {
+    //        AjaxLoad(url = "/WareHouse/TreatmentSale/ExportList/?handler=UpdateSign"
+    //            , data = {
+    //                'id': id,
+    //                'sign': Signature_ResultSignation
+    //            }
+    //            , async = true, error = null
+    //            , success = function (result) {
+    //                if (result != "0") {
+    //                    WareHouse_Load(0, id);
+    //                    syslog_whr('s', result);
+    //                }
+    //            }
+    //        );
+    //    }
+    //}
+
+    // #region // Search
+    function WareHouse_M_Event() {
+
+        $('#txtexportmat_Filter').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#divSearchexport .fa-search").hide();
+            $("#divSearchexport .spinner-border").show();
+            clearTimeout(data_TimerOnchange);
+            data_TimerOnchange = setTimeout(function (e) {
+                OnExportMat_FilterAsync();
+            }, 500);
+        });
+
+        $("#divSearchexport").on('click', '.btn_clear', function (e) {
+            $('#txtexportmat_Filter').val('');
+            $(".btn_clear").addClass('opacity-1');
+            $('#divMaterialList .exmeterial').removeClass("d-none");
+        });
+    }
+
+    function OnExportMat_HideCollapse(){
+        $("#colListsEL").collapse('hide');
+    }
+
+    async function OnExportMat_FilterAsync() {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let search = xoa_dau($('#txtexportmat_Filter').val().toLowerCase()).trim();
+                    let typeExport = Number($("#TypeExport").dropdown('get value')) ? Number($("#TypeExport").dropdown('get value')) : 0;
+                    let typeService = Number($("#TypeService").dropdown('get value')) ? Number($("#TypeService").dropdown('get value')) : 0;
+                    let countDetail = Number($("#el_CountDetail").dropdown('get value')) ? Number($("#el_CountDetail").dropdown('get value')) : 0;
+
+                    for ([key, value] of Object.entries(WareData)) {
+                        let isExport = typeExport == 0 ? true : ((typeExport == 1 && value.Export == 1) || (typeExport == 2 && value.Export == 0));
+                        let isTypeService = typeService == 0 ? true : ((typeService == 3 && value.Type == 0) || (typeService != 3 && typeService == value.Type) )
+                        let hasDetail = countDetail == 0 ? true : ((countDetail == 1 && value.HasConsumable == 1) || (countDetail == 2 && value.HasConsumable == 0));
+                        if ((xoa_dau(value.PurchaseName).toLowerCase().includes(search)
+                            || xoa_dau(value.CustCode).toLowerCase().includes(search)
+                            || xoa_dau(value.CustName).toLowerCase().includes(search))
+                            && isExport && isTypeService && hasDetail
+                        ) {
+                            $('#exmet_' + key).removeClass("d-none");
+                        }
+                        else {
+                            $('#exmet_' + key).addClass("d-none");
+                        }
+                    }
+                    //ColorSearchFilterText(search, "seachRow");
+                    $("#divSearchexport .fa-search").show();
+                    $("#divSearchexport .spinner-border").hide();
+                    resolve()
+                }
+            )
+        })
+    }
+        //#endregion
+</script>
+<style>
+
+    #divMaterialList .EL-status.active {
+        background-color: #e9ecefa3 !important;
+    }
+
+    #divMaterialList .EL-status {
+        cursor: pointer;
+    }
+
+    #divMaterialList .horizontal {
+        position: absolute;
+        bottom: 0px;
+        width: 100%;
+    }
+</style>

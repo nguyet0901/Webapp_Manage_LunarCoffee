@@ -1,0 +1,347 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.APITemplate.APITemplateDetailModel
+@{
+    Layout = null;
+}
+<div class="bg-gray-100 p-3 position-sticky top-0" style="height: calc(100vh - 240px);">
+    <div class="text-dark card card-plain h-100">
+        <div class="pb-0 px-0 pt-1">
+            <div class="ps-1 pt-0 text-dark text-sm">
+                <p class="mb-0 text-sm mt-0  mb-1">@Local["Cài đặt"]</p>
+                <div class="d-flex">
+                    <p id="rd_roomname" class="text-sm text-primary font-weight-bold my-auto">voucher</p>
+                    <p id="rd_chairname" class="text-sm ps-2 my-auto">account_object_address</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0 mt-1  h-100">
+            <div class="row px-2 position-relative overflow-y form3" style="max-height: 34vh;" id="atd_formMap">
+                <div class="field col-12 col-sm-12 col-xl-6 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Tham số đầu vào api"]">@Local["Tham số API"]</label>
+                    <input id="atd_paraName" name="name" type="text" class="form-control">
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-6 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Tên trường ánh xạ từ dữ liệu phần mềm đến tham số api"]">@Local["Trường ánh xạ"]</label>
+                    <div class="ui fluid search selection dropdown form-control" id="atd_mapfield">
+                        <input type="hidden" />
+                        <i class="dropdown icon"></i>
+                        <input class="search" autocomplete="off" tabindex="0" />
+                        <div class="default text">eg .@Local["Trường ánh xạ"]</div>
+                        <div id="atd_cbbmapfield" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-12 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Kiểu dữ liệu"]">@Local["Loại dữ liệu"]</label>
+                    <div class="form-group mb-0">
+                        <div class="input-group mb-0 flex-nowrap">
+                            <div class="ui fluid search selection dropdown form-control" id="atd_datatype" onchange="event.preventDefault(); atd_onChangeDataType()">
+                                <input type="hidden" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="atd_cbbdatatype" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                            <div class="ui fluid search selection dropdown form-control border" id="atd_typeitem">
+                                <input type="hidden" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text"></div>
+                                <div id="atd_cbbtypeitem" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-12 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Giá trị mặc định"]">@Local["Giá trị mặc định"]</label>
+                    <input id="atd_defaultvalue" name="default" type="text" class="form-control">
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-6 p-1">
+                    <div class="form-check ">
+                        <input id="atd_ckbIsMater" class="form-check-input" type="checkbox">
+                        <label class="form-check-label" for="atd_ckbIsMater">
+                            @Local["Is master"]
+                        </label>
+                    </div>
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-6 p-1">
+                    <div class="form-check ">
+                        <input id="atd_ckbUseFirst" class="form-check-input" type="checkbox">
+                        <label class="form-check-label" for="atd_ckbUseFirst">
+                            @Local["Use first data"]
+                        </label>
+                    </div>
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-12 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Tham số đầu vào api"]">@Local["Lặp lại dữ liệu"]</label>
+                    <input id="atd_countseft" name="numberService" type="number" class="form-control" min="1" value="1">
+                </div>
+                <div class="field col-12 col-sm-12 col-xl-12 p-1">
+                    <label class="cursor-pointer fw-bold" data-info="@Local["Tham số đầu vào api"]">@Local["Mô tả"]</label>
+                    <input id="atd_note" name="note" type="text" class="form-control">
+                </div>
+            </div>
+            <hr class="horizontal dark my-2">
+
+            <div class="ps-1">
+                <div class="pt-0">
+                    <div class="col-auto ms-auto d-flex align-items-baseline">
+                        <h6 class="text-sm text-primary cursor-pointer font-weight-bold text-decoration-underline" id="atd_btnAddCondi" onclick="event.preventDefault(); return atd_addCondi()">@Local["Cấu hình dữ liệu theo điều kiện"]</h6>
+                    </div>
+                    <div class="overflow-auto max-height-160" id="atd_condition">
+
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton position-absolute">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" id="atd_btnClose" onclick="event.preventDefault();atl_closeDetail()">@Local["Đóng"]</button>
+                        <button class="btn btn-danger d-none" id="atd_btnDel" onclick="event.preventDefault();CloseModal()">@Local["Xóa"]</button>
+                        <button id="atd_btnSave" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();AED_ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    //#region //INIT - DECLARE
+    let atd_currentID = "@Model._currentID";
+    let atd_parrentID = "@Model._parrentID";
+    let atd_path = "", atd_levelpath = 0;
+    let atd_xhrLoad;
+    let atd_typeitem = '';
+    let atd_condi = "";
+    let atd_dataType = {
+        "string": { ID: "string", Name: "string", hasItem: 0 }
+        , "number": { ID: "number", Name: "number", hasItem: 0 }
+        , "boolean": { ID: "boolean", Name: "boolean", hasItem: 0 }
+        , "datetime": { ID: "datetime", Name: "datetime", hasItem: 1 }
+        , "boolean": { ID: "boolean", Name: "boolean", hasItem: 0 }
+        , "array": { ID: "array", Name: "array", hasItem: 1 }
+    };
+
+    let atd_dataTypeItem = {
+        "array": [{ ID: "string", Name: "string" }
+                , { ID: "number", Name: "number" }
+                , { ID: "boolean", Name: "boolean" }
+                , { ID: "datetime", Name: "datetime" }
+                , { ID: "boolean", Name: "boolean" }
+                , { ID: "object", Name: "object" }]
+        , "datetime": [{ ID: "yyyy-mm-dd", Name: "yyyy-mm-dd" }
+            , { ID: "yyyy-mm-dd hh:mm:ss", Name: "yyyy-mm-dd hh:mm:ss" }
+            , { ID: "dd-mm-yyyy", Name: "dd-mm-yyyy" }
+            , { ID: "dd/mm/yyyy", Name: "dd/mm/yyyy" }
+            , { ID: "dd-mm-yyyy hh:mm:ss", Name: "dd-mm-yyyy hh:mm:ss" }
+            , { ID: "dd/mm/yyyy hh:mm:ss", Name: "dd/mm/yyyy hh:mm:ss" }]
+    };
+    $(document).ready(function () {
+        atd_init();
+
+    });
+    function atd_init() {
+        AjaxLoad(url = "/Setting/APITemplate/APITemplateDetail?handler=LoadData"
+            , data = { id: atd_parrentID }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    atd_loadCombo();
+                    if (atd_currentID != "0") {
+                        $('#atd_btnDel').removeClass('d-none');
+                        atd_loadData();
+                    }
+                    else {
+                        $('#atd_btnDel').addClass('d-none');
+                        let item = data[0];
+                        atd_path = atd_parseJson(item?.Path ?? '');
+                        atd_levelpath = (item?.LevelPath ?? -1) + 1;
+                        if (item?.ParaName ?? '' != '') {
+                            atd_path[`${Object.keys(atd_path).length}`] = item?.ParaName;
+                        }
+                    }
+                } else {
+                    notiError_SW()
+                }
+            });
+    }
+    //#endregion
+
+    //#region //LOADDATA
+    function atd_loadCombo() {
+        let dataType = Object.values(atd_dataType);
+        Load_Combo(dataType, "atd_cbbdatatype", true);
+        $("#atd_datatype").dropdown('refresh');
+        $("#atd_datatype").dropdown('set selected', dataType[0].ID);
+
+        let dataField = Object.values(atl_dataMapping);
+        Load_Combo(dataField, "atd_cbbmapfield", true);
+        $("#atd_mapfield").dropdown('refresh');
+        $("#atd_mapfield").dropdown('set selected', dataField[0].ID);
+    }
+
+    function atd_loadData() {
+        if (atd_xhrLoad && atd_xhrLoad.readyState != 4) atd_xhrLoad.abort();
+        atd_xhrLoad = AjaxLoad(url = "/Setting/APITemplate/APITemplateDetail?handler=LoadData"
+            , data = { id: atd_currentID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    atd_fillData(data[0]);debugger
+
+                }
+                else if (result == "0") {
+                    notiWarning();
+                }
+            }
+
+        );
+    }
+    //#endregion
+
+    //#region //FILL DATA
+
+    function atd_parseJson(str) {
+        try {
+            if (str != '') {
+
+                return JSON.parse(str);
+            }
+            return {};
+        }
+        catch (e) {
+            return {};
+        }
+    }
+
+    function atd_fillData(item) {
+        if (item && Object.keys(item).length > 0) {
+
+            $('#atd_paraName').val(item.ParaName);
+            $("#atd_mapfield").dropdown('refresh');
+            $("#atd_mapfield").dropdown('set selected', item.MapField);
+            atd_typeitem = item.TypeItem;
+
+            $("#atd_datatype").dropdown('refresh');
+            $("#atd_datatype").dropdown('set selected', item.TypeData);
+
+            $('#atd_defaultvalue').val(item.DefaultValue);
+
+            $("#atd_ckbIsMater").prop('checked', item.IsMaster == 1);
+            $("#atd_ckbUseFirst").prop('checked', item.UseFirstData == 1);
+
+            $('#atd_note').val(item.Note);
+
+            atd_condi = item?.Conditions ?? "";
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+    function atd_Excuted() {
+        var data = new Object();
+        $('#textShowMessage').html('');
+        data.Name = $('#RoomName').val() ? $('#RoomName').val() : "";
+        data.IsTreatment = $('#r_IsTreatment').is(':checked') ? 1 : 0;
+        data.IsCashier = $('#r_IsCashier').is(':checked') ? 1 : 0;
+        data.IsXquang = $('#r_IsXquang').is(':checked') ? 1 : 0;
+        data.IsExamination = $('#r_IsExamination').is(':checked') ? 1 : 0;
+        data.IdLevel = ser_LevelIDOfCurrent;
+        $('#atd_formMap').form('validate form');
+        if ($('#atd_formMap').form('is valid')) {
+            AjaxLoad(url = "/Setting/APITemplate/APITemplateDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: atd_currentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data[0].result == 1) {
+
+                            notiSuccess();
+                        }
+                        else if (data[0].result == -1) {
+                            $('#textShowMessage').html(Outlang["Trung_du_lieu"]);
+                        }
+                    } else {
+                        notiError_SW();
+                    }
+                })
+                , sender = $('#atd_btnSave')
+        }
+        return false;
+    }
+
+    function atd_delete() {
+        const promise = notiConfirm();
+        promise.then(function () { atd_excutedelete(); }, function () { });
+    }
+    function atd_excutedelete() {
+        AjaxLoad(url = "/Setting/APITemplate/APITemplateDetail/?handler=Delete"
+                , data = {
+                    CurrentID: atd_currentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        atl_closeDetail();
+                    } else {
+                        notiError_SW();
+                    }
+                });
+
+    }
+
+    function atd_onChangeDataType() {
+        let typeID = $("#atd_datatype").dropdown("get value") ? $("#atd_datatype").dropdown("get value") : "";
+        let hasItem = Number((atd_dataType[typeID]?.hasItem ?? 0));
+        if (hasItem == 1) {
+            let dataTypeItem = atd_dataTypeItem[typeID] ?? [];
+            $('#atd_typeitem').removeClass('disabled');
+            Load_Combo(dataTypeItem, "atd_cbbtypeitem", true);
+            let id = atd_typeitem != '' ? atd_typeitem : dataTypeItem[0].ID
+            $("#atd_typeitem").dropdown('refresh');
+            $("#atd_typeitem").dropdown('set selected', id);
+        }
+        else {
+            $('#atd_typeitem').dropdown('clear');
+            $('#atd_typeitem').addClass('disabled');
+        }
+
+        return false;
+    }
+
+    function atd_addCondi() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/APITemplate/APITemplateCondition?ver=" + versionofWebApplication
+            , function (responseTxt, statusTxt, xhr) {
+                if (statusTxt == "success") {
+                    if (typeof atc_cbExcute === 'function')
+                        atc_cbExcute({ ...atl_dataMapping }, atd_condi, atd_afterCondi);
+                }
+                if (statusTxt == "error") {
+                    console.warn("error");
+                }
+            });
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function atd_afterCondi(result) {
+
+    }
+    //#endregion
+</script>
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

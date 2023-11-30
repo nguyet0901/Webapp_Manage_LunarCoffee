@@ -1,0 +1,100 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerTypeDetailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+</head>
+
+<body>
+
+    <div class="header">
+        Nguồn Khách Hàng
+    </div>
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+                    <div class="field">
+                        <label>Tên Nguồn Khách Hàng</label>
+                        <input id="NameSup" name="name" type="text" />
+                    </div>
+                    <div class="field">
+                        <div class="field">
+                            <label>Ghi Chú</label>
+                            <textarea id="Note" name="content"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="actions">
+        <div style="float: right">
+            <button class="ui teal button" form="form3" type="submit" onclick="return ExcuteData()">Save</button>
+        </div>
+        <div style="float: right">
+            <button class="ui grey button" form="form3" onclick="event.preventDefault();CloseModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var ser_SupplierDetailCurrentID = @Model._CustomerDetailCurrentID;
+
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#NameSup').val() ? $('#NameSup').val() : "";
+            data.Note = $('#Note').val() ? $('#Note').val() : "";
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Setting/CustomerTypeDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_SupplierDetailCurrentID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            LoadLaboSupplierAjax();
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+               
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+            }
+            return false;
+        }
+
+        $(document).ready(function () {
+            if (ser_SupplierDetailCurrentID!="0") LoadDataUpdateCustomer();
+        });
+
+        function LoadDataUpdateCustomer() {
+            AjaxLoad(url = "/Setting/CustomerTypeDetail/?handler=ExcuteData"
+                , data = {
+                    id: ser_SupplierDetailCurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataSupplier = JSON.parse(result);
+                    $('#NameSup').val((dataSupplier[0].Name));
+                    $('#Note').val((dataSupplier[0].Note));
+                });
+           
+        }
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+
+</body>
+
+</html>
+

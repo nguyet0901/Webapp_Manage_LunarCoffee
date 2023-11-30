@@ -1,0 +1,202 @@
+﻿@page
+@model MLunarCoffee.Pages.Permission.PermissionGroupControlDetailModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <link href="/assests/dist/semantic.min.custom.css" rel="stylesheet" />
+    <link href="/assests/dist/plugins/ionicons/css/ionicons.min.css" rel="stylesheet" />
+    <link href="/assests/dist/css/main.css" rel="stylesheet" />
+    <script>css_require('/css/main.custom.css')</script>
+    <link href="/assests/dist/plugins/lobibox/css/lobibox.css" rel="stylesheet" />
+
+</head>
+
+<body>
+    <div class="header">
+        @Local["Thêm phân quyền nhóm theo màn hình"]
+    </div>
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+
+                    <div class="two fields">
+                        <div class="field">
+                            <label>@Local["Nhóm"]</label>
+                            <div class="ui fluid search selection dropdown" id="Group_ID">
+                                <input type="hidden" name="userGroup" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Nhóm"]</div>
+                                <div id="cbbGroup" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>@Local["Nhóm trang"]</label>
+                            <div class="ui fluid search selection dropdown" id="PageGroup_ID" onchange="OnChangeGroupPage()">
+                                <input type="hidden" name="controlName" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Nhóm trang"]</div>
+                                <div id="cbbPageGroupID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="two fields">
+                        <div class="field">
+                            <label>@Local["Trang"]</label>
+                            <div class="ui fluid search selection dropdown" id="Page_ID" onchange="OnChangePage()">
+                                <input type="hidden" name="controlName" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">ed .@Local["Trang"]</div>
+                                <div id="cbbPageID" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>@Local["Điều khiển"]</label>
+                            <div class="ui fluid search selection dropdown" id="Control_ID">
+                                <input type="hidden" name="controlName" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Điều khiển"]</div>
+                                <div id="cbbControl" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="NotePermissionGroupControl" name="content" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="actions">
+            <div style="float: right">
+                <button class="ui teal button" form="form3" type="submit" onclick="return ExcuteData()">@Local["Lưu"]</button>
+            </div>
+            <div style="float: right">
+                <button class="ui grey button" form="form3" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var DataControl = "";
+            var DataGroupUser = "";
+            var DataPage = "";
+            var DataGroupPage = "";
+            var CurrentID = '@Model._CurrentID'
+            function ExcuteData() {
+                var data = new Object();
+                data.Note = $('#NotePermissionGroupControl').val() ? $('#NotePermissionGroupControl').val() : "";
+                data.Group_ID = Number($('#Group_ID').dropdown('get value')) ? Number($('#Group_ID').dropdown('get value')) : 0;
+                data.Control_ID = Number($('#Control_ID').dropdown('get value')) ? Number($('#Control_ID').dropdown('get value')) : 0;
+                $('#form3').form('validate form');
+                if ($('#form3').form('is valid')) {
+                    AjaxLoad(url = "/Permission/PermissionGroupControlDetail/?handler="
+                        , data = {
+                            data: JSON.stringify(data),
+                            CurrentID: CurrentID
+                        }, async = true, error = null
+                        , success = function (result) {
+                            if (result == "1") {
+                                notiSuccess();
+                                LoadGroupControlListAjax();
+                            } else {
+                                notiError("@Local["Phân quyền nhóm theo control đã tồn tại. vui lòng kiểm tra lại"]");
+                            }
+                        });
+                    $('#DetailModal').modal('hide');
+                    $("#DetailModal_Content").html('');
+                }
+                return false;
+            }
+
+            $(document).ready(function () {
+                AjaxLoad(url = "/Permission/PermissionGroupControlDetail/?handler=InitializeComboPermissionPage"
+                    , data = {  }, async = true, error = null
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+                        DataControl = data._DataControl;
+                        DataGroupUser = data._DataGroupUser;
+                        DataPage = data._DataPage;
+                        DataGroupPage = data._DataGroupPage;
+                        Load_Combo(DataGroupUser, "cbbGroup", true);
+
+                        $("#Group_ID").dropdown("refresh");
+                        Load_Combo(DataGroupPage, "cbbPageGroupID", true);
+
+                        $("#PageGroup_ID").dropdown("refresh");
+                    });
+                LoadDataUpdatePermissionControl();
+
+            });
+
+            function OnChangeGroupPage() {
+                var groupid = Number($('#PageGroup_ID').dropdown('get value'))
+                    ? Number($('#PageGroup_ID').dropdown('get value'))
+                    : 0;
+                let data = DataPage.filter(word => word["GroupID"] === groupid);
+
+                Load_Combo(data, "cbbPageID", true);
+                $("#PageGroup_ID").dropdown("refresh");
+            }
+            function OnChangePage() {
+                var pageID = Number($('#Page_ID').dropdown('get value'))
+                    ? Number($('#Page_ID').dropdown('get value'))
+                    : 0;
+                let data = DataControl.filter(word => word["PageID"] === pageID);
+
+                Load_Combo(data, "cbbControl", true);
+                $("#Page_ID").dropdown("refresh");
+            }
+
+            function LoadDataUpdatePermissionControl() {
+                AjaxLoad(url = "/Permission/PermissionGroupControlDetail/?handler=Loadata"
+                    , data = { id: CurrentID}, async = true, error = null
+                    , success = function (result) {
+                        let dataGroupControl = JSON.parse(result);
+                        $('#NotePermissionGroupControl').val((dataGroupControl[0].Note));
+
+                        $("#Group_ID ").dropdown("refresh");
+                        $("#Group_ID ").dropdown("set selected", dataGroupControl[0].Group_ID);
+
+                        $("#PageGroup_ID ").dropdown("refresh");
+                        $("#PageGroup_ID ").dropdown("set selected", dataGroupControl[0].PageGroup_ID);
+
+                        $("#Page_ID ").dropdown("refresh");
+                        $("#Page_ID ").dropdown("set selected", dataGroupControl[0].Page_ID);
+
+
+                        $("#Control_ID ").dropdown("refresh");
+                        $("#Control_ID ").dropdown("set selected", dataGroupControl[0].Control_ID);
+                    });
+            }
+        </script>
+
+        <script>js_require('/assests/dist/semantic.min.js');</script>
+        <script>js_require('/assests/dist/plugins/cookie/js.cookie.js');</script>
+        <script>js_require('/assests/dist/plugins/nicescrool/jquery.nicescroll.min.js');</script>
+        <script>js_require('/js/customjs/custom-validation.js');</script>
+        <script>js_require('/assests/dist/plugins/pacejs/pace.js');</script>
+        <script>js_require('/js/main.js');</script>
+        <script>js_require('/js/comon/noti_function.js');</script>
+        <script>js_require('/js/comon/load_datasource.js');</script>
+
+</body>
+
+</html>
+

@@ -1,0 +1,247 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.Labo.LaboPieModel
+@{
+    Layout = null;
+}
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="text-md text-dark font-weight-bold mb-0">@Local["Phiếu labo"]</h6>
+            <p class="text-sm mb-0">@Local["Báo cáo tổng quan phiếu labo"] (@Local["Doanh số"], @Local["Doanh thu"], @Local["Công nợ"] )</p>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#LaboPie_ChartDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LaboPie_LoadData()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="LaboPie_ChartDiv">
+        <div class="card-body p-0">
+            <div class="d-lg-flex">
+                <div class="w-lg-50 col-auto my-auto">
+                    <div class="d-flex align-items-center mb-sm-0 mb-4">
+                        <div class="form-check">
+                            <input id="target" name="LaboPie_ChartTab" value="0" class="LaboPie_ChartTab form-check-input pr-2 cursor-pointer" type="radio" checked="checked">
+                            <label class="custom-control-label cursor-pointer" for="target">@Local["Bác sĩ"]</label>
+                        </div>
+                        <div class="form-check ms-3">
+                            <input id="revenue" name="LaboPie_ChartTab" value="1" class="LaboPie_ChartTab form-check-input pr-2 cursor-pointer" type="radio">
+                            <label class="custom-control-label cursor-pointer" for="revenue">@Local["Nhà cung cấp"]</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row px-1" id="LaboPie_DoctorTab">
+                <div class="col-12 col-md-6 col-xl-6 px-1 mt-2">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh số"]:
+                        <span id="LaboPie_TargetDocTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="col-w-300 text-center mt-3 mx-auto position-relative" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="LaboPie_TargetDoc" class="chart-canvas" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="LaboPie_TargetDocList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-6 px-1 mt-2">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh thu"]:
+                        <span id="LaboPie_RevenueDocTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="col-w-300 text-center mt-3 mx-auto position-relative" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="LaboPie_RevenueDoc" class="chart-canvas" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="LaboPie_RevenueDocList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row px-1" id="LaboPie_SupTab">
+                <div class="col-12 col-md-6 col-xl-6 px-1 mt-2">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh số"]:
+                        <span id="LaboPie_TargetSupTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="col-w-300 text-center mt-3 mx-auto position-relative" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="LaboPie_TargetSup" class="chart-canvas" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="LaboPie_TargetSupList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-6 px-1 mt-2">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Doanh thu"]:
+                        <span id="LaboPie_RevenueSupTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="col-w-300 text-center mt-3 mx-auto position-relative" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="LaboPie_RevenueSup" class="chart-canvas" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="LaboPie_RevenueSupList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>
+    //#region //INIT
+    let LaboPie_MainData;
+    $(document).ready(function ()
+    {
+        ToolPopper();
+        LaboPie_LoadData();
+    });
+    //#endregion
+    //#region //Load Data
+    function LaboPie_LoadData()
+    {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branch = "@Model._branch";
+        AjaxLoad(url = "/Report/Revenue/Labo/LaboPie/?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "") {
+
+                    LaboPie_MainData = JSON.parse(result);
+                    let { Table: dataTargetDoc, Table1: dataRevenueDoc, Table2: dataTargetSup, Table3: dataRevenueSup } = LaboPie_MainData;
+                    let e = {
+                        name: 'Name', amount: 'Amount', percentage: 1000000, totalID: '', chartID: '', descriptID: ''
+                    }
+                    if (dataTargetDoc != undefined) {
+                        e = { ...e, totalID: 'LaboPie_TargetDocTotal', chartID: 'LaboPie_TargetDoc', descriptID: 'LaboPie_TargetDocList' }
+                        LaboPie_RenderChart(dataTargetDoc, e);
+                    }
+                    if (dataRevenueDoc != undefined) {
+                        e = { ...e, totalID: 'LaboPie_RevenueDocTotal', chartID: 'LaboPie_RevenueDoc', descriptID: 'LaboPie_RevenueDocList' }
+                        LaboPie_RenderChart(dataRevenueDoc, e);
+                    }
+                    if (dataTargetSup != undefined) {
+                        e = { ...e, totalID: 'LaboPie_TargetSupTotal', chartID: 'LaboPie_TargetSup', descriptID: 'LaboPie_TargetSupList' }
+                        LaboPie_RenderChart(dataTargetSup, e);
+                    }
+                    if (dataRevenueSup != undefined) {
+                        e = { ...e, totalID: 'LaboPie_RevenueSupTotal', chartID: 'LaboPie_RevenueSup', descriptID: 'LaboPie_RevenueSupList' }
+                        LaboPie_RenderChart(dataRevenueSup, e);
+                    }
+                    LaboPie_CheckTab();
+                    LaboPie_HandleChangeTab();
+                }
+            }
+        );
+    }
+
+    async function LaboPie_RenderChart(data, { name, amount, percentage, totalID, chartID, descriptID })
+    {
+        new Promise(resolve =>
+        {
+            let dataChart = LaboPie_LimitDataChart(data, name, amount);
+            let total = data.reduce((result, item) => result + item[amount], 0);
+            $(`#${totalID}`).html(formatNumberToMilion(Number(total)));
+            ReportPie_Description(dataChart, name, amount, descriptID);
+            rp_pie(chartID, dataChart, name, amount);
+            resolve();
+        })
+    }
+    function LaboPie_LimitDataChart(dataChart, name, amount)
+    {
+        let data = [...dataChart];
+        let LIMIT_CHART = 10;
+        if (data.length > LIMIT_CHART) {
+            let limitData = data.splice(0, LIMIT_CHART);
+            let totalOther = 0;
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                totalOther += item[amount];
+            }
+            data = [...limitData, ...[{ [amount]: totalOther, [name]: '@Local["Khác"]', Revenue: 0 }]];
+        }        
+        return data;
+    }
+
+    //#endregion
+    //#region //Event
+    function LaboPie_HandleChangeTab()
+    {
+        $(".LaboPie_ChartTab").unbind("change").change(function ()
+        {
+            LaboPie_CheckTab();
+        })
+    }
+
+    function LaboPie_CheckTab()
+    {
+        let { Table: dataTargetDoc, Table1: dataRevenueDoc, Table2: dataTargetSup, Table3: dataRevenueSup } = LaboPie_MainData;
+        let name = 'Name', amount = 'Amount';
+        let LaboPie_IsDoc = Number($(".LaboPie_ChartTab:checked").val());
+        if (LaboPie_IsDoc == 0) {
+            rp_pie('LaboPie_TargetDoc', LaboPie_LimitDataChart(dataTargetDoc, name, amount), name, amount);
+            rp_pie('LaboPie_RevenueDoc', LaboPie_LimitDataChart(dataRevenueDoc, name, amount), name, amount);
+            $('#LaboPie_DoctorTab').show(500);
+            $('#LaboPie_SupTab').hide(500);
+        }
+        else {
+            $('#LaboPie_DoctorTab').hide(500);
+            rp_pie('LaboPie_TargetSup', LaboPie_LimitDataChart(dataTargetSup, name, amount), name, amount);
+            rp_pie('LaboPie_RevenueSup', LaboPie_LimitDataChart(dataRevenueSup, name, amount), name, amount);
+            $('#LaboPie_SupTab').show(500);
+        }
+        if (typeof LaboGeneral_CheckTab === 'function') {
+            LaboGeneral_CheckTab();
+        }
+    }
+                                                            //#endregion
+</script>
+
+
+

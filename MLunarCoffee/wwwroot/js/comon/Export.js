@@ -577,7 +577,7 @@ function exportJsonToExcel_CheckPer(key) {
                 var src = $(this)[0].src;
                 var l = window.location;
                 //var t = l.protocol + '//' + l.host + '/';
-                var t = l.protocol + '//' + 'demo.MLUechsolution.com' + '/';
+                var t = l.protocol + '//' + 'demo.LunarCoffee.com' + '/';
                 if (proto.test(src)) {
                 } else if (ab.test(src)) {
                     src = t + src;
@@ -753,7 +753,7 @@ function exportJsonToExcel_CheckPer(key) {
         //            if (tags[i] == 'style') html += ('\n' + $(this)[0].outerHTML + '\n');
         //            if (tags[i] == 'link') {
         //                let itemLink = $(this).clone();
-        //                itemLink.attr('href', 'https://demo.MLUechsolution.com' + itemLink.attr('href'));
+        //                itemLink.attr('href', 'https://demo.LunarCoffee.com' + itemLink.attr('href'));
         //                html += ('\n' + itemLink[0].outerHTML + '\n');
         //            }
         //        });

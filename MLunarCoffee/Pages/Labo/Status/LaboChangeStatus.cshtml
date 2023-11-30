@@ -1,0 +1,149 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Status.LaboChangeStatusModel
+@{
+    Layout = null;
+}
+
+<div class="card shadow-lg ">
+    <div class="card-header p-3 pb-0">
+        <div class="d-flex">
+            <div class="col-auto my-auto">
+                <div class="h-100">
+                    <h6 id="LBD_CurrentStatus" class="mb-0"></h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-3 pt-2">
+        <div class="row px-2 form3" id="LBD_ContentArea">
+            <div class="field col-12 p-1">
+                <ul class="list-group list-group-flush" id="LBD_ContentList">
+                </ul>
+            </div>
+            <div class=" col-12 col-md-12 col-xl-12 px-1 mt-2 flex-grow-1">
+                <div class="mb-1">
+                    <label class="mb-0">@Local["Ghi chú"]</label>
+                    <div id="LBD_quicknotearea" >
+                        <div class="input-group flex-nowrap">
+                            <div class="input-group-text w-100 border-0 px-0">
+                                <div id="LBD_quicknote" class="ui fluid search selection dropdown form-control">
+                                    <input type="hidden" />
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text">eg .@Local["Ghi chú"]</div>
+                                    <div id="LBD_ccbquicknote" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="my-2">@Local["Nội dung"]  </label>
+                    <textarea rows="2" id="LaboStatusContent" class="form-control" placeholder="eg .@Local["Nội dung"]"></textarea>
+                </div>
+            </div>
+        </div>
+        <hr class="horizontal dark mt-3 mb-2">
+        <div class="d-flex">
+            <button id="LBD_ChangeStatus" class="w-50 mx-2 btn bg-gradient-primary btn-sm mt-1 disabled" onclick="LBD_ChangeExecute()">@Local["Lưu"]</button>
+            <button class="w-50 mx-2 btn bg-gradient-secondary btn-sm mt-1" onclick="LBD_ClosePopup()">@Local["Đóng"]</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var ser_Labo_Current_LaboID = Number("@Model._LaboDetailID");
+    var ser_Labo_Current_Status = 0;
+    var ser_Labo_Data_QuickNote;
+    $(document).ready(function () {
+        LBD_Initialize();
+    })
+    function LBD_Initialize() {
+        AjaxLoad(url = "/Labo/Status/LaboChangeStatus/?handler=Initialize"
+            , data = { 'currentid': ser_Labo_Current_LaboID }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let data_Status_Current = data.Table;
+                    let data_Status_Next = data.Table1;
+                    ser_Labo_Data_QuickNote = data.Table2;
+                    Load_Combo(ser_Labo_Data_QuickNote, "LBD_ccbquicknote", true);
+                    $("#LBD_quicknote").dropdown("refresh");
+                    $("#LBD_quicknote").dropdown("set value", 1);
+                    LBD_Render(data_Status_Next, 'LBD_ContentList')
+                    $('#LBD_CurrentStatus').html(data_Status_Current[0].Name);
+                }
+            }
+        );
+
+    }
+    function LBD_Render(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<li class="cursor-pointer p-2 rounded-2  border-0 list-group-item labo_item_action d-flex p-1 align-items-center" data-id="' + item.ID + '" data-close="0">'
+                        + '<span class="badge me-3" style="min-height: 20px;background-color: ' + item.Color + '"> </span>'
+                        + '<div class="d-flex flex-column justify-content-center">'
+                        + '<h6 class="mb-0 text-sm">' + item.Name + '</h6>'
+                        + '</div>'
+                        + '</li>'
+
+                    stringContent = stringContent + tr;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        $("#LBD_ContentArea .labo_item_action").on('click', function (event) {
+            ser_Labo_Current_Status = Number($(this).attr("data-id"));
+            $(this).addClass("active").siblings().removeClass("active");
+            $('#LBD_ChangeStatus').removeClass('disabled');
+        });
+    }
+
+    function LBD_ChangeExecute() {
+        if (ser_Labo_Current_Status != 0) {
+            var data = new Object();
+            data.StatusID = ser_Labo_Current_Status;
+            data.Content = $('#LaboStatusContent').val() ? $('#LaboStatusContent').val() : "";
+            data.QuickNote = $('#LBD_quicknote input').attr('value');
+            AjaxLoad(url = "/Labo/Status/LaboChangeStatus/?handler=ExcuteData"
+                , data = { 'data': JSON.stringify(data), 'CurrentID': ser_Labo_Current_LaboID }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        LBD_ClosePopup();
+                        if (typeof LaboList_LoadData === 'function') LaboList_LoadData(ser_Labo_Current_LaboID, 0, 0, 0);
+                        if (typeof LaboDetail_OutSide === 'function') LaboDetail_OutSide();
+                        if (typeof CustLabo_LoadData === 'function') CustLabo_LoadData(ser_Labo_Current_LaboID, 0);
+                        let custID = (typeof ser_MainCustomerID != 'undefined' ? ser_MainCustomerID
+                            : (typeof LaboDetail_CustID != 'undefined' ? LaboDetail_CustID : ''))
+                        syslog_cutlabo('u', result, custID, $('#LaboStatusContent').val());
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+
+
+        return false;
+    }
+
+    function LBD_ClosePopup() {
+        $("#DetailModalLaboChangeStatus").fadeOut(300);
+    }
+
+
+</script>
+

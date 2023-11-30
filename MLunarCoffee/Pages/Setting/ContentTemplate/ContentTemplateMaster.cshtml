@@ -1,0 +1,125 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ContentTemplate.ContentTemplateMasterModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Nhóm nội dung"]</h6>
+                                <p class="text-sm mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="SCTM_FromContent">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Mẫu"]</label>
+                            <input id="SCTM_Name" name="name" class="form-control" type="text" placeholder="eg .@Local["Mẫu"]" />
+                        </div>
+@*                        <div class="field col-12 p-1">
+                            <label>@Local["Loại"]</label>
+                            <input id="SCTM_Type" name="typecontrol" class="form-control" type="text" placeholder="eg .@Local["Loại"]" />
+                        </div>*@
+                        <div class="col-12 col-md-12 col-xl-12 p-1 mt-1">
+                            <label>@Local["Loại"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="SCTM_Type">
+                                <i class="remove icon"></i><i class="dropdown icon"></i>
+                                <input type="hidden" name="cashier" value="0">
+                                <input class="search" autocomplete="off" tabindex="0">
+                                <div class="text"></div>
+                                <div id="SCTM_cbbType" class="menu transition hidden" tabindex="-1">
+                                    <div class="item" data-value="TRS">@Local["Điều trị"]</div>
+                                    <div class="item" data-value="SCH">@Local["Lịch hẹn"]</div>
+                                    <div class="item" data-value="CD">@Local["Nội dung"]</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Mô tả"]</label>
+                            <textarea id="SCTM_Descript" name="" class="form-control" type="text" placeholder="eg .@Local["Mô tả"]" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="SCTM_FromContent" onclick="event.preventDefault(); CloseModal()">@Local["Đóng"]</button>
+                        <button form="SCTM_FromContent" type="button" class="btn bg-gradient-primary mt-2 me-2 setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault(); SCTM_ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let SCTM_CurrentID = "@Model._CurrentID";
+
+    $(document).ready(function () {
+        if (SCTM_CurrentID != "0") {
+            SCTM_LoadData();
+        }
+    });
+
+    function SCTM_LoadData() {
+        AjaxLoad(url = "/Setting/ContentTemplate/ContentTemplateMaster/?handler=Loadata"
+            , data = { CurrentID: SCTM_CurrentID }
+            , async = true
+            , error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let item = data[0];
+                SCTM_FillDate(item);
+            });
+    }
+
+    function SCTM_FillDate(item) {
+        if (item) {
+            $("#SCTM_Type").dropdown("refresh"); 
+            $("#SCTM_Type").dropdown("set selected", item.MasterType);
+            $('#SCTM_Name').val(item.MasterName);
+            $('#SCTM_Descript').val(item.MasterDescript);
+        }
+    }
+    //Event Insert or Edit
+    function SCTM_ExcuteData() {
+        var data = new Object();
+        //data.Type = $('#SCTM_Type').val() ? $('#SCTM_Type').val() : "";
+        data.Type = $('#SCTM_Type').dropdown('get value') ? $('#SCTM_Type').dropdown('get value') : '';
+        data.Name = $('#SCTM_Name').val() ? $('#SCTM_Name').val() : "";
+        data.Description = $('#SCTM_Descript').val() ? $('#SCTM_Descript').val() : "";
+        $('#SCTM_FromContent').form('validate form');
+        if ($('#SCTM_FromContent').form('is valid')) {
+            AjaxLoad(url = "/Setting/ContentTemplate/ContentTemplateMaster/?handler=ExcuteDataMaster"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: SCTM_CurrentID,
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        SCTL_Loaddata();
+                        CloseModal();
+                    } else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    } else {
+                        notiError_SW();
+                    }
+                });
+
+        }
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>

@@ -1,0 +1,696 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.SettingScheduleStatusModel
+@{
+
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-3 px-0 ">
+    <div class="row m-0">
+        <div class="col-12">
+            <div class="py-3 px-0">
+                <div class="vtcardheader">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Trạng thái lịch hẹn"]</h6>
+                        <p class="text-sm mb-0">
+                            @Local["Kéo thả các thanh trạng thái để sắp xếp thứ tự trạng thái, trạng thái bị ẩn sẻ không được hiển thị"].
+                        </p>
+                    </div>
+                </div>
+                <div class="pt-3">
+                    <div class="row col-12 d-flex">
+                        <div class="col-12 col-xl-5 me-0">
+                            <div class="me-2">
+                                <div class="vtcardheader pb-0">
+                                    <div class="left">
+                                        <h6 class="mb-0">@Local["Trạng thái"]</h6>
+                                        <p class="text-sm mb-0">@Local["Tên trạng thái"]</p>
+                                    </div>
+                                    <div class="right">
+                                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="event.preventDefault();return Schedule_Status_AddNew()">
+                                            @Local["Thêm mới"]
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="pt-2">
+                                    <div class="col-12 page_status_list" id="page_status_list"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-7 p-1">
+                            <div class="col-12 d-none p-1" id="setting_popup">
+                                <div class="vtcardheader pb-0">
+                                    <div class="left">
+                                        <h6 class="mb-0">@Local["Trạng thái"]</h6>
+                                        <p class="text-sm mb-0">@Local["Chi tiết trạng thái"]</p>
+                                    </div>
+                                </div>
+                                <div class="p-3 pt-2">
+                                    <div class="row px-1 form3" id="formSettingSchedule">
+                                        <div class="field col-12 p-1">
+                                            <label>@Local["Tên trạng thái"]</label>
+                                            <input id="SS_StatusName" name="name" type="text" class="form-control" />
+                                        </div>
+                                        <div class="field col-12 p-1">
+                                            <label>@Local["Tên ngôn ngữ khác"]</label>
+                                            <input id="SS_StatusNameLangOther" name="name" type="text" class="form-control" />
+                                        </div>
+
+                                        <div class="field col-12 col-md-6 p-1">
+
+                                            <label class="mb-2">@Local["Thời gian dự kiến"]</label>
+                                            <div class="input-group w-100">
+                                                <div class="input-group-text px-2 py-0 cursor-pointer w-20">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="SSS_IsForectTime" type="checkbox" checked onchange="event.preventDefault();return SSS_OnchangeIsForect();">
+                                                    </div>
+                                                </div>
+                                                <div class="input-group-text p-0  w-80">
+                                                    <div class="ui fluid search selection border-0 dropdown form-control" id="TimeExpired_ID">
+                                                        <input type="hidden" name="Name" />
+                                                        <i class="dropdown icon"></i>
+                                                        <input class="search" autocomplete="off" tabindex="0" />
+                                                        <div class="default text"></div>
+                                                        <div id="cbbTimeExpired" class="menu" tabindex="-1">
+                                                            <div class="item" data-value="5">5 @Local["Phút"]</div>
+                                                            <div class="item" data-value="10">10 @Local["Phút"]</div>
+                                                            <div class="item" data-value="15">15 @Local["Phút"]</div>
+                                                            <div class="item" data-value="25">25 @Local["Phút"]</div>
+                                                            <div class="item" data-value="30">30 @Local["Phút"]</div>
+                                                            <div class="item" data-value="45">45 @Local["Phút"]</div>
+                                                            <div class="item" data-value="60">60 @Local["Phút"]</div>
+                                                            <div class="item" data-value="90">90 @Local["Phút"]</div>
+                                                            <div class="item" data-value="120">120 @Local["Phút"]</div>
+                                                            <div class="item" data-value="150">150 @Local["Phút"]</div>
+                                                            <div class="item" data-value="180">180 @Local["Phút"]</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        <div class="field col-12 col-md-6 p-1">
+                                            <label class="mb-2">@Local["Mã màu"]</label>
+                                            <input id="SS_Color" name="fillCode" type="text" />
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="field form-check col-12 col-sm-6 ms-1">
+                                                <input id="ScheduleTreatment" class="form-check-input pr-2 typeschedule" name="typeschedule" type="checkbox">
+                                                <label class="custom-control-label" for="choose_all_type_service">@Local["Chuyển bác sĩ"]</label>
+                                            </div>
+                                            <div class="field form-check col-12 col-sm-5 ms-1">
+                                                <input id="ScheduleIsExamination" class="form-check-input pr-2 edit" type="checkbox">
+                                                <label class="custom-control-label" for="ScheduleIsExamination">@Local["Nhận thông báo"]</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="field form-check col-12 ms-1">
+                                            <input id="ScheduleCashier" class="form-check-input pr-2 typeschedule" name="typeschedule" type="checkbox">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["Chuyển thu ngân"]</label>
+                                        </div>
+                                        <div class="field form-check col-12 ms-1">
+                                            <input id="ScheduleXquang" class="form-check-input pr-2 typeschedule" name="typeschedule" type="checkbox">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["X-quang"]</label>
+                                        </div>
+
+                                        <div class="field form-check col-12 ms-1">
+                                            <input id="ChoosingRoom_ID" class="form-check-input pr-2" checked type="checkbox">
+                                            <label class="custom-control-label" for="choose_all_type_service">@Local["Chọn phòng"]</label>
+                                        </div>
+                                    </div>
+                                    <div class="fixed-botombutton p-2">
+                                        <div class="action_Save">
+                                            <div class="text-danger text-gradient text-sm mt-2 font-weight-bold" id="textShowMessage"></div>
+                                            <div class="action_Save-Content">
+                                                <button id="ButtonDeleteScheduleStatus" class="btn btn-secondary d-none" form="formSettingSchedule" onclick="event.preventDefault(); return Schedule_Status_DeleteStatus();">@Local["Xóa"]</button>
+                                                <button class="btn btn-secondary" form="formSettingSchedule" onclick="event.preventDefault(); return Schedule_Status_Close_Popup();">@Local["Đóng"]</button>
+                                                <button form="formSettingSchedule" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault();return Schedule_Status_ExcuteAttributeStatus()">@Local["Lưu"]</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12" id="SS_Status_Detail">
+                                <div class="mt-1 pb-0">
+                                    <div class="d-lg-flex">
+                                        <div class="w-50 col-auto my-auto">
+                                            <div class="h-100">
+                                                <h6 out_in_header="" class="mb-0">@Local["Sắp xếp trạng thái"]</h6>
+                                                <p class="text-sm mb-0">@Local["Kéo thả trạng thái để sắp xếp"]</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-2 mt-3">
+                                    <div class="col-12 page_status_check" id="page_status_follow"></div>
+                                </div>
+                                <div class="fixed-botombutton pe-3">
+                                    <div class="action_Save">
+                                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                                        <div class="action_Save-Content">
+                                            <button form="formSettingSchedule" id="ButtonSaveScheduleStatus" data-fontchanged="true" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" onclick="event.preventDefault();return Schedule_Status_ExcuteStatusFollow()">
+                                                @Local["Lưu"]
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var DataScheduleStatus = {};
+    var StatusCurrentID = 0;
+    $(document).ready(function () {
+        $("#SS_Color").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            showInput: true,
+            color: '#ffffff',
+            palette: [
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+        Schedule_Status_OutClick();
+        Schedule_Status_LoadData();
+        Schedule_Status_Event();
+    });
+
+
+
+    function Schedule_Status_LoadData() {
+        AjaxLoad(url = "/Setting/SettingScheduleStatus/?handler=LoadData"
+            , data = { ID: StatusCurrentID }
+            , async = true, error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data != undefined && data.length != 0) {
+                    if (StatusCurrentID == 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            DataScheduleStatus[item.ID] = item;
+                        }
+                        Schedule_Status_Render_Status_List(data, "page_status_list");
+                        if ($("#page_status_list .page_status_item[data-id=" + DataScheduleStatus[1].ID + "]").length != 0) {
+                            $("#page_status_list .page_status_item[data-id=" + DataScheduleStatus[1].ID + "]").trigger("click");
+                        }
+                    }
+                    else {
+                        DataScheduleStatus[StatusCurrentID] = data[0];
+                        Schedule_Status_Render_Status_List(data, "page_status_list", StatusCurrentID);
+                        if ($("#page_status_list .page_status_item[data-id=" + StatusCurrentID + "]").length != 0) {
+                            $("#page_status_list .page_status_item[data-id=" + StatusCurrentID + "]").trigger("click");
+                        }
+                    }
+                }
+            });
+    }
+    function Schedule_Status_Event() {
+        $(".page_status_list").on("click", ".editstatus", function () {
+            StatusCurrentID = Number($(this).parent('.page_status_item').attr("data-id"));
+            $("#SS_Status_Detail").addClass('d-none');
+            let Top = $(this).parent().position().top + 48;
+            $("#setting_popup").removeClass('d-none');
+            Schedule_Status_View_Detail();
+        });
+        $(".page_status_list").on("click", ".page_status_item", function (e) {
+            StatusCurrentID = Number($(this).attr("data-id"));
+            $(this).addClass("active").siblings().removeClass("active");
+            let edit = $(this).children('.editstatus');
+            if (!$(edit).is(e.target) && $(edit).has(e.target).length === 0) {
+                $("#setting_popup").addClass('d-none');
+                $("#SS_Status_Detail").removeClass('d-none');
+            }
+            if (DataScheduleStatus[StatusCurrentID] != undefined) {
+                let item = DataScheduleStatus[StatusCurrentID];
+                $(this).css({ "background": item.Color + '70' }).siblings().removeAttr('style');
+                if (item.IsCheckout == 1 || StatusCurrentID == 1) $("#ButtonSaveScheduleStatus").addClass("disabled");
+                else $("#ButtonSaveScheduleStatus").removeClass("disabled");
+            }
+            Schedule_Status_Render_Status_Follow("page_status_follow");
+        });
+        $("#page_status_follow").on("click", '.button_disabled', function () {
+
+            let parent = $(this).parent(".page_status_check_item");
+            let parentedit = $(this).parent(".page_status_check_item .button_disabled");
+            let height_item = $("#page_status_follow .page_status_check_item:first-child").outerHeight();
+            if (parent.hasClass("disabled")) {
+                parent.removeClass("disabled");
+                parent.removeClass('bg-light');
+                parent.children(1).removeClass('text-danger');
+                parent.children(1).children(1).removeClass('text-danger');
+                let top = 0;
+                let itemInsert;
+                if ($(".page_status_check_item:not(.disabled)").length != 0) {
+                    let length = $(".page_status_check_item:not(.disabled)").length;
+                    itemInsert = $(".page_status_check_item:not(.disabled)")[length - 2];
+                    top = height_item * (length - 1);
+                }
+                if (parent.prev().hasClass("disabled")) {
+                    let postion = parent.position().top;
+                    parent.css({
+                        top: postion + 'px',
+                        position: 'absolute',
+                        'zIndex': '60'
+                    }).animate({
+                        top: top + 'px',
+                        position: 'absolute'
+                    }, {
+                        duration: 'slow',
+                        complete: function () {
+                            parent.removeAttr('style');
+                            if (itemInsert != undefined) {
+                                parent.insertAfter(itemInsert)
+                            }
+                            else {
+                                parent.insertBefore($(".page_status_check_item:first-child"));
+                            }
+                            $("#page_status_follow").sortable("destroy");
+                            Schedule_Status_Render_Status_Event_Handle();
+                        }
+                    }, function () {
+
+                    });
+                }
+                else {
+                }
+            }
+            else {
+                parent.addClass("disabled");
+                parent.addClass('bg-light');
+                parent.children(1).children(1).addClass('text-danger');
+                let height = $("#page_status_follow").outerHeight() - $("#page_status_follow .page_status_check_item:first-child").outerHeight();
+                let postion = parent.position().top;
+                parent.css({
+                    top: postion + 'px',
+                    position: 'absolute',
+                    'zIndex': '60'
+                }).animate({
+                    top: height + 'px',
+                    position: 'absolute'
+                }, 'slow', function () {
+                    parent.removeAttr('style');
+                    parent.insertAfter($(".page_status_check_item:last-child"));
+                    $("#page_status_follow").sortable("destroy");
+                    Schedule_Status_Render_Status_Event_Handle();
+                })
+            }
+        })
+        $(".typeschedule").change(function () {
+            $('.typeschedule').not(this).prop("checked", false);
+        })
+    }
+    function Schedule_Status_AddNew() {
+        event.stopPropagation();
+        $("#SS_Status_Detail").addClass("d-none");
+        $('.page_status_item').removeClass("active");
+        $('.page_status_item').removeAttr("style");
+        StatusCurrentID = 0;
+        $("#setting_popup").removeClass('d-none');
+        $("#page_status_follow").html('');
+        Schedule_Status_View_Detail();
+    }
+    function Schedule_Status_OutClick() {
+        $(document).unbind("click").on("click", function (e) {
+            let list = $(".page_status_list");
+            let popup = $("#setting_popup");
+            if (!$(list).is(e.target) && $(list).has(e.target).length === 0
+                && !$(popup).is(e.target) && $(popup).has(e.target).length === 0) {
+                //Schedule_Status_Close_Popup();
+            }
+        });
+    }
+    //#region // Render Data
+    function Schedule_Status_Render_Status_List(data, id, currentid) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            let stringContent = '';
+            if (currentid != undefined) {
+                let statusName = author_get("UserLang") == 'en' ? DataScheduleStatus[StatusCurrentID].NameLangOther : DataScheduleStatus[StatusCurrentID].Name;
+                if ($("#page_status_list .page_status_item[data-id=" + currentid + "]").length != 0) {
+                    $("#page_status_list .page_status_item[data-id=" + currentid + "]").children("div").eq(0).html(statusName);
+                }
+            }
+            else {
+                myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = Schedule_Status_Render_Status_List_Each(item);
+                        stringContent = '<div class="d-flex position-relative align-items-center form-control mb-3 page_status_item" data-id="' + item.ID + '">' + tr + '</div>';
+                        $("#" + id).append(stringContent)
+                    }
+                }
+            }
+        }
+    }
+    function Schedule_Status_Render_Status_List_Each(item) {
+        try {
+            let result = "";
+            let statusName = author_get("UserLang") == 'en' ? item.NameLangOther : item.Name;
+            result =
+                '<span class="editstatus me-2">'
+                + '<i class="vtt-icon vttech-icon-edit-content" aria-hidden="true"></i>'
+                + '</span>'
+                + '<div>' + statusName + '</div>'
+                + '<div class="ms-auto arrow"><i class="vtt-icon vttech-icon-Arrow-right"></i></div>'
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+    function Schedule_Status_Render_Status_Follow(id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let stringEable = '';
+            let stringDisabled = '';
+            if (StatusCurrentID != 0) {
+                if (DataScheduleStatus[StatusCurrentID] != undefined) {
+                    let item = DataScheduleStatus[StatusCurrentID];
+                    let StatusFollow = item.StatusFollow;
+                    let ObjStatusFollow = StatusFollow.split(',');
+                    let count = 1;
+                    for (let i = 0; i < ObjStatusFollow.length; i++) {
+                        let IDStatus = ObjStatusFollow[i];
+                        for ([key, value] of Object.entries(DataScheduleStatus)) {
+                            if (StatusCurrentID != key && IDStatus == key) {
+                                let statusName = author_get("UserLang") == 'en' ? value.NameLangOther : value.Name;
+                                let tr =
+                                    '<div>' + statusName + '</div>'
+                                    + '<div class="button_disabled ms-auto"><span class="vtt-icon vttech-icon-cancel1 me-2 form-control-feedback" aria-hidden="true"></span></div>'
+                                stringEable += '<div class="page_status_check_item form-control d-flex mb-3" data-id="' + key + '">' + tr + '</div>'
+                                count = count + 1;
+                            }
+                        }
+                    }
+                    for ([key, value] of Object.entries(DataScheduleStatus)) {
+                        if (StatusCurrentID != key) {
+                            let statusName = author_get("UserLang") == 'en' ? value.NameLangOther : value.Name;
+                            let CheckoutNoteEdit = StatusCurrentID == 3 ? "" : `<div class="button_disabled text-danger ms-auto"><span class="vtt-icon vttech-icon-cancel1 me-2 form-control-feedback" aria-hidden="true"></span></div>`;
+                            let tr =
+                                '<div>' + statusName + '</div>'
+                                + CheckoutNoteEdit
+                            if (StatusFollow.includes(',' + key + ',')) {
+                                //stringEable += '<div class="page_status_check_item" data-id="' + key + '">' + tr + '</div>'
+                            }
+                            else {
+                                stringDisabled += '<div class="page_status_check_item bg-light form-control d-flex disabled mb-3" data-id="' + key + '">' + tr + '</div>'
+                            }
+                        }
+                    }
+                    stringContent = stringEable + stringDisabled;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            Schedule_Status_Render_Status_Event_Handle();
+        }
+    }
+    function Schedule_Status_Render_Status_Event_Handle() {
+        $("#page_status_follow").unbind('sortable').sortable({
+            items: ".page_status_check_item:not(.disabled)",
+            start: function (event, ui) {
+            },
+            stop: function (event, ui) {
+            }
+        });
+    }
+    //#endregion
+    function Schedule_Status_ExcuteAttributeStatus() {
+        $("#textShowMessage").hide();
+        let StatusName = $("#SS_StatusName").val() ? $("#SS_StatusName").val().trim() : "";
+        let StatusNameLangOther = $("#SS_StatusNameLangOther").val() ? $("#SS_StatusNameLangOther").val().trim() : "";
+        let Color = $("#SS_Color").spectrum('get').toHexString();
+        let isTreat = $("#ScheduleTreatment").is(":checked") ? 1 : 0;
+        let isCashier = $("#ScheduleCashier").is(":checked") ? 1 : 0;
+        let isXquang = $("#ScheduleXquang").is(":checked") ? 1 : 0;
+        let isChoosingRoom = $('#ChoosingRoom_ID').is(":checked") ? 1 : 0;
+        let isForectTime =$('#SSS_IsForectTime').is(':checked') ? 1 : 0;
+        let TimeExpired = Number($('#TimeExpired_ID').dropdown('get value')) ? Number($('#TimeExpired_ID').dropdown('get value')) : 0;
+        let IsExamination = $("#ScheduleIsExamination").is(":checked") ? 1 : 0;
+
+
+        if (StatusName != "") {
+            AjaxLoad(url = "/Setting/SettingScheduleStatus/?handler=ExecuteStatus"
+                , data = {
+                    CurrentID: StatusCurrentID,
+                    StatusName: StatusName,
+                    StatusNameLangOther: StatusNameLangOther,
+                    Color: Color,
+                    IsTreatment: isTreat,
+                    IsCashier: isCashier,
+                    IsXquang: isXquang,
+                    IsChoosingRoom: isChoosingRoom,
+                    IsForectTime: isForectTime,
+                    TimeExpired: TimeExpired,
+                    IsExamination: IsExamination
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result > "0") {
+                        notiSuccess();
+                        StatusCurrentID = Number(result);
+                        Schedule_Status_LoadData();
+                        Schedule_Status_Close_Popup();
+                    } else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                        $("#textShowMessage").show();
+                    } else {
+                        notiError_SW();
+                    }
+                });
+        }
+        else {
+            $("#textShowMessage").html('@Local["Kiểm tra dữ liệu"]');
+            $("#textShowMessage").show();
+        }
+
+    }
+    function Schedule_Status_DeleteStatus() {
+        const promise = notiConfirm();
+        promise.then(function () { Schedule_Status_ExecuteDelete(); }, function () { });
+    }
+    function Schedule_Status_ExecuteDelete() {
+        AjaxLoad(url = "/Setting/SettingScheduleStatus/?handler=DeleteStatus"
+            , data = { CurrentID: StatusCurrentID }, async = true, error = null
+            , success = function (result) {
+                if (result == 1) {
+                    notiSuccess();
+                    delete DataScheduleStatus[StatusCurrentID];
+                    if ($("#page_status_list .page_status_item[data-id=" + StatusCurrentID + "]").length != 0) {
+                        $("#page_status_list .page_status_item[data-id=" + StatusCurrentID + "]").remove();
+                    }
+                    $("#page_status_follow").html('');
+                    Schedule_Status_Close_Popup();
+                }
+                else {
+                    notiError();
+                }
+            });
+    }
+    function Schedule_Status_ExcuteStatusFollow() {
+        let Follow = Schedule_Status_Get_Statu_Follow();
+        AjaxLoad(url = "/Setting/SettingScheduleStatus/?handler=UpdateStatusFollow"
+            , data = {
+                CurrentID: StatusCurrentID
+                , StatusFollow: Follow
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == 1) {
+                    notiSuccess();
+                    Schedule_Status_LoadData();
+                }
+                else {
+                }
+            });
+    }
+    function Schedule_Status_Get_Statu_Follow() {
+        try {
+            let result = "";
+            $('#page_status_follow .page_status_check_item:not(.disabled)').each(function () {
+                let id = $(this).attr('data-id');
+                result += id + ',';
+            })
+            result = ',' + result;
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+
+    function Schedule_Status_Close_Popup() {
+        $("#SS_Status_Detail").removeClass('d-none');
+        $("#setting_popup").addClass('d-none');
+    }
+
+    function Schedule_Status_View_Detail() {
+        Schedule_Status_View_Reset();
+        if (StatusCurrentID != 0) {
+            if (DataScheduleStatus[StatusCurrentID] != undefined) {
+                let item = DataScheduleStatus[StatusCurrentID];
+                $("#SS_StatusName").val(item.Name);
+                $("#SS_StatusNameLangOther").val(item.NameLangOther);
+                $("#TimeExpired_ID").dropdown("refresh");
+                $("#TimeExpired_ID").dropdown("set selected", item.TimeExpired);
+                if (Number(item.IsChoosingRoom)) {
+                    $("#ChoosingRoom_ID").prop("checked", true)
+                }
+                else $("#ChoosingRoom_ID").prop("checked", false);
+                $(".typeschedule").prop("checked", false);
+                if (item.IsTreatment == 1) {
+                    $("#ScheduleTreatment").prop("checked", true);
+                }
+                else if (item.IsCashier == 1) {
+                    $("#ScheduleCashier").prop("checked", true);
+                }
+                else if (item.IsXquang) {
+                    $("#ScheduleXquang").prop("checked", true);
+                }
+                if (item.IsExamination == 1) $("#ScheduleIsExamination").prop("checked", true);
+                else $("#ScheduleIsExamination").prop("checked", false);
+                $("#SS_Color").spectrum("set", item.Color);
+                if (StatusCurrentID == 1 || StatusCurrentID == 3) {
+                    Schedule_Status_View_NotArrivedYet()
+                };
+                if (StatusCurrentID == 2) {
+                    $("#ButtonDeleteScheduleStatus").addClass('d-none');
+                    $("#TimeExpired_ID").addClass('disabled')
+                }
+                if(StatusCurrentID == 2 || StatusCurrentID == 3) {
+                    $("#TimeExpired_ID").dropdown("clear");
+                    $('#SSS_IsForectTime').prop('checked',false);
+                    $("#formSettingSchedule").addClass('NotEdit');
+                }
+                else $("#formSettingSchedule").removeClass('NotEdit');
+
+            }
+        }
+        else {
+            $("#ButtonDeleteScheduleStatus").addClass('d-none');
+        }
+    }
+
+    function Schedule_Status_View_Reset() {
+        $("#TimeExpired_ID").removeClass("disabled");
+        $("#ChoosingRoom_ID").prop("disabled", false);
+        $(".typeschedule").prop("disabled", false);
+        $("#ButtonSaveScheduleStatus").removeClass("disabled");
+        $("#ButtonDeleteScheduleStatus").removeClass('d-none');
+        $("#textShowMessage").hide();
+        $("#SS_StatusName").val('');
+        $("#SS_StatusNameLangOther").val('');
+        $(".typeschedule").prop("checked", false);
+        $("#ChoosingRoom_ID").prop("checked", false);
+        $("#TimeExpired_ID").dropdown("refresh");
+        $("#TimeExpired_ID").dropdown("set selected", 5);
+        //$("#ManufactureRoom_ID").dropdown("refresh");
+        //$("#ManufactureRoom_ID").dropdown("clear");
+
+    }
+
+    function Schedule_Status_View_NotArrivedYet() {
+        $("#TimeExpired_ID").addClass("disabled");
+        $("#ChoosingRoom_ID").prop("disabled", true);
+        $(".typeschedule").prop("disabled", true);
+        $("#ButtonDeleteScheduleStatus").addClass('d-none');
+    }
+
+
+    function SSS_OnchangeIsForect() {
+        if ($('#SSS_IsForectTime').is(':checked')) {
+            $("#TimeExpired_ID").removeClass('disabled');
+        }
+        else {
+            $("#TimeExpired_ID").addClass('disabled', true);
+        }
+        return false;
+    }
+
+    //function SSS_OnchangeIsChosingRoom() {
+    //    if ($('#ChoosingRoom_ID').is(':checked')) {
+    //        $("#ManufactureRoom_ID").removeClass('disabled');
+    //    }
+    //    else {
+    //        $("#ManufactureRoom_ID").addClass('disabled', true);
+    //    }
+    //    return false;
+    //}
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+
+<script>js_require('/js/main.js');</script>
+<style>
+    .page_status_item .arrow {
+        position: absolute;
+        top: 50%;
+        right: 50px;
+        transform: translateY(-50%);
+        color: white !important;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    }
+
+        .page_status_item .arrow i {
+            font-size: 15px;
+        }
+
+    .page_status_item.active .arrow {
+        opacity: 1;
+        right: 10px;
+    }
+
+    .page_status_check_item {
+        counter-increment: num-sections;
+    }
+
+    .page_status_check .page_status_check_item:not(.disabled):before {
+        content: counter(num-sections);
+        position: absolute;
+        margin-left: -17px;
+        margin-top: -20px;
+        width: 20px;
+        height: 20px;
+        background-color: #00bcd4;
+        text-align: center;
+        color: white;
+        line-height: 20px;
+        border-radius: 50%;
+    }
+
+    .sp-replacer {
+        display: block !IMPORTANT;
+        width: 100% !IMPORTANT;
+        padding: 0.5rem 0.75rem !IMPORTANT;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.4rem;
+        color: #495057 !important;
+        background-color: #fff !IMPORTANT;
+        background-clip: padding-box !important;
+        border: 1px solid #d2d6da !IMPORTANT;
+        height: auto !important;
+        border-radius: 0.5rem;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .NotEdit input:not(.edit) {
+        pointer-events: none;
+        background-color: #e9ecef !important;
+    }
+</style>

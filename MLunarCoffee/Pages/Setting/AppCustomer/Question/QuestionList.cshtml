@@ -1,0 +1,288 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Question.QuestionListModel
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Danh sách câu hỏi thường gặp"]</h6>
+                    <p id="QuestionLimitNote" class="text-sm mb-0"></p>
+                </div>
+                <div class="right">
+                    <div class="form-check me-2">
+                        <input id="QuestionChkDisable" class="form-check-input pr-2" type="checkbox" checked="checked">
+                        <label>@Local["Câu hỏi ẩn"]</label>
+                    </div>
+                    <button id="btnNewQuestion" class="btn bg-gradient-primary btn-sm mt-1" onclick="return QuestionAddNew()">@Local["Thêm mới"]</button>
+                </div>              
+            </div>
+            <div class="card-body pt-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center w-100 mt-2 position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table data-name="" class="table vt-table mb-0" id="dtContentQuestion">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th>#</th>
+                                <th style="min-width: 150px;">@Local["Câu hỏi"]</th>
+                                <th>@Local["Nội dung"]</th>
+                                <th style="min-width: 150px;">@Local["Người tạo"]</th>
+                                <th>@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentQuestionBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let DataUser;
+    let xhrQuestionList;
+    let QuestionData;
+    let QuestionLimitData = (ser_AcceptSettingApp['question'] != undefined && ser_AcceptSettingApp['question']['limit'] != undefined)
+        ? ser_AcceptSettingApp['question']['limit']
+        : {
+            Dimensions: "",
+            Format: "",
+            Key: "limit",
+            Limit: 10,
+            Size: 0,
+            Type: "question",
+            format: [],
+            height: 0,
+            width: 0,
+        }
+    $(document).ready(function () {
+        $('#QuestionLimitNote').html(`@Local["Hiển thị tối đa"] ${QuestionLimitData.Limit} @Local["Câu hỏi"]`);
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                QuestionLoad();
+            });
+        $('#QuestionChkDisable').prop('checked', false);
+        $('#dtContentQuestion tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr').find('.QuestionID')[0].innerHTML);
+            QuestionEdit(ID);
+        });
+        $('#dtContentQuestion tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr').find('.QuestionID')[0].innerHTML);
+            QuestionDelete(ID)
+        });
+        $('#QuestionChkDisable').unbind().change(function (event) {
+            if ($('#QuestionChkDisable').is(':checked'))
+                $('#dtContentQuestion').addClass('showdis');
+            else $('#dtContentQuestion').removeClass('showdis');
+        });
+        $('#dtContentQuestion tbody').on('click', '.buttonDisabledClass', function () {
+            let ID = Number($(this).closest('tr').find('.QuestionID')[0].innerHTML);
+            let flag = $(this).hasClass('vttech-icon-nohide');
+            QuestionDisable(ID, flag);
+        });
+    });
+
+    function QuestionLoad() {
+        AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionList/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                let data = JSON.parse(result);
+                QuestionData = JSON.parse(result);
+                QuestionRender(data, "dtContentQuestionBody");
+            }
+        );
+    }
+
+    async function QuestionRender(data, id) {
+        new Promise((reslove) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let itemContent = QuestionRenderItem(item);
+                        stringContent = stringContent + `<tr id="QuestionContent_${item.ID}" class="vt-number ${((item.IsDisabled === 1) ? ('table-active') : (""))}"" role="row" data-id="${item.ID}"> ${itemContent} </tr>`;
+                    }
+                }
+                myNode.innerHTML = stringContent;
+            }
+        })
+    }
+
+    async function QuestionRenderByID(id = 0) {
+        return new Promise((resolve) => {
+            if (xhrQuestionList && xhrQuestionList.readyState != 4) xhrQuestionList.abort();
+            xhrQuestionList = AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionDetail/?handler=Loadata"
+                , data = { id: id }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            let objIndex = QuestionData.findIndex((obj => obj.ID == id));
+                            QuestionData[objIndex].IsDisabled = JSON.parse(result)[0].IsDisabled;
+                            let item = data[0];
+                            let itemContent = QuestionRenderItem(item);
+                            let tr = `<tr id="QuestionContent_${item.ID}" class="vt-number ${((item.IsDisabled === 1) ? ('table-active') : (""))}"" role="row" data-id="${item.ID}"> ${itemContent} </tr>`;
+                            let QuestionRow = $("#QuestionContent_" + id);
+                            if (QuestionRow && QuestionRow.length != 0) {
+                                QuestionRow.replaceWith(tr);
+                            }
+                            else {
+                                document.getElementById('dtContentQuestionBody').insertAdjacentHTML('beforeend', tr);
+                            }
+                        }
+                        else {
+                            let QuestionRow = $("#QuestionContent_" + id);
+                            if (QuestionRow && QuestionRow.length != 0) QuestionRow.remove();
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#loaderList").show();
+                }
+                , complete = function (e) {
+                    $("#loaderList").hide();
+                }
+            );
+        })
+    }
+
+    function QuestionRenderItem(item) {
+        let obj = Fun_GetObject_ByID(DataUser, item.CreatedBy);
+        let name = (obj != null) ? obj.Name : 'unknown';
+        let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+        let tr =
+            '<td class="d-none QuestionID">' + item.ID + '</td>'
+            + '<td class="vt-number-order"></td>'
+            + '<td><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Question + '</a></td>'
+            + '<td><span class="content_line_clamp">' + item.Content + '</span></td>'
+            + '<td>'
+            + '<div class="d-flex">'
+            + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+            + '<img class="avatar avatar-xs mt-2" src="' + img + ' " alt="label-image">'
+            + '</div>'
+            + '<div class="d-flex flex-column">'
+            + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+            + '<span class="text-xs">' + GetDateTime_String_DMY(item.Created) + '</span>'
+            + '</div>'
+            + '</div>'
+            + '<td>'
+            + '<div class="text-nowrap cursor-pointer">'
+            + QuestionRenderButton(item.ID, item.IsDisabled)
+            + '</div>'
+            + '</td>';
+        return tr;
+    }
+
+    function QuestionRenderButton(id, isdisabled) {
+        try {
+            let buttons = [];
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                + '<i data-id="' + id + '" class="buttonDeleteClass vtt-icon vttech-icon-delete"></i>'
+                + '</button>');
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                + ((isdisabled === 1)
+                    ? '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-hide"></i>'
+                    : '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-nohide"></i>')
+                + '</button>');
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function QuestionDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { QuestionExcuteDelete(id); }, function () { });
+    }
+
+    function QuestionExcuteDelete(id) {
+        AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    QuestionLoad();
+                    syslog_mob("d", "FAQ");
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function QuestionAddNew() {
+        let data = [...QuestionData].filter(x => x.IsDisabled == 0)
+        if (data && data.length >= 0 && data.length < QuestionLimitData.Limit) {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Setting/AppCustomer/Question/QuestionDetail" + "?ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+            return false;
+        }
+        else {
+            notiWarning('@Local["Quá giới hạn số lượng câu hỏi"]');
+            return false;
+        }
+    }
+    function QuestionEdit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/AppCustomer/Question/QuestionDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function QuestionDisable(id, flag) {
+        const promise = notiConfirm();
+        promise.then(function () { QuestionExecuteDisable(id, flag); }, function () { });
+    }
+
+    function QuestionExecuteDisable(id, flag) {
+        let data = [...QuestionData].filter(x => x.IsDisabled == 0)
+        if (flag || (data && data.length >= 0 && data.length < QuestionLimitData.Limit)) {
+            AjaxLoad(url = "/Setting/AppCustomer/Question/QuestionList/?handler=DisableItem"
+                , data = { id: id }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        QuestionRenderByID(id);
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        else {
+            notiWarning('@Local["Quá giới hạn số lượng câu hỏi"]');
+        }
+    }
+</script>
+<style>
+    .table-active {
+        display: none;
+    }
+
+    .showdis .table-active {
+        display: table-row;
+    }
+
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+</style>
+<script>js_require('/js/main.js');</script>

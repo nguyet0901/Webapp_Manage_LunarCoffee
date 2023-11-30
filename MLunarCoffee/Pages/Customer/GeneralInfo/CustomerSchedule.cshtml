@@ -1,0 +1,127 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.GeneralInfo.CustomerScheduleModel
+@{
+    Layout = null;
+}
+
+<div class="card mb-3 mt-lg-0 mt-4">
+    <div class="card-header pb-0 p-3">
+        <div class="row">
+            <div class="col-md-8 d-flex align-items-center ">
+                <h6 class="mb-0">@Local["Lịch hẹn"]</h6>
+            </div>
+            <div class="col-md-4 text-end">
+
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-3">
+        <div class="timeline timeline-one-side" data-timeline-axis-style="dotted" id="generalInfo_app">
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        GeneralInfo_ShedulerLoad();
+    })
+    function GeneralInfo_ShedulerLoad () {
+
+        AjaxLoad(url = "/Customer/GeneralInfo/CustomerSchedule/?handler=Loadata"
+            , data = {'custID': ser_MainCustomerID}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0") {
+
+                    let data = JSON.parse(result);
+                    if (data.length != 0) {
+                        GeneralInfo_ShedulerRender(data, "generalInfo_app");
+                    } else {
+
+                    }
+
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function () {
+
+            }
+            , complete = function (e) {
+            }
+        );
+    }
+
+    function GeneralInfo_ShedulerRender (data, id) {
+
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let avatar_base64 =  + GeneralInfo_ShedulerRender_Doctor(item.DoctorID);
+                    let classtype = 'text-success';
+                    let subtype = '', type = '';
+                    if (item.IsCancel == 1) {
+                        classtype = 'bg-gradient-danger';
+                        type = Outlang["Lich_huy"];
+                        subtype = item.ReasonCancel;
+                    }
+                    else {
+                        type = item.TypeName;
+                        if (item.Type == 1) {
+                            classtype = 'bg-gradient-success';
+                        } else {
+                            classtype = 'bg-gradient-info';
+                        }
+                    }
+                    tr = '<div class="timeline-block mb-3">'
+                        + '<span class="timeline-step">'
+                        + '<img src="' + avatar_base64 + '" alt="kal" class="border-radius-lg shadow">'
+                        + '</span>'
+                        + '<div class="timeline-content">'
+                        + '<h6 class="text-dark text-sm font-weight-bold mb-0">'
+                        + item.ShortName
+                        + '</h6>'
+                        + '<p class="text-sm mt-1 mb-0">' + ConvertTimeSpanUTC_Time(item.Date_From) + '</p>'
+                        + '<p class="text-sm text-dark mt-1 mb-0">'
+                        + item.Content
+                        + '</p>'
+                        + '<span class="badge badge-sm ' + classtype + '">' + type + '</span>'
+                        + '<span style="margin-left: 6px;" class="badge badge-sm ' + classtype + '">' + subtype + '</span>'
+                        + '</div>'
+                        + '</div>';
+                    stringContent = stringContent + tr;
+                }
+
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function GeneralInfo_ShedulerRender_Doctor (DoctorID) {
+        if (Number(DoctorID) != 0) {
+            let obj = Fun_GetObject_ByID(DataEmployee, DoctorID);
+            if (obj != null) {
+                return obj.Avatar;
+            }
+        }
+        return Master_Default_Pic;
+    }
+
+
+</script>
+
+<style>
+    .timeline-step img {
+        width: 30px;
+        height: 30px;
+        background: transparent;
+    }
+</style>

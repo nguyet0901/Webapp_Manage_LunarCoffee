@@ -1,0 +1,100 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.TypeCustomerStatusDetailModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+</head>
+<body>
+
+    <div data-languagestatic="list_status_consulting_detail_header" class="header header_form_main">
+        Chi Tiết Tình Trạng Tư Vấn
+    </div>
+
+    <div class="row">
+        <div class="sixteen wide tablet eight wide computer column">
+            <div class="ui segments">
+                <form class="ui form segment form3" id="form3">
+                    <div class="field">
+                        <label><span data-languagestatic="status">Tình Trạng</span><span> *</span></label>
+                        <input id="StatusName" name="name" type="text" />
+                    </div>
+                    <div class="field">
+                        <label data-languagestatic="note">Ghi Chú</label>
+                        <textarea id="StatusNote" name="content" style="height: 50px!important"></textarea>
+                    </div>
+                    <div class="field">
+                        <div style="font-size: 12px; text-align: center; color: red" id="textShowMessage"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div style="float: right">
+            <button data-languagestatic="button_ok" class="ui teal button saveButton  _tab_control_" data-tab="edit_tab_type_customer_status" onclick="event.preventDefault();return ExcuteData()">Save</button>
+        </div>
+        <div style="float: right">
+            <button data-languagestatic="button_cancel" class="ui grey button cancelButton" onclick="event.preventDefault(); return CloseModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var ser_TelePageTypeCustomerStatusDetailID;
+
+        $(document).ready(function () {
+            ser_TelePageTypeCustomerStatusDetailID = "@Model._TelePageTypeCustomerStatusDetailID";
+            if (ser_TelePageTypeCustomerStatusDetailID != "0") LoadDataTypeCustomerStatusDetail();
+            Checking_TabControl_Permission();
+        });
+
+        function LoadDataTypeCustomerStatusDetail() {
+            AjaxLoad(url = "/Setting/TypeCustomerStatusDetail/?handler=Loadata"
+                , data = {
+                    id: ser_TelePageTypeCustomerStatusDetailID
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataUnit = JSON.parse(result);
+                    $('#StatusName').val((dataUnit[0].Name));
+                    $('#StatusNote').val((dataUnit[0].Note));
+                });
+
+        }
+
+        function ExcuteData() {
+            var data = new Object();
+            data.Name = $('#StatusName').val() ? $('#StatusName').val() : "";
+            data.Note = $('#StatusNote').val() ? $('#StatusNote').val() : "";
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                AjaxLoad(url = "/Setting/TypeCustomerStatusDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_TelePageTypeCustomerStatusDetailID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            LoadTypeCustomerStatusjax();
+                            $('#DetailModal').modal('hide');
+                            $("#DetailModal_Content").html('');
+                        } else {
+                            document.getElementById("textShowMessage").innerHTML = result;
+                        }
+                    });
+
+            }
+            return false;
+        }
+
+    </script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+    <script>js_require('/js/main.js');</script>
+</body>
+</html>

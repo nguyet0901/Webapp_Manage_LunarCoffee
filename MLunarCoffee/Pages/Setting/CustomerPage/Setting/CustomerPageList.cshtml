@@ -1,0 +1,136 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerPage.Setting.CustomerPageListModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Danh sách thuộc tính trang khách hàng"]</h6>
+                        <p class="text-sm mb-0">@Local["Cấu hình hiển thị hình ảnh, nội dung"],..</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="dtContentSettingCustomerWebPage" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width:45px;">#</th>
+                                    <th>@Local["Hình ảnh"]</th>
+                                    <th>@Local["Thuộc tính"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentSettingCustomerPageBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    let DataUser;
+    $(document).ready(function () {
+        CP_Load();
+        CP_Event();
+    });
+
+    function CP_Load() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Setting/CustomerPage/Setting/CustomerPageList/?handler=LoadData"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result);
+                            CP_Render(data, 'dtContentSettingCustomerPageBody');
+                        }
+                    });
+            });
+
+    }
+
+    function CP_Render(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+                    let tr = `<td class="d-none CP_ID"> ${item.ID} </td>
+                                      <td class="d-none CP_Type"> ${item.Type} </td>
+                                      <td class="vt-number-order"></td>
+                                      <td> ${CP_LoadPropertiesImage(item.Type, item.Value)} </td>
+                                      <td class="col col-md-6 mx-auto">
+                                          <a class="text-decoration-underline fw-bold buttonEditClass" href="#"> ${item.Name} </a>
+                                          <p class="mb-0 text-sm"> ${item.Value} </p>
+                                      </td>
+                                      <td class="col col-md-3">
+                                          <div class="d-flex f-md-right">
+                                              <div class="icon icon-shape icon-sm me-2 text-center" >
+                                                  <img class="avatar avatar-xs mt-2 " src="${img}" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                                                  </div>
+                                                  <div class="d-flex flex-column">
+                                                  <h6 class="text-dark text-sm mb-0"> ${name} </h6>
+                                                  <span class="text-xs"> ${item.DayEditor} </span>
+                                              </div>
+                                          </div>
+                                      </td>`;
+                    stringContent = stringContent + `<tr class="vt-number" role="row"> ${tr} </tr>`;
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function CP_LoadPropertiesImage(type, value) {
+        let result = '';
+        if (type == 'img') {
+            result = `<div class="text-center">
+                                  <div class="avatar avatar-xl position-relative">
+                                    <img class="border-radius-md h-100" src="${value}" alt="label-image" onerror="Master_OnLoad_Error_Image(this)"/>
+                                  </div>
+                              </div>`;
+        }
+        return result;
+    }
+
+    function CP_Edit(CurrentID, Type) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerPage/Setting/CustomerPageDetail?CurrentID=" + CurrentID + "&Type=" + Type + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function CP_Event() {
+        $('#dtContentSettingCustomerWebPage tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr').find('.CP_ID')[0].innerHTML);
+            let Type = String($(this).closest('tr').find('.CP_Type')[0].innerHTML).trim();
+            CP_Edit(ID, Type);
+        });
+    }
+</script>
+
+<script>js_require('/js/main.js')</script>
+<style>
+    @@media (max-width: 767.98px) {
+        .f-md-right {
+            float: right;
+        }
+    }
+</style>

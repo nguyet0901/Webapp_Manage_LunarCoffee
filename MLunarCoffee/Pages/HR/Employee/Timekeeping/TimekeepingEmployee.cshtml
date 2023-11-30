@@ -1,0 +1,404 @@
+﻿@page
+@model MLunarCoffee.Pages.HR.Employee.Timekeeping.TimekeepingEmployeeModel
+@{
+    Layout = null;
+}
+<div class="card card-plain">
+    <div class="vtcardheader card-header p-0 w-100"> 
+        <div class="vtcondition w-100">
+            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+            <div class="fulllap collapse collapsesticky show">
+                <div class="row m-0 d-lg-flex">
+                    <div class="col-12 col-sm-3 px-0 py-1 pe-sm-2">
+                        <div class="ui fluid search selection dropdown form-control" id="TkeepBranchID" onchange="event.preventDefault();return TKeep_Filter();">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Chọn chi nhánh"]</div>
+                            <div id="cbbTkeepBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-3 px-0 py-1 pe-sm-2">
+                        <div class="ui fluid search selection dropdown form-control" id="TkeepEmpGroupID" onchange="event.preventDefault();return TKeep_Filter();">
+                            <input type="hidden" name="Emp" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Nhóm nhân viên"]</div>
+                            <div id="cbbTkeepEmpGroup" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 px-0 py-1 pe-sm-2">
+                        <div class="input-group flex-nowrap rounded-end position-relative">
+                            <div class="input-group-text py-0 px-3 position-relative ">
+                                <div id="TkeepBlockTime" class="px-2 rounded-2 bg-gradient-primary text-white" style="border-radius: 10px !important;" title="" data-bs-toggle="tooltip" data-bs-original-title="@Local["Giới hạn ngày"]">
+                                    <div class="text-sm">31</div>
+                                </div>
+                            </div>
+                            <input class="flatpickr form-control input-group-text text-start" id="TkeepDate" type="text" placeholder="@Local["Chọn ngày"].." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-1">
+            <button class="btn bg-gradient-primary btn-sm mt-0 mb-0" onclick="event.preventDefault();TKeep_LoadData();">@Local["OK"]</button>
+            <button class="btn bg-gradient-primary btn-sm mt-0 mb-0 _tab_control_" data-tab="export_excel" title="@Local["Xuất"]" data-value="fade up" onclick="event.preventDefault();return TKeep_Export();">@Local["Xuất"]</button>
+            <button class="btn btn-dark mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#TKeep_DivCheckbox">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-3" id="TKeep_DivCheckbox" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="branchcode" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Mã chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="day" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Ngày"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogle form-check-input" data-name="minute" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Phút"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-2 p-0">
+        <div class="m-0 my-3 pb-0 mobile-responsive mb-0 vt-header-sticky" style="max-height: calc(100vh - 250px)">
+            <div id="Tkeep_Loader" class="waitingdiv text-center w-100 mt-2 position-absolute translate-middle-x start-50" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <table id="dtContentTimekeep" class="table vt-table mb-0 ">
+                <thead id="dtContentTimekeepHeader" class="hiddenCollapse">
+                </thead>
+                <tbody id="dtContentTimekeepBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    //#region //Init & Event
+    let TK_DataTime = {}
+    let TK_DataEmployee;
+    let TK_Flag = 0;
+    var shtabletime;
+    var TK_DFrom;
+    var TK_DTo;
+    $(document).ready(function () {
+        shtabletime = $("#dtContentTimekeep").TableExpandColumn({
+            shtoogle: $('#TKeep_DivCheckbox .shtoogle')
+        });
+
+        $("#TkeepBlockTime").tooltip()
+        $("#TkeepDate").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (selectedDates.length != 1) {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > 31) {
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                    }
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#TkeepDate").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        TKeep_Init();
+        Checking_TabControl_Permission();
+        TKeep_Event();
+    });
+
+    function TKeep_Event () {
+        $("#TKeep_DivCheckbox input").change(function () {
+            let ColSpan = $('.ColDistance').filter(function () {
+                return !($(this).css('display') == 'none')
+            }).length
+
+            $(".DayHeader").attr("colspan", ColSpan);
+        });
+    }
+
+    //#endregion
+
+    //#region //Load
+    function TKeep_Init() {
+        AjaxLoad(url = "/HR/Employee/Timekeeping/TimekeepingEmployee/?handler=Init"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataBranch = data.Branch;
+                    let dataEmployeeGroup = data.GroupEmployee;
+                    TK_DataEmployee = data.Employee;
+
+                    Load_Combo(dataBranch, "cbbTkeepBranch", true, "@Local["Tất cả chi nhánh"]");
+                    Load_Combo(dataEmployeeGroup, "cbbTkeepEmpGroup", true, "@Local["Tất cả bộ phận"]");
+                    $("#TkeepBranchID").dropdown("refresh");
+                    $("#TkeepBranchID").dropdown("set selected", "0");
+                    $("#TkeepEmpGroupID").dropdown("refresh");
+                    $("#TkeepEmpGroupID").dropdown("set selected", "0");
+                    TK_Flag = 1;
+                    TKeep_LoadData();
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function TKeep_LoadData() {
+        TK_DataTime = {};
+        //let dateFrom, dateTo;         
+        let date = $('#TkeepDate').val() ? $('#TkeepDate').val() : new Date();
+        if (date.search(" to ") > 0) {
+            date = date.replace(" to ", "x");
+            TK_DFrom = date.split('x')[0];
+            TK_DTo = date.split('x')[1];
+        }
+        else {
+            TK_DFrom = date;
+            TK_DTo = date;
+        }
+
+        AjaxLoad(url = "/HR/Employee/Timekeeping/TimekeepingEmployee/?handler=LoadData"
+            , data = {
+                dateFrom: TK_DFrom,
+                dateTo: TK_DTo
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    TKeep_GeneralDataTime(data);                    
+                    TKeep_Render(TK_DataEmployee
+                        , 'dtContentTimekeepHeader'
+                        , 'dtContentTimekeepBody');
+                }
+                else {
+                    notiError_SW();
+                }
+
+            }
+            , sender = null
+            , before = function (e) {
+                $("#Tkeep_Loader").show();
+            }
+            ,complete = function (e) {
+                $("#Tkeep_Loader").hide();
+            }
+        );
+    }
+
+    function TKeep_GeneralDataTime(data) {
+        TK_DataTime = {};
+        if (data && data.length != 0) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let result = data.filter(word =>{return word['EmpID'] == item.EmpID && word['NumDate'] == item.NumDate});
+                if (TK_DataTime[item.EmpID] != undefined) {
+                    TK_DataTime[item.EmpID][item.NumDate] = result;
+                }
+                else {
+                    TK_DataTime[item.EmpID] = {};
+                    TK_DataTime[item.EmpID][item.NumDate] = result;
+                }
+            }
+        }        
+    }
+    //#endregion
+
+    //#region // RENDER
+
+    async function TKeep_Render(data, idHeader, idBody) {
+        new Promise((resolve) => {
+            TKeep_RenderHeader(idHeader, TK_DFrom, TK_DTo);
+            document.getElementById(idBody).innerHTML = '';
+            fnRenderBlock(data, idBody
+                    , blocknum = (data.length/3).toFixed(0)
+                    , fnrender = TKeep_RenderBody
+                    , fnsuccess = null
+                );
+        });
+    }
+
+    async function TKeep_RenderHeader(id, datefrom, dateto) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '', stringDetailContent = '', stringDate = '';
+                let _NumCol = $("#TKeep_DivCheckbox input").prop('checked', false).length;
+                let _colspan = 7 - _NumCol;
+                let _dFrom = ConvertOnly_DMY_To_DateTime(datefrom);
+                let _dTo = ConvertOnly_DMY_To_DateTime(dateto);
+                let isdiffYear = Distance_Year_2Date(_dFrom, _dTo) > 0;
+                let _distanceDay = Math.ceil((_dTo - _dFrom) / (1000 * 60 * 60 * 24));
+                for(let i = 0; i <= _distanceDay ; i++){
+                    let strDate = isdiffYear ? ConvertDateTimeToString_D_M_Y(_dFrom) : ConvertDateTimeToString_D_M(_dFrom);
+                    stringDate += `
+                            <th colspan="${_colspan}" class="DayHeader" style="min-width: 120px;">${strDate}</th>
+                    `
+                    stringDetailContent += `
+                        <th class="${i == 0 ? 'ColDistance' : ''}" data-name="branchcode">@Local["Mã"]</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}">@Local["Ca"]</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}">In</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}">Out</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}" data-name="day">@Local["Ngày"]</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}">@Local["Giờ"]</th>
+                        <th class="${i == 0 ? 'ColDistance' : ''}" data-name="minute">@Local["Phút"]</th>
+                    `
+                    _dFrom.setDate(_dFrom.getDate() + 1);
+                }
+                stringContent = `
+                    <tr class="bg-gray-100" role="row" rowspan="2">
+                        <th class="d-none">ID</th>
+                        <th style="width: 25px;" rowspan="2">#</th>
+                        <th rowspan="2">@Local["Mã"]</th>
+                        <th rowspan="2">@Local["Tên"]</th>
+                        <th rowspan="2" data-name="day">@Local["Ngày"]</th>
+                        <th rowspan="2">@Local["Giờ"]</th>
+                        <th rowspan="2" data-name="minute">@Local["Phút"]</th>
+                        ${stringDate}
+                    </tr>
+                    <tr class="bg-gray-100">
+                        ${stringDetailContent}
+                    </tr>
+                `
+                myNode.innerHTML = stringContent;
+            }
+            shtabletime.Refresh();
+        })
+    }
+
+    async function TKeep_RenderBody(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let stringContent = '';
+                let _dFrom = ConvertOnly_DMY_To_DateTime(TK_DFrom);
+                let _dTo = ConvertOnly_DMY_To_DateTime(TK_DTo);
+                let _distanceDay = Math.ceil((_dTo - _dFrom) / (1000 * 60 * 60 * 24));
+
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent += TKeep_RenderBodyEach(item, _dFrom, _distanceDay);
+                }
+                myNode.insertAdjacentHTML('beforeend', stringContent);
+            }
+            shtabletime.Refresh();
+        })
+    }
+
+    function TKeep_RenderBodyEach (item, dateFrom, distance = 0) {
+        let result = '';
+        let trTotal = '';
+        let _empID = item.EmpID;
+        let _dataEmpTime = TK_DataTime[_empID] != undefined ? TK_DataTime[_empID] : {};
+        let _totalMinutes = 0;
+        let _numdatefrom = ConvertDateTime_To_YMDInt(dateFrom);
+        let _dataTime = (_dataEmpTime[_numdatefrom] != undefined && TK_DataTime[_empID] != undefined) ? TK_DataTime[_empID][_numdatefrom] : [];
+        let rowspan = ((_dataTime.length == 0) ? (_dataEmpTime[Object.keys(_dataEmpTime)[0]] ?? [])[0]?.Rowspan ?? 1 : _dataTime[0].Rowspan) || 1;
+        for(let j = 0 ; j < rowspan;j++){
+            let trbody = '';
+            let tr = '';
+            let _dateNew = new Date(dateFrom);
+            for (let i = 0; i <= distance; i++){
+                let dateInt = ConvertDateTime_To_YMDInt(_dateNew);
+                let timeCheckin = '', timeCheckout = '', branchcode = '', shiftname = '';
+                let timeDistance = 0;
+                _dataTime = (_dataEmpTime[dateInt] != undefined && TK_DataTime[_empID] != undefined) ? TK_DataTime[_empID][dateInt] : [];
+                if(_dataTime[j] != undefined){
+                    timeCheckin = ConvertTimeInt_ToTime(_dataTime[j].TimeCheckin);
+                    timeCheckout = ConvertTimeInt_ToTime(_dataTime[j].TimeCheckout);
+                    branchcode = _dataTime[j].BranchCode;
+                    shiftname = _dataTime[j].ShiftName;
+                }
+                if (timeCheckin != '' && timeCheckout != ''){
+                    let _minute = HHMM_Distance_HHMM(timeCheckin, timeCheckout);
+                    timeDistance = _minute;
+                    _totalMinutes += _minute;
+                }                
+                trbody += `
+                    <td data-name="branchcode">${branchcode}</td>
+                    <td>${shiftname}</td>
+                    <td>${timeCheckin != '' ? (timeCheckin) : ''}</td>
+                    <td>${timeCheckout != '' ? (timeCheckout) : ''}</td>
+                    <td class="text-center" data-name="day">${timeCheckin != '' && timeCheckout != '' ? formatNumber(((timeDistance/60) / 24).toFixed(2)) : ''}</td>
+                    <td class="text-center">${timeCheckin != '' && timeCheckout != '' ? formatNumber((timeDistance/60).toFixed(2)) : ''}</td>
+                    <td class="text-center" data-name="minute">${timeCheckin != '' && timeCheckout != '' ? formatNumber((timeDistance).toFixed(2)) : ''}</td>
+                `
+                _dateNew.setDate(_dateNew.getDate() + 1);
+            }
+                    
+            if (j+1 == rowspan) {
+                tr = `<td rowspan="${rowspan}" class="vt-number-order"></td>
+                    <td rowspan="${rowspan}">${item.Code}</td>
+                    <td rowspan="${rowspan}">${item.Name}</td>                
+                    <td rowspan="${rowspan}" class="text-center" data-name="day">${formatNumber(((_totalMinutes / 60) / 24).toFixed(2))}</td>
+                    <td rowspan="${rowspan}" class="text-center">${formatNumber((_totalMinutes / 60).toFixed(2))}</td>
+                    <td rowspan="${rowspan}" class="text-center" data-name="minute">${formatNumber((_totalMinutes).toFixed(2))}</td>
+                `
+                trTotal += `<tr id="rowTKEmp_${_empID}" class="vt-number">`+ tr + trbody + '</tr>'
+            }
+            else {
+                tr = '';                
+                result += `<tr id="rowTKEmp_${_empID}" class="vt-number">`+ tr + trbody + '</tr>'
+            }
+        }        
+        return trTotal + result;
+    }
+    //#endregion
+
+
+    function TKeep_Filter() {
+        if(TK_Flag == 0) return;
+        let _branchid = Number($('#TkeepBranchID').dropdown('get value')) ? Number($('#TkeepBranchID').dropdown('get value')) : 0;
+        let _groupid = Number($('#TkeepEmpGroupID').dropdown('get value')) ? Number($('#TkeepEmpGroupID').dropdown('get value')) : 0;
+
+        if (_branchid != 0 || _groupid != 0) {
+            let IDBranchstring=  ',' + _branchid + ','
+            for(let i = 0 ; i < TK_DataEmployee.length ; i++){
+                let emp = TK_DataEmployee[i];
+                if ((_branchid == 0 || (_branchid != 0 && ((',' + emp["BranchID"] + ',').includes(IDBranchstring) || (emp["IsAllBranch"] == "1"))))
+                    && (_groupid == 0 || (_groupid != 0 && emp["GroupID"] == _groupid))
+                ) {
+                    $("#rowTKEmp_" + emp.EmpID).removeClass("d-none");
+                }
+                else{
+                    $("#rowTKEmp_" + emp.EmpID).addClass("d-none");
+                }
+            }
+        }
+    }
+
+    function TKeep_Export() {
+        exportToExcel("dtContentTimekeep", Outlang['Lich_su_cham_cong'] != undefined ? Outlang['Lich_su_cham_cong'] : 'excel' );
+    }
+
+</script>

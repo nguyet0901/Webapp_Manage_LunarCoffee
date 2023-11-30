@@ -1,0 +1,324 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.DrugStore.DrugStorePaymentModel
+
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-plain" id="DSP_MasterContainer">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Thanh toán thuốc"]</h6>
+                                <p class="text-sm mb-0">@Local["Xóa trong ngày. Chỉ người tạo mới được quyền xóa"]</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+                            <button id="DSP_btnAdd" class="btn bg-gradient-primary btn-sm mt-1 d-none" onclick="DSP_NewPayment()">@Local["Thêm mới"]</button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-body pt-2 position-relative">
+                    <div class="row">
+                        <div class="col-lg-8 col-md-6 col-12 mt-0">
+                            <div class="m-0 my-3 mobile-responsive">
+                                <div id="DSP_WaitingDiv" class="waitingdiv text-center" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="sheet_cart_load_empty" id="DSP_List_Empty" style="display:none">
+                                    @Local["Không có dữ liệu"]
+                                </div>
+                                <table data-name="ContentPaymentMedicine" class="table vt-table mb-0" id="DSP_dtContent">
+                                    <thead>
+                                        <tr>
+                                            <th class="d-none">ID</th>
+                                            <th style="width: 25px;">@Local["#"]</th>
+                                            <th>@Local["Mã phiếu"]</th>
+                                            <th>@Local["Tiền thanh toán"]</th>
+                                            <th>@Local["Xử lý"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="DSP_dtContentBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-12 col-md-6 mt-4 mt-lg-0">
+                            <div class="p-0">
+                                <div class="card-body p-3 pt-1">
+ 
+                                    <div class="border-0 p-2 text-dark bg-gray-100 border-radius-lg mt-2">
+                                        @*<div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Ngày kê toa"]</span>
+                                            <span id="DSP_Created" class="fw-bold text-primary text-sm ms-4"></span>
+                                        </div>
+                                        <hr class="horizontal dark my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Người kê toa"]</span>
+                                            <span id="DSP_CreatedBy" class="fw-bold text-primary text-sm ms-4"></span>
+                                        </div>
+                                        <hr class="horizontal dark my-2">*@
+                                        <div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Giá tiền"]</span>
+                                            <span id="DSP_lbPrice" class="fw-bold text-primary text-sm ms-4"></span>
+                                        </div>
+                                        <hr class="horizontal dark my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Chiết khấu"]</span>
+                                            <span class="fw-bold text-primary text-sm ms-4">
+                                                <span class="pe-2 text-primary" id="DSP_lbDiscountPer"></span>
+                                                <span id="DSP_lbDiscountAmount">0</span>
+
+                                            </span>
+                                        </div>
+                                        <hr class="horizontal dark my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Thành tiền"]</span>
+                                            <span id="DSP_lbAmount" class="fw-bold text-primary text-sm ms-4">0</span>
+                                        </div>
+                                        <hr class="horizontal dark my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="mt-1 text-sm">@Local["Đã thanh toán"]</span>
+                                            <span id="DSP_lbPayment" class="fw-bold text-primary text-sm ms-4">0</span>
+                                        </div>
+ 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--Detail-->
+            <div id="DSP_DetailContainer">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    var DSP_CustMedID = "@Model._CustMedID";
+    let DSP_CustID = 0;
+    let DSP_DataEmp;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DSP_DataEmp = data[0];
+                DSP_LoadData();
+                DSP_Event();
+            })
+        Checking_TabControl_Permission();
+    });
+
+    //#region // LOAD DATA
+    function DSP_LoadData() {
+        AjaxLoad(url = "/WareHouse/DrugStore/DrugStorePayment/?handler=LoadataPaymentMedicine"
+            , data = {
+                'CustMedID': DSP_CustMedID
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "[]" && result != "0") {
+                    let data = JSON.parse(result);
+                    DSP_RenderInfo(data.Table);
+                    DSP_RenderData(data.Table1, 'DSP_dtContentBody');
+                }
+                else if (result == "[]") {
+                    $('#DSP_List_Empty').show();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = $('#DSP_btnAdd')
+            , before = function () {
+                $('#DSP_List_Empty').hide();
+                $("#DSP_WaitingDiv").show();
+            }
+            , complete = function (e) {
+                $("#DSP_WaitingDiv").hide();
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // RENDER DATA
+
+    function DSP_RenderInfo(data) {
+        if (data && data.length > 0) {
+            let item = data[0];
+            DSP_CustID = item.CustID;
+            
+            //Payement
+            let DSP_Price = 0;
+            $('#DSP_lbPrice').html(formatNumber(item?.PriceRoot));
+
+
+            if (item.DiscountAmount == 0) {
+                if (item.DiscountPercent != 0) {
+                    //Type %
+                    $('#DSP_lbDiscountPer').html(`${formatNumber(item?.DiscountPercent)}`);
+                    DSP_Price = (item.PriceRoot * item?.DiscountPercent) / 100;
+                }
+                else {
+                    $('#DSP_lbDiscountPer').html('');
+                }
+
+            }
+            else {
+                //Type VND
+                $('#DSP_lbDiscountPer').html(``);
+                DSP_Price = item.DiscountAmount;
+            }
+            $('#DSP_lbAmount').html(formatNumber(item?.PriceDiscounted));
+            $('#DSP_lbDiscountAmount').html(`${formatNumber(DSP_Price)}`);
+            $('#DSP_lbPayment').html(`${formatNumber(item?.PayAmount)}`);
+            //  $('#DSP_Customer').attr('href', `/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}"`);
+            //  $('#DSP_Customer').html(`${item.CustName} [${item.CustCode}]`);
+            //$('#DSP_CreatedBy').html(`${DSP_DataEmp[item?.CreatedBy ?? 0]?.Name ?? ""}`);
+            //$('#DSP_Created').html(`${ConvertDateTimeUTC_DMYHM(item.Created)}`);
+            if(item.PriceDiscounted == 0 || item.PayAmount < item.PriceDiscounted) {
+                $('#DSP_btnAdd').removeClass('d-none')
+            }
+            else {
+                $('#DSP_btnAdd').addClass('d-none')
+            }
+        }
+    }
+
+    async function DSP_RenderData(data, id) {
+        new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `
+                                <tr role="row" class="vt-number">
+                                    <td class="d-none">${item.ID}</td>
+                                    <td class="vt-number-order text-center"></td>
+                                    <td>
+                                        <h6 class="mb-0 text-dark text-sm">${item.InvoiceNum}</h6>
+                                        <span class="text-xs">${GetDateTime_String_DMYHM(item.Created)}</span>
+                                    </td>
+                                    <td>
+                                        <h6 class="mb-0 text-dark text-sm">
+                                            ${author_get("UserLang") == 'en' ? Outlang[item.MethodNameLangKey] : item.MethodName}
+                                            ${item.TransferType != "" ? ' - ' + item.TransferType : ''}
+                                            ${item.PosType != "" ? ' - ' + item.PosType : ''}
+                                        </h6>
+                                            <span class="text-primary text-sm">${formatNumber(item.Amount)}</span>
+                                    </td>
+                                    <td class="text-nowrap"> ${DSP_RenderData_Button(item.ID, item.InvoiceNum, item.IsDelete)} </td>
+                                    <td class="d-none" id="DSP_ThirdAccount_${item.ID}"  data-code="${item.InvoiceNum}" data-type="${item.AccountingVoucherType}" data-refid="${item.AccountingRefid}"></td>
+                                </tr>
+                            `
+                        stringContent = stringContent + tr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+            resolve();
+        })
+    }
+
+    function DSP_RenderData_Button(id, code, isDelete) {
+        let buttons = [];
+        buttons.push(`<button class="buttonGrid" value="${id}"><i datacode="${code}" class="DSP_btnPrintClass vtt-icon vttech-icon-print"></i></button>`)
+        if (isDelete == 1) {
+            buttons.push(`<button class="buttonGrid _tab_control_" data-tab="delete_tab_payment" value="${id}"><i  class="DSP_btnDelete vtt-icon vttech-icon-delete"></i></button>`);
+        }
+        return Render_Button_Grid(buttons);
+    }
+
+    //#endregion
+
+    // #region // EVENT
+
+    function DSP_Event() {
+        $('#DSP_dtContent tbody').on('click', '.DSP_btnPrintClass', function () {
+            let ID = Number($(this).closest('tr')[0].children[0].innerHTML);
+            let code = $(this).attr("datacode");
+            syslog_cutpaid('p', code, DSP_CustID);
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=invoice_medicine&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+
+
+        });
+        $('#DSP_dtContent tbody').on('click', '.DSP_btnDelete', function () {debugger
+            let ID = Number($(this).closest('tr')[0].children[0].innerHTML);
+            DSP_DeleteData(ID);
+        });
+    }
+
+    function DSP_DeleteData(id) {
+        const promise = notiConfirm();
+        promise.then(function () { DSP_ExecuteDeleteData(id); }, function () { });
+    }
+
+    async function DSP_ExecuteDeleteData(id) {
+        new Promise((resolve, reject) => {
+            AjaxLoad(url = "/WareHouse/DrugStore/DrugStorePayment/?handler=DeleteItemMedicine"
+                , data = { 'id': id }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        if (typeof DSP_DelThirdAccounting === 'function') DSP_DelThirdAccounting(id)
+                        syslog_cutpaid('d', result, DSP_CustID);
+                        if (typeof DSP_LoadData == 'function') DSP_LoadData();
+                        if (typeof DSD_GetInfo == "function") DSD_GetInfo()
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+            resolve();
+        });
+    }
+
+    function DSP_NewPayment() {
+        $("#DSP_DetailContainer").empty();
+        $("#DSP_DetailContainer").load("/Customer/Payment/PaymentMedicineDetail?CustomerID=" + DSP_CustID + "&MedID=" + DSP_CustMedID + "&ver=" + versionofWebApplication,
+            function () {
+                $("#DSP_MasterContainer").hide();
+                $("#DSP_DetailContainer").show();
+            });
+    }
+
+    function DSP_CancelDetail() {
+        $("#DSP_DetailContainer").empty();
+        $("#DSP_MasterContainer").show();
+    }
+   // #endregion
+    //#region //ThirdAccount Delete
+    function DSP_DelThirdAccounting(id) {
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+            APIAccount_Excute(id, type = 7, action = "del"
+                , beforefunc = function () { }
+                , successfunc = function (e){}
+                , failfunc = function (message) {notiWarning(message)}
+                , completefunc = function () { }
+            );
+        }
+    }
+    //#endregion
+  
+
+</script>
+<script>js_require('/js/main.js');</script>

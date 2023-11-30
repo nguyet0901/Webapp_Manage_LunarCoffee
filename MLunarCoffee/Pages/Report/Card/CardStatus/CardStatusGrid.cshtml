@@ -1,0 +1,819 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Card.CardStatus.CardStatusGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="collapsesticky collapse show" id="CS_General">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Trạng thái thẻ trả trước"]</h6>
+            <p class="text-sm mb-0">@Local["Báo cáo trạng thái thẻ trả trước"]</p>
+        </div>
+        <div class="right">
+            <div class="text-primary fw-bold d-inline mx-2">
+                <span id="CS_currentdata">0</span>
+                <span class="mx-2">/</span>
+                <span id="CS_totaldata">0</span>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#CS_GeneralDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return CS_LoadData()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return CS_Export()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["In báo cáo"]">
+                <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); CS_PrintReport()"></i>
+            </div>
+        </div>        
+    </div>
+    <div class="card-body p-0 pt-0 collapsesticky collapse show" id=CS_GeneralDiv>
+        <div class="row m-0">
+            <div class="col-lg-3 col-sm-4 px-0 pe-sm-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex flex-column">
+                            <h6 class="text-sm text-primary text-gradient mb-0">@Local["Còn hạn"]</h6>
+                            <h6 class="font-weight-bolder" id="CS_AmountLimited">0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-4 px-0 pe-sm-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex flex-column">
+                            <h6 class="text-sm text-primary text-gradient mb-0">@Local["Hết hạn"]</h6>
+                            <h6 class="font-weight-bolder" id="CS_AmountExpired">0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-4 px-0 pe-sm-2">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex flex-column">
+                            <h6 class="text-sm text-primary text-gradient mb-0">@Local["Không khóa"]</h6>
+                            <h6 class="font-weight-bolder" id="CS_AmountUnBlock">0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-4 px-0">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex flex-column">
+                            <h6 class="text-sm text-primary text-gradient mb-0">@Local["Khóa"]</h6>
+                            <h6 class="font-weight-bolder" id="CS_AmountBlock">0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="m-0 my-3 mobile-responsive">
+            <table class="table vt-table mb-0" id="CS_Grid">
+                <thead>
+                    <tr>
+                        <th style="width: 60px">#</th>
+                        <th>@Local["Mã thẻ"]</th>
+                        <th>@Local["Khách hàng"]</th>
+                        <th>@Local["Thành tiền"]</th>
+                        <th>@Local["Giá trị sử dụng"]</th>
+                        <th>@Local["Tiền đã sử dụng"]</th>
+                        <th>@Local["Tiền đã thanh toán"]</th>
+                        <th>@Local["Số lần sử dụng"]</th>
+                        <th>@Local["Ngày hết hạn"]</th>
+                        <th>@Local["Tình trạng"]</th>
+                        <th>@Local["Khóa thẻ"]</th>
+                    </tr>
+                </thead>
+                <tbody id="CS_GridBody">
+                </tbody>
+            </table>
+        </div>
+        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return CS_RenderMore();">
+            @Local["Xem thêm"]
+        </button>
+    </div>
+</div>
+<div id="CS_GeneralDetail" class="mt-3" style="display:none;">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <p id="CS_DetailCardStatus" class="text-md text-dark font-weight-bold mb-1"></p>
+        </div>
+        <div class="right">
+            <div class="wrap">
+                <div class="wrapblock">
+                    <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                        <span id="CS_currentdetaildata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="CS_totaldetaildata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#CS_GeneralDetailDiv" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); CS_DetailPrintReport()"></i>
+                    </div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return CS_ExportDetail(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return CS_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                </div>
+                <div class="wrapblock">
+                    <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="StatusCard" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Tình trạng thẻ"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="branch" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="created" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Ngày tạo"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="createdby" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người tạo"]</p>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="CS_GeneralDetailDiv">
+        <div class="card-body p-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <table data-name="CS_GridDetail" class="table vt-table mb-0" id="CS_GridDetail">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">#</th>
+                            <th data-name="cardcode">@Local["Mã thẻ"]</th>
+                            <th style="min-width: 140px">@Local["Mã khách hàng"]</th>
+                            <th data-name="custname">@Local["Khách hàng"]</th>
+                            <th data-name="service">@Local["Dịch vụ/sản phẩm"]</th>
+                            <th data-name="amount">@Local["Tiền đã sử dụng"]</th>
+                            <th>@Local["Tiền đã sử dụng"]</th>
+                            <th data-name="StatusCard">@Local["Tình trạng thẻ"]</th>
+                            <th data-name="branch">@Local["Chi nhánh"]</th>
+                            <th data-name="created">@Local["Ngày tạo"]</th>
+                            <th data-name="createdby">@Local["Người tạo"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="CS_GridDetailBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return CS_RenderDetailMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    let _branchID = "@Model._branchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let xhrLoadList, xhrLoadDetail;
+    let shtableDetail;
+    let DataEmp;
+    let DataReportMain, DataReportMainSlice, DataReportMainDetail, DataReportMainDetailSlice;
+    let IndexReport = 0; IndexReportDetail = 0;
+    let timeoutCount, timeoutCountDetail;
+    let totalAmount = 0; totalPriceUse = 0; totalPayment = 0; totalAmountUsed = 0; totalTimeUsed = 0;
+
+    $(document).ready(function ()
+    {
+        ToolPopper();
+        CS_LoadData();
+        shtableDetail = $("#CS_GridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogleDetail')
+        });
+        CS_LoadEmployee();
+        Checking_TabControl_Permission();
+    });
+
+    function CS_LoadData()
+    {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        IndexReport = 0;
+        xhrLoadList = AjaxLoad(url = "/Report/Card/CardStatus/CardStatusGrid?handler=Loadata"
+            , data = {
+                'branchID': _branchID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "[]") {
+                    let { Table: data, ...dataTotal } = JSON.parse(result);
+                    let dataExport = JSON.parse(JSON.stringify(data));
+                    DataReportMain = CS_RenderDataExport(dataExport);
+                    DataReportMainSlice = sliceIntoChunks(data, 500);
+                    $("#CS_GridBody").empty();
+                    if (DataReportMainSlice && DataReportMainSlice.length != 0) {
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "CS_GridBody"
+                            , blocknum = 100
+                            , fnrender = CS_Render
+                            , fnsuccess = null
+                        );
+                    }
+                    CS_RenderTotal(dataTotal);
+                    Count_Up("CS_totaldata", dataExport.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function CS_RenderMore()
+    {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "CS_GridBody"
+                , blocknum = 100
+                , fnrender = CS_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function CS_Render(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let cardStatus = item.CardStatus == 1 ? '<span class="text-primary fw-bold">@Local["Còn hạn"]</span>' : '<span class="text-secondary">@Local["Hết hạn"]</span>';
+                            let isLock = item.IsLock == 0 ? '<span class="text-primary fw-bold">@Local["Không khóa"]</span>' : '<span class="text-secondary">@Local["Khóa"]</span>';
+
+                            //calc total
+                            totalPayment += item.Payment;
+                            totalAmount += item.Amount;
+                            totalPriceUse += item.PriceUse;
+                            totalAmountUsed += item.AmountUsed;
+                            totalTimeUsed += item.TimeUsed;
+                            tr = `<tr class="vt-number" role="row">
+                                                      <td class="vt-number-order"></td>
+                                                      <td>
+                                                          <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-custid="0" data-cardid="${item.CardID}" data-name="${item.CustName} [${item.CardCode}]">
+                                                             ${item.CardCode}
+                                                          </a>
+                                                      </td>
+                                                      <td>
+                                                          <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-custid="${item.CustID}" data-cardid="0" data-name="${item.CustName}">
+                                                             ${item.CustName}
+                                                          </a>
+                                                      </td>
+                                                      <td>${formatNumber(item.Amount)}</td>
+                                                      <td>${formatNumber(item.PriceUse)}</td>
+                                                      <td>${formatNumber(item.AmountUsed)}</td>
+                                                      <td>${formatNumber(item.Payment)}</td>
+                                                      <td>${item.TimeUsed}</td>
+                                                      <td>${ConvertDateTimeUTC_DMY(item.ExpiredDate)}</td>
+                                                      <td>${cardStatus}</td>
+                                                      <td>${isLock}</td>
+                                                  </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        tr = `<tr class="vt-number text-white bg-gradient bg-primary mt-2 CS_RowTotal" role="row">
+                                                  <td></td>
+                                                  <td class="text-start" colspan="2">
+                                                      <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white" data-custid="0" data-cardid="0">@Local["Tất cả"]</a>
+                                                  </td>
+                                                  <td>${formatNumber(totalAmount)}</td>
+                                                  <td>${formatNumber(totalPriceUse)}</td>
+                                                  <td>${formatNumber(totalAmountUsed)}</td>
+                                                  <td>${formatNumber(totalPayment)}</td>
+                                                  <td>${formatNumber(totalTimeUsed)}</td>
+                                                  <td></td>
+                                                  <td></td>
+                                                  <td></td>
+                                              </tr>`;
+                        if ($('.CS_RowTotal').length) {
+                            $('.CS_RowTotal').remove();
+                        }
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                        CS_GeneralEvent();
+                    }
+                }
+                clearTimeout(timeoutCount);
+                timeoutCount = setTimeout(() =>
+                {
+                    Count_Up("CS_currentdata", $("#" + id).children().length - 1);
+                }, 300)
+                resolve();
+            }, 10)
+        })
+    }
+
+    function CS_RenderTotal(...data)
+    {
+        let dataState = data[0].Table1;
+        let dataIsLock = data[0].Table2;
+
+        let amountLimited = 0;
+        let amountExpired = 0;
+        let amountBlock = 0;
+        let amountUnBlock = 0;
+
+        for (let i = 0; i < dataState.length; i++) {
+            if (dataState[i].CardStatus == 1) amountLimited = dataState[i].TotalState;
+            if (dataState[i].CardStatus == 0) amountExpired = dataState[i].TotalState;
+        }
+
+        for (let i = 0; i < dataIsLock.length; i++) {
+            if (dataIsLock[i].IsLock == 1) amountBlock = dataIsLock[i].TotalIsLock;
+            if (dataIsLock[i].IsLock == 0) amountUnBlock = dataIsLock[i].TotalIsLock;
+        }
+
+        Count_Up("CS_AmountLimited", formatNumber(amountLimited));
+        Count_Up("CS_AmountExpired", formatNumber(amountExpired));
+        Count_Up("CS_AmountBlock", formatNumber(amountBlock));
+        Count_Up("CS_AmountUnBlock", formatNumber(amountUnBlock));
+    }
+    //#region // LOAD EMPLOYEE
+    function CS_LoadEmployee()
+    {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data)
+            {
+                DataEmp = data[0];
+            });
+    }
+    //#endregion
+    //#region // LOAD DETAIL AND RENDER
+    function CS_DetailLoad(custid, cardid)
+    {
+        if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+        IndexReportDetail = 0;
+        xhrLoadDetail = AjaxLoad(url = "/Report/Card/CardStatus/CardStatusGrid/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'custID': custid,
+                'cardID': cardid,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    DataReportMainDetail = JSON.parse(JSON.stringify(data));
+                    DataReportMainDetailSlice = sliceIntoChunks(data, 500);
+                    $("#CS_GridDetailBody").empty();
+                    if (DataReportMainDetailSlice && DataReportMainDetailSlice.length != 0) {
+                        fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "CS_GridDetailBody"
+                            , blocknum = 100
+                            , fnrender = CS_DetailRender
+                            , fnsuccess = null
+                        );
+                    }
+                    Count_Up("CS_totaldetaildata", DataReportMainDetail.length);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function CS_RenderDetailMore()
+    {
+        IndexReportDetail += 1;
+        if (DataReportMainDetailSlice && DataReportMainDetailSlice[IndexReportDetail]) {
+            fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "CS_GridDetailBody"
+                , blocknum = 100
+                , fnrender = CS_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+
+    async function CS_DetailRender(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let obj = Fun_GetObject_ByID(DataEmp, item.CreatedBy);
+                            let createdName = (obj != null) ? obj.Name : 'unknown';
+                            let tr = `<tr class="vt-number" role="row">
+                                                          <td class="vt-number-order"></td>
+                                                          <td data-name="cardcode">${item.CardCode}</td>
+                                                          <td data-name="custcode">
+                                                              <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                                                 ${item.CustCode}
+                                                              </a>
+                                                          </td>
+                                                          <td data-name="custname">${item.CustName}</td>
+                                                          <td data-name="service">${(RP_DataService[item.ServiceID] != undefined ? RP_DataService[item.ServiceID].Name : '')}</td>
+                                                          <td>${formatNumber(item.AmountUsed)}</td>
+                                                          <td>${item.IsPlus == 0 && item.AmountChange != 0 ? '-' + formatNumber(item.AmountChange) : formatNumber(item.AmountChange)}</td>
+                                                          <td data-name="StatusCard">${CS_StatusCard(item.Card_ID_New, item.isLock)}</td>
+                                                          <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '')}</td>
+                                                          <td data-name="created">${ConvertDateTimeUTC_DMYHM(item.Created)}</td>
+                                                          <td data-name="createdby">${createdName}</td>
+                                                      </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableDetail.Refresh();
+                clearTimeout(timeoutCountDetail);
+                timeoutCountDetail = setTimeout(() =>
+                {
+                    Count_Up("CS_currentdetaildata", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+        })
+    }
+
+    function CS_StatusCard (CardNewID, IsLock) {
+        try {
+            let result = ``;
+
+            if (CardNewID != 0) {
+                result = decodeHtml('@Local["Đã chuyển thẻ"]');
+            } else if (IsLock != 0) {
+                result = decodeHtml('@Local["Đã khóa"]');
+            } else {
+                result = '';
+            }
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //Event
+    function CS_GeneralEvent()
+    {
+        $("#CS_GridBody .buttonViewClass").unbind('click').on("click", function ()
+        {
+            let custid = $(this).attr('data-custid');
+            let cardid = $(this).attr('data-cardid');
+            let name = $(this).attr('data-name');
+            $("#CS_GeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#CS_GeneralDetail").offset().top
+            }, 300);
+            if (custid == "0" && cardid == "0") {
+                $("#CS_DetailCardStatus").html('@Local["Tất cả trường hợp trạng thái thẻ trả trước"]');
+            }
+            else {
+                $("#CS_DetailCardStatus").html(name);
+            }
+            CS_DetailLoad(custid, cardid);
+        })
+    }
+
+    async function CS_RenderDataExport(dataOrigin)
+    {
+        try {
+            if (dataOrigin && dataOrigin.length != 0) {
+                let totalAmountExcel = 0; totalPriceUseExcel = 0; totalPaymentExcel = 0; totalAmountUsedExcel = 0; totalTimeUsedExcel = 0;
+                let dataTemp = [];
+                let row = {};
+                for (let i = 0; i < dataOrigin.length; i++) {
+                    let itemOrigin = dataOrigin[i];
+                    let cardStatus = itemOrigin.CardStatus == 1 ? decodeHtml('@Local["Còn hạn"]') : decodeHtml('@Local["Hết hạn"]');
+                    let isLock = itemOrigin.IsLock == 0 ? decodeHtml('@Local["Không khóa"]') : decodeHtml('@Local["Khóa"]');
+
+                    //calc total
+                    totalPaymentExcel += itemOrigin.Payment;
+                    totalAmountExcel += itemOrigin.Amount;
+                    totalPriceUseExcel += itemOrigin.PriceUse;
+                    totalAmountUsedExcel += itemOrigin.AmountUsed;
+                    totalTimeUsedExcel += itemOrigin.TimeUsed;
+
+                    row = {
+                        "NO": i + 1,
+                        "CardCode": itemOrigin.CardCode,
+                        "CustName": itemOrigin.CustName,
+                        "Amount": itemOrigin.Amount,
+                        "PriceUse": itemOrigin.PriceUse,
+                        "AmountUsed": itemOrigin.AmountUsed,
+                        "Payment": itemOrigin.Payment,
+                        "TimeUsed": itemOrigin.TimeUsed,
+                        "ExpiredDate": ConvertDateTimeUTC_DMY(itemOrigin.ExpiredDate),
+                        "CardStatus": cardStatus,
+                        "IsLock": isLock,
+                    }
+                    dataTemp.push(row);
+                }
+                row = {
+                    "NO": '',
+                    "CardCode": decodeHtml('@Local["Tất cả"]'),
+                    "CustName": '',
+                    "Amount": totalAmountExcel,
+                    "PriceUse": totalPriceUseExcel,
+                    "AmountUsed": totalAmountUsedExcel,
+                    "Payment": totalPaymentExcel,
+                    "TimeUsed": totalTimeUsedExcel,
+                    "ExpiredDate": '',
+                    "CardStatus": '',
+                    "IsLock": '',
+                }
+                dataTemp.push(row);
+                return dataTemp;
+            }
+        }
+        catch (ex) {
+            console.error(ex, ex.stack);
+        }
+    }
+
+    async function CS_Export()
+    {
+        try {
+            let dataMapped = await DataReportMain;
+            if (dataMapped && dataMapped.length != 0) {
+                var dataHeader = {
+                    "NO": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }],
+                    "CardCode": ["@Local["Mã thẻ"]"],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "Amount": ["@Local["Thành tiền"]"],
+                    "PriceUse": ["@Local["Giá trị sử dụng"]"],
+                    "AmountUsed": ["@Local["Tiền đã sử dụng"]"],
+                    "Payment": ["@Local["Tiền đã thanh toán"]"],
+                    "TimeUsed": ["@Local["Số lần sử dụng"]"],
+                    "ExpiredDate": ["@Local["Ngày hết hạn"]"],
+                    "CardStatus": ["@Local["Tình trạng"]"],
+                    "IsLock": ["@Local["Khóa thẻ"]"],
+                }
+                syslog_ExpExcel('e', Outlang["Bao_cao_tinh_trang_the_tra_truoc"]);
+                exportJsonToExcel(Outlang["Bao_cao_tinh_trang_the_tra_truoc"], dataMapped, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+    async function CS_PrintReport()
+    {
+        try {
+            let dataMapped = await DataReportMain;
+            if (dataMapped && dataMapped.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "CardCode": ["@Local["Mã thẻ"]"],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "Amount": ["@Local["Thành tiền"]"],
+                    "PriceUse": ["@Local["Giá trị sử dụng"]"],
+                    "AmountUsed": ["@Local["Tiền đã sử dụng"]"],
+                    "Payment": ["@Local["Tiền đã thanh toán"]"],
+                    "TimeUsed": ["@Local["Số lần sử dụng"]"],
+                    "ExpiredDate": ["@Local["Ngày hết hạn"]"],
+                    "CardStatus": ["@Local["Tình trạng"]"],
+                    "IsLock": ["@Local["Khóa thẻ"]"],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr)
+                    {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Bao_cao_tinh_trang_the_tra_truoc"], dataMapped, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    async function CS_ExportDetail(isOption = 0) {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#CS_GeneralDetail');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CardCode": ["@Local["Mã thẻ"]"],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "ServiceID": ["@Local["Dịch vụ/sản phẩm"]", (value, { ServiceID }) => {
+                        return (RP_DataService[ServiceID] != undefined ? RP_DataService[ServiceID].Name : '');
+                    }],
+                    "AmountUsed": ["@Local["Tiền đã sử dụng"]", (value) =>
+                    {
+                        return (value);
+                    }],
+                    "AmountChange": ["@Local["Tiền đã sử dụng"]", (value, { IsPlus }) =>
+                    {
+                        return (IsPlus == 0 && value != 0 ? '-' + formatNumber(value) : formatNumber(value));
+                    }],
+                    "Card_ID_New": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name="StatusCard"]`)).is(":checked"),
+                        data: ["@Local["Tình trạng thẻ"]", (value, { isLock }) => {
+                            return (CS_StatusCard(value, isLock));
+                        }]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }]
+                    },
+                    "Created": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='created']`)).is(":checked"),
+                        data: ["@Local["Ngày tạo"]", (value) => { return ConvertDateTimeUTC_DMYHM(value) }]
+                    },
+                    "CreatedBy": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='createdby']`)).is(":checked"),
+                        data: ["@Local["Người tạo"]", (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'CG_GridDetailBody', PermissionTable_TabControl);
+                let fileName = xoa_dau($("#CS_DetailCardStatus").text()).replaceAll(' ', '_');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(Outlang["Bao_cao_tinh_trang_the_tra_truoc"] + '_' + fileName, DataReportMainDetail, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function CS_DetailPrintReport()
+    {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }],
+                    "CardCode": ["@Local["Mã thẻ"]"],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "ServiceID": ["@Local["Dịch vụ/sản phẩm"]", {
+                        callbackRenderValue: (value, { ServiceID }) =>
+                        {
+                            return (RP_DataService[ServiceID] != undefined ? RP_DataService[ServiceID].Name : '');
+                        }
+                    }],
+                    "AmountUsed": ["@Local["Tiền đã sử dụng"]", {
+                        callbackRenderValue: (value) =>
+                        {
+                            return (value);
+                        }
+                    }],
+                    "AmountChange": ["@Local["Tiền đã sử dụng"]", {
+                        callbackRenderValue: (value, { IsPlus }) =>
+                        {
+                            return (IsPlus == 0 && value != 0 ? '-' + formatNumber(value) : formatNumber(value));
+                        }
+                    }],
+                    "Card_ID_New": ["@Local["Tình trạng thẻ"]", {
+                        isShow: $(`.shtoogle[data-name='StatusCard']`).is(":checked"),
+                        callbackRenderValue: (value, {isLock }) =>
+                        {
+                            return (CS_StatusCard(value, isLock));
+                        }
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogle[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value, { BranchID }) =>
+                        {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }
+                    }],
+                    "Created": ["@Local["Ngày tạo"]", {
+                        isShow: $(`.shtoogle[data-name='created']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "CreatedBy": ["@Local["Người tạo"]", {
+                        isShow: $(`.shtoogle[data-name='createdby']`).is(":checked"),
+                        callbackRenderValue: (value, { CreatedBy }) =>
+                        {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr)
+                    {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Bao_cao_tinh_trang_the_tra_truoc"] + '_' + $("#CS_DetailCardStatus").text(), DataReportMainDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                    //#endregion
+</script>

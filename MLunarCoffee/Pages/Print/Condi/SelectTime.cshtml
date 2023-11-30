@@ -1,0 +1,125 @@
+﻿@page
+@model MLunarCoffee.Pages.Print.Condi.SelectTime
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chi tiết"]</h6>
+                                <p class="text-sm mb-0">@Local["Chọn chi tiết để in"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pb-6 d-flex justify-content-center">
+                    <div class="col-12 col-xl-8 pb-2">
+                        <div class="row px-2 form3" id="prform">
+                            <div class="col-12">
+                                <label>@Local["Chọn ngày"]</label>
+                            </div>
+                            <div class="field col-12 col-lg-6 p-1 d-grid justify-content-center">
+                                <div class="d-flex gap-1">
+                                    <label class="mt-0 ms-0 mb-0 text-primary text-sm fw-bold w-auto">@Local["Từ ngày"] :</label>
+                                    <label id="pr_DF" class="flatpickr mt-0 ms-0 mb-0 text-primary text-sm fw-bold w-auto"></label>
+                                </div>
+                                <hr class="horizontal dark mt-1 mb-1">
+                                <input class="flatpickr form-control border-0 d-none" id="pr_datefrom" name="dateValid" placeholder="eg .@Local["Từ ngày"]" />
+                            </div>
+                            <div class="field col-12 col-lg-6 p-1 d-grid justify-content-center">
+                                <div class="d-flex gap-1">
+                                    <label class="mt-0 ms-0 mb-0 text-primary text-sm fw-bold w-auto">@Local["Đến ngày"] :</label>
+                                    <label id="pr_DT" class="flatpickr mt-0 ms-0 mb-0 text-primary text-sm fw-bold w-auto"></label>
+                                </div>
+                                <hr class="horizontal dark mt-1 mb-1">
+                                <input class="flatpickr form-control border-0 d-none" id="pr_dateto" name="dateValid" placeholder="eg .@Local["Đến ngày"]" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="prform" onclick="event.preventDefault();CloseModal()">Cancel</button>
+                        <button form="prform" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return prtime_Save()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var prtime_link = '';
+    $(document).ready(function () {
+        let DateNow = new Date();
+        $('#pr_DT').html(ConvertDateTimeUTC_DMY(DateNow));
+        $('#pr_DF').html(ConvertDateTimeUTC_DMY(DateNow));
+        prtime_ini();
+    });
+    function prtime_ini() {
+        $("#pr_datefrom").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            inline: true,
+            defaultDate: new Date(),
+        });
+        $("#pr_dateto").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            inline: true,
+            defaultDate: new Date(),
+        });
+        $("#pr_datefrom").change(function () {
+            $('#pr_DF').html($('#pr_datefrom').val());
+        });
+        $("#pr_dateto").change(function () {
+            $('#pr_DT').html($('#pr_dateto').val());
+        });
+    }
+    function prtime_Save() {
+        if (prtime_link != "") {
+            let pdatefrom = ConvertDMY_ToInt($('#pr_datefrom').val() ? $('#pr_datefrom').val() : new Date());
+            pdateto = ConvertDMY_ToInt($('#pr_dateto').val() ? $('#pr_dateto').val() : new Date());
+            let dateFR = new Date(ConvertStringDMY_YMD($('#pr_datefrom').val()));
+            let dateTO = new Date(ConvertStringDMY_YMD($('#pr_dateto').val()));
+            let diffDays = Math.ceil((dateTO - dateFR) / (1000 * 60 * 60 * 24));
+            if ((diffDays) <= 365 && (diffDays) >= 0) {
+                CloseModal();
+                prtime_link = `${prtime_link}&datefrom=${pdatefrom}&dateto=${pdateto}`;
+                $("#DetailModal_Content").html('');
+                $("#DetailModal_Content").load(prtime_link);
+                $('#DetailModal').modal('show');
+            }
+            else if ((Number(pdateto) - Number(pdatefrom)) > 365) {
+                $('#textShowMessage').html('@Local["Tối đa 365 ngày"]');
+            }
+            else {
+                $('#textShowMessage').html('@Local["Sai định dạng"]');
+            }
+        }
+    }
+    function prtime_assignlink(_link) {
+        prtime_link = _link;
+
+    }
+</script>
+<style>
+    #prform .flatpickr-calendar {
+        box-shadow: none;
+        border: none;
+    }
+</style>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+

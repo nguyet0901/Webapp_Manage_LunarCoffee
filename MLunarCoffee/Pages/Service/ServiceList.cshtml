@@ -1,0 +1,865 @@
+﻿@page
+@model MLunarCoffee.Pages.Service.ServiceList
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="row card card-plain">
+    <div class="col-12 px-0">
+        <div class="row mx-0" id="ServicetList">
+            <div class="card card-plain">
+                <div class="row px-2">
+                    <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+                        <div class="vtcardheader card-header px-1 py-3">
+                            <div class="left">
+                                <h6 class="mb-0">@Local["Nhóm dịch vụ"]</h6>
+                                <p class="text-sm mb-0">
+                                    @Local["Tất cả nhóm dịch vụ"]
+                                </p>
+                            </div>
+                            <div class="right">
+                                <button id="SerList_btnAddGroup" class="btn btn-primary  btn-sm mb-0" onclick="event.preventDefault();return SerList_NewServiceType()">
+                                    @Local["Thêm mới"]
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex my-2 ps-1">
+                            <div class="form-check form-check-inline">
+                                <input id="choose_all_type_service" onchange="event.preventDefault();return SerList_FilterType();" class="form-check-input" type="checkbox" checked="checked">
+                                <label class="form-check-label" for="choose_all_type_service">
+                                    @Local["Dịch vụ"]
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input id="choose_all_type_product" onchange="event.preventDefault();return SerList_FilterType();" class="form-check-input" type="checkbox" checked="checked">
+                                <label class="form-check-label" for="choose_all_type_product">
+                                    @Local["Sản phẩm"]
+                                </label>
+                            </div>
+                        </div>
+                        <div id="loaderListTypeService" class="waitingdiv text-center position-absolute top-50 z-index-2 start-50 translate-middle" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <div class="nav-wrapper mt-2" style="--max-height:calc( 100vh - 220px ); --overflow-y: auto">
+                            <ul class="nav nav-pills nav-menus nav-menus-vertical flex-column  bg-white border-radius-lg"
+                                id="dtContentServiceTypeBody">
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+                        <div class="ms-0 ms-lg-2">
+                            <div class="card-header px-1 py-2">
+                                <div class="vtcardheader mt-2">
+                                    <div class="left">
+                                        <h6 class="mb-0">@Local["Dịch vụ"]</h6>
+                                        <p class="text-sm mb-0">
+                                            @Local["Tất cả dịch vụ"]
+                                        </p>
+                                    </div>
+                                    <div class="right">
+ 
+                                        <button id="SerList_btnAdd" class="btn btn-dark _tab_control_ bg-gradient-primary btn-sm mb-0 me-2 mt-1" data-tab="add_service" data-value="fade up"
+                                                onclick="event.preventDefault();return SerList_NewService()" data-fontchanged="true">
+                                            @Local["Thêm mới"]
+                                        </button>
+                                        <button class="btn btn-dark btn-sm mt-1 mb-0 me-2 _tab_control_" data-tab="export_excel" onclick="event.preventDefault();return exportData_Servicelist();">@Local["Xuất"]</button>
+                                        <button class="btn btn-dark btn-sm mt-1 mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                            @Local["Xem thêm"]
+                                        </button>
+                                    </div>
+                                    <div class="toggle">
+                                        <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                            <ul class="card card-body text-dark text-capitalize opacity-10">
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="avatar" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hình ảnh"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="type" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Loại"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="sp-dv" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Dịch vụ/sản phẩm"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="idencode" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Mã định danh"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="idenname" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Tên định danh"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="installment" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Trả góp"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="time" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Lần điều trị"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="WarantyMonth" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Số tháng bảo hành"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="re_consu" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hoa hồng tư vấn"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="re_assit" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hoa hồng kỹ thuật viên/phụ tá"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="re_doctor" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hoa hồng bác sĩ"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="re_spec" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hoa hồng chuyên môn"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="editor" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Cập nhật gần nhất"]</p>
+                                                </li>
+                                                <li id="per_ser_revenuetreatdoc" class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="re_doc_settings" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Hoa hồng điều trị"]</p>
+                                                </li>
+                                                <li id="per_ser_revenuetreatdoc" class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="servicenote" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm mb-0">@Local["Ghi chú"]</p>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="vtcondition">
+                                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                                    <div class="fulllap collapse collapsesticky show">
+                                        <div class="row p-0 m-0 mt-2">
+                                            <div class="field col-12 col-md-12 col-xl-4 p-1">
+                                                <div class="input-group flex-nowrap" id="ServiceGeneral_Sort">
+                                                    <div class="input-group-text input-group-text px-2">
+                                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                                        <div class="spinner-border spinner-border-sm d-none"></div>
+                                                    </div>
+                                                    <input id="filterService" type="text" class="form-control" placeholder="eg .@Local[" Tìm kiếm"]">
+                                                    <div class="input-group-text">
+                                                        <i class="btn_clear fas fa-minus-circle opacity-1"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                                <div class="ui fluid search selection dropdown form-control" id="chkDisabled_Service_List" onchange="event.preventDefault(); SerList_FilterByType()">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">eg .@Local["Dịch vụ"]</div>
+                                                    <div id="cbbDisabled_Service_List" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+ 
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 p-1">
+                                                <div class="ui fluid search selection dropdown form-control" id="SerList_Unit" onchange="event.preventDefault(); SerList_FilterList()">
+                                                    <input type="hidden" />
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">eg .@Local["Đơn vị"]</div>
+                                                    <div id="SerList_cbbUnit" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0 mx-n1">
+
+                                <div class="row  form3">
+                                    <div class="p-0 pb-2 m-0 mt-0 mobile-responsive position-relative" style="max-height: calc(100vh - 192px)">
+                                        <div id="loaderList" class="waitingdiv text-center w-100 mt-2 position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                        <table id="dtContentService" class="table vt-table mb-0">
+                                            <thead class="hiddenCollapse">
+                                                <tr role="row">
+                                                    <th class="fixed-side d-none">ID</th>
+                                                    <th class="fixed-side" style="width: 50px;">@Local["#"]</th>
+                                                    <th style="min-width:70px;max-width: 70px;" data-name="avatar">@Local["Hình ảnh"]</th>
+                                                    <th style="min-width:70px;max-width: 70px;">@Local["Mã dịch vụ"]</th>
+                                                    <th class="fixed-side" style="min-width: 200px;">@Local["Dịch vụ"]</th>
+                                                    <th data-name="idencode">@Local["Mã định danh"]</th>
+                                                    <th data-name="idenname">@Local["Tên định danh"]</th>
+                                                    <th style="min-width:100px;width: 100px;">@Local["Giá nhỏ nhất"]</th>
+                                                    <th style="min-width:100px;width: 100px;">@Local["Giá lớn nhất"]</th>
+                                                    <th style="min-width:100px;width: 100px;">@Local["Đơn vị"]</th>
+                                                    <th data-name="time" style="min-width:100px;width: 100px;">@Local["Lần điều trị"]</th>
+                                                    <th data-name="installment">@Local["Trả góp"]</th>
+                                                    <th data-name="WarantyMonth">@Local["Bảo hành"]</th>
+                                                    <th data-name="type" class="no-sort" style="min-width: 150px;">@Local["Loại"]</th>
+                                                    <th data-name="sp-dv" class="no-sort">@Local["Dịch vụ/sản phẩm"]</th>
+                                                    <th data-name="re_consu" class="vt_consult no-sort" style="min-width:100px;width: 100px;">@Local["Hoa hồng tư vấn"]</th>
+                                                    <th data-name="re_assit" class="vt_treat no-sort" style="min-width: 100px;width: 100px;">@Local["Hoa hồng kỹ thuật viên/phụ tá"]</th>
+                                                    <th data-name="re_doctor" class="vt_treatdoc no-sort" style="min-width: 100px;width: 100px;">@Local["Hoa hồng bác sĩ"]</th>
+                                                    <th data-name="re_spec" class="vt_specific no-sort" style="min-width: 100px;width: 100px;">@Local["Hoa hồng chuyên môn"]</th>
+                                                    <th data-name="re_doc_settings" class="no-sort" style="min-width: 200px; width: 200px; ">@Local["Hoa hồng điều trị"]</th>
+                                                    <th data-name="servicenote" class="no-sort" style="min-width: 200px; width: 200px; ">@Local["Ghi chú"]</th>
+                                                    <th data-name="editor" class="no-sort" style="min-width: 200px; width: 200px; ">@Local["Cập nhật gần nhất"]</th>
+                                                    <th class="no-sort servicelist_thHanlde" style="width: 30px;">@Local["Xử lý"]</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dtContentServiceBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row w-100 ms-1" id="ServiceDetail_Div">
+        </div>
+    </div>
+</div>
+<script>
+    //#region //DEFINE - INIT 
+    var dataServiceType;
+    var dataService = [];
+    var CurrentServiceGroup = 0;
+    var CurrentService = 0;
+    let DataEmployee;
+    let shtable;
+    let BeginID = 0;
+    let LimitLoad = 50;
+    let xhrSerList;
+    let timerOnChange;
+    $(document).ready(function () {
+        shtable = $("#dtContentService").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                SerList_LoadInit();
+            });
+
+        SerList_Event();
+        Checking_TabControl_Permission();
+        CheckPermissionControlInPage(sys_PerControl, '@Model.CurrentPath');
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+    });
+
+    function SerList_LoadInit() {
+        AjaxLoad(url = "/Service/ServiceList/?handler=LoadInit"
+            , data = {}
+            , async = true, error = null
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    if (data && data.length > 0) {
+                        Load_Combo(data, "SerList_cbbUnit", true, "@Local["Tất cả đơn vị"]");
+                        $("#SerList_Unit").dropdown("refresh");
+                        $("#SerList_Unit").dropdown("set selected", "0");
+                        if(sys_dencos_Main == 0) {
+                            $("#SerList_Unit").remove();
+                        }
+                      
+                        Load_Combo([
+                              {"ID": "0", "Name": "@Local["Dịch vụ đang sử dụng"]"}
+                            , {"ID": "1", "Name": "@Local["Tất cả dịch vụ"]"}]
+                            , "cbbDisabled_Service_List",true);
+                        $("#chkDisabled_Service_List").dropdown("refresh");
+                        $("#chkDisabled_Service_List").dropdown("set selected", "0");
+                    }
+                     SerList_Type_Load(0);
+                     SerList_Load(0);
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region // HANDLE GRID
+    function SerList_Event() {
+        $('#dtContentServiceBody .buttonEditClass').unbind().click(function () {
+            CurrentService = Number($(this).attr('data-id'));
+            SerList_EditService(CurrentService);
+        });
+
+        $('#dtContentServiceBody .buttonDeleteClass').unbind().click(function () {
+            let ID = Number($(this).attr('data-id'));
+            SerList_DeleteService(ID)
+        });
+
+        $('#dtContentServiceBody .buttonRevenueDocClass').unbind().click(function () {
+            let ID = Number($(this).attr('data-id'));
+            SerList_RevenueDocService(ID)
+        });
+
+        $('#dtContentServiceBody .buttonDisabledClass').unbind().click(function () {
+            let ID = Number($(this).attr('data-id'));
+            SerList_ExecuteDisableService(ID);
+        });
+    }
+    async function SerList_Load(id) {
+        return new Promise((resolve) => {
+            if (xhrSerList && xhrSerList.readyState != 4) xhrSerList.abort();
+            xhrSerList = AjaxLoad(url = "/Service/ServiceList/?handler=LoadataService"
+                , data = { 'id': id }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (id == 0) {
+                            if (data && data.length != 0) {
+                                dataService = data;
+                                $("#dtContentServiceBody").empty();
+                                fnRenderBlock(data, "dtContentServiceBody"
+                                    , blocknum = Math.ceil(data.length / 3)
+                                    , fnrender = SerList_Render
+                                    , fnsuccess = function (e) { }
+                                    , fnbegin = function (e) { }
+                                );
+                            }
+                        }
+                        else {
+                            if (data && data.length != 0) {
+                                let item = data[0];
+                                let itemContent = SerList_RenderEach(item);
+                                let tr = `
+                                            <tr id="rservice_${item.ID}" class="rowService type${item.CatID} vt-number  ${((item.IsDisabled === 1) ? (' table-active') : (""))}"  data-id="${item.ID}">
+                                                ${itemContent}
+                                            </tr>
+                                        `
+                                let rowService = $("#rservice_" + id);
+                                if (rowService && rowService.length != 0) {
+                                    rowService.replaceWith(tr);
+                                    dataService = dataService.reduce((pre, arr) => {
+                                        if (arr.ID == item.ID) arr = item;
+                                        pre.push(arr);
+                                        return pre;
+                                    }, [])
+                                }
+                                else {
+                                    dataService.push(item);
+                                    document.getElementById('dtContentServiceBody').insertAdjacentHTML('beforeend', tr);
+                                }
+                                SerList_Event();
+                                shtable.Refresh();
+                            }
+                            else {
+                                let rowService = $("#rservice_" + id);
+                                if (rowService && rowService.length != 0) rowService.remove();
+                                dataService = dataService.filter((item) => {
+                                    return item.ID != id
+                                });
+                            }
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#loaderListTypeService").show();
+                }
+                , complete = function (e) {
+                    $("#loaderListTypeService").hide();
+                }
+            );
+        })
+    }
+    async function SerList_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let ii = 0; ii < data.length; ii++) {
+                            let item = data[ii];
+                            let itemContent = SerList_RenderEach(item);
+                            let tr = `<tr id="rservice_${item.ID}" class="rowService type${item.CatID} vt-number  ${((item.IsDisabled === 1) ? (' table-active d-none') : (""))}"  data-id="${item.ID}">
+                                                ${itemContent}
+                                                </tr>`
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtable.Refresh();
+                        SerList_Event();
+                        Checking_TabControl_Permission();
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+    function SerList_RenderEach(item) {
+        try {
+            let tr = `
+                <td class="d-none">${item.ID}</td>
+                <td class="vt-number-order text-center"></td>
+                <td data-name="avatar" class="text-center">
+                    <img class="hoverpopup avatar avatar-md border-radius-lg  border border-1 border-gray" src="${item.Avatar}" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                </td>
+                <td>
+                    ${((item.IsDisabled != 1)
+                ? (`<a class="text-dark fw-bold border-bottom border-dark buttonEditClass" data-id="${item.ID}" data-isproduct=" ${item.CatID}" href="#"> ${item.ServiceCode != "" ? item.ServiceCode:'#'}</a>`)
+                : (item.ServiceCode != "" ? item.ServiceCode : '#'))}
+                </td>
+                <td>${item.ServiceName}</td>
+                <td data-name="idencode">${item.IdenCode}</td>
+                <td data-name="idenname">${item.IdenName}</td>
+                <td>${formatNumber(item.Price)}</td>
+                <td>${formatNumber(item.Price_Max)}</td>
+
+                <td>
+                    ${item.UnitName}
+
+                </td>
+                <td data-name="time"> ${(Number(item.IsProduct) == 0 ? `${item.TimeToTreatment} @Local["Lần"]` : ``)}</td>
+                <td data-name="installment">
+                    ${((item.Is_Installment == 1) ? `<span title="@Local["Trả góp"]" class="badge bg-gradient-info">Installment</span>` : ``)}
+                </td>
+                <td data-name="WarantyMonth">
+                    ${((item.WarrantyMonth != 0) ? `<span>${item.WarrantyMonth} Tháng</span>` : ``)}
+                </td>
+                <td data-name="type">${item.CatName}</td>
+                <td data-name="sp-dv">
+                    ${(Number(item.IsProduct) == 0
+                    ? `<span title="@Local["Dịch vụ"]" class="badge bg-gradient-info text-uppercase">@Local["Dịch vụ"]</span>`
+                    : `<span title="@Local["Sản phẩm"]" class="badge bg-gradient-success text-uppercase">@Local["Sản phẩm"]</span>`)}
+                </td>
+
+                <td data-name="re_consu" class="vt_consult_t">${SerList_RenderEach_Commision(item.PerConsult, item.AmountConsult)}</td>
+                <td data-name="re_assit" class="vt_treat_t">${SerList_RenderEach_Commision(item.PerTreat, item.AmountTreat)}</td>
+                <td data-name="re_doctor" class="vt_treatdoc_t">${SerList_RenderEach_Commision(item.PerTreatDoc, item.AmountTreatDoc)}</td>
+                <td data-name="re_spec" class="vt_specific_t">${SerList_RenderEach_Commision(item.PerTreatSpecific, item.AmountTreatSpecific)}</td>
+                <td data-name="re_doc_settings">
+                    <div class="text-nowrap">
+                        ${SerList_RenderEach_ReDocSettings(item.ID)}
+                    </div>
+                </td>
+                <td data-name="servicenote">${item.ServiceNote}</td>
+                <td data-name="editor" >${SerList_RenderEach_ModifiedLast(item.ModifiedLast, item.ModifiedByLast)}</td>
+                <td class="ServiceList_rowBtnHandle">
+                    <div class="text-nowrap">
+                    ${SerList_RenderEach_Execute(item.ID, item.IsDisabled)}
+                    </div>
+                </td>
+            `;
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function SerList_RenderEach_Commision(per, amount) {
+        try {
+            if (Number(amount) != 0) {
+                return formatNumber(amount);
+            }
+            else {
+                return per + `<span class="percentIcon">%</span>`;
+            }
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+
+    function SerList_RenderEach_ModifiedLast(Modified, ModifiedBy) {
+        try {
+            let result = '';
+            let obj = Fun_GetObject_ByID(DataEmployee, ModifiedBy);
+            let name = (obj != null) ? obj.Name : 'unknown';
+            let img = (obj != null && obj.Avatar != "") ? obj.Avatar : Master_Default_Pic;
+            result = `
+                        <div class="d-flex ms-2">
+                            <div class="icon icon-shape icon-sm me-1 text-center">
+                                <img class="avatar avatar-xs mt-2" src="${img}" alt="label-image" />
+                            </div>
+                            <div class="d-flex flex-column">
+                                <h6 class="text-dark text-sm mb-0"> ${name}</h6>
+                                <span class="text-xs"> ${ConvertDateTimeToStringDMY_HM(Modified)}</span>
+                            </div>
+                        </div>
+                    `
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function SerList_RenderEach_Execute(id, isdisabled) {
+        try {
+            let buttons = [];
+            buttons.push('<button class="buttonGrid _tab_control_" data-tab="grid_show_hide_service" value="' + id + '">'
+                + ((isdisabled === 1)
+                    ? '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-hide"></i>'
+                    : '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-nohide"></i>')
+                + '</button>');
+
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function SerList_RenderEach_ReDocSettings(id) {
+        try {
+            let buttons = [];
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                + '<i data-id="' + id + '" class="buttonRevenueDocClass vtt-icon vttech-icon-comission"></i>'
+                + '</button>');
+           
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+
+
+    //#endregion
+
+    //#region // HANDLE LIST
+ 
+    async function SerList_FilterByType() {
+        $("#loaderList").show();
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (CurrentServiceGroup == 0) $("#dtContentService tr.rowService").removeClass('d-none');
+                else {
+                    $("#dtContentService tr.rowService").addClass('d-none');
+                    $("#dtContentService tr.rowService.type" + CurrentServiceGroup).removeClass('d-none');                    
+                }
+                let type = (Number($('#chkDisabled_Service_List').dropdown('get value')) ? Number($('#chkDisabled_Service_List').dropdown('get value')) : 0);
+                $("#dtContentService tr.rowService:not(.d-none)").each(function (index) {
+                    if ($(this).hasClass('table-active')) {
+                        if (type == 1) $(this).removeClass('d-none')
+                        else $(this).addClass('d-none')
+                    }
+                });
+ 
+                $("#loaderList").hide();
+            }, 10);
+        })
+
+    }
+    function SerList_NewService() {
+        SerList_ResetDetail();
+        $("#ServiceDetail_Div").load("/Service/ServiceDetail" + "?ver=" + versionofWebApplication);
+        $("#ServiceDetail_Div").show();
+        return false;
+    }
+    function SerList_ResetDetail() {
+        $("#ServiceDetail_Div").empty();
+        $("#ServicetList").hide();
+        document.getElementById("ServiceDetail_Div").innerHTML = '';
+    }
+    function SerList_EditService(CurrentID) {
+        SerList_ResetDetail();
+        $("#ServiceDetail_Div").load("/Service/ServiceDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $("#ServiceDetail_Div").show();
+        return false;
+    }
+    function SerList_RevenueDocService(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Service/Revenue/ServiceRevenueDoctor?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    
+    function SerList_ExecuteDisableService(id) {
+
+        AjaxLoad(url = "/Service/ServiceList/?handler=DisableItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    SerList_Load(id);
+                    SerList_Type_Load(0);
+                    syslog_ser('u', result);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // SERVICE TYPE
+    function SerList_Type_Event() {
+        $('#dtContentServiceTypeBody .buttonEditClass').unbind().click(function () {
+            CurrentServiceGroup = Number($(this).attr("data-id"));
+            SerList_EditServiceType(CurrentServiceGroup);
+        });
+        $('#dtContentServiceTypeBody .rowGroupService').on('shown.bs.tab', function (e) {
+            CurrentServiceGroup = Number($(this).attr("data-id"));
+            $('.rowGroupService').removeClass('active')
+            $(this).addClass('active');
+
+            SerList_FilterByType();
+        });
+
+       
+        $('#filterService').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#ServiceGeneral_Sort .fa-search").hide();
+            $("#ServiceGeneral_Sort .spinner-border").removeClass('d-none');
+            clearTimeout(timerOnChange);
+            timerOnChange = setTimeout(function (e) {
+                SerList_FilterList(isTxtSearch = 1);
+            }, 300);
+        });
+        $("#ServiceGeneral_Sort .btn_clear").unbind().click(function (e) {
+            $('#filterService').val('');
+            $(".btn_clear").addClass('opacity-1');
+            SerList_FilterList(isTxtSearch = 1);
+
+        });
+    }
+    
+    function SerList_Type_Load(id) {
+        AjaxLoad(url = "/Service/ServiceList/?handler=LoadataServiceType"
+            , data = { "id": id }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != '0') {
+                    if (id == 0) {
+                        dataServiceType = JSON.parse(result);
+                        if (dataServiceType && dataServiceType.length) {
+                            SerList_Type_Render(dataServiceType, 'dtContentServiceTypeBody');
+                        }
+                    }
+                    else {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            let row = $("#rstype_" + id);
+                            let item = data[0];
+                            let tr = SerList_Type_RenderEach(item);
+
+                            if (row.length != 0) row.replaceWith(tr);
+                            else document.getElementById('dtContentServiceTypeBody').insertAdjacentHTML('beforeend', tr);
+                            SerList_Type_Event();
+                        }
+                        else {
+                            let row = $("#rstype_" + id);
+                            if (row.length != 0) row.remove();
+                            dataServiceType = dataServiceType.filter((type) => type.ID != id);
+                        }
+                    }
+                }
+            }
+        );
+    }
+    async function SerList_FilterList(isTxtSearch = 0) {
+        return new Promise((resolve) => {
+            let search = xoa_dau($('#filterService').val().toLowerCase()).trim();
+            let unit = (Number($('#SerList_Unit').dropdown('get value')) ? Number($('#SerList_Unit').dropdown('get value')) : 0);
+            let data = dataService.filter(function (item) {
+                if ((search == "" || xoa_dau(item["ServiceCode"]).toLowerCase().includes(search)
+                    || xoa_dau(item["ServiceName"]).toLowerCase().includes(search))
+                    && (unit == 0 || item["UnitCount"] == unit))
+                    return true;
+                return false;
+            });
+            $("#dtContentServiceBody").empty();
+            fnRenderBlock(data, "dtContentServiceBody"
+                , blocknum = 100
+                , fnrender = SerList_Render
+                , fnsuccess = function (e) { }
+                , fnbegin = function (e) { }
+            );
+            if(isTxtSearch == 1) {
+                $("#ServiceGeneral_Sort .fa-search").show();
+                $("#ServiceGeneral_Sort .spinner-border").addClass('d-none');
+            }
+            resolve();
+        })
+    }
+    function SerList_FilterType() {
+        try {
+            let data = [];
+            if ($('#choose_all_type_service')[0].checked == true && $('#choose_all_type_product')[0].checked == true) {
+                data = dataServiceType;
+            }
+            else if ($('#choose_all_type_service')[0].checked == true) {
+                data = dataServiceType.filter(word => word.IsProduct != 1);
+            }
+            else if ($('#choose_all_type_product')[0].checked == true) {
+                data = dataServiceType.filter(word => word.IsProduct == 1);
+            }
+            SerList_Type_Render(data, 'dtContentServiceTypeBody');
+        }
+        catch (ex) {
+
+        }
+    }
+    function SerList_Type_TriggerClickType(id = CurrentServiceGroup) {
+        let rowTypeService = $(".rowGroupService[data-id=" + id + "]");
+        if (rowTypeService && rowTypeService.length != 0) {
+            rowTypeService.addClass("active").siblings().removeClass("active");
+        }
+    }
+    function SerList_EditServiceType(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Service/ServiceTypeDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function SerList_NewServiceType() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Service/ServiceTypeDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    async function SerList_Type_Render(data, id) {
+        return new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let total = 0;
+                let totalAll = 0;
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = SerList_Type_RenderEach(item);
+
+                        myNode.insertAdjacentHTML("beforeend", tr);
+                        total = total + Number(item.TotalService);
+                        totalAll = totalAll + Number(item.TotalServiceAll);
+                    }
+                }
+                let stringContent = `
+                        <li class="nav-item" role="presentation">
+                            <a data-id="0" class="text-sm ps-2 item-menu rowGroupService nav-link cursor-pointer" data-hover data-bs-toggle="tab">
+                                <div class="text-bolder text-lowercase">
+                                    <span class="SL_total fw-bolder text-primary">${formatNumber(total)}</span>
+                                    <span class="SL_totalAll fw-bolder text-primary d-none">${formatNumber(totalAll)}</span>
+                                    <span class="ps-2">@Local["Dịch vụ"] / @Local["Sản phẩm"]</span>
+                                </div>
+                            </a>
+                            <hr class="horizontal dark my-0 opacity-2">
+                        </li>
+                        `
+                myNode.insertAdjacentHTML("afterbegin", stringContent);
+                SerList_Type_TriggerClickType();
+            }
+            SerList_Type_Event();
+        })
+    }
+    function SerList_Type_RenderEach(item) {
+        try {
+            let result = `
+                        <li id="rstype_${item.ID}" class="nav-item" role="presentation">
+                            <a data-id="${item.ID}" class="text-sm px-1 item-menu  rowGroupService nav-link cursor-pointer " data-hover data-bs-toggle="tab">
+                                <div class="px-1">
+                                    <div data-id="${item.ID}"  class="d-inline buttonEditClass ">
+                                        <span class="mt-0 cursor-pointer col-auto my-auto mb-0 text-dark ms-0 text-sm fw-bold">
+                                            ${item.Code != "" ? item.Code:"#"}
+                                        </span>
+                                        <span class="ps-1 text-sm text-dark">
+                                            ${item.Name}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center mt-0">
+                                        <div class="ps-0">
+                                            <span class="SL_total fw-bold text-primary">${formatNumber(item.TotalService)}</span>
+                                            <span class="SL_totalAll fw-bold text-primary d-none">${formatNumber(item.TotalServiceAll)}</span>
+                                            <span class="px-1 text-lowercase text-secondary">${(item.IsProduct == 1) ? `@Local["Sản phẩm"]` : `@Local["Dịch vụ"]`}</span>
+                                            <span class="text-primary">${(item.IsExamination == 1) ? `@Local["Khám"]` : ``}</span>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+
+
+                            </a>
+                        <hr class="horizontal dark my-0">
+                        </li>
+                        `
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region // Other
+    function CloseDetailService() {
+        $("#ServiceDetail_Div").empty();
+        document.getElementById("ServiceDetail_Div").innerHTML = '';
+        $("#ServicetList").show();
+        $("#ServiceDetail_Div").hide();
+        $(".rowService").removeClass("active");
+        $(".rowService").find("[data-id='" + CurrentService + "']").addClass("active");
+    }
+
+    async function exportData_Servicelist() {
+        exportToExcel("dtContentService", 'dichvu-sanpham');
+        syslog_ser('e', '');
+    }
+
+    //#endregion
+
+</script>
+<style>
+ 
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+
+    .rowGroupService .buttonEditClass:hover {
+        border-bottom: 1px solid var(--color--primary)
+    }
+</style>
+
+<script>js_require('/assests/dist/ColorPicker/spectrum.js');</script>
+<link href="/assests/dist/ColorPicker/spectrum.css" rel="stylesheet" />

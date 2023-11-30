@@ -1,0 +1,483 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.General.General
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div id="Gen_Main" class="row p-2 me-n3 pe-0">
+    <div id="Gen_SectionStu" class="row position-relative me-0 pe-0" style="height: 50vh !important;">
+        <div class="col-12 col-md-5 col-xl-4 p-1">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex gap-lg-2">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Học viên"]</h6>
+                                <a class=" text-sm cursor-pointer" href="/Student/Student/StudentList" target="_blank">
+                                    @Local["Xem thêm"]
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-2 mt-lg-0">
+                            <div class="input-group flex-nowrap">
+                                <input id="genstu_date" class="flatpickr form-control flatpickr-input" type="text" placeholder="eg .ngày ghi danh" readonly="readonly">
+                                <div class="input-group-text cursor-pointer" data-bs-toggle="tooltip" title="" data-bs-original-title="@Local["Tải lại"]" onclick="Genstu_Load(0,0,'')">
+                                    <i class="text-gradient text-primary fas fa-redo"></i>
+                                </div>
+
+                                <div onclick="event.preventDefault(); return Genstu_AddStudent();" class="input-group-text text-primary cursor-pointer" data-bs-toggle="tooltip" title="" data-bs-original-title="@Local["Thêm mới"]">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-2 position-relative">
+                    <div id="Genstu_Wait" class="d-none  waitingdiv text-center z-index-sticky position-absolute top-0 start-50 translate-middle-x">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="mt-0 px-3 p-1">
+                        <div class="input-group flex-nowrap" id="genstu_searchdiv">
+                            <div class="input-group-text input-group-text px-3">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                            </div>
+                            <input id="genstu_search" autocomplete="off" type="text" class="form-control" placeholder="eg .search">
+                            <span class="input-group-text">
+                                <i class="btn_clear fas fa-minus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="position-relative">
+                        <div id="GenTableStuContainer" class="overflow-auto row pb-4 px-2 form3 m-1">
+                            <div class="dataTable-container position-relative px-0 col-12">
+                                <table class="table table-flush dataTable-table mb-0">
+                                    <tbody id="Genstu_List">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="Genstu_PopupAction" class="position-absolute collapse" style="z-index: 2000;">
+                            <div class="col-w-200 rounded-3 shadow-lg">
+                                <ul class="nav nav-pills flex-column bg-white border-radius-lg py-3 px-2">
+                                    <li class="nav-item" role="presentation">
+                                        <a class="text-sm nav-link cursor-pointer" data-hover="" onclick="event.preventDefault(); return Genselected_StuDetail();">@Local["Chọn khóa học"]</a>
+                                    </li>
+                                    <li><hr class="horizontal dark my-0 opacity-2" /></li>
+                                    <li class="nav-item" role="presentation">
+                                        <a class="text-sm nav-link cursor-pointer" data-hover="" onclick="event.preventDefault(); return Genselected_StuPaymentDetail();">@Local["Thanh toán"]</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btnsysmore btn btn-secondary w-100 p-1 my-1 cursor-pointer position-absolute bottom-0 start-50 translate-middle-x"
+                            onclick="event.preventDefault();return Genstu_Load(1,0,'');">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-7 col-xl-8 p-1 ">
+            <div class="row">
+                <div class="col-12 ps-0 ps-lg-3 ps-md-3">
+                    <div class="card-body p-2 py-0 position-relative">
+                        <div class="w-100 position-relative">
+                            <div id="Genselected_area" class="d-none z-index-sticky w-100 shadow-lg rounded-3 border-1 bg-gray-100 border-radius-lg position-absolute bg-white ">
+                                <div class="d-lg-flex d-md-flex">
+                                    <div class="ms-auto my-auto d-flex">
+                                        <div class="m-3  ps-4">
+                                            <button onclick="Genstu_removeselected(0)" class="btn bg-gradient-danger btn-sm mb-0 mt-0">
+                                                @Local["Hủy chọn"]
+                                            </button>
+                                            <button onclick="Genstu_addcource()" class="btn bg-gradient-success btn-sm mb-0 mt-0">
+                                                <i class="fs-6 fas fa-cloud-upload-alt me-2"></i> @Local["Chọn khóa học"]
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex row p-3 pt-0" id="Genselected_list">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="Genstu_courselist">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row position-relative me-0 pe-0 mt-3">
+        <div class="col-12 col-md-12 col-xl-12 p-1">
+            <div id="Genstu_paymentlist" class="pb-3">
+            </div>
+        </div>
+    </div>
+</div>
+<div id="Gen_Detail"></div>
+
+<script type="text/javascript">
+
+    let genstu_begin = 0;
+    let genstu_limit = 50;
+    let genstu_timer;
+    var genstu_currentselect = {};
+    let genstu_currentStu = 0;
+
+    var stugen_Class = {};
+    var stugen_Teacher = {};
+    var stugen_Subject = {};
+    var stugen_Attend = {};
+    var stugen_Rating = {};
+    var stugen_Branch = {};
+
+    $(document).ready(function () {
+        let lastDay = new Date();
+        let firstDay = new Date();
+        firstDay.setDate(firstDay.getDate() - 7); // minus the date
+        $("#genstu_date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        $("#genstu_date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        Genstu_Load(ismore = 0, issearch = 0, searchtext = "");
+
+        Genstu_Initialize();
+        Genstu_MainEvent();
+
+    });
+    function Genstu_Initialize () {
+        AjaxLoad(url = "/Student/General/General/?handler=LoadComboMain"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    stugen_Attend = (data.Attend).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+                    stugen_Rating = (data.Rating).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+                    stugen_Branch = (data.Branch).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+                    stugen_Teacher = (data.Teacher).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+                    stugen_Class = (data.Class).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+                    stugen_Subject = (data.Subject).reduce((pre, arr) => {if (arr.ID) pre[arr.ID] = arr; return pre;}, {});
+
+                    $("#Genstu_paymentlist").load('/Student/General/Desk?ver=' + versionofWebApplication);
+                    $("#Genstu_courselist").load('/Student/General/Course/CourseList?ver=' + versionofWebApplication);
+
+                }
+            }
+            , sender = null
+            , before = function (e) {
+
+            }
+            , complete = function (e) {
+
+            }
+        );
+    }
+    function Genstu_MainEvent () {
+        $('#genstu_search').keyup(function () {
+            if ($(this).val().length > 3) {
+                if ($(this).val().length > 0) $("#genstu_searchdiv .btn_clear").removeClass('opacity-1');
+                else $("#genstu_searchdiv .btn_clear").addClass('opacity-1');
+                $("#genstu_searchdiv .fa-search").hide();
+                $("#genstu_searchdiv .spinner-border").show();
+                clearTimeout(genstu_timer);
+                let textsearch = xoa_dau($(this).val()).toLowerCase();
+                genstu_timer = setTimeout(function (e) {
+                    Genstu_Load(ismore = 0, issearch = 1, searchtext = textsearch);
+                }, 500);
+            }
+        });
+        $("#genstu_searchdiv").on('click', '.btn_clear', function (e) {
+            $('#genstu_search').val('');
+            $("#genstu_searchdiv .btn_clear").addClass('opacity-1');
+
+        });
+        $("#genstu_date").on('change', function (e) {
+            Genstu_Load(ismore = 0, issearch = 0, searchtext = "");
+        });
+
+        $(window).resize(function () {
+            let tableContainer = $("#GenTableStuContainer");
+            if (tableContainer.length != 0) {
+                let posTop = tableContainer.position().top;
+                let height = $("#Gen_SectionStu").height() - posTop - 150;
+                tableContainer.css("height", height)
+            }
+        }).trigger('resize');
+    }
+    function Genstu_Load (ismore = 0, issearch = 0, searchtext = "") {
+        let date = $('#genstu_date').val() ? $('#genstu_date').val() : new Date();
+        let dateFrom;
+        let dateTo;
+        if (date.includes(" to ")) {
+            date = date.replace(" to ", "#");
+            dateFrom = date.split('#')[0];
+            dateTo = date.split('#')[1];
+        }
+        else {
+            dateFrom = date;
+            dateTo = date;
+        }
+        if (ismore == 0) {genstu_begin = 0; $("#Genstu_List").html('');};
+        if (issearch == 1) dateFrom = '01-01-1900 0:0:0';
+        AjaxLoad(url = "/Student/General/General/?handler=LoadStudent"
+            , data = {
+                'issearch': issearch
+                , 'begin': genstu_begin
+                , 'limit': genstu_limit
+                , 'searchtext': searchtext
+                , 'dateFrom': dateFrom
+                , 'dateTo': dateTo
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        genstu_begin = data[data.length - 1].ID;
+                        Genstu_Render(data, "Genstu_List");
+                    }
+                }
+            },
+            sender = null,
+            before = function (e) {
+                $("#Genstu_Wait").removeClass('d-none');
+            },
+            complete = function (e) {
+                $("#Genstu_Wait").addClass('d-none');
+                $("#genstu_searchdiv .fa-search").show();
+                $("#genstu_searchdiv .spinner-border").hide();
+            }
+        );
+    }
+
+    async function Genstu_Render (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let tr = '';
+                        if (data[i] != undefined) {
+                            tr = Genstu_RenderEach(data[i])
+                        }
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            Genstu_Event();
+            resolve();
+        })
+    }
+
+    function Genstu_RenderEach (item) {
+        let tr =
+            `<tr>
+                <td class="ps-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-sm me-2 text-center">
+                            <div class="form-check ">
+                                <input data-id="${item.ID}" data-name="${item.Name}" data-code="${item.Code}" class="stucheck form-check-input" type="checkbox">
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <div>
+                                <a data-id="${item.ID}" href="/Student/student/studentmain?studentid=${item.ID}" target="_blank" class="mb-0 detail border-bottom border-primary text-sm fw-bold">${item.Name}</a>
+                            </div>
+                            <span class="text-sm">
+                                <span class="text-sm text-secondary">${item.Code}</span>
+                                <span class="text-sm text-dark">${item.Phone}</span>
+                            </span>
+                        </div>
+                        <div class="p-2 ms-auto btnCourseMore text-secondary z-index-2 cursor-pointer" data-id="${item.ID}">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </td>
+            </tr>`
+
+        return tr;
+    }
+    //#region // Selected
+    function Genstu_Event () {
+        $("#Genstu_List .stucheck").unbind().change(function (e) {
+            let id = $(this).attr('data-id');
+            let name = $(this).attr('data-name');
+            let code = $(this).attr('data-code');
+            if ($(this).is(":checked")) {
+                let e = {};
+                e.id = id;
+                e.name = name;
+                e.code = code;
+                genstu_currentselect[id] = e;
+                Genselected_Render(e, "Genselected_list");
+                $('#Genselected_area').removeClass('d-none');
+            }
+            else {
+                Genstu_removeselected(id)
+            }
+        });
+
+        $("#Genstu_List .btnCourseMore").unbind('click').on('click', function () {
+            event.preventDefault();
+            event.stopPropagation();
+            let id = Number($(this).attr('data-id'));
+            let _parent = $(this).closest('tr');
+            let _topList = $("#GenTableStuContainer").offset().top;
+            if (!isNaN(id) && id != 0) {
+                genstu_currentStu = id;
+                let width = _parent.outerWidth();
+                let widthPopup = 200;
+                let widthContainer = $("#Genstu_List").width();
+                if (_parent && _parent.length != 0) {
+                    let {top} = _parent.offset();
+                    let {left} = _parent.position();
+                    let Popup_Left = left + width + widthPopup > widthContainer
+                        ? left + width - widthPopup
+                        : left + width;
+
+                    $("#Genstu_PopupAction").css({
+                        "top": top + 20 - _topList,
+                        "left": Popup_Left
+                    }).animate({
+                        "top": top + 20 - _topList
+                    }).addClass('show');
+                }
+            }
+        });
+
+    }
+    async function Genselected_Render (item, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+
+                tr = `<div id="genstuse_${item.id}" class="col-auto aligns-item-center text-dark border border-1 text-sm border-radius-lg  py-1 bg-gray-100 p-2 m-2">
+                    <div class="d-flex align-items-center ">
+                        <a data-id="${item.id}"  class="genstuse col-auto aligns-item-center text-dark text-sm m-2">
+                            <i class="text-sm fas fa-times text-danger opacity-2"></i>
+                        </a>
+                        <div class="d-flex flex-column pe-3">
+                            <h6 class="mb-0 fw-bold text-dark text-sm">${item.code}</h6>
+                            <span class="text-sm">${item.name}</span>
+                        </div>
+                    </div>
+                </div>`
+                myNode.insertAdjacentHTML('beforeend', tr);
+            }
+            Genselected_Event();
+            resolve();
+        })
+    }
+    function Genselected_Event () {
+        $("#Genselected_list .genstuse").unbind().click(function (e) {
+            let id = $(this).attr('data-id');
+            Genstu_removeselected(id);
+        });
+    }
+
+    function Genselected_StuDetail () {
+        if (!isNaN(genstu_currentStu) && genstu_currentStu != 0) {
+            $('#Genselected_list').html('');
+            $("#Genstu_List .stucheck").each(function () {
+                if (Number($(this).attr("data-id")) == genstu_currentStu) {
+                    $(this).prop("checked", true).trigger('change');
+                }
+                else $(this).prop("checked", false).trigger('change');
+            })
+            $('#Genselected_area').addClass('d-none');
+            Genstu_addcource();
+        }
+    }
+
+    function Genselected_StuPaymentDetail () {
+        if (!isNaN(genstu_currentStu) && genstu_currentStu != 0) {
+            Genstu_OpenDetail('/Student/Payment/PaymentClassStudent?StudentID=' + genstu_currentStu + '&ver=' + versionofWebApplication)
+        }
+    }
+    //#endregion
+
+    //#region // Function List
+
+    function Genstu_removeselected (id) {
+        if (id == 0) {
+            $('#Genstu_List .stucheck').prop('checked', false);
+            genstu_currentselect = {};
+            $('#Genselected_list').html('');
+        }
+        else {
+            delete genstu_currentselect[id];
+            if ($('#genstuse_' + id).length) $('#genstuse_' + id).remove();
+        }
+        if (Object.keys(genstu_currentselect).length == 0) {
+            $('#Genselected_area').addClass('d-none');
+        }
+    }
+
+    function Genstu_addcource () {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Student/General/Detail/Enrollment");
+        $('#DetailModal').modal('show');
+    }
+
+    function Genstu_AddStudent () {
+        Genstu_OpenDetail('/Student/Student/StudentDetail?ver=' + versionofWebApplication);
+    }
+
+    //#endregion
+
+    //#region // EMAIL
+
+    function Genstu_MailTemplate (type = "", studentid = 0, masterid = 0) {
+        $("#MainSendMail_Content").empty();
+        $("#MainSendMail_Content").load('/Student/Email/EmailTemplate?&ver=' + versionofWebApplication
+            , function (responseTxt, statusTxt, xhr) {
+                if (statusTxt == "success") {
+                    $("#MainSendMail").addClass('active');
+                    if (typeof ETemp_SendMailStu === 'function')
+                        ETemp_SendMailStu(type, studentid, masterid);
+                }
+                if (statusTxt == "error") {
+
+                }
+            })
+    }
+
+    //#endregion
+
+    //#region // OTHER
+
+    function Genstu_OpenDetail (url) {
+        $("#Gen_Main").hide();
+        $("#Gen_Detail").html('');
+        $("#Gen_Detail").load(url);
+        $("#Gen_Detail").fadeIn(100);
+    }
+
+    function Genstu_CloseDetail () {
+        $("#Gen_Main").fadeIn(100);
+        $("#Gen_Detail").empty().hide();
+    }
+
+    //#endregion
+</script>
+
+<style>
+    .genstuse i:hover {
+        opacity: 1 !important;
+    }
+</style>

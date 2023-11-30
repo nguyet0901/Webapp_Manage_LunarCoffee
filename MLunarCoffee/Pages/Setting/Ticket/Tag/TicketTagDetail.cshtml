@@ -1,0 +1,148 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Ticket.Tag.TicketTagDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">Ticket tag</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết ticket tag"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formTagDetail">
+                        <div class="field col-12 col-md-6 p-1">
+                            <label>@Local["Tag"]</label>
+                            <input id="TagDetail_StatusName" class="form-control" name="name" type="text" />
+                        </div>                        
+                        <div class="field col-12 col-md-6 p-1">
+                            <label>@Local["Số ngày xử lý tối đa"]</label>
+                            <input class="form-control" id="TagDetail_MaxExcute" value="0" type="number" min="0" placeholder="eg .@Local["Số ngày xử lý tối đa"]" />
+                        </div>
+                        <div class="field col-12 col-md-12 p-1">
+                            <label>@Local["Mã màu"]</label>
+                            <input id="TagDetail_StatusColor" class="form-control" name="fillCode" type="text" />
+                        </div>
+                        <div class="field col-12 col-md-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="TagDetail_Note" class="form-control" name="note" type="text" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formTagDetail" onclick="event.preventDefault(); CloseModal()">@Local["Đóng"]</button>
+                        <button form="formTagDetail" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_customer" onclick="event.preventDefault();TagDetail_ExcuteStatus()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let ser_CurrentID = "@Model._CurrentID";
+
+    $(document).ready(function () {
+        //Load Color Table
+        $("#TagDetail_StatusColor").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            showInput: true,
+            color: '#ffffff',
+            palette: [
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+
+        TagDetail_DataUpdateStatus();
+
+    });
+
+    function TagDetail_DataUpdateStatus() {
+        if (ser_CurrentID != "0") {
+            AjaxLoad(url = "/Setting/Ticket/Tag/TicketTagDetail/?handler=Loadata"
+                , data = {
+                    id: ser_CurrentID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    $("#TagDetail_StatusName").val(data[0].Name);
+                    $("#TagDetail_MaxExcute").val(data[0].MaxExcute);
+                    $("#TagDetail_StatusColor").spectrum("set", data[0].Color);
+                    $("#TagDetail_Note").spectrum("set", data[0].Note);
+                }
+            );
+        }
+    }
+
+
+    function TagDetail_ExcuteStatus() {
+        let data = new Object();
+        data.Name = $('#TagDetail_StatusName').val() ? $('#TagDetail_StatusName').val() : "";
+        data.MaxExcute = Number($('#TagDetail_MaxExcute').val()) ? Number($('#TagDetail_MaxExcute').val()) : 0;
+        data.Color = $("#TagDetail_StatusColor").spectrum('get').toHexString();
+        data.Note = $("#TagDetail_Note").val() ? $("#TagDetail_Note").val() : "";
+        $('#formTagDetail').form('validate form');
+        if ($('#formTagDetail').form('is valid')) {
+            AjaxLoad(url = "/Setting/Ticket/Tag/TicketTagDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_CurrentID
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        CloseModal();
+                        if (typeof TicketTag_Load === 'function') TicketTag_Load();
+                    }
+                    else {
+                        $("#textShowMessage").html("Trùng dữ liệu")
+                    }
+                }
+            );
+        }
+        return false;
+    }
+
+
+</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+<style>
+    .sp-replacer {
+        display: block !IMPORTANT;
+        width: 100% !IMPORTANT;
+        padding: 0.5rem 0.75rem !IMPORTANT;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.4rem;
+        color: #495057 !important;
+        background-color: #fff !IMPORTANT;
+        background-clip: padding-box !important;
+        border: 1px solid #d2d6da !IMPORTANT;
+        height: auto !important;
+        border-radius: 0.5rem;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+</style>

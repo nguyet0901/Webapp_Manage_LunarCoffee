@@ -1,0 +1,588 @@
+﻿@page
+@model MLunarCoffee.Pages.ToDo.WorkingProject.TodoTaskDetailModel
+@{ Layout=null;
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <script src="/assests/dist/UploadJS/js/vendor/jquery.ui.widget.js"></script>
+    <script src="/assests/dist/UploadJS/js/jquery.iframe-transport.js"></script>
+    <script src="/js/comon/initialize_setting.js?ver=@DateTime.Now.Ticks "></script>
+</head>
+<body>
+<div class="card mb-3 p-3 border-radius-xl bg-white" data-animation="FadeIn">
+    <div class="row">
+        <div class="col-auto my-auto">
+            <div class="h-100">
+                <h6 data-languagestatic="" class="font-weight-bolder mb-0">Task</h6>
+                <p data-languagestatic="" class="mb-0 text-sm">Some text of detail sub</p>
+            </div>
+        </div>
+        <div class="col-lg-5 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3">
+            <ul class="nav nav-pills nav-fill p-1 bg-transparent detailcus" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link cursor-pointer active" data-languagestatic="general_info" data-bs-toggle="pill" data-bs-target="#task_info" role="tab">Info</a>
+                </li>
+                <li class="nav-item" role="presentation" id="current_detail_todo_comment">
+                    <a class="nav-link cursor-pointer" data-languagestatic="detail" data-bs-toggle="pill" data-bs-target="#task_comments" role="tab">Comments</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="nav-wrapper position-relative end-0 form3" id="form3">
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade active show" id="task_info" role="tabpanel">
+                <div class="row px-1">
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                        <label><span>Name</span><span> *</span></label>
+                        <input class="form-control" id="taskName" name="name" type="text" placeholder="eg. Name" />
+                    </div>
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                        <label>Member<span></span><span> *</span></label>
+                        <div class="ui fluid search selection dropdown form-control" id="Staff_ID">
+                            <input type="hidden" name="GroupUser" />
+                            <i class="dropdown icon"></i>
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="cbbStaff" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 px-1 mt-2">
+                        <label>Description</label>
+                        <textarea data-tab="phone_customer" class="form-control _tab_control_" type="tel" name="Note" id="taskDescription" rows="4" placeholder="" maxlength="10" />
+                    </div>
+                </div>
+                <div class="row px-1" id="FormCreateCheckList">
+                    <div class="field col-12 px-1 mt-2">
+                        <label data-languagestatic="content">CheckList</label>
+                        <table id="dtTableCheckList" class="ui compact table">
+                            <tbody id="dtTableCheckListBody">
+                            </tbody>
+                        </table>
+                        <button class="btn btn-secondary button_chose p-3" onclick="TodoTask_CheckList_AddNew()"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="task_comments" role="tabpanel">
+                <div class="pb-5 mb-4" style="height:400px;">
+                    <div class="d-flex mt-4 chat-form col-12 col-sm-12 ms-2 px-5">
+                        <div class="flex-grow-1 my-auto">
+                            <textarea class="form-control" placeholder="Type your message" rows="2" name="message-to-send" id="message-to-send"></textarea>
+                            <div class="text-danger text-sm d-inline ps-2" id="textShowMessageMaster"></div>
+                        </div>
+                        <div class="flex-shrink-0 my-auto">
+                            <button type="button" class="border-0 text-md text-gradient text-info mb-0 me-3" onclick="event.preventDefault();return TodoTask_InsertComment();">
+                                <i class="text-md text-gradient text-info fas fa-paper-plane" aria-hidden="true"></i>
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                    <div id="chat_history" class="px-6 pb-0 overflow-auto h-100" tabindex="2">
+                        <ul id="_comment_detail_">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="fixed-botombutton">
+        <div class="float-start px-1">
+            <div id="btnCustomerDetailSave" class="_tab_control_" data-tab="edit_tab_customer">
+                <button id="btnDeleteTask" data-languagestatic="button_cancel" class="btn bg-gradient-danger" form="formcustomer" onclick="event.preventDefault();TodoTask_Delete()">Delete</button>
+            </div>
+        </div>
+        <div class="action_Save">
+            <div class="action_Save-Content">
+                <div class="_tab_control_" data-tab="edit_tab_customer">
+                    <button data-languagestatic="button_cancel" class="btn btn-secondary" form="formcustomer" onclick="event.preventDefault(); CloseModal()">Cancel</button>
+                </div>
+                <div id="btnCustomerDetailSave" class="_tab_control_" data-tab="edit_tab_customer">
+                    <button id="button_customer_detail_save" data-languagestatic="button_ok" form="formcustomer" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="event.preventDefault();ExcuteDataTask()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        let _taskDetailID = @Model._taskDetailID;
+        let toDoListTemp = Todo_Project_Detail.filter(word => word["id"] == Todo_list_ID);
+        let toDoTaskTemp = toDoListTemp[0].tasks;
+        var dataTaskDetail;
+        var data_checklist = {};
+
+        $(document).ready(function () {
+            TodoTask_Load_DataInit(ProjectID);
+
+            if (_taskDetailID != "0") {
+                $("#btnDeleteTask").show();
+            }
+            else {
+                $("#btnDeleteTask").hide();
+            }
+        });
+        function TodoTask_Load_DataInit(ProjectID) {
+            AjaxLoad(url = "/ToDo/WorkingProject/TodoTaskDetail/?handler=LoadInitializeData"
+                , data = {
+                    projectID: ProjectID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        var ser_dataStaff = data.dtStaff;
+
+                        Load_Combo(ser_dataStaff, "cbbStaff", true);
+                        TodoTask_Load_DataUpdate();
+                    }
+                });
+        }
+        function TodoTask_Load_DataUpdate() {
+            if (_taskDetailID != "0") {
+                dataTaskDetail = toDoTaskTemp.filter(word => word["id"] == _taskDetailID);
+                $('#taskName').val((dataTaskDetail[0].name));
+                $('#taskDescription').val((dataTaskDetail[0].description));
+                $("#Staff_ID").dropdown("refresh");
+                $("#Staff_ID").dropdown("set selected", dataTaskDetail[0].staffid);
+                let _CheckList = dataTaskDetail[0].checklists;
+                for (let i = 0; i < _CheckList.length; i++) {
+                    let item = _CheckList[i];
+                    var element = {};
+                    element.id = item.id;
+                    element.name = item.name;
+                    element.state = item.state;
+                    data_checklist[item.id] = element;
+                    TodoTask_Render_CheckList(item.id, element, 'dtTableCheckListBody');
+                }
+
+                $('#current_detail_todo_comment').show();
+                TodoTask_Load_Comment();
+            }
+            else {
+                $('#current_detail_todo_comment').hide();
+            }
+        }
+        function TodoTask_Render_CheckList(key, value, id) {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let tr =
+                    '<td class="d-none">' + key + '</td>'
+                    + '<td>' + TodoTask_CheckList_AddCell(key, value) + '</td>'
+                    + '<td style="width: 50px;">'
+                    + '<button class="buttonGrid"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'
+                    + '</td>'
+                tr = '<tr id=row_' + key + '>' + tr + '</tr>';
+                document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + tr;
+            }
+            TodoTask_CheckList_FillData(data_checklist);
+            TodoTask_CheckList_Event();
+        }
+        function TodoTask_CheckList_AddCell(randomNumber, value) {
+            let resulf = '<textarea rows="1" class="form-control checklist_item" id="checklist_item_' + randomNumber + '" value="' + value.name + '"></textarea>';
+            resulf = resulf;
+            return resulf;
+        }
+        function TodoTask_CheckList_FillData(data) {
+            for ([key, value] of Object.entries(data)) {
+                $('#checklist_item_' + key).val(value.name);
+            }
+
+        }
+        function TodoTask_CheckList_Event() {
+            $(".checklist_item").change(function () {
+                let id = this.id.replace("checklist_item_", "")
+                data_checklist[id].name = this.value;
+            });
+            $('#dtTableCheckList tbody').on('click', '.buttonDeleteClass', function (event) {
+                let timespan = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+                delete data_checklist[timespan];
+                $('#row_' + timespan).remove();
+                event.stopPropagation();
+            });
+        }
+        function TodoTask_CheckList_AddNew() {
+            let element = {};
+            let id = (new Date()).getTime();
+            element.id = id;
+            element.name = '';
+            element.state = 0;
+            data_checklist[id] = element;
+            TodoTask_Render_CheckList(id, element, 'dtTableCheckListBody');
+            console.log(data_checklist);
+            return id;
+        }
+        function TodoTask_Load_Comment() {
+            AjaxLoad(url = "/ToDo/WorkingProject/TodoTaskDetail/?handler=LoadCommentDetail"
+                , data = {
+                    projectid: ProjectID,
+                    taskid: _taskDetailID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        TodoTask_Render_CommentList(data, '_comment_detail_');
+                    }
+                });
+
+
+        }
+        function TodoTask_InsertComment() {
+            let content = ($('#message-to-send').val()).trim();
+            let title = ($('#taskName').val()).trim();
+            let CurrentDetailChoose_EmpWork = Number($('#Staff_ID').dropdown('get value')) ? Number($('#Staff_ID').dropdown('get value')) : 0;
+            if (content.length < 2) document.getElementById('textShowMessageMaster').innerHTML = "The content is too short";
+            else {
+                $('#message-to-send').val('');
+                document.getElementById('textShowMessageMaster').innerHTML = "";
+                AjaxLoad(url = "/ToDo/WorkingProject/TodoTaskDetail/?handler=InsertCommentDetail"
+                    , data = {
+                        projectid: ProjectID
+                        , taskid: _taskDetailID
+                        , empwork: CurrentDetailChoose_EmpWork
+                        , title: title
+                        , content: content
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            TodoTask_Load_Comment();
+                        }
+                    });
+            }
+
+        }
+        function TodoTask_Render_CommentList(data, id) {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                let dr = "";
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        if (item.IsMe == "1") {
+                            dr = '<li class="d-flex justify-content-between mb-4 col-12 col-md-12">'
+                                +'<i class="far fa-comments rounded-circle d-flex align-self-start me-3 shadow-1-strong ms-2" width="60" aria-hidden="true"></i>'
+                                +' <div class="card bg-light card-content me-2">'
+                                +'  <div class="card-header d-flex justify-content-between p-3">'
+                                + '      <small class="text-muted text-xs mb-0 "><i class="far fa-clock pe-1" aria-hidden="true"></i>' + ConvertDateTimeToStringDMY_HM(item.CreatedDate) + '</small>'
+                                + '      <p class="fw-bold mb-0 text-sm"><i class="fas fa-circle pe-2 text-info text-sm" aria-hidden="true"></i>' + item.CreatedName + '</p>'
+                                +'  </div>'
+                                +'  <div class="card-body">'
+                                + '      <p class="mb-0 text-sm">' + item.Content + '</p>'
+                                + '  </div>'
+                                + '</div> </li > '
+                        }
+                        else {
+                            dr = '<li class="d-flex justify-content-between mb-4 col-12 col-md-12">'
+                                + ' <div class="card bg-light card-content me-2">'
+                                + '  <div class="card-header d-flex justify-content-between p-3">'
+                                + '      <p class="fw-bold mb-0 text-sm"><i class="fas fa-circle pe-2 text-success text-sm" aria-hidden="true"></i>' + item.CreatedName + '</p>'
+                                + '      <small class="text-muted text-xs mb-0 "><i class="far fa-clock pe-1" aria-hidden="true"></i>' + ConvertDateTimeToStringDMY_HM(item.CreatedDate) + '</small>'
+                                + '  </div>'
+                                + '  <div class="card-body">'
+                                + '      <p class="mb-0 text-sm">' + item.Content + '</p>'
+                                + '  </div></div> '
+                                + '<i class="far fa-comments rounded-circle d-flex align-self-start me-3 shadow-1-strong ms-2" width="60" aria-hidden="true"></i>'
+                                +'</li > '
+                        }
+                        stringContent = stringContent + dr;
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+                document.getElementById('textShowMessageMaster').innerHTML = "";
+            }
+        }
+        function ExcuteDataTask() {
+            var data = new Object();
+            data.id = Number((new Date()).getTime());
+            data.name = $('#taskName').val() ? $('#taskName').val() : "";
+            data.description = $('#taskDescription').val() ? $('#taskDescription').val() : 0;
+            data.staffid = Number($('#Staff_ID').dropdown('get value')) ? Number($('#Staff_ID').dropdown('get value')) : 0;
+            $('#form3').form('validate form');
+            if ($('#form3').form('is valid')) {
+                if (_taskDetailID != "0") {
+                    dataTaskDetail[0].name = data.name;
+                    dataTaskDetail[0].description = data.description;
+                    dataTaskDetail[0].staffid = data.staffid;
+                    let checklist=[]
+                    for ([key, value] of Object.entries(data_checklist)) {
+                        checklist.push(value);
+                    }
+                    if (checklist.length != 0) {
+                        dataTaskDetail[0].checklists = checklist;
+                    }
+                    for (var k = 0; k < toDoTaskTemp.length; k++) {
+                        if (toDoTaskTemp[k].id == _taskDetailID) {
+                            toDoTaskTemp[k] = dataTaskDetail[0];
+                            break;
+                        }
+                    }
+                    toDoListTemp[0].tasks = toDoTaskTemp;
+                    for (var i = 0; i < Todo_Project_Detail.length; i++) {
+                        if (Todo_list_ID == Todo_Project_Detail[i].id) {
+                            Todo_Project_Detail[i] = toDoListTemp[0];
+                            break;
+                        }
+                    }
+                    RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+
+                }
+                else {
+                    AjaxLoad(url = "/ToDo/WorkingProject/TodoTaskDetail/?handler=ExcuteData"
+                        , data = {
+                            data: JSON.stringify(data),
+                        }, async = true, error = null
+                        , success = function (result) {
+                            if (result != "0") {
+                                let data = JSON.parse(result);
+                                let checklist = []
+                                for ([key, value] of Object.entries(data_checklist)) {
+                                    checklist.push(value);
+                                }
+                                if (checklist.length != 0) {
+                                    data[0].checklists = checklist;
+                                }
+                                toDoTaskTemp.push(data[0]);
+                                toDoListTemp[0].tasks = toDoTaskTemp;
+                                for (var i = 0; i < Todo_Project_Detail.length; i++) {
+                                    if (Todo_list_ID == Todo_Project_Detail[i].id) {
+                                        Todo_Project_Detail[i] = toDoListTemp[0];
+                                        break;
+                                    }
+                                }
+                                RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+                            }
+                        });
+                }
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+                ExcuteDataTodoProject(_taskDetailID, Todo_list_ID);
+            }
+            return false
+        }
+
+        function TodoTask_Delete() {
+            if (_taskDetailID) {
+                const promise = notiConfirm();
+                promise.then(function () { ExecuteDeleteTodoTask(_taskDetailID); }, function () { });
+            }
+        }
+
+        function TodoTask_Execute_Delete(id) {
+            for (var i = 0; i < Todo_Project_Detail.length; i++) {
+                if (Todo_list_ID == Todo_Project_Detail[i].id) {
+                    for (j = 0; j < Todo_Project_Detail[i].tasks.length; j++) {
+                        if (id == Todo_Project_Detail[i].tasks[j].id) {
+                            Todo_Project_Detail[i].tasks.splice(j, 1);
+                        }
+                    }
+                    break;
+                }
+            }
+            RenderProjectDetail(Todo_Project_Detail, 'list_Task');
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+            ExcuteDataTodoProject(id, 0, 1);// Delete
+        }
+    </script>
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+    <script>css_require('/assests/dist/css/chat-page.css');</script>
+    <style>
+        .card-content {
+            width: -webkit-fill-available !important;
+        }
+        .btn{
+            margin-bottom: 0 !important;
+        }
+    </style>
+    @*<style type="text/css">
+        .checklist_item:hover {
+            background: #f8db38;
+        }
+
+        .checklist_text {
+            text-overflow: ellipsis;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical;
+            font-family: 'Times New Roman' !important;
+            font-style: normal;
+            font-size: 13px !important;
+            color: #04355a !important;
+            padding-left: 3px;
+            padding-top: 2px;
+        }
+
+        .deleteChecklist {
+            float: left;
+            color: red;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            margin-right: 25px;
+            margin-top: 2px;
+        }
+
+        .timeline .event {
+            margin-left: -18px !important;
+            margin-top: -17px !important;
+        }
+
+        .timeline {
+            padding-bottom: 0px !important;
+            margin-top: 13px !important;
+            margin-bottom: 14px !important;
+            border-left: 2px solid #0288d1;
+        }
+
+            .timeline:after {
+                background: #2185d0;
+            }
+
+        .chat .chat-history .other-message {
+            background: #d1e5f8 !important;
+            color: #160145 !important;
+            font-size: 12px !important;
+            padding: 3px 10px !important;
+            margin-bottom: 5px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat .chat-history .my-message {
+            background: #d9dfda !important;
+            color: #160145 !important;
+            font-size: 12px !important;
+            padding: 3px 10px !important;
+            margin-bottom: 5px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat .chat-history .message-data {
+            margin-bottom: 5px !important;
+        }
+
+        .chat .chat-history .message-data-time {
+            font-size: 11px !important;
+            padding: 5px;
+        }
+
+        .chat .chat-history {
+            padding: 4px 5px !important;
+            height: fit-content !important;
+            border-bottom-color: transparent !important;
+        }
+
+        .chat .chat-message {
+            padding: 10px 8px !important;
+        }
+
+        .chat .chat-history .message:after {
+            border-bottom-color: transparent !important;
+        }
+
+        .titleDetail {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+            font-family: 'Times New Roman';
+        }
+
+        .headerDetail_ {
+            display: block;
+            color: #0288d1;
+            font-size: 13px;
+            font-weight: 700;
+            padding-bottom: 10px;
+        }
+
+        .authorDetail_ {
+            font-style: italic;
+            color: #0288d1;
+            position: absolute;
+            width: 100%;
+            text-align: right;
+            border-bottom: 1px #d4d4d5 solid;
+        }
+
+        .listitem_detail, .imagelistitem_detail {
+            cursor: pointer !important;
+        }
+
+        .listmaster_render {
+            color: #2b0239 !important;
+            font-size: 13px !important;
+            text-align: center;
+            width: 100%;
+            font-weight: 800 !important;
+            font-style: unset;
+        }
+
+        .titleDetail_Grid {
+            font-style: italic;
+            color: #2185d0;
+            padding-bottom: 10px;
+        }
+
+        .rightemp {
+            position: absolute !important;
+            right: 22px !important;
+            color: red;
+        }
+
+        .iconforward {
+            padding: 0px 4px;
+        }
+
+        .emp_work {
+            font-size: 12px;
+            color: #2185d0;
+        }
+
+        .checklist_item {
+            display: block !important;
+            padding: 3px;
+        }
+
+        .checklist_text {
+            text-overflow: ellipsis;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical;
+            font-family: 'Times New Roman' !important;
+            font-style: normal;
+            font-size: 13px !important;
+            color: #04355a !important;
+            padding-left: 25px;
+        }
+
+        #_detail_content_check_list_ {
+            max-height: 150px;
+            overflow-y: auto;
+            padding-top: 5px;
+            border-top: #d4d4d585 solid 1px;
+            margin-top: 10px;
+        }
+
+        #_detail_content_ {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        #current_detail_todo_comment {
+            /*display: none;*/
+            padding: 5px;
+            background: #f2f5f8;
+            min-width: 300px;
+            width: 300px;
+        }
+    </style>*@
+</body>
+</html>

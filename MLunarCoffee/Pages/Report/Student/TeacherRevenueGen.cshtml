@@ -1,0 +1,331 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Student.TeacherRevenueGenModel
+@{
+    Layout = null;
+}
+<div class="card-header p-3 px-0 pb-0">
+    <div class="d-lg-flex gap-1 ps-3">
+        <div class="my-auto me-3">
+            <h6 class="mb-0">@Local["Hiệu quả giảng viên"]</h6>
+            <p class="mb-0 text-sm">@Local["Danh sách doanh thu giáo viên"]</p>
+        </div>
+    </div>
+</div>
+<div class="card-body p-3 pt-0">
+    <div class="d-lg-flex gap-1">
+        <div class="ms-auto my-auto d-flex align-items-center">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#TCR_GridArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return TCR_Load()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return TCR_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="TCR_GridArea">
+        <div class="card-body p-0 mt-3">
+            <div class="m-0 my-0 mobile-responsive position-relative vt-header-sticky">
+                <div id="TCR_GridWaiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <table data-name="TCR_Grid" class="table vt-table mb-0" id="TCR_Grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">#</th>
+                            <th>@Local["Giảng viên"]</th>
+                            <th class="col-2">@Local["Tổng tiền"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="TCR_GridBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="TCR_Detail" class="mt-3" style="display: none;">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+
+            <div class="w-70 col-auto my-auto">
+                <p id="TCR_DetailTeacherName" class="text-md text-dark font-weight-bold mb-1"></p>
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="text-primary fw-bold d-inline mx-2">
+                    <span id="TCR_currentdata">0</span>
+                    <span class="mx-2">/</span>
+                    <span id="TCR_totaldata">0</span>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#TCR_DetailDivArea" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return TCR_ExportDetail()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-3 pt-0 collapsesticky collapse show" id="TCR_DetailDivArea">
+        <div class="m-0 my-3 mobile-responsive vt-header-sticky" style="max-height: 82vh !important">
+            <table data-name="TCR_GridDetail" class="table vt-table mb-0" id="TCR_GridDetail">
+                <thead>
+                    <tr>
+                        <th style="width: 30px">#</th>
+                        <th>@Local["Tên học viên"]</th>
+                        <th>@Local["Khoá học"]</th>
+                        <th>@Local["Thanh toán"]</th>
+                        <th>@Local["Hình thức thanh toán"]</th>
+                        <th>@Local["Giảng viên"]</th>
+                        <th>@Local["Chi nhánh"]</th>
+                    </tr>
+                </thead>
+                <tbody id="TCR_GridDetailBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return TCR_RenderDetailMore();">
+        @Local["Xem thêm"]
+    </button>
+</div>
+
+
+<script>
+    let xhrLoadList;
+    let TCR_Data, TCR_DataDetail;
+    let TCR_DataDetailSlide, IndexReport;
+    let timeoutCount;
+    $(document).ready(function ()
+    {
+        TCR_LoadData();
+    });
+
+    //LoadMain
+    //#region
+    function TCR_LoadData()
+    {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _branchID = "@Model._BranchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        $("#TCR_GridBody").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/Student/TeacherRevenueGen?handler=Loadata"
+            , data = {
+                'BranchID': _branchID
+                , 'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    TCR_Data = JSON.parse(result);
+                    $("#TCR_GridBody").empty();
+                    $("#TCR_GridWaiting").show();
+                    TCR_RenderData(TCR_Data, 'TCR_GridBody');
+                    $("#TCR_GridWaiting").hide();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+    }
+    async function TCR_RenderData(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        let stringcontent = '';
+                        let trtotal = '';
+                        let totalAmount = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            totalAmount += item.TotalAmount;
+                            let tr = `
+                                    <td class="vt-number-order"></td>
+                                    <td>
+                                        <a href="#" class="border-1  border-primary border-bottom TCR_TeacherDetail" data-id="${item.ID}">
+                                            ${item.TeacherName}
+                                        </a>
+                                    </td>
+                                    <td>${formatNumber(item.TotalAmount)}</td>
+                                `
+                            stringcontent += `<tr class="vt-number" role="row">${tr}</tr>`;
+                            if (data.length > 1 && i == data.length - 1) {
+                                trtotal = `
+                                        <td></td>
+                                        <td>
+                                            <a href="#" class="border-1 border-white border-primary border-bottom TCR_TeacherDetail text-white" data-id="-1">@Local["Tổng"]</a>
+                                        </td>
+                                        <td class="text-center">${formatNumber(totalAmount)}</td>
+                                    `;
+                                stringcontent = stringcontent + '<tr class="text-white bg-gradient bg-primary" role="row">' + trtotal + '</tr>';
+                            }
+                        }
+
+                        myNode.insertAdjacentHTML('beforeend', stringcontent);
+                    }
+                }
+                TCR_Event();
+            }, 100)
+        });
+    }
+    //#endregion
+
+    //LoadDetail
+    //#region
+    function TCR_LoadDetail(id)
+    {
+        if (xhrLoadList && xhrLoadList.readyState != 0) xhrLoadList.abort();
+        let _branchID = "@Model._BranchID";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        $("#TCR_GridDetailBody").empty();
+        xhrLoadDetail = AjaxLoad(url = "/Report/Student/TeacherRevenueGen/?handler=LoadataDetail"
+            , data = {
+                'branchID': _branchID,
+                'TeacherID': id,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result)
+            {
+                if (result != "0") {
+                    IndexReport = 0;
+                    TCR_DataDetail = JSON.parse(result);
+                    $('#TCR_totaldata').html(TCR_DataDetail.length);
+                    TCR_DataDetailSlide = sliceIntoChunks(JSON.parse(JSON.stringify(TCR_DataDetail)), 300);
+                    if (TCR_DataDetailSlide && TCR_DataDetailSlide != 0) {
+                        fnRenderBlock(TCR_DataDetailSlide[IndexReport], "TCR_GridDetailBody"
+                            , blocknum = 100
+                            , fnrender = TCR_RenderDetail
+                            , fnsuccess = null
+                        );
+                    }
+
+                }
+            }
+        );
+    }
+    async function TCR_RenderDetail(data, id)
+    {
+        new Promise((resolve) =>
+        {
+            setTimeout(() =>
+            {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                <tr class="vt-number">
+                                    <td class="vt-number-order"></td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <h6 class="mb-0 text-dark text-sm">${item.StudentName}</h6>
+                                            <span class="text-xs">${item.StudentCode}</span>
+                                        </div>
+                                    </td>
+                                    <td>${item.CourseName}</td>
+                                    <td>${formatNumber(item.Amount)}</td>
+                                    <td>${item.Method}</td>
+                                    <td>${item.TeacherName}</td>
+                                    <td>${RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : ''}</td>
+                                </tr>
+                                `
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+            }, 100)
+        });
+        clearTimeout(timeoutCount);
+        timeoutCount = setTimeout(() =>
+        {
+            $('#TCR_currentdata').html($("#" + id).children().length)
+        }, 300)
+    }
+    //#endregion
+
+    //event
+    //#region
+    function TCR_RenderDetailMore()
+    {
+        IndexReport += 1;
+        if (TCR_DataDetailSlide && TCR_DataDetailSlide[IndexReport]) {
+            fnRenderBlock(TCR_DataDetailSlide[IndexReport], "TCR_GridDetailBody"
+                , blocknum = 100
+                , fnrender = TCR_RenderDetail
+                , fnsuccess = null
+            );
+        }
+    }
+    function TCR_Event()
+    {
+        $("#TCR_GridBody .TCR_TeacherDetail").unbind().on('click', function ()
+        {
+            let id = $(this).attr('data-id');
+            $('#TCR_Detail').fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#TCR_Detail").offset().top
+            }, 300);
+            if (id != -1) {
+                let teachername = $(this).text().trim();
+                $("#TCR_DetailTeacherName").html(teachername);
+            }
+            else $("#TCR_DetailTeacherName").html('@Local["Tất cả giảng viên"]');
+            TCR_LoadDetail(id);
+        });
+    }
+    function TCR_Export()
+    {
+        exportToExcel("TCR_Grid", Outlang["Bao_cao_hieu_qua_giang_vien"]);
+    }
+    function TCR_ExportDetail()
+    {
+        var fileName = xoa_dau($("#TCR_DetailTeacherName").text()).replaceAll(' ', '-');
+        dataheader = {
+            "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+            "StudentCode": ["@Local["Mã học viên"]"],
+            "StudentName": ["@Local["Tên học viên"]"],
+            "CourseName": ["@Local["Khoá học"]"],
+            "Amount": ["@Local["Thanh toán"]"],
+            "BranchID": ["@Local["Chi nhánh"]", (value) => { return RP_DataBranch[value] != undefined ? RP_DataBranch[value].Name : '' }],
+            "Method": ["@Local["Hình thức thanh toán"]"],
+            "TeacherName": ["@Local["Giảng viên"]"],
+        }
+        exportJsonToExcel(fileName, TCR_DataDetail, dataheader);
+    }
+        //#endregion
+</script>

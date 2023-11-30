@@ -1,0 +1,275 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Assay.AssayListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row" id="CAL_MasterContainer">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#CAL_infodes">
+                                    <i class="text-gradient  text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        @*<div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Form xét nghiệm"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết danh sách form xét nghiệm"]</p>
+                            </div>
+                        </div>*@
+                        <div class="ms-auto my-auto mt-1">
+                            <button class="btn bg-gradient-primary btn-sm mt-1" onclick="CAL_Add()">@Local["Thêm mới"]</button>
+                        </div>
+                    </div>
+                    <div id="CAL_infodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-2 mt-2 multi-collapse collapse">
+                        <h6 class="mb-0">@Local["Form xét nghiệm"]</h6>
+                        <p class="text-sm mb-0">@Local["Chi tiết danh sách form xét nghiệm"]</p>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive" style="max-height:80vh;">
+                        <div id="CAL_WaitingDiv" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table data-name="ContentAssayCus" class="table vt-table mb-0" id="CAL_dtContent">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["#"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Người tạo"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="CAL_dtContentBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="CAL_btnloadMore" class="btn btnsysmore btn-secondary w-100 p-1 mt-1 mb-0 position-relative" style="pointer-events: auto;" onclick="event.preventDefault(); return CAL_Load(0, 1);">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card" id="CAL_DetailContainer">
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    //#region //DECLARE - INIT
+    var ser_CustomerAssayID = '@Model._CustomerAssayID';
+    let shtable;
+    let CAL_data;
+    let CAL_limit = 100, CAL_beginID = 0;
+    let CAL_isDoneLoadMore = false;
+    $(document).ready(function () {
+        shtable = $("#CAL_dtContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        CAL_Load(0, 0);
+        Checking_TabControl_Permission();
+
+    });
+    //#endregion
+
+    //#region //LOAD DATA
+    function CAL_Load(CAL_currentID, CAL_isLoadMore = 0) {
+        if (CAL_currentID == 0 && CAL_isLoadMore == 0) {
+            CAL_data = [];
+            CAL_beginID = 0;
+            CAL_isDoneLoadMore = false;
+            $('#CAL_dtContentBody').html('');
+        }
+
+        AjaxLoad(url = "/Customer/Assay/AssayList/?handler=LoadataAssayCusList"
+            , data =
+            {
+                'customerID': ser_CustomerAssayID
+                , 'id': CAL_currentID
+                , 'limit': CAL_limit
+                , 'beginID': CAL_beginID
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    if (CAL_currentID == 0) {
+                        CAL_data = CAL_data.concat(data);
+                        CAL_beginID = data[data.length - 1].ID;
+                        fnRenderBlock(data, "CAL_dtContentBody"
+                            , blocknum = 50
+                            , fnrender = CAL_RenderData
+                            , fnsuccess = function (e) { }
+                            , fnbegin = function (e) { }
+                        );
+                    }
+                    else {
+                        if (data && data.length != 0) {
+                            if ($('#CAL_rowContent_' + CAL_currentID).length > 0) {
+                                CAL_data = CAL_data.reduce((pre, arr) => {
+                                    if (arr.ID == data[0].ID) arr = data[0];
+                                    pre.push(arr);
+                                    return pre;
+                                }, []);
+                                $('#CAL_rowContent_' + CAL_currentID).replaceWith(CAL_RenderEach(data[0]));
+                                CAL_Event();
+                            }
+                            else {
+                                if (CAL_isDoneLoadMore) {
+                                    CAL_data.push(data[0]);
+                                    $('#CAL_dtContentBody').prepend(CAL_RenderEach(data[0]));
+                                    CAL_Event();
+                                }
+                                else {
+                                    CAL_Load(0, 0);
+                                }
+                            }
+                        }
+                        else {
+                            if ($('#CAL_rowContent_' + CAL_currentID).length > 0) {
+                                CAL_data = CAL_data.filter(word => {
+                                    return word.ID != CAL_currentID
+                                })
+                                $('#CAL_rowContent_' + CAL_currentID).remove();
+                            }
+                        }
+                    }
+                }
+                else if (result == "[]") {
+                    if (CAL_isLoadMore == 1) {
+                        $("#CAL_btnloadMore").hide();
+                        CAL_isDoneLoadMore = true;
+                    }
+                    else {
+                        if (CAL_currentID != 0) {
+                            if ($('#CAL_rowContent_' + CAL_currentID).length > 0) {
+                                CAL_data = CAL_data.filter(word => {
+                                    return word.ID != CAL_currentID
+                                })
+                                $('#CAL_rowContent_' + CAL_currentID).remove();
+                            }
+                        }
+                        else {
+                            
+                        }
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+                shtable.Refresh();
+            }
+            , before = function () {
+                $("#CAL_WaitingDiv").show();
+            }
+            , complete = function (e) {
+                $("#CAL_WaitingDiv").hide();
+            });
+    }
+    //#endregion
+
+    //#region //RENDER DATA
+    async function CAL_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CAL_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        CAL_Event();
+                        shtable.Refresh();
+                    }
+                }
+
+                resolve();
+            }, 30)
+        })
+    }
+
+    function CAL_RenderEach(item) {
+        try {
+            let tr = `<td class="d-none">${item.ID}</td>
+                                <td class="vt-number-order"></td>
+                                <td>
+                                <a class="buttonEditClass" value="${item.ID}" href="#"><span class="fw-bold pe-2">${item.FormName}</span></a>
+                                <div>${item.Note}</div>
+                                </td>
+                                <td  data-sortvalue="${item.CreatedNumber}">
+                                ${item.CreatedName}
+                                </br>
+                                ${item.Created}
+                                </td>
+                                <td data-name="mofified" data-sortvalue="${item.ModifiedNumber}">
+                                ${item.ModifiedName}
+                                </br>
+                                ${item.Modified}
+                                </td>`;
+            tr = `<tr id="CAL_rowContent_${item.ID}" role="row" class="vt-number CLS_clsRowContent cursor-pointer vt-number">${tr}</tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //HANDLE EVENT
+    function CAL_Event() {
+        $('#CAL_dtContent tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CAL_Edit(ID, ser_CustomerAssayID);
+        });
+        $('#CAL_dtContent tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteAssayCusList(ID)
+        });
+        $('#CAL_dtContent tbody').on('click', '.buttonPrintClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            syslog_cuttes('p', ser_CustomerAssayID, '');
+            PrintTemplate(ID, Master_branchID, 23, versionofWebApplication, ser_CustomerAssayID);
+        });
+    }
+
+    function CAL_Add() {
+        CAL_OpenDetail();
+        $("#CAL_DetailContainer").load("/Customer/Assay/AssayDetail?CustomerID=" + ser_CustomerAssayID + "&ver=" + versionofWebApplication);
+        $('#CAL_DetailContainer').show();
+    }
+    function CAL_Edit(id, customerid) {
+        CAL_OpenDetail();
+        $("#CAL_DetailContainer").load("/Customer/Assay/AssayDetail?CurrentID=" + id + "&CustomerID=" + customerid + "&ver=" + versionofWebApplication);
+        $('#CAL_DetailContainer').show();
+
+    }
+
+    function CAL_OpenDetail() {
+        $("#CAL_DetailContainer").empty();
+        $("#CAL_MasterContainer").hide();
+        document.getElementById("CAL_DetailContainer").innerHTML = '';
+    }
+    function CAL_CloseDetail() {
+        document.getElementById("CAL_DetailContainer").innerHTML = '';
+        $("#CAL_MasterContainer").show();
+        $("#CAL_DetailContainer").hide();
+    }
+    //#endregion
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>

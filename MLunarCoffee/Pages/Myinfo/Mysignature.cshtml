@@ -1,0 +1,95 @@
+﻿@page
+@model MLunarCoffee.Pages.Myinfo.Mysignature
+@{
+    Layout = null;
+}
+<div class="row">
+    <div class="co-12">
+        <div class="card">
+            <div class="card-header p-3 pb-0">
+                <div class="d-flex">
+                    <div class=" ms-auto my-auto mt-1">
+                        <a onclick="MySign_Reset()" class="cursor-pointer text-gradient text-primary px-2">@Local["Đặt lại"]</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 position-relative pb-2">
+                <div class="js-signature" data-line-width="4" data-height="400" data-auto-fit="true"></div>
+                <img id="Signature_View" class="position-absolute top-0 start-0 w-100 h-100 px-4 pb-3 pt-2" src="/default.png" style="display:none;" />
+            </div>
+            <div class="card-footer py-2">
+                <div class="action_Save mb-2">
+                    <div class="action_Save-Content">
+                        <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 " onclick="return MySign_Save()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+</div>
+
+<script>js_require_notasync('/assests/dist/Signation/jq-signature.js', true);</script>
+
+<script type="text/javascript">
+    let mysigndata = "";
+    let getcanvascontent = 1;
+    $(document).ready(function() {
+        if ($('.js-signature').length) $('.js-signature').jqSignature();
+
+        $("#Signature_View,.js-signature").unbind('mousedown').on("mousedown", function() {
+            $("#Signature_View").hide();
+            getcanvascontent = 1;
+        })
+        MySign_Load(); 
+    });
+
+    function MySign_Save() {
+        if (getcanvascontent == 1) mysigndata = $('.js-signature').jqSignature('getDataURL');
+        AjaxLoad(url = "/Myinfo/Mysignature/?handler=UpdateSign"
+            , data = {
+                'signdata': mysigndata
+            }, async = true, error = null
+            , success = function(result) {
+                if (result == "1") {
+                    notiSuccess();
+                }
+                else {
+                    notiError();
+                }
+            }
+        );
+    }
+
+    function MySign_Reset() {
+        $('.js-signature').jqSignature('clearCanvas');
+        
+        if (mysigndata != undefined && mysigndata != '') {  
+            $("#Signature_View").show();
+            $("#Signature_View").attr("src", mysigndata); 
+        }
+        getcanvascontent = 0;
+    }
+    function MySign_Load() {
+        try {
+            AjaxLoad(url = "/Signature/Signature/?handler=GetSignData"
+                , data = {}, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data.length > 0) {
+                            let mysign = data[0].SignData; 
+                            if (mysign != undefined && mysign != '') {
+                                mysigndata = mysign;
+                                MySign_Reset();
+                            }
+                        }
+                    }
+                }
+            );
+
+        } catch (e) {
+
+        }
+    }
+</script>

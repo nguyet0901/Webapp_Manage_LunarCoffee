@@ -1,0 +1,346 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Payment.SupplierPaymentDetailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VTTech Solution</title>
+    <meta charset="utf-8" />
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+
+</head>
+<body>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Thanh toán nhà cung cấp labo"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 form3" id="SupPay_Form">
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-6 col-xl-4 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Nhà cung cấp"]</label>
+                            <input id="SupPay_Name" class="form-control" type="text" disabled="" placeholder="eg .@Local["Nhà cung cấp"]" />
+
+                        </div>
+
+                        <div class="field col-12 col-md-6 col-xl-4 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Chi nhánh"]</label>
+                            <input id="SupPay_Branch" class="form-control" type="text" disabled="" placeholder="eg .@Local["Chi nhánh"]" />
+
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-4 flex-grow-1 px-1 mt-2">
+                            <label>@Local["Ngày tạo"]</label>
+                            <input id="SupPay_Created" class="form-control flatpickr detail" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                        </div>
+                    </div>
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                            <label>@Local["Hình thức thanh toán"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="SupPay_Method">
+                                <input type="hidden" name="paymentMethod" />
+                                <i class="dropdown icon"></i>
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Hình thức thanh toán"]</div>
+                                <div id="cbbSupPay_Method" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                            <label>@Local["Số tiền"]</label>
+                            <input id="SupPay_Amount" name="discountOther" type="text" class="form-control  money" disabled="" placeholder="eg .@Local["Số tiền"]" />
+                        </div>
+                        <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="SupPay_Note" class="form-control" name="content" rows="1"></textarea>
+                        </div>
+                    </div>
+                    <table class="mt-4 table vt-table mb-0" id="SupPay_TableContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">LaboID</th>
+                                <th>#</th>
+                                <th>@Local["Mã labo"]</th>
+                                <th>@Local["Dịch vụ"]</th>
+                                <th>@Local["Giá tiền"]</th>
+                                <th>@Local["Đã trả"]</th>
+                                <th>@Local["Tiền thanh toán"]</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="SupPay_TableContentBody">
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="SupPay_Message"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="SupPay_Form"
+                                    onclick="CloseModal()">
+                                @Local["Xóa"]
+                            </button>
+                            <button class="btn bg-gradient-warning" form="SupPay_Form"
+                                    onclick="SupPay_Confirm()">
+                                @Local["Cập nhật tổng tiền"]
+                            </button>
+                            <button id="SupPay_Save" form="SupPay_Form" type="button"
+                                    class="btn bg-gradient-primary mt-2 me-2" onclick="SupPay_SaveExecute()">
+                                @Local["Lưu"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        var ser_ChooseDate = "0";
+        var ser_PaymentSupplierID = ("@Model._PaymentSupplierID");
+        let ser_PaymentBranchID = ("@Model._PaymentBranchID");
+
+        var ser_PaymentCurrentID = ("@Model._PaymentCurrentID");
+        var ser_TotalAmountCurrent = 0;// gia tri nay la tong cac detail
+
+        var dataPaymentDetail;
+
+        $(document).ready(function () {
+            $(".flatpickr.detail").flatpickr({
+                dateFormat: 'd-m-Y H:i',
+                enableTime: true,
+                defaultDate: new Date()
+            });
+            if (ser_ChooseDate == "1") {
+                $("#dateCreated").show();
+            }
+            $("#SupPay_Save").attr("disabled", true);
+            document.getElementById("SupPay_Message").innerHTML = "";
+
+            SupPay_Initialize();
+            SupPay_LoadDetail();
+
+            $('#SupPay_Amount').divide();
+            SupPay_Count();
+            $('.tableftMoney').divide();
+            $(".tableftMoney").change(function () {
+                var value = this.value.replace(/,/g, '');
+                var maxvalue = Number(this.title);
+                if (!(!isNaN(parseFloat(value)) && isFinite(value))) {
+                    $(this).val(0);
+                }
+                else {
+                    if (value > maxvalue)
+                        document.getElementById("SupPay_Message").innerHTML = "@Local["Số tiền đóng lớn hơn số tiền còn lại"]";
+                    else if (value < 0) {
+                        document.getElementById("SupPay_Message").innerHTML = "@Local["Số tiền nhỏ hơn 0"]";
+                    }
+                    else {
+                        document.getElementById("SupPay_Message").innerHTML = "";
+                        SupPay_Count();
+                    }
+                }
+            });
+            $('#SupPay_TableContent tbody').on('change', '.checkPayment', function () {
+                let id = this.id.replace("checkPayment_", "")
+                if ($("#checkPayment_" + id)[0].checked == true) {
+
+                    let LeftMoney = $("#payCurrent_" + id).attr("data-tableft");
+                    $('#payCurrent_' + id).val(LeftMoney);
+                }
+                else {
+                    $('#payCurrent_' + id).val(0);
+                }
+            });
+            $('.ui.dropdown .remove.icon').on('click', function (e) {
+                $(this).parent('.dropdown').dropdown('clear');
+                e.stopPropagation();
+            });
+        });
+
+        function SupPay_Initialize() {
+            AjaxLoad(url = "/Labo/Payment/SupplierPaymentDetail/?handler=Initialize"
+                , data = {
+                    'SupplierID': ser_PaymentSupplierID
+                    , 'BranchID': ser_PaymentBranchID
+                }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+
+                        Load_Combo(data.MethodPayment, "cbbSupPay_Method", true);
+                        $("#SupPay_Method").dropdown("refresh");
+
+                        let InfoSupp = data.InfoSupp;
+                        if (InfoSupp.length > 0) {
+                            $("#SupPay_Name").val(data.InfoSupp[0].SupplierName);
+                            $("#SupPay_Branch").val(data.InfoSupp[0].BranchName);
+                        }
+                    }
+                }
+            );
+        }
+
+        function SupPay_LoadDetail() {
+            AjaxLoad(url = "/Labo/Payment/SupplierPaymentDetail/?handler=SuppPaymentDetailLoad"
+                , data = {
+                    'SupplierID': ser_PaymentSupplierID
+                    ,'BranchID': ser_PaymentBranchID
+                }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data.length > 0) {
+                            RenderPaymentDetail(data, "SupPay_TableContentBody");
+                        }
+
+                    }
+                }
+            );
+        }
+
+
+
+        function SupPay_SaveExecute() {
+            if (document.getElementById("SupPay_Message").innerHTML === "") {
+                let dataMaster = new Object();
+                dataMaster.Method_ID = Number($('#SupPay_Method').dropdown('get value')) ? Number($('#SupPay_Method').dropdown('get value')) : 0;
+                dataMaster.Content = $('#SupPay_Note').val() ? $('#SupPay_Note').val() : "";
+                dataMaster.dateCreated = $('#SupPay_Created').val() ? $('#SupPay_Created').val() : new Date();
+                var totalPaid = $('#SupPay_Amount').val() ? $('#SupPay_Amount').val() : 0;
+                dataMaster.Amount = totalPaid;
+
+                let dataDetail = [];
+                let totalAmount = 0;
+                var x = document.getElementsByClassName("tableftMoney");
+                for (let i = 0; i < x.length; i++) {
+                    let element = {};
+                    element.TabID = Number(x[i].id.replace("payCurrent_", ""));
+                    element.Amount = Number(x[i].value.replace(/,/g, ''));
+                    element.Note = "";
+                    totalAmount = totalAmount + Number(x[i].value.replace(/,/g, ''));
+                    dataDetail.push(element);
+                }
+
+                if (totalAmount === 0) {
+                    document.getElementById("SupPay_Message").innerHTML = "@Local["Tổng tiền không thể bằng 0"]";
+                }
+                else {
+                    $('#SupPay_Form').form('validate form');
+                    if ($('#SupPay_Form').form('is valid')) {
+                        AjaxLoad(url = "/Labo/Payment/SupplierPaymentDetail/?handler=ExcuteData"
+                            , data = {
+                                'data': JSON.stringify(dataMaster), 'dataDetail': JSON.stringify(dataDetail)
+                                , 'CurrentID': ser_PaymentCurrentID
+                                , 'SupplierID': ser_PaymentSupplierID
+                            }, async = true
+                            , error = function () {
+                                notiError_SW();
+                            }
+                            , success = function (result) {
+                                if (result != "0") {
+                                    let data = JSON.parse(result);
+                                    notiSuccess();
+                                    if (typeof LoadInvoice_Outsite !== 'undefined' && $.isFunction(LoadInvoice_Outsite)) {
+                                        LoadInvoice_Outsite();
+                                    }
+                                    if (typeof ListLabo_Load !== 'undefined' && $.isFunction(ListLabo_Load)) {
+                                        ListLabo_Load(data[0].Supplier);
+                                    }
+                                } else {
+                                    notiError_SW();
+                                }
+                            }
+                        );
+
+                        $('#DetailModal').modal('hide');
+                        $("#DetailModal_Content").html('');
+                    }
+                }
+            }
+            return false;
+        }
+
+        function SupPay_Confirm() {
+            SupPay_Count();
+            if (document.getElementById("SupPay_Message").innerHTML == '')
+                $("#SupPay_Save").attr("disabled", false);
+        }
+
+        function SupPay_Count () {
+            $('#SupPay_Message').html('')
+            ser_TotalAmountCurrent = 0;
+            var x = document.getElementsByClassName("tableftMoney");
+            for (let i = 0; i < x.length; i++) {
+                let Amount = Number(x[i].value.replace(/,/g, ''));
+                ser_TotalAmountCurrent = ser_TotalAmountCurrent + Amount;
+
+                let haspaid = Number(x[i].getAttribute('data-tableft').replace(/,/g, ''));
+                if (haspaid < Amount) document.getElementById("SupPay_Message").innerHTML = "@Local["Số tiền đóng lớn hơn số tiền còn lại"]";
+            }
+            $('#SupPay_Amount').val(ser_TotalAmountCurrent);
+            ser_TotalAmountCurrentNotDeposit = ser_TotalAmountCurrent;
+
+        }
+
+        function RenderPaymentDetail(data, id) {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr =
+                            '<td class="d-none">' + item.LaboID + '</td>'
+                            +'<td class="vt-number-order"></td>'
+                            + '<td>' + item.Lab_Code + '</td>'
+                            + '<td><span class="d-block">' + item.TabName + '</span>'
+                            + ' <span class="d-block">' + item.TabCreated + '</span>'
+                            + '</td>'
+                            + '<td>' + item.TabAmount + '</td>'
+                            + '<td>' + item.TabPaid + '</td>'
+                            + '<td>' + '<input class="form-control money tableftMoney" data-tableft="' + item.TabLeft + '" id="payCurrent_' + item.LaboID + '"  type="text" placeholder="eg .amount" title="' + item.TabLeft + '" '
+                            + (item.IsProduct == 1 ? ("Disabled") : (""))
+                            + ' value="0">' + '</td>'
+                            + '<td>' + AddCell_CheckPayment(item.LaboID) + '</div>'
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                    }
+                }
+                document.getElementById(id).innerHTML = stringContent;
+            }
+        }
+        function AddCell_CheckPayment (randomNumber) {
+            let resulf = '<div class="form-check">'
+                + '<input class="checkPayment form-check-input pr-2" type="checkbox" id="checkPayment_' + randomNumber + '">'
+                + '</div>'
+
+
+            return resulf;
+        }
+
+    </script>
+    <script>js_require('/js/main.js');</script>
+
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+</html>

@@ -1,0 +1,1221 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.ListCustomerModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0" id="LC_ListContainer">
+    <div class="row">
+        <div class="col-12 px-0 pt-1">
+            <div class="card card-plain">
+
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left w-lg-30">
+                        <h6 class="mb-0">@Local["Danh sách khách hàng"]</h6>
+                        <p class="text-sm mb-0">@Local["Khách hàng phát sinh lịch hẹn, điều trị, doanh thu và doanh số trong kỳ"]</p>
+                    </div>
+                    <div class="right w-lg-60  overflow-unset">
+                        <div class="vtcondition w-100">
+                            <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                            <div class="fulllap collapse collapsesticky show">
+
+                                <div class="m-0 row">
+                                    <div class="col-12 col-md-6 px-0 py-1 pe-sm-1">
+                                        <div class="input-group flex-nowrap rounded-end position-relative">
+                                            <div class="input-group-text py-0 px-3 position-relative ">
+                                                <div id="blockTime" class="px-2 rounded-2 bg-gradient-primary text-white" style="border-radius: 10px !important;" title="" data-bs-toggle="tooltip" data-bs-original-title="@Local["Giới hạn ngày"]">
+                                                    <div id="LC_TimeLimit" class="text-sm">31</div>
+                                                </div>
+                                            </div>
+                                            <input id="LC_date" class="flatpickr form-control" type="text" placeholder="@Local["Chọn ngày"].." title="@Local["Giới hạn ngày"]" />
+                                            <div id="LC_dteDate" class="input-group-text position-relative cursor-pointer  _tab_control_"
+                                                 data-tab="custlist_btn_view_cust_all_day" title="">
+                                                <span class="btn badge bg-gradient-success my-auto"
+                                                      onclick="event.preventDefault(); LC_setToDay();">@Local["Hôm nay"]</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6 px-0 py-1 pe-sm-1">
+                                            <div class="d-flex w-100">
+                                                <div class="w-100 bg-gray-100">
+                                                    <div class="ui fluid search selection dropdown form-control" id="LC_BranchID">
+                                                        <input type="hidden" name="branch" />
+                                                        <i class="dropdown icon"></i>
+                                                        <input class="search" autocomplete="off" tabindex="0" />
+                                                        <div class="default text">eg. @Local["Chi nhánh"]</div>
+                                                        <div id="LC_cbbBranchID" class="menu" tabindex="-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="ms-2">
+                                                    <button id="LC_btnOK" class="btn bg-gradient-primary mb-0" onclick="LC_LoadData()">@Local["OK"]</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body pt-2">
+                        <div class="ms-0 px-0 row pb-3 _tab_control_" data-tab="listcust_overviewinfo">
+                            <div class="col-12 col-md-6 col-lg-3 mt-0 ps-0">
+                                <div class="bg-gray-100 border-5 border-dark border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body d-flex mt-2 p-2">
+                                    <div class="ms-2">
+                                        <span class="fs-4 fw-bold fw-bold text-dark" id="LC_TotalCust">0</span>
+                                        <p class="opacity-8 mb-2 text-sm">@Local["Khách hàng"]</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 mt-0 ps-0">
+                                <div class="bg-gray-100 border-5 border-secondary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body d-flex mt-2 p-2">
+                                    <div class="ms-2">
+                                        <span class="fs-4 fw-bold fw-bold text-secondary" id="LC_TotalSchedule">0</span>
+                                        <p class="opacity-8 mb-2 text-sm">@Local["Lịch hẹn"]</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 mt-0 ps-0">
+                                <div class="bg-gray-100 border-5 border-primary border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body d-flex mt-2 p-2">
+                                    <div class="ms-2">
+                                        <span class="fs-4 fw-bold fw-bold text-primary ellipsis_one_line" id="LC_TotalTarget">0</span>
+                                        <p class="opacity-8 mb-2 text-sm">@Local["Doanh số"]</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 mt-0 ps-0">
+                                <div class="bg-gray-100 border-5 border-danger border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start card-body d-flex mt-2 p-2">
+                                    <div class="ms-2">
+                                        <span class="fs-4 fw-bold fw-bold text-danger ellipsis_one_line" id="LC_TotalRevenue">0</span>
+                                        <p class="opacity-8 mb-2 text-sm">@Local["Doanh thu"]</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white LC_clsTool pt-3 z-index-3">
+                            <div class="card card-plain">
+                                <div class="vtcardheader card-header p-0">
+                                    <div class="left">
+                                        <div class="input-group w-100 col-w-300 col-auto my-auto" id="LC_SearchContainer">
+                                            <div class="input-group-text input-group-text px-2">
+                                                <i class="fas fa-search" aria-hidden="true"></i>
+                                                <div class="spinner-border spinner-border-sm d-none"></div>
+                                            </div>
+                                            <input id="LC_Searching" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm"]" autocomplete="off">
+                                            <div class="input-group-text p-0">
+                                                <div class="position-relative d-inline">
+                                                    <a class="cursor-pointer px-2" data-bs-toggle="collapse" role="tab" data-bs-target="#colsearch">
+                                                        <i class=" text-gradient text-primary fas fa-filter"></i>
+                                                    </a>
+                                                    <div class="collapse collapsesticky position-absolute z-index-3 end-1 top-100 mt-1" id="colsearch" style="min-width:285px;">
+                                                        <div class="card card-body text-dark text-capitalize opacity-10">
+                                                            <div class="field col-12 mt-2">
+                                                                <div class="ui fluid search selection dropdown form-control" id="LC_MemberID">
+                                                                    <input type="hidden" name="branch" />
+                                                                    <i class="dropdown icon"></i>
+                                                                    <div class="default text">eg .@Local["Thành viên"]</div>
+                                                                    <div id="LC_cbbMemberID" class="menu" tabindex="-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <button class="btn btn-dark btn-sm mt-3 mb-2" onclick="LC_closeFilter()">@Local["Đóng"]</button>
+                                                            <button class="btn btn-primary btn-sm " onclick="LC_FilterCombo()">@Local["OK"]</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="right">
+                                        <div class="wrap">
+                                            <div class="wrapblock">
+                                                <div class="text-primary fw-bold d-inline text-nowrap mt-1">
+                                                    <span id="LC_currentdata">0</span>
+                                                    <span class="mx-2">/</span>
+                                                    <span id="LC_totaldata">0</span>
+                                                </div>
+                                                <div class="icon-hover mx-1 mt-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["In"]">
+                                                    <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer" onclick="event.preventDefault(); LC_PrintReport()"></i>
+                                                </div>
+
+                                                <div class="flex-nowrap input-group rounded-0 vttech-input-group mb-1 mb-md-0  mt-1 _tab_control_" data-tab="export_excel">
+                                                    <div class="icon-hover me-0 input-group-text vttech-input-item vttech-input-item-first" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Xuất excel"]">
+                                                        <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                                                    </div>
+                                                    <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return LC_ExportExcel(0)">@Local["Tất cả"]</i>
+                                                    </div>
+                                                    <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                                        <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return LC_ExportExcel(1)">@Local["Tùy chọn"]</i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="wrapblock">
+                                                <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                                    @Local["Xem thêm"]
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="toggle">
+                                        <div class="collapse position-absolute end-1 top-100 mt-1" id="colLists" style="min-width:250px;z-index:10;">
+                                            <ul class="card card-body text-dark text-capitalize opacity-10" style=" max-height: 400px; overflow: auto;">
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="code_old" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["MSKH cũ"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="new_customer" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Khách mới"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="createddate" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Ngày tạo"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Nguồn khách hàng"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="group" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Nhóm khách hàng"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="member" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Thành viên"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="email" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Email"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="DocCode" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                                                </li>
+
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="Birth" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Ngày sinh"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="Age" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Tuổi"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="Gender" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Giới tính"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="District" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Quận huyện"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="NumFirstPaid" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Ngày thanh toán đầu tiên"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="NumLastTreat" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Ngày điều trị cuối cùng"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="NumLastCare" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Ngày chăm sóc cuối cùng"]</p>
+                                                </li>
+                                                <li class="d-flex">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="City" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Thành phố"]</p>
+                                                </li>
+                                                <li class="d-flex _tab_control_" data-tab="listcust_totalperiod">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="raise" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Doanh số"]</p>
+                                                </li>
+
+                                                <li class="d-flex _tab_control_" data-tab="listcust_totalperiod">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="amount" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Doanh thu"]</p>
+                                                </li>
+                                                <li class="d-flex _tab_control_">
+                                                    <div class="form-check form-switch">
+                                                        <input class="shtoogle form-check-input" data-name="ccstaff" type="checkbox">
+                                                    </div>
+                                                    <p class="text-sm">@Local["Nhân viên chăm sóc"]</p>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="d-md-flex position-relative">
+                                        <div id="LC_TableContainer" class="overflow-scroll pe-0 flex-grow-1">
+                                            <div class="mobile-responsive position-relative vt-header-sticky">
+                                                <div class="mobile-responsive  mt-3 overflow-y" style="max-height: calc(100vh - 200px);">
+                                                    <div id="LC_Waiting" class="position-absolute top-0 start-50 translate-middle-x waitingdiv text-center" style="display: none;">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="sr-only">Loading...</span>
+                                                        </div>
+                                                    </div>
+                                                    <table id="LC_dtContent" class="table vt-table mb-0" data-name="ListCustomer">
+                                                        <thead class="hiddenCollapse">
+                                                            <tr role="row">
+                                                                <th style="width: 50px;">#</th>
+                                                                <th style="min-width: 150px;"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Mã khách hàng"]</th>
+                                                                <th style="min-width: 150px;"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Tên khách"]</th>
+                                                                <th style="min-width: 150px;" data-name="code_old"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["MSKH cũ"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort">@Local["Điện thoại"]</th>
+                                                                <th style="min-width: 150px;" data-name="DocCode"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Mã hồ sơ"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="Birth">@Local["Ngày sinh"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="Age">@Local["Tuổi"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="Gender">@Local["Giới tính"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="District">@Local["Quận huyện"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="City">@Local["Thành phố"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="NumFirstPaid">@Local["Ngày thanh toán đầu tiên"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="NumLastTreat">@Local["Ngày điều trị cuối cùng"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="NumLastCare">@Local["Ngày chăm sóc cuối cùng"]</th>
+                                                                <th style="min-width: 150px;"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Số lịch hẹn"]</th>
+                                                                <th style="min-width: 150px;" data-name="raise" class="_tab_control_" data-tab="listcust_totalperiod"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Doanh số"]</th>
+                                                                <th style="min-width: 150px;" data-name="amount" class="_tab_control_" data-tab="listcust_totalperiod"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Doanh thu"]</th>
+                                                                <th style="min-width: 150px;" data-name="createddate"><i class="text-sm pe-2 fas fa-sort-alpha-down cursor-pointer"></i>@Local["Ngày tạo"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="new_customer">@Local["Khách mới"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="source">@Local["Nguồn"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="group">@Local["Nhóm"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="member">@Local["Thành viên"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="email">@Local["Email"]</th>
+                                                                <th style="min-width: 150px;" class="no-sort" data-name="ccstaff">@Local["Nhân viên chăm sóc"]</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="LC_dtContentBody">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <button id="LC_btnLoadMore" class="btn btnsysmore btn-secondary w-100 p-1" onclick="LC_RenderMore(1)">@Local["Xem thêm"]</button>
+                                            </div>
+                                        </div>
+                                        <div id="LC_DetailContainer" class="card card-plain col-w-400 " style="display: none">
+                                            <div class="text-dark card my-3 card-plain">
+                                                <div class="card-header pb-0 px-0 pt-1">
+
+                                                    <div class="d-lg-none text-dark d-flex align-items-center ms-2 mb-3 text-sm cursor-pointer" style="transition: 0.5s all;" onclick="event.preventDefault(); return LC_CloseDetail();">
+                                                        <i class="fas fa-caret-left text-primary pe-2"></i>
+                                                        @Local["Quay lại"]
+                                                    </div>
+
+                                                    @*<div class="position-absolute end-0 top-1">
+                                                        <div class="LC_Detail_Collapse icon-hover cursor-pointer px-2 mt-1" style="transition: 0.5s all;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="@Local["Đóng"]" onclick="event.preventDefault(); return LC_CloseDetail();">
+                                                            <i class="fas fa-angle-double-right text-lg text-primary cursor-pointer"></i>
+                                                        </div>
+                                                    </div>*@
+                                                    <div class="d-flex">
+                                                        <div>
+                                                            <img id="LC_Detail_Avatar" src="/default.png" onerror="Master_OnLoad_Error_Image(this)" class="avatar avatar-sm me-2" alt="avatar image">
+                                                        </div>
+                                                        <div class="mt-n1">
+                                                            <p class="text-primary text-sm fw-bold pe-1 mb-0" id="LC_Detail_CustCode"></p>
+                                                            <p class="text-dark text-sm fw-bold pe-1 mb-0" id="LC_Detail_Name"></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body p-0 mt-3">
+                                                    <div class="ps-1 pt-0 text-dark text-sm">
+                                                        <div class="row mx-0 d-flex gap-3">
+                                                            <div style="" class="cusinfotag py-1 ps-0">
+                                                                <div class="d-flex">
+                                                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Tổng phát sinh"]</p>
+                                                                </div>
+                                                                <h6 class="fw-bold p-1 mb-0 mt-0" id="LC_Detail_Target">0</h6>
+                                                            </div>
+                                                            <div style="" class="cusinfotag py-1 ps-0">
+                                                                <div class="d-flex">
+                                                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Tổng thanh toán"]</p>
+                                                                </div>
+                                                                <h6 class="fw-bold p-1 mb-0 mt-0" id="LC_Detail_Revenue">0</h6>
+                                                            </div>
+                                                            <div style="" class="cusinfotag py-1 ps-0">
+                                                                <div class="d-flex">
+                                                                    <p class="ps-1 text-sm mt-1 pb-0 mb-0 text-secondary">@Local["Công nợ"]</p>
+                                                                </div>
+                                                                <h6 class="fw-bold p-1 mb-0 mt-0" id="LC_Detail_Debt">0</h6>
+                                                            </div>
+                                                        </div>
+                                                        <hr class="horizontal dark my-3">
+                                                    </div>
+                                                    <div class="ps-1">
+                                                        <div class="pt-0">
+                                                            <div class="col-auto ms-auto">
+                                                                <h6 class="text-sm text-dark text-capitalize font-weight-bold">@Local["Thanh toán"] / @Local["Phát sinh"] ( @Local["Trong kỳ"] )</h6>
+                                                            </div>
+
+                                                            <div id="LC_Detail_dtContentDetail" class="p-0 card-body overflow-y overflow-x-hidden" style="max-height: calc(70vh - 114px)">
+                                                                <div id="LC_Detail_Loading" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                                                    <div class="spinner-border text-primary" role="status">
+                                                                        <span class="sr-only">Loading...</span>
+                                                                    </div>
+                                                                </div>
+                                                                <ul id="LC_Detail_dtContentBody" class="list-group">
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    //LC_Sort == 1: Tên khách
+    //LC_Sort == 2: Ngày tạo
+    //LC_Sort > 0: Asc
+    //LC_Sort < 0: Desc
+
+    //#region //DECLARE - INIT
+    let shtable;
+    let LC_maxDate = 365;
+    let LC_searchTimeoutCount, LC_timeoutCount;
+    let LC_dtePicker;
+    let LC_xhrLoadList, LC_xhrLoadListDetail;
+    let LC_dataMaster, LC_dataMasterSlice;
+    let LC_IndexReport = 0;
+    let LC_CurrentID = 0;
+    var LC_dataMember;
+    let LC_isLoading = 0;
+    let LC_Sort = 0;
+    $(document).ready(function () {
+        ToolPopper();
+        $('#LC_TimeLimit').html(LC_maxDate);
+        LC_dtePicker = $("#LC_date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                } else {
+                    var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                    if (diffDays > LC_maxDate)
+                        instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+
+        });
+        var date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        $("#LC_date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        shtable = $("#LC_dtContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $('#LC_dtContent').tablesort();
+        LC_EventInitial();
+        LC_CheckAllowFilterDate();
+        LC_Initialize();
+
+        Checking_TabControl_Permission();
+    });
+    function LC_Initialize() {
+        LC_isLoading = 0;
+        AjaxLoad(url = "/Customer/ListCustomer/?handler=Initialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let DataBranch = data.Branch;
+                LC_dataMember = data.Membership;
+                Load_Combo(DataBranch, "LC_cbbBranchID", true);
+                $("#LC_BranchID").dropdown("refresh");
+                $("#LC_BranchID").dropdown("set selected", @Model._branchID);
+                Load_Combo(LC_dataMember, "LC_cbbMemberID", false, '@Local["Thành viên"]');
+                $("#LC_MemberID").dropdown("refresh");
+                $("#LC_MemberID").dropdown("set selected", "0");
+                LC_LoadData();
+
+            }, sender = null
+        );
+    }
+    //#endregion
+
+    //#region //LOADDATA
+    function LC_LoadData(IsSort = 0) {
+        if (LC_xhrLoadList && LC_xhrLoadList.readyState != 4) LC_xhrLoadList.abort();
+        LC_Reset();
+        let date = $('#LC_date').val() ? $('#LC_date').val() : new Date()
+        let branchID = Number($('#LC_BranchID').dropdown('get value')) ? Number($('#LC_BranchID').dropdown('get value')) : 0;
+
+        LC_xhrLoadList = AjaxLoad(url = "/Customer/ListCustomer/?handler=LoadData"
+            , data = {
+                date: date
+                , branchID: branchID
+                , maxdate: LC_maxDate
+                , SortBy: LC_Sort
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let datas = JSON.parse(result);
+                    let dataTotal = datas.Table;
+                    let data = datas.Table1;
+
+                    LC_dataMaster = [...data];
+
+                    LC_dataMasterSlice = sliceIntoChunks(data, 500);
+                    if (LC_dataMasterSlice && LC_dataMasterSlice.length != 0) {
+                        fnRenderBlock(LC_dataMasterSlice[LC_IndexReport], "LC_dtContentBody"
+                            , blocknum = 100
+                            , fnrender = LC_RenderData
+                            , fnsuccess = null
+                        );
+                    }
+                    if (IsSort != 1) {
+                        LC_RenderTotal(dataTotal);
+                    }
+                    Count_Up("LC_totaldata", LC_dataMaster.length);
+                    LC_isLoading = 1;
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#LC_Waiting").show();
+            }
+            , complete = function (e) {
+                $("#LC_Waiting").hide();
+            }
+        );
+        return false;
+    }
+
+    function LC_RenderMore() {
+        LC_IndexReport += 1;
+        if (LC_dataMasterSlice && LC_dataMasterSlice[LC_IndexReport]) {
+            fnRenderBlock(LC_dataMasterSlice[LC_IndexReport], "LC_dtContentBody"
+                , blocknum = 100
+                , fnrender = LC_RenderData
+                , fnsuccess = null
+            );
+        }
+    }
+    //#endregion
+
+    //#region //RENDER DATA
+
+    async function LC_RenderTotal(data) {
+        new Promise(resolve => {
+            if (data && data.length > 0) {
+                let item = data[0] ?? {};
+                Count_Up("LC_TotalCust", item?.TotalCust ?? 0);
+                Count_Up("LC_TotalSchedule", item?.TotalSchedule ?? 0);
+                $('#LC_TotalTarget').html(formatNumber(item?.TotalRaise ?? 0))
+                $('#LC_TotalRevenue').html(formatNumber(item?.TotalAmount ?? 0))
+            }
+            resolve();
+        })
+    }
+
+    async function LC_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let member = LC_getmember(LC_dataMember, item.Amount);
+                            let tr = `
+                                      <td class="vt-number-order"></td>
+                                      <td>
+                                          <a data-id="${item.CustID}" class="btnCustCode text-primary">${item.CustCode}</a>
+                                      </td>
+                                      <td>
+                                           ${item.CustName}
+                                      </td>
+                                      <td  data-name="code_old">${item.CustOldCode}</td>
+                                      <td data-name="phone1" class="_tab_control_" data-staff="${item.StaffID}" data-tab="phone_customer">${item.Phone}</td>
+                                      <td data-name="DocCode">${item.DocCode}</td>
+                                      <td data-name="Birth">${ConvertDateTimeUTC_DMY(item.Birth)}</td>
+                                      <td data-name="Age">${item.Age}</td>
+                                      <td data-name="Gender">${LC_RenderGender(item.GenderID)}</td>
+                                      <td data-name="District">${item.District}</td>
+                                      <td data-name="City">${item.City}</td>
+                                      <td data-name="NumFirstPaid">${item.NumFirstPaid != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(item.NumFirstPaid)) : ''}</td>
+                                      <td data-name="NumLastTreat">${item.NumLastTreat != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(item.NumLastTreat)) : ''}</td>
+                                      <td data-name="NumLastCare">${item.NumLastCare != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(item.NumLastCare)) : ''}</td>
+                                      <td >${formatNumber(item.TotalSchedule)}</td>
+                                      <td class="_tab_control_" data-name="raise" data-tab="listcust_totalperiod">${formatNumber(item.Raise)}</td>
+                                      <td class="_tab_control_" data-name="amount" data-tab="listcust_totalperiod">${formatNumber(item.Amount)}</td>
+                                      <td data-name="createddate">${ConvertDateTimeUTC_DMY(item.Created)}</td>
+                                      <td data-name="new_customer" class="text-center">
+                                      ${((item.IsCustNew == "1") ? '<span class="badge bg-gradient-success">New</span>' : '')}
+                                      </td>
+
+                                      <td data-name="source">${item.SourceName}</td>
+                                      <td data-name="group">${item.GroupName}</td>
+                                      <td data-name="member">${member?.Name ?? ""}</td>
+                                      <td data-name="email">${item.Email1}</td>
+                                      <td data-name="ccstaff">${Fun_GetName_ByID(MTDataEmployee,item.CCStaffID)}</td>
+                            `
+
+                            tr = `<tr id="lccust_${item.CustID}" data-member="${member?.ID ?? 0}" class="vt-number LC_clsRow cursor-pointer" data-id="${item.CustID}" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        LC_Event();
+                        if (LC_IndexReport == 0) {
+                            //$('.LC_clsRow:first').trigger('click');
+                        }
+                        shtable.Refresh();
+                        Checking_TabControl_Permission();
+                        clearTimeout(LC_timeoutCount);
+                        LC_timeoutCount = setTimeout(() => {
+                            Count_Up("LC_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+            }, 100);
+        })
+    }
+
+    function LC_RenderGender(GenderID) {
+        try {
+            let result = decodeHtml('@Local["Nam"]');
+            if (GenderID == 61) result = decodeHtml('@Local["Nữ"]');
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //LOADDETAIL
+    async function LC_Detail_LoadData() {
+        return new Promise(resolve => {
+
+            let date = $('#LC_date').val() ? $('#LC_date').val() : new Date()
+            let branchID = Number($('#LC_BranchID').dropdown('get value')) ? Number($('#LC_BranchID').dropdown('get value')) : 0;
+            LC_xhrLoadListDetail = AjaxLoad(url = "/Customer/ListCustomer/?handler=LoadDetail"
+                , data = {
+                    date: date
+                    , branchID: branchID
+                    , maxdate: LC_maxDate
+                    , 'currentID': LC_CurrentID
+                }
+                , async = true
+                , error = function () {
+                    LC_Detail_Reset();
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        let datas = JSON.parse(result);
+                        let dataInfo = datas.Table;
+                        let data = datas.Table1;
+                        LC_Detail_FillData(dataInfo);
+                        $('#LC_Detail_dtContentBody').empty();
+                        if (data && data.length != 0) {
+                            fnRenderBlock(data, "LC_Detail_dtContentBody"
+                                , blocknum = 20
+                                , fnrender = LC_Detail_RenderData
+                                , fnsuccess = null
+                            );
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        })
+    }
+
+    function LC_Detail_FillData(data) {
+        if (data && data.length > 0) {
+            let item = data[0] ?? {};
+            let strCode = item?.CustCode != '' ? `<a class="LC_linkCust fw-bold" target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">${item?.CustCode}</a>` : '#';
+            $('#LC_Detail_Avatar').attr('src', item?.Avatar ?? '/default.png');
+            $('#LC_Detail_Name').html(item?.CustName ?? '#');
+            $('#LC_Detail_CustCode').html(strCode);
+            $('#LC_Detail_TreatTime').html(formatNumber(item?.TotalTreat ?? 0));
+            $('#LC_Detail_Target').html(formatNumber(item?.TotalRaise ?? 0));
+            $('#LC_Detail_Revenue').html(formatNumber(item?.TotalPaid ?? 0));
+            $('#LC_Detail_Debt').html(formatNumber(item?.TotalDebt ?? 0));
+            if (item?.TotalDebt ?? 0 > 0) {
+                $('#LC_Detail_Debt').addClass('cost_info_left');
+            }
+            else {
+                $('#LC_Detail_Debt').removeClass('cost_info_left')
+            }
+        }
+    }
+
+    async function LC_Detail_RenderData(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let type = LC_Detail_GetTypeSer(item.Type, item.IsProduct);
+                            let tr = `<li class="px-2 list-group-item border-0 my-1 checklist-item checklist-item-secondary justify-content-between  border-radius-lg border-radius-bottom-start-0 border-radius-top-start-0">
+                                          <div class="d-flex w-100">
+                                              <div class="ps-3 row px-2 w-100">
+                                                  <div class="col-12">
+                                                      <span class="mb-0 fw-bold text-sm text-primary">${type}</span>
+                                                      <span class="mb-0 text-dark fw-bold text-sm ms-1">${item.Code} ${item.Name} </span>
+                                                  </div>
+                                                  <div class="col-12">
+                                                      <span class="mb-0 text-secondary text-sm font-italic">${formatNumber(item.Paid)} / ${formatNumber(item.Amount)}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+
+                                      </li>
+                                      `;
+
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        Checking_TabControl_Permission();
+                    }
+                }
+            }, 100);
+        })
+    }
+    function LC_Detail_GetTypeSer(type, IsProduct) {
+        let result = "";
+        switch (type) {
+            case 1:
+                result = IsProduct == 0 ? Outlang["Dv"] : Outlang["Sp"];
+                break;
+            case 2: //card
+                result = Outlang["Sys_the"];
+                break;
+            case 3: //medicine
+                result = Outlang["Thuoc"];
+                break;
+            case 4: //desposit
+                result = Outlang["Tien_coc"];
+                break;
+        }
+        return result;
+    }
+    //#endregion
+
+    //#region //EVENT
+    function LC_Event() {
+        $("#LC_dtContentBody .LC_clsRow").unbind('click').on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            LC_CurrentID = $(this).attr('data-id');
+            $('.LC_clsRow').removeClass('active');
+            $(this).closest('tr').addClass('active');
+            $("#LC_DetailContainer").show("slide", { direction: "right" }, 100);
+            LC_Detail_LoadData();
+        })
+        $("#LC_dtContentBody .btnCustCode").unbind('click').on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let custID = $(this).attr('data-id');
+            let url = `/Customer/MainCustomer?CustomerID=${custID}&ver=${versionofWebApplication}`
+            window.open(url, '_blank')
+        })
+    }
+
+    async function LC_Filter(id) {
+        await new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    let textsearch = $('#LC_Searching').val().trim();
+                    let search = xoa_dau(textsearch.toLowerCase());
+                    if (search == "") {
+                        $('#LC_dtContentBody .LC_clsRow').removeClass('d-none');
+
+                    }
+                    else {
+
+                        let datafilter = LC_dataMaster.filter(word => {
+                            return (
+                                xoa_dau(word["CustName"].toLowerCase()).includes(search)
+                                || xoa_dau(word["CustCode"]).toLowerCase().trim().includes(search)
+                                || xoa_dau(word["DocCode"]).toLowerCase().trim().includes(search)
+                            );
+                        });
+                        if (datafilter != undefined && datafilter.length > 0) {
+                            $('#LC_dtContentBody .LC_clsRow').addClass('d-none');
+                            for (ii = 0; ii < datafilter.length; ii++) {
+                                $('#lccust_' + datafilter[ii].CustID).removeClass('d-none');
+                            }
+                        }
+                        else {
+                            $('#LC_dtContentBody .LC_clsRow').addClass('d-none');
+                        }
+                    }
+                    $("#LC_SearchContainer .fa-search").show();
+                    $("#LC_SearchContainer .spinner-border").addClass('d-none');
+                    resolve()
+                }
+            )
+        })
+    }
+
+    function LC_EventInitial() {
+        $('#LC_Searching').keyup(function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+            $("#LC_SearchContainer .fa-search").hide();
+            $("#LC_SearchContainer .spinner-border").removeClass('d-none');
+            clearTimeout(LC_searchTimeoutCount);
+            LC_searchTimeoutCount = setTimeout(function (e) {
+                LC_Filter("LC_dtContentBody");
+            }, 500);
+        });
+        $("#LC_SearchContainer .btn_clear").on('click', function (e) {
+            $('#LC_Searching').val('');
+            $(this).addClass('opacity-1');
+            LC_Filter("LC_dtContentBody");
+        });
+    }
+
+    function LC_GridSort(ele, type) {
+        let SortType = $(ele).hasClass("fa-sort-alpha-down");
+        $("#LC_dtContent .sort").removeClass("text-danger");
+
+        $(ele).addClass("text-danger " + (SortType ? "fa-sort-alpha-up" : "fa-sort-alpha-down"));
+        $(ele).removeClass(SortType ? "fa-sort-alpha-down" : "fa-sort-alpha-up");
+
+        LC_Sort = type * (SortType ? 1 : -1);
+        LC_LoadData(1);
+    }
+
+    function LC_closeFilter() {
+        $('#colsearch').collapse('hide');
+    }
+
+    function LC_CloseDetail() {
+        $("#LC_DetailContainer").hide("slide", { direction: "right" }, 100);
+    }
+
+    function LC_HideLine(id) {
+        if (!$('#lccust_' + id).hasClass('d-none'))
+            $('#lccust_' + id).addClass("d-none");
+    }
+    function LC_ShowLine(id) {
+        if ($('#lccust_' + id).hasClass('d-none'))
+            $('#lccust_' + id).removeClass("d-none");
+    }
+
+    function LC_FilterCombo() {
+        if (LC_isLoading == 1) {
+
+            LC_isLoading = 0;
+            let member = (Number($('#LC_MemberID').dropdown('get value')) ? Number($('#LC_MemberID').dropdown('get value')) : 0);
+
+            let row = document.getElementsByClassName('LC_clsRow');
+            for (i = 0; i < row.length; i++) {
+                let item_id = row[i].id.replace('lccust_', '');
+                LC_ShowLine(item_id);
+            }
+
+            for (i = 0; i < row.length; i++) {
+                let item_id = row[i].id.replace('lccust_', '');
+                let item_member = row[i].getAttribute('data-member');
+
+                if (member != 0 && item_member != member)
+                    LC_HideLine(item_id);
+            }
+            LC_isLoading = 1;
+        }
+    }
+    //#endregion
+
+    //#region //EXPORT - PRINT
+    async function LC_ExportExcel(isOption = 0) {
+        let dataRoot = LC_dataMaster;
+        let eleContainer = $('#LC_ListContainer');
+        let isAll = (isOption == 0);
+        let dataExport = {
+            "STT": ["@Local["STT"]", (value, { }, idx) => { return idx + 1 }]
+            , "CustCode": "@Local["Mã khách hàng"]"
+            , "CustName": "@Local["Tên khách"]"
+            , "CustOldCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='code_old']`)).is(":checked"),
+                data: "@Local["MSKH cũ"]"
+            }
+            , "Phone": {
+                dataNamePer: 'phone1',
+                data: ["@Local["Điện thoại"]"]
+            }
+            , "DocCode": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='DocCode']`)).is(":checked"),
+                data: "@Local["Mã hồ sơ"]"
+            }
+            , "Birth": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Birth']`)).is(":checked"),
+                data: ["@Local["Ngày sinh"]", (v) => { return (ConvertDateTimeUTC_DMY(v)) }]
+            }
+            , "Age": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Age']`)).is(":checked"),
+                data: ["@Local["Tuổi"]"]
+            }
+            , "GenderID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='Gender']`)).is(":checked"),
+                data: ["@Local["Giới tính"]", (v) => { return LC_RenderGender(v) }]
+            }
+            , "District": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='District']`)).is(":checked"),
+                data: "@Local["Quận huyện"]"
+            }
+            , "City": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='City']`)).is(":checked"),
+                data: "@Local["Thành phố"]"
+            }
+            , "NumFirstPaid": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='NumFirstPaid']`)).is(":checked"),
+                data: ["@Local["Ngày thanh toán đầu tiên"]", (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }]
+            }
+            , "NumLastTreat": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='NumLastTreat']`)).is(":checked"),
+                data: ["@Local["Ngày điều trị cuối cùng"]", (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }]
+            }
+            , "NumLastCare": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='NumLastCare']`)).is(":checked"),
+                data: ["@Local["Ngày chăm sóc cuối cùng"]", (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }]
+            }
+            , "TotalSchedule": "@Local["Số lịch hẹn"]"
+            , "Raise": {
+                dataNamePer: 'raise',
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='raise']`)).is(":checked"),
+                data: "@Local["Doanh số"]"
+            }
+            , "Amount": {
+                dataNamePer: 'amount',
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='amount']`)).is(":checked"),
+                data: "@Local["Doanh thu"]"
+            }
+            , "Created": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='createddate']`)).is(":checked"),
+                data: ["@Local["Ngày tạo"]", (v) => { return (ConvertDateTimeUTC_DMY(v)) }]
+            }
+            , "IsCustNew": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='new_customer']`)).is(":checked"),
+                data: ["@Local["Khách mới"]", (v) => { return (v == "1" ? "new" : "") }]
+            }
+            , "SourceName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                data: "@Local["Nguồn"]"
+            }
+            , "GroupName": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='group']`)).is(":checked"),
+                data: "@Local["Nhóm"]"
+            }
+            , "Member": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='member']`)).is(":checked"),
+                data: ["@Local["Thành viên"]", (v, { Amount }) => { return LC_getmember(LC_dataMember, Amount)?.Name ?? '' }]
+            }
+            , "Email1": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='email']`)).is(":checked"),
+                data: "@Local["Email"]"
+            }
+            , "CCStaffID": {
+                isShow: isAll || (eleContainer.find(`.shtoogle[data-name='ccstaff']`)).is(":checked"),
+                data: ["@Local["Nhân viên chăm sóc"]", (v) => { return Fun_GetName_ByID(MTDataEmployee, v) }]
+            }
+        };
+        dataExport = Checking_TabControl_System_RebuildHeader(dataExport, tableBodyId = 'LC_dtContentBody', PermissionTable_TabControl);
+        let nameFile = Outlang["Danh_sach_khach_hang"];
+        await exportJsonToExcel(nameFile, dataRoot, dataExport);
+        return false;
+    }
+    async function LC_PrintReport() {
+        try {
+            let dataRoot = LC_dataMaster;
+            if (dataRoot && dataRoot.length != 0) {
+                let _dateFrom = "";
+                let _dateTo = "";
+                let date = $('#LC_date').val() ? $('#LC_date').val() : new Date()
+                if (date.includes(" to ")) {
+                    _dateFrom = date.split(" to ")[0];
+                    _dateTo = date.split(" to ")[1];
+                }
+                else {
+                    _dateFrom = date;
+                    _dateTo = date;
+                }
+                let _branchID = Number($('#LC_BranchID').dropdown('get value')) ? Number($('#LC_BranchID').dropdown('get value')) : 0;
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, idx) => { return idx + 1 }
+                    }]
+                    , "CustCode": ["@Local["Mã khách hàng"]"]
+                    , "CustName": ["@Local["Tên khách"]"]
+                    , "CustOldCode": ["@Local["MSKH cũ"]", { isShow: $(`.shtoogle[data-name='code_old']`).is(":checked") }]
+                    , "Phone": {
+                        dataNamePer: 'phone1',
+                        data: ["@Local["Điện thoại"]"]
+                    }
+                    , "DocCode": ["@Local["Mã hồ sơ"]", { isShow: $(`.shtoogle[data-name='DocCode']`).is(":checked") }]
+                    , "Birth": ["@Local["Ngày sinh"]", {
+                        isShow: $(`.shtoogle[data-name='Birth']`).is(":checked"),
+                        callbackRenderValue: (v) => { return (GetDateTime_String_DMY(v)) }
+                    }]
+                    , "Age": ["@Local["Tuổi"]", {
+                        isShow: $(`.shtoogle[data-name='Age']`).is(":checked")
+                    }]
+                    , "GenderID": ["@Local["Giới tính"]", {
+                        isShow: $(`.shtoogle[data-name='Gender']`).is(":checked")
+                        , callbackRenderValue: (v) => { return (LC_RenderGender(v)) }
+                    }]
+                    , "District": ["@Local["Quận huyện"]", { isShow: $(`.shtoogle[data-name='District']`).is(":checked") }]
+                    , "City": ["@Local["Thành phố"]", { isShow: $(`.shtoogle[data-name='City']`).is(":checked") }]
+                    , "NumFirstPaid": ["@Local["Ngày thanh toán đầu tiên"]", {
+                        isShow: $(`.shtoogle[data-name='NumFirstPaid']`).is(":checked")
+                        , callbackRenderValue: (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }
+                    }]
+                    , "NumLastTreat": ["@Local["Ngày điều trị cuối cùng"]", {
+                        isShow: $(`.shtoogle[data-name='NumLastTreat']`).is(":checked")
+                        , callbackRenderValue: (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }
+                    }]
+                    , "NumLastCare": ["@Local["Ngày chăm sóc cuối cùng"]", {
+                        isShow: $(`.shtoogle[data-name='NumLastCare']`).is(":checked")
+                        , callbackRenderValue: (v) => { return v != 0 ? ConvertDateTimeUTC_DMY(ConvertYMDInt_ToDateTime(v)) : '' }
+                    }]
+                    , "TotalSchedule": ["@Local["Số lịch hẹn"]"]
+                    , "Raise": {
+                        dataNamePer: 'raise',
+                        data: ["@Local["Doanh số"]", {
+                            isShow: $(`.shtoogle[data-name='raise']`).is(":checked")
+                            , callbackRenderValue: (v) => { return (formatNumber(v)) }
+                            , isTotalFooter: true
+                        }]
+                    }
+                    , "Amount": {
+                        dataNamePer: 'amount',
+                        data: ["@Local["Doanh thu"]", {
+                            isShow: $(`.shtoogle[data-name='amount']`).is(":checked")
+                            , callbackRenderValue: (v) => { return (formatNumber(v)) }
+                            , isTotalFooter: true
+                        }]
+                    }
+                    , "Created": ["@Local["Ngày tạo"]", {
+                        isShow: $(`.shtoogle[data-name='createddate']`).is(":checked"),
+                        callbackRenderValue: (v) => { return (GetDateTime_String_DMY(v)) }
+                    }]
+                    , "IsCustNew": ["@Local["Khách mới"]", {
+                        isShow: $(`.shtoogle[data-name='new_customer']`).is(":checked"),
+                        callbackRenderValue: (v) => { return (v == "1" ? "new" : "") }
+                    }]
+                    , "SourceName": ["@Local["Nguồn"]", { isShow: $(`.shtoogle[data-name='source']`).is(":checked") }]
+                    , "GroupName": ["@Local["Nhóm"]", { isShow: $(`.shtoogle[data-name='group']`).is(":checked") }]
+                    , "Member": ["@Local["Thành viên"]", {
+                        isShow: $(`.shtoogle[data-name='member']`).is(":checked"),
+                        callbackRenderValue: (v, { Amount }) => { return LC_getmember(LC_dataMember, Amount)?.Name ?? '' }
+                    }]
+                    , "Email1": ["@Local["Email"]", {
+                        isShow: $(`.shtoogle[data-name='email']`).is(":checked")
+                    }]
+                    , "CCStaffID": ["@Local["Nhân viên chăm sóc"]", {
+                        isShow: $(`.shtoogle[data-name='ccstaff']`).is(":checked"),
+                        callbackRenderValue: (v) => { return Fun_GetName_ByID(MTDataEmployee, v) }
+                    }]
+                };
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'LC_dtContentBody', PermissionTable_TabControl);
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = '@Local["Danh sách khách hàng"]', dataRoot, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+    //#endregion
+
+    //#region //OTHER
+
+    function LC_CheckAllowFilterDate() {
+        if ($('#LC_dteDate').length == 0) {
+            $("#LC_date").flatpickr({
+                mode: "range",
+                dateFormat: 'd-m-Y',
+                enableTime: false,
+                clickOpens: false,
+                minDate: "today",
+                maxDate: "today"
+            });
+            let date = new Date();
+            let firstDay = date;
+            let lastDay = date;
+            $("#LC_date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        }
+
+        if ($("#LC_OverviewInfo").length === 0) {
+            $("#LC_SearchBlock").addClass("d-flex");
+        }
+    }
+    function LC_setToDay() {
+        LC_dtePicker.setDate([new Date(), new Date()]);
+    }
+
+    function LC_Reset() {
+        LC_IndexReport = 0;
+        $("#LC_dtContentBody").empty();
+        LC_dataMaster = [], LC_dataMasterSlice = [];
+        $('#LC_totaldata').html(0);
+        $('#LC_currentdata').html(0);
+        $("#LC_DetailContainer").hide();
+        LC_isLoading = 0;
+        LC_Detail_Reset();
+    }
+
+    function LC_Detail_Reset() {
+        $('#LC_Detail_Avatar').attr('src', '/default.png');
+        $('#LC_Detail_Name').html('#');
+        $('#LC_Detail_CustCode').html('-');
+        $('#LC_Detail_Phone').html('-');
+        $('#LC_Detail_TreatTime').html(0);
+        $('#LC_Detail_Target').html(0);
+        $('#LC_Detail_Revenue').html(0);
+        $('#LC_Detail_Debt').html(0);
+        $('#LC_Detail_Debt').removeClass('cost_info_left');
+        $('#LC_Detail_dtContentBody').empty();
+    }
+
+    function LC_getmember(data, amount) {
+        let result = {};
+        if (data != undefined && data.length != 0) {
+            if (amount != undefined) {
+                amount = Number(amount);
+
+                if (amount >= data[data.length - 1].AmountTo) result = data[data.length - 1];
+                else if (amount <= data[0].AmountFrom) result = data[0];
+                else {
+                    let member = data.filter(function (wor) {
+                        return (Number(wor.AmountFrom) <= amount && Number(wor.AmountTo) >= amount);
+                    });
+                    if (member != undefined && member.length > 0) {
+                        result = member[0];
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    //#endregion
+</script>
+<script>js_require_notasync('/assets/js/plugins/chartjs.min.js', true);</script>
+<script>css_require('/css/main_customer.css');</script>
+<style>
+
+    #LC_ListContainer .rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    #LC_ListContainer .LC_clsRow.active {
+        background: rgba(var(--bs-primary), 0.1) !important;
+    }
+
+    .LC_clsTool {
+        top: 0.1px
+    }
+
+    #LC_dtContent .sorted i {
+        color: red !important;
+    }
+
+    /*// Small devices (landscape phones, 576px and up)*/
+
+    @@media (max-width: 768px) {
+        #LC_DetailContainer {
+            position: absolute;
+            top: 0;
+            background: #ffffff;
+            z-index: 1;
+            left: 0;
+            border-radius: 0;
+            height: 85vh;
+            width: 100% !important;
+        }
+    }
+
+    @@media (min-width: 576px) and (max-width: 767.98px) {
+        #LC_Detail_dtContentDetail {
+            max-height: calc(65vh - 114px) !important;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        #LC_Detail_dtContentDetail {
+            max-height: calc(60vh - 114px) !important;
+        }
+    }
+</style>

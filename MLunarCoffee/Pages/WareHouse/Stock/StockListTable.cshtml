@@ -1,0 +1,896 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Stock.StockListTableModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card" id="listitem">
+            <div class="card-header pb-0 ViewOnly" >
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div id="received_header" class="warehouse_header h-100">
+                            <h6 data-languagestatic="invoice_form_header" class="mb-0">Phiếu Nhập</h6>
+                            <p data-languagestatic="invoice_form_header_sub1" class="text-sm mb-0">Chỉnh Sửa Trong Ngày, Người Tạo Có Quyền Chỉnh Sửa Và Chỉ Khi Chưa Chốt Kho</p>
+                            <p data-languagestatic="invoice_form_header_sub2" class="text-sm mb-0">Lưu ý: Import Tồn Đầu Kỳ Trước Khi Sử Dụng Kho</p>
+                        </div>
+                        <div id="delivered_header" class="warehouse_header h-100" style="display: none">
+                            <h6 data-languagestatic="list_export_form_header" class="mb-0">Danh Sách Phiếu Xuất</h6>
+                            <p data-languagestatic="invoice_form_header_sub1" class="text-sm mb-0">Chỉnh Sửa Trong Ngày, Người Tạo Có Quyền Chỉnh Sửa Và Chỉ Khi Chưa Chốt Kho</p>
+                            <p data-languagestatic="invoice_form_header_sub2" class="text-sm mb-0">Lưu ý: Import Tồn Đầu Kỳ Trước Khi Sử Dụng Kho</p>
+                        </div>
+                        <div id="transfered_header" class="warehouse_header h-100" style="display: none">
+                            <h6 data-languagestatic="list_exchange_warehouse_header" class="mb-0">Danh Sách Phiếu Chuyển Kho</h6>
+                            <p data-languagestatic="list_exchange_warehouse_header_sub" class="text-sm mb-0">Xóa Trong Ngày, Người Tạo Có Quyền Xóa Và Chỉ Khi Chưa Chốt Kho</p>
+                            <p data-languagestatic="invoice_form_header_sub2" class="text-sm mb-0">Lưu ý: Import Tồn Đầu Kỳ Trước Khi Sử Dụng Kho</p>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <div class="btn-group waretype selected" id="waretype_input">
+                            <a class="btn btn-dark btn-sm px-3 bg-gradient-primary" data-languagestatic="warehouse_import" onclick="event.preventDefault();return WareHouse_TypeLoad(1);">Nhập Kho</a>
+                            <a class="btn btn-dark border-start border-light btn-sm px-3 ViewOnly bg-gradient-primary" title="New Form" onclick="WareHouse_Insert(1)">
+                                <i class="ni text-white vtt-icon vttech-icon-add"></i>
+                            </a>
+                        </div>
+                        <div class="btn-group waretype" id="waretype_output">
+                            <a class="btn btn-dark btn-sm px-3" data-languagestatic="warehouse_export" onclick="event.preventDefault();return WareHouse_TypeLoad(2);">Xuất Kho</a>
+                            <a class="btn btn-dark border-start border-light btn-sm px-3 ViewOnly" title="New Form" onclick="WareHouse_Insert(2)">
+                                <i class="ni text-white vtt-icon vttech-icon-add"></i>
+                            </a>
+                        </div>
+                        <div class="btn-group waretype" id="waretype_transfer">
+                            @*<a class="btn btn-dark btn-sm px-3" data-languagestatic="warehouse_transter" onclick="event.preventDefault();return WareHouse_TypeLoad(3);">Chuyển Kho</a>*@
+                            <a class="btn btn-dark border-start border-light btn-sm px-3 ViewOnly" title="New Form" onclick="WareHouse_Insert(3)">
+                                Chuyển Kho
+                                @*<i class="ni text-white vtt-icon vttech-icon-add"></i>*@
+                            </a>
+                        </div>
+                        <button class="btn btn-dark btn-sm " onclick="event.preventDefault();return WareHouse_Export()">Export</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card-body pt-2 ">
+                <div class="row px-2 form3">
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="WareHouseID" onchange="WareHouse_Load(0, 0);">
+                            <input type="hidden" name="WareHouse" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="cbbWareHouseID" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-4 p-1">
+                        <input id="datefilter" class="flatpickr form-control" type="text" placeholder="From day.." onchange="WareHouse_Load(0, 0);" />
+                    </div>
+                    <div class="col-12 col-sm-12 col-xl-4 p-1">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span data-languagedyn="lock_date_closest" class="input-group-text fw-bold text-primary text-gradient">Ngày Chốt Gần Nhất</span>
+                                <span class="form-control fw-bolder text-dark" id="lock_date_closest">unknown</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+
+                    </div>
+
+                    <table id="dtContentInputList" class="table vt-table mb-0">
+                        <thead>
+                            <tr role="row">
+                                <th rowspan="3" class="fixed-side" data-languagestatic="no" style="width: 30px;">#</th>
+                                <th rowspan="1" class="fixed-side" colspan="2" data-languagestatic="general_info">Thông Tin Phiếu</th>
+                                <th rowspan="1" colspan="8" data-languagestatic="material">Vật Tư</th>
+                                <th rowspan="3" data-languagestatic="createdname" style="min-width: 100px;">Thông Tin Tạo</th>
+                                <th rowspan="3" data-languagestatic="sign" class="ViewOnly" style="min-width: 70px;">Chữ Ký</th>
+                                <th rowspan="3" data-languagestatic="" id="StatusRecipt" class="" style="min-width: 70px;">Trạng Thái</th>
+                                <th rowspan="3" data-languagestatic="" class="ViewOnly" style="min-width: 70px;">View</th>
+                                <th rowspan="3" data-languagestatic="delete" class="ViewOnly" style="width: 70px">Xóa</th>
+                            </tr>
+                            <tr role="row">
+                                <th rowspan="2" style="border-left: 1px solid #e6e6e6;" class="fixed-side">Code</th>
+                                <th rowspan="2" data-languagestatic="totalamount" class="fixed-side">Tổng Tiền</th>
+                                <th rowspan="2" style="min-width: 100px;">Code</th>
+                                <th rowspan="2" style="min-width: 200px;" data-languagestatic="name">Tên</th>
+                                <th rowspan="1" colspan="2" style="min-width: 120px;" data-languagestatic="execute">ĐV Xử Lý</th>
+                                <th rowspan="1" colspan="2" style="min-width: 120px;" data-languagestatic="unitcount_mini">ĐV Kiểm Kê</th>
+                                <th rowspan="2" style="min-width: 90px;" data-languagestatic="totalamount_final" class="no-sort">Giá Tiền</th>
+                                <th rowspan="2" style="min-width: 170px;" data-languagestatic="supplier">Nhà Cung Cấp</th>
+                            </tr>
+                            <tr role="row">
+                                <th class="exsale" style="border-left: 1px solid #e6e6e6;" data-languagestatic="quantity">SL</th>
+                                <th class="exsale" data-languagestatic="name">Đơn Vị</th>
+                                <th class="exstand" style="border-left: 1px solid #e6e6e6;" data-languagestatic="quantity">SL </th>
+                                <th class="exstand" data-languagestatic="name">Đơn Vị</th>
+                            </tr>
+                        </thead>
+                        <tbody data-languagedyn="grid" id="dtContentInputListBody">
+                        </tbody>
+
+                    </table>
+                    <button id="btnWare_More" class="btn btn-secondary w-100 p-1 cursor-pointer transform-scale-10" onclick="event.preventDefault();return WareHouse_Load(0,1);">Load More</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="itemDetail" style="display:none;">
+
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    let DataUser, DataProduct, DataWarehouse;
+    let wareLimit = 20;
+    let wareBegin = 0;
+    let maxRowInCode = 2;
+    let FlagWare = 0;
+    let wareTypeID = 0;
+    let ser_ViewOnly = "@Model._ViewOnly";
+
+    $(document).ready(function () {
+        StockList_ViewOnly();
+        Master_IndexDB_Reads(_Session_Data, [_Session_User, _Session_Product, _Session_Warehouse]
+            , function (data) {
+                DataUser = data[0];
+                DataProduct = data[1];
+                DataWarehouse = data[2];
+                WareHouse_Initialize();
+                WareHouse_Event();
+
+            });
+    });
+    //
+    function StockList_ViewOnly() {
+        if (ser_ViewOnly == "1") {
+            $(".ViewOnly").hide();
+            $(".ViewDetail").removeClass("code");
+            $(".HeightViewOnly").css("height", "calc(100vh - 225px )")
+        } else {
+            $(".ViewOnly").show();
+            $(".ViewDetail").addClass("code");
+        }
+    }
+
+    //#region // Load And Render
+    function WareHouse_TypeLoad(type) {
+        if (FlagWare == 1) {
+            FlagWare = 0;
+            $('.waretype').children().removeClass('bg-gradient-primary');
+            switch (type) {
+                case 1:
+                    if (!$('#waretype_input').hasClass('selected')) {
+                        $('#waretype_input').addClass('selected').siblings('.waretype').removeClass("selected");
+                        $('#waretype_input').children().addClass('bg-gradient-primary');
+                        $("#StatusRecipt").css("display","table-cell");
+                        wareTypeID = 1;
+                    }
+                    break;
+                case 2:
+                    if (!$('#waretype_output').hasClass('selected')) {
+                        $('#waretype_output').addClass('selected').siblings('.waretype').removeClass("selected");
+                        $('#waretype_output').children().addClass('bg-gradient-primary');
+                        $("#StatusRecipt").hide();
+                        wareTypeID = 2;
+                    }
+                    break;
+                //case 3:
+                //    if (!$('#waretype_transfer').hasClass('selected')) {
+                //        $('#waretype_transfer').addClass('selected').siblings('.waretype').removeClass("selected");
+                //        $('#waretype_transfer').children().addClass('bg-gradient-primary');
+                //        wareTypeID = 3;
+                //    }
+                //    break;
+            }
+
+            FlagWare = 1;
+            WareHouse_Load(0, 0);
+        }
+        return false;
+    }
+    function WareHouse_Load(detail, ismore) {
+        if (FlagWare == 1) {
+            let _detail = (detail != undefined) ? detail : 0;
+            let WareHouseID = Number($('#WareHouseID').dropdown('get value') ? $('#WareHouseID').dropdown('get value') : 0);
+
+            WareHouse_HeaderForm();
+            let date = $('#datefilter').val() ? $('#datefilter').val() : new Date();
+            if (_detail == 0 && ismore == 0) {
+                wareBegin = 0;
+            }
+            AjaxLoad(url = "/WareHouse/Stock/StockListTable/?handler=LoadData"
+                , data = {
+                    'date': date, 'DetailID': _detail
+                    , 'BeginID': wareBegin, 'Limit': wareLimit
+                    , 'WareHouseID': WareHouseID
+                    , 'TypeID': wareTypeID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+                        if (data != undefined && data.length != 0) {
+                            if (_detail != 0) { WareHouse_Render_Replace(_detail, data) }
+                            else {
+                                if (ismore != 1) {
+                                    $("#dtContentInputListBody").html('');
+
+                                }
+                                wareBegin = data[data.length - 1].ID;
+                                WareHouse_Render(data);
+                            }
+                        }
+                        else {
+                            if (_detail == 0 && ismore == 0) {
+                                $("#dtContentInputListBody").html('');
+                            }
+                        }
+
+                        let row_warehouse = document.getElementsByClassName("row_warehouse");
+                        if (row_warehouse.length != 0) {
+                            for (let i = 0; i < row_warehouse.length; i++) {
+                                row_warehouse[i].classList.remove("selected");
+                            }
+                        }
+                        $('.hoverpopup').popup({
+                            transition: "scale up",
+                            position: "bottom left"
+                        });
+                        StockList_ViewOnly();
+                    }
+                }
+                , sender = null
+                , before = function () {
+                    $("#dtContentList").hide();
+                    $("#loaderList").show();
+                }
+                , complete = function (e) {
+                    $("#dtContentList").show();
+                    $("#loaderList").hide();
+                }
+            );
+
+        }
+    }
+    function WareHouse_Render_Replace(id, data) {
+        let tri = WareHouse_Render_Each(data);
+        let obj = $('.row_' + id);
+        for (let i = obj.length - 1; i >= 0; i--) {
+            if (i == 0) {
+                $('.row_' + id).replaceWith(tri);
+            }
+            else {
+                obj[i].remove();
+            }
+        }
+        $('.row_' + id).addClass("more");
+        setTimeout(function () {
+            $('.row_' + id).removeClass("more")
+        }, 2000)
+        $('.hoverpopup').popup({
+            transition: "scale up",
+            position: "top right"
+        });
+    }
+    function WareHouse_RenderLastedLock(item) {
+        let closet = GetDateTime_String_DMYHM(item);
+        if (closet.includes('1900')) closet = '';
+        $("#lock_date_closest").html(closet);
+    }
+    function WareHouse_Render(data) {
+        if (data != undefined && data.length != 0) {
+            WareHouse_RenderLastedLock(data[0].LastestLock);
+            let items = [];
+            for (let i = 0; i < data.length; i++) {
+                data[i].Render = 0;
+            }
+
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].Render == 0) {
+                    items = [];
+                    items.push(data[i]);
+                    for (let ii = i + 1; ii < data.length; ii++) {
+                        if (data[ii].ID == data[i].ID) {
+                            items.push(data[ii]);
+                            data[ii].Render = 1;
+                        }
+                    }
+                    let tr = WareHouse_Render_Each(items);
+                    if (tr != '') $("#dtContentInputListBody").append(tr);
+                }
+            }
+
+            $('.hoverpopup').popup({
+                transition: "scale up",
+                position: "top right"
+            });
+        }
+    }
+    function WareHouse_Render_Each(items) {
+        if (items.length != 0) {
+            let item = items[0];
+            let stringContent = '';
+            let rowspan = items.length;
+            let number_hide = items.length - maxRowInCode - 1;
+            let showicon = '<div data-id="' + item.ID + '" id="showmore_' + item.ID + '" class="showmore">'
+                + 'more ' + number_hide + ' <i class="chevron down icon"></i>'
+                + '</div>';
+            let lessicon = '<div data-id="' + item.ID + '" id="showless_' + item.ID + '" class="showless"><i class="chevron up icon"></i></div>';
+            let code = '<div class="hoverpopup" style="display:inline-block">'
+                + '<a datatype="' + item.Type + '" dataid="' + item.ID + '" class="d-block fw-bold ViewDetail cursor-pointer border-bottom border-primary">' + item.Code + '</a>'
+               // + ((item.WareTransfer != '') ? '<i class="vtt-icon vttech-icon-Arrow-left text-danger text-xs"></i>' : '')
+                + '</div>';
+            let button = WareHouse_Render_Button(item.ID, item.PerLock
+                , item.PerSameDate, item.PerSameUser, item.PerPassing, item.WareFrom, item.WareTo);
+            let objuser = Fun_GetObject_ByID(DataUser, item.Created);
+            let user = '<div class="d-inline">'
+                + '<img class="avatar avatar-xs me-2" src="data:image/png;base64, ' + objuser.Avatar + '" alt="label-image">'
+                + '<span>' + objuser.Name + '</span>'
+                + '</div>'
+                + '<div class="hoverpopup" title="' + GetDateTime_String_DMYHM(item.CreatedDate) + '">' + GetDateTime_String_DMY(item.CreatedDate) + '</div>'
+            let sign = WareHouse_Render_Button_Sign(item.ID, item.Sign_Value);
+            let view = WareHouse_Render_Button_View(item.ID, item.Type);
+            let isReciept = WareHouse_Render_Button_IsReciept(item.ID, item.Type, item.IsReciept);
+            for (let i = 0; i < items.length; i++) {
+                let itemIndex = items[i];
+                let productname, productcode;
+                let objproduct = Fun_GetObject_ByID(DataProduct, itemIndex.Product);
+                productname = objproduct.Name; productcode = objproduct.Code;
+                let classname = (i > maxRowInCode) ? 'collapse' : 'uncollapse';
+                let tr =
+                    ((i == 0) ? ('<td class="' + classname + ' vt-number-order fixed-side"  rowspan="' + rowspan + '"></td>') : '')
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '" class="fixed-side">' + code + WareHouse_Render_Transfer(itemIndex.WareFrom, itemIndex.WareTo) + '</td>') : '')
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '" class="fixed-side">' + formatNumber(item.TotalAmount) + '</td>') : '')
+                    + '<td class="' + classname + ((i != 0) ? ' border_left' : '') + '">'
+                    + productcode
+
+                    + '</td>'
+                    + '<td class="' + classname + '">'
+                    + productname
+                    + ((i == maxRowInCode && number_hide != 0) ? showicon : '')
+                    + ((i > maxRowInCode && i == items.length - 1) ? lessicon : '')
+                    + '</td>'
+                    + '<td class="exsale ' + classname + '">' + itemIndex.Number.toFixed(2) + '</td>'
+                    + '<td class="exsale ' + classname + '">' + itemIndex.UnitName + '</td>'
+                   // + '<td class="exstand ' + classname + '">' + (itemIndex.Number * itemIndex.Number_Standard).toFixed(2) + '</td>'
+                    + '<td class="exstand ' + classname + '">' + (itemIndex.Number_Standard).toFixed(2) + '</td>'
+                    + '<td class="exstand ' + classname + '">' + itemIndex.UnitStandName + '</td>'
+                    + '<td class="' + classname + '" >' + formatNumber(itemIndex.Amount) + '</td>'
+                    + '<td class="' + classname + '" >' + itemIndex.SupName + '</td>'
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '">' + user + '</td>') : '')
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '" class="ViewOnly text-center">' + sign + '</td>') : '')
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '" class="ViewOnly text-center">' + isReciept + '</td>') : '')
+                    + ((i == 0 && wareTypeID == 1) ? ('<td rowspan="' + rowspan + '" class="ViewOnly text-center">' + view + '</td>') : '')
+                    + ((i == 0) ? ('<td rowspan="' + rowspan + '" class="ViewOnly">' + button + '</td>') : '')
+                stringContent = stringContent + '<tr class="row_warehouse row_' + itemIndex.ID + ((i == 0) ? ' vt-number' : "") + '" role="row" data-id="' + itemIndex.ID + '">' + tr + '</tr>';
+            }
+            return stringContent;
+        }
+        else {
+            return '';
+        }
+    }
+    function WareHouse_Render_Button(ID, PerLock, PerSameDate, PerSameUser, PerPassing, WareFrom, WareTo) {
+        let result = "";
+        if ((PerPassing == 1 || (PerSameDate == 1 && PerSameUser == 1))
+            && PerLock == 1) {
+            result = '<button dataid="' + ID + '" data-warefrom="' + WareFrom + '" data-wareto="' + WareTo + '" title="Delete" class="buttonDeleteClass hoverpopup buttonGrid"><i class="vtt-icon vttech-icon-delete"></i></button>'
+        }
+        return result;
+    }
+    function WareHouse_Render_Button_Sign(ID, SignValue) {
+        try {
+            let result = "";
+            if (SignValue == "") {
+                result = '<button dataid="' + ID + '"  title="Sign" class="buttonSignClass hoverpopup buttonGrid"><i class="vtt-icon vttech-icon-signature"></i></button>';
+            }
+            else {
+                result = '<div dataid="' + ID + '" class="img_sign buttonSignClass hoverpopup text-center" title="Sign" ><img class="avatar avatar-lg me-2" src="' + SignValue + '" /> </div>'
+            }
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+    function WareHouse_Render_Button_View(ID,Type) {
+        try {
+            let result = "";
+            result = '<button datatype="' + Type + '" dataid="' + ID + '" title="View Detail" class="buttonViewClass hoverpopup buttonGrid"><i class="vtt-icon vttech-icon-all"></i></button>'
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+    function WareHouse_Render_Button_IsReciept(ID, Type, IsRecipt) {
+        try {
+            let result = "";
+            if (Type == 1) {
+                if (IsRecipt == 1) {
+                    result = '<span class="badge bg-gradient-info">Đã Nhận</span>';
+                }
+                else {
+                    result = '<span class="badge bg-gradient-warning">Chưa Nhận</span>';
+                }
+            }
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+    function WareHouse_Render_Transfer(WareFrom, WareTo) {
+        try {
+            let result = "";
+            if (WareFrom !== 0 && WareTo !== 0) {
+                let objwareFrom = Fun_GetObject_ByID(DataWarehouse, WareFrom);
+                let nameWareFrom = wareTypeID == 1 ? objwareFrom.Name : "";
+                let objwareTo = Fun_GetObject_ByID(DataWarehouse, WareTo);
+                result = '<div>' + nameWareFrom + '<i class="vtt-icon vttech-icon-Arrow-right" style="color:rgb(240 69 69);font-size:12px;"></i>' + objwareTo.Name + '</div>';
+            }
+            return result;
+        }
+        catch {
+            return "";
+        }
+    }
+
+    function WareHouse_HeaderForm() {
+        try {
+            switch (wareTypeID) {
+                case 1:
+                    $("#received_header").show().siblings('.warehouse_header').hide();
+                    break;
+                case 2:
+                    $("#delivered_header").show().siblings('.warehouse_header').hide();
+                    break;
+                case 3:
+                    $("#transfered_header").show().siblings('.warehouse_header').hide();
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch {
+        }
+    }
+
+
+    function WareHouse_Initialize() {
+        Load_Combo(Object.values(DataWarehouse), "cbbWareHouseID", true);
+        $("#WareHouseID").dropdown("refresh");
+        $("#WareHouseID").dropdown("set selected", Number(Object.keys(DataWarehouse)[0]));
+        wareTypeID = 1;
+        $("#datefilter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        let date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#datefilter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        FlagWare = 1;
+        WareHouse_Load(0, 0);
+
+    }
+
+    //#endregion
+
+    //#region // Event
+    function WareHouse_Event() {
+
+
+        $('#dtContentInputListBody').on('click', '.code', function (event) {
+            let id = $(this).attr("dataid");
+            let type = $(this).attr("datatype");
+            WareHouse_Edit(type, id);
+        });
+        $('#dtContentInputListBody').on('click', '.buttonViewClass', function (event) {
+            let id = $(this).attr("dataid");
+            let type = $(this).attr("datatype");
+            WareHouse_View(type, id);
+        });
+        $('#dtContentInputListBody').on('click', '.buttonDeleteClass', function (event) {
+            let id = $(this).attr("dataid");
+            let warefrom = $(this).attr("data-warefrom");
+            let wareto = $(this).attr("data-wareto");
+            WareHouse_Delete(id, warefrom, wareto)
+        });
+        $('#dtContentInputListBody').on('click', '.buttonSignClass', function (event) {
+            let id = $(this).attr("dataid");
+            Signature_Executed_Input(id);
+        });
+        $('#dtContentInputListBody').on('click', '.showmore', function (event) {
+            let id = $(this).attr("data-id");
+            $('#showmore_' + id).hide();
+            $('.row_' + id + ' .collapse').show();
+            $('.row_' + id + ' .collapse').addClass("more");
+            setTimeout(function () {
+                $('.row_' + id + ' .collapse').removeClass("more")
+            }, 500)
+        });
+        $('#dtContentInputListBody').on('click', '.showless', function (event) {
+            let id = $(this).attr("data-id");
+            $('#showmore_' + id).show();
+            $('.row_' + id + ' .collapse').hide();
+
+        });
+        $('#dtContentInputListBody').on('click', '.row_warehouse', function (event) {
+            let id = $(this).attr("data-id");
+            $(".row_warehouse").removeClass("selected");
+            if ($('.row_' + id).length) {
+                $('.row_' + id).addClass("selected");
+            }
+        });
+    }
+    function WareHouse_Export() {
+        switch (wareTypeID) {
+            case 1:
+                exportToExcel("dtContentInputList", 'input_warehouse');
+                break;
+            case 2:
+                exportToExcel("dtContentInputList", 'export_warehouse');
+                break;
+            case 3:
+                exportToExcel("dtContentInputList", 'transfer_warehouse');
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+    function WareHouse_Delete(id, warefrom, wareto) {
+        const promise = notiConfirm();
+        promise.then(function () { WareHouse_DeleteExecute(id, warefrom, wareto); }, function () { });
+    }
+    function WareHouse_DeleteExecute(id, warefrom, wareto) {
+        let WareHouseID = Number($('#WareHouseID').dropdown('get value'));
+        AjaxLoad(url = "/WareHouse/Stock/StockListTable/?handler=DeleteItem"
+            , data = {
+                'id': id,
+                'typeid': wareTypeID,
+                'wareid': WareHouseID,
+                'warefrom': warefrom,
+                'wareto': wareto
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    if ($('.row_' + id).length) $('.row_' + id).remove();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+    function WareHouse_Insert(type) {
+        WareHouse_Open();
+        let WareHouseID = Number($('#WareHouseID').dropdown('get value') ? $('#WareHouseID').dropdown('get value') : 0);
+        switch (type){
+            case 1:
+                $("#itemDetail").load('/WareHouse/Stock/StockInDetail?WareID=' + WareHouseID + '&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case 2:
+                $("#itemDetail").load('/WareHouse/Stock/StockOutDetail?WareID=' + WareHouseID + '&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case 3:
+                $("#itemDetail").load('/WareHouse/Stock/StockTransferDetail?WareID=' + WareHouseID + '&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            default:
+                $("#itemDetail").load('/WareHouse/Stock/StockDetail?Type=' + type + '&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+        }
+        //$("#itemDetail").load('/WareHouse/Stock/StockDetail?Type=' + type + '&ver=' + versionofWebApplication);
+        //$("#itemDetail").show();
+        return false;
+    }
+    function WareHouse_Edit(type, CurrentID) {
+        WareHouse_Open();
+        switch (type) {
+            case "1":
+                $("#itemDetail").load('/WareHouse/Stock/StockInDetail?CurrentID='+CurrentID +'&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case "2":
+                $("#itemDetail").load('/WareHouse/Stock/StockOutDetail?CurrentID='+CurrentID +'&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case "3":
+                $("#itemDetail").load('/WareHouse/Stock/StockTransferDetail?CurrentID='+CurrentID +'&ver=' + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+        }
+        //$("#itemDetail").load("/WareHouse/Stock/StockDetail?CurrentID=" + CurrentID + "&Type=" + type + "&ver=" + versionofWebApplication);
+        //$("#itemDetail").show();
+        return false;
+    }
+    function WareHouse_View(type, CurrentID) {
+        WareHouse_Open();
+        switch (type) {
+            case "1":
+                $("#itemDetail").load("/WareHouse/Stock/StockInDetail?CurrentID=" + CurrentID + "&ViewDetail=1&ver=" + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case "2":
+                $("#itemDetail").load("/WareHouse/Stock/StockOutDetail?CurrentID=" + CurrentID + "&ViewDetail=1&ver=" + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+            case "3":
+                $("#itemDetail").load("/WareHouse/Stock/StockTransferDetail?CurrentID=" + CurrentID + "&ViewDetail=1&ver=" + versionofWebApplication);
+                $("#itemDetail").show();
+                break;
+        }
+        //$("#itemDetail").load("/WareHouse/Stock/StockDetail?CurrentID=" + CurrentID + "&Type=" + type + "&ViewDetail=1&ver=" + versionofWebApplication);
+        //$("#itemDetail").show();
+        return false;
+    }
+    function WareHouse_Open() {
+        $("#itemDetail").empty();
+        $("#listitem").hide();
+        document.getElementById("itemDetail").innerHTML = '';
+    }
+    function WareHouse_Close() {
+        $("#itemDetail").empty();
+        document.getElementById("itemDetail").innerHTML = '';
+        $("#listitem").show();
+        $("#itemDetail").hide();
+    }
+
+    async function Signature_Executed_Input(id) {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/WareHouse/Stock/StockListTable/?handler=UpdateSign"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation,
+                    'typeid': wareTypeID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        WareHouse_Load(id, 0);
+                    }
+                }
+            );
+
+        }
+
+    }
+        //#endregion
+
+
+
+
+        </script>
+        @*<style>
+            #dtContentInputListBody {
+                font-size: 14px;
+            }
+
+                #dtContentInputListBody .user {
+                    width: 15px;
+                    height: 15px;
+                    border-radius: 20px;
+                    display: inline;
+                    margin-right: 5px;
+                    margin-bottom: -3px;
+                }
+
+                #dtContentInputListBody .code {
+                    border-bottom: 1px solid #003a65;
+                }
+
+                #dtContentInputListBody .collapse {
+                    display: none;
+                }
+
+                #dtContentInputListBody .uncollapse {
+                }
+
+            #btnWare_More {
+                height: 20px;
+                border-style: none;
+                font-size: 13px;
+                color: #db2828;
+                background: #ffffff;
+                width: 100%;
+                display: inline-block;
+                text-align: center;
+                cursor: pointer;
+            }
+
+
+
+            #dtContentInputListBody .showmore {
+                float: right;
+                font-size: 11px;
+                color: red;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            #dtContentInputListBody .showless {
+                float: right;
+                font-size: 11px;
+                color: red;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .img_sign {
+                display: flex;
+                justify-content: center;
+                position: relative;
+                width: 60px;
+                margin: auto;
+            }
+
+            .row_index {
+                counter-increment: sections;
+            }
+
+                .row_index .number {
+                    text-align: center !important;
+                }
+
+                    .row_index .number:before {
+                        content: counter(sections)
+                    }
+
+            .more {
+                animation: more 1s ease-in-out 1;
+            }
+
+            @@keyframes more {
+                0% {
+                    background-color: white;
+                }
+
+                25% {
+                    background-color: rgb(190, 227, 255);
+                }
+
+                50% {
+                    background-color: white;
+                }
+
+                50% {
+                    background-color: rgb(190, 227, 255);
+                }
+
+                100% {
+                    background-color: white;
+                }
+            }
+
+            .row_warehouse.selected {
+                background-color: #d6edff !important;
+            }
+
+            .border_left {
+                border-left: 1px solid rgba(34,36,38,.1) !important;
+            }
+
+            #dtContentInputList .exsale {
+                background: #fffcfa;
+            }
+
+            #dtContentInputList .exstand {
+                background: #f6ffff;
+            }
+
+            .ui.checkbox.chb_warecheckbox .box:before,
+            .ui.checkbox.chb_warecheckbox label:before,
+            .ui.checkbox.chb_warecheckbox .box:after,
+            .ui.checkbox.chb_warecheckbox label:after,
+            .ui.checkbox input[type=checkbox].stockcheck,
+            .ui.checkbox input[type=radio].stockcheck {
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                left: 9px !important;
+                border-color: white !important;
+                color: #37668a !important;
+            }
+
+            .ui.checkbox.chb_warecheckbox input[disabled] ~ .box:after,
+            .ui.checkbox.chb_warecheckbox input[disabled] ~ label {
+                opacity: 0.8 !important
+            }
+
+            .ui.checkbox.chb_warecheckbox .lb_warehouse {
+                padding: 7px 18px !important;
+                color: white !important;
+                padding-left: 2.5714em !important;
+                border-radius: .28571429rem;
+                cursor: pointer;
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                font-size: 14px;
+            }
+
+            .border_left {
+                position: relative !important;
+                border-top-left-radius: 0 !important;
+                border-bottom-left-radius: 0 !important;
+                margin: 0 !important;
+                height: 31px !important;
+                width: 40px;
+            }
+
+                .border_left .plus.icon {
+                    font-size: 17px;
+                    opacity: 1 !important;
+                    margin: 1px 0px 0px -9px !important;
+                }
+
+                .border_left:before {
+                    content: "";
+                    position: absolute;
+                    left: -2px;
+                    top: 15%;
+                    height: 70%;
+                    width: 2px;
+                    background-color: #fff;
+                }
+
+            @@media only screen and (max-width:767px) {
+
+                #chb_warecheckboxList .field {
+                    margin-bottom: 5px;
+                }
+            }
+
+            .waretype.selected {
+                border-bottom: 5px solid #2185d0;
+                padding-bottom: 3px;
+            }
+
+            .waretype {
+                display: flex;
+                border-bottom: 5px solid white;
+                padding-bottom: 3px;
+                margin-right: 6px;
+            }
+
+            .border_left {
+                background: #e5f4ff !important;
+                color: #f2711c !important;
+            }
+
+            .lb_warehouse {
+                cursor: pointer;
+                color: #006bbb;
+                padding: 6px;
+                font-size: 14px;
+                border-radius: 5px 0px 0px 5px;
+                background: #e5f4ff;
+            }
+
+                .lb_warehouse:hover {
+                    background: #2185d0 !important;
+                    color: white !important;
+                }
+        </style>*@

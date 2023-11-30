@@ -1,0 +1,285 @@
+﻿@page
+@model MLunarCoffee.Pages.Myinfo.MyReport.CommissionGeneralModel
+@{
+}
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="card-header pb-2">
+                <div class="d-lg-flex">
+                    <div class="flex-fill flex-grow-1 pb-3 overflow-auto mt-2 mt-lg-0">
+                        <ul id="myinfoheader" class="nav nav-pills nav-horizontal p-1 bg-transparent permissionlist px-0" role="tablist">
+                           @* <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer active" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionDoctor">@Local["Hoa hồng bác sĩ"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionDoctorByTreat">@Local["Hoa hồng bác sĩ điều trị"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionAssistant">@Local["Hoa hồng kỹ thuật viên/phụ tá"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionAssistantByTreat">@Local["Hoa hồng kỹ thuật viên - phụ tá theo điều trị"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionConsult">@Local["Hoa hồng tư vấn"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionSupport">@Local["Hoa hồng hỗ trợ"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionTeleSale">@Local["Hoa hồng telesale"]</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="myinfoheader nav-link cursor-pointer" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommissionCSKH">@Local["Hoa hồng cskh"]</a>
+                            </li>*@
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-3 pt-0">
+                <div class="row m-0 px-1">
+                    <div class="col col-md-5 col-lg-4 px-0 mx-1">
+                        <div class="input-group flex-nowrap rounded-end position-relative">
+                            <div class="input-group-text px-3 position-relative">
+                                <div id="blockTime" class="icon-xs rounded-circle d-none bg-gradient-dark text-white" title="@Local["Giới hạn ngày"]" data-bs-toggle="tooltip">
+                                    <div id="RP_Time_Block" class="text-xxs fw-bold"></div>
+                                </div>
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                            </div>
+                            <input id="CG_Date" class="form-control hoverpopup flatpickr border-end" type="text" placeholder="eg .@Local["Ngày"]" />
+                        </div>
+                    </div>
+                    <div class="col-auto px-0 mx-1">
+                        <button class="btn bg-gradient-primary mb-0" style="width: 100px;" onclick="CG_View()" data-fontchanged="true">
+                            @Local["OK"]
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-content" id="cms_tabContent">
+
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+
+    let rangedate = 0;
+    var RP_DataBranch = {}; 
+    var RP_DataServiceCare = []; var RP_DataCustomerSource = {}; var RP_DataCustomerSourceCat = {}; var RP_DataCustomerGroup = {};
+    var RP_DataServiceCat = {}, RP_DataService = {}, RP_DataCard = {}, RP_DataMedicine = {}, RP_DataProduct = {};
+    var DataTeeth, RP_DataUser = {}, RP_DataEmployee = {};
+    var RP_DataCommune = {}, RP_DataDistrict = {}, RP_DataCity = {};
+
+    $(document).ready(function () {  
+        Master_IndexDB_Reads(_Session_Data, [_Session_Teeth,_Session_Commune,_Session_District,_Session_City]
+            , function (data) {
+                DataTeeth = data[0]; 
+                RP_DataCommune = data[1];
+                RP_DataDistrict = data[2];
+                RP_DataCity = data[3];
+                CG_Ini();
+                CG_MyReportLoad(); 
+            })
+        CG_SetDate(); 
+    });
+    async function CG_Ini() {
+        new Promise((resolve) => {
+            AjaxLoad(url = "/Report/ReportGeneral/?handler=InitializeCombo"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result);
+
+                        RP_DataUser = (data.User).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataEmployee = (data.Employee).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+
+                        RP_DataBranch = (data.Branch).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerSource = (data.Source).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerSourceCat = (data.SourceCat).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCustomerGroup = (data.GroupCustomer).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataServiceCat = (data.ServiceCat).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataService = (data.Service).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataCard = (data.Card).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataMedicine = (data.Medicine).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {})
+                        RP_DataProduct = (data.Product).reduce((pre, arr) => {
+                            if (arr.ID) pre[arr.ID] = arr;
+                            return pre;
+                        }, {}) 
+                        RP_DataServiceCare = data.ServiceCare; 
+                    } 
+                    
+                }
+            );
+        })
+    }
+    function CG_MyReportLoad() {
+        AjaxLoad(url = "/Myinfo/MyReport/CommissionGeneral/?handler=GetData"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    CG_RenderMyReport(data, "myinfoheader");
+                    CG_EventLinkClick();
+                    $('#myinfoheader .myinfoheader')?.first().click();
+                }
+            }
+        );
+    }
+    function CG_RenderMyReport(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = "";
+            let stringContent = "";
+            if (data && data.length > 0) { 
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let li = `
+                        <li class="nav-item ms-0" role="presentation">
+                            <a class="myinfoheader nav-link cursor-pointer nav-item-text ${i == 0 ?'active': ''}" data-bs-toggle="pill" role="tab" data-bs-target="#tabCommission${item.ID}" data-id="${item.ID}">${item.Title}</a>
+                        </li>
+                    `
+                    stringContent += li;
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    function CG_SetDate() { 
+        let DateReport; 
+         
+        DateReport = $("#CG_Date").flatpickr({
+            mode: "range"
+            , dateFormat: 'd-m-Y'
+            , enableTime: false
+            , showMonths: 1
+            , onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+                if (rangedate != 0) {
+                    $("#CG_Date").removeClass('errorReport');
+                    $('#CG_Date').prop('title', '');
+                    if (selectedDates.length != 1) {
+                        var diffDays = Math.abs(selectedDates[1] - selectedDates[0]) / (1000 * 60 * 60 * 24);
+                        if (diffDays > rangedate) {
+                            instance.setDate([selectedDates[0], selectedDates[0]], true);
+                            $('#CG_Date').prop('title', '@Local["Ngày tối đa"] : ' + rangedate + ' days');
+                            $("#CG_Date").addClass('errorReport');
+
+                        }
+                    }
+                }
+            }
+        });
+        let date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#CG_Date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+    }
+
+    function CG_EventLinkClick() { 
+        $('#myinfoheader .myinfoheader').on("click", function () {
+            let type = $(this).attr("data-bs-target");
+            let idReport = $(this).attr("data-id");
+            CG_LoadLink(type, idReport); 
+        })
+    }
+    function CG_View() {
+        let type = $('#myinfoheader .myinfoheader.active').attr("data-bs-target");
+        let idReport = $('#myinfoheader .myinfoheader.active').attr("data-id");
+        if (type && idReport) {
+            CG_LoadLink(type, idReport);
+        }
+    }
+
+    function CG_LoadLink(type, idReport) {
+        let dateFrom = "";
+        let dateTo = "";
+        let date = $('#CG_Date').val() ? $('#CG_Date').val() : new Date()
+        if (date.includes(" to ")) {
+            dateFrom = date.split(" to ")[0];
+            dateTo = date.split(" to ")[1];
+        }
+        else {
+            dateFrom = date;
+            dateTo = date;
+        }
+        switch (type) { 
+            case "#tabCommission2":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionDoctor?branch=0&sheet=2&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission136":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionDoctorByTreat?branch=0&sheet=136&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission139":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionAssistant?branch=0&sheet=139&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission4":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionAssistantByTreat?branch=0&sheet=4&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission26":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionConsult?branch=0&sheet=26&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission138":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionSupport?branch=0&sheet=138&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission103":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionTeleSale?branch=0&sheet=103&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission137":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionCSKH?branch=0&sheet=137&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+            case "#tabCommission183":
+                $("#cms_tabContent").empty();
+                $("#cms_tabContent").load("/MyInfo/MyReport/CommissionDoctorByPaid?branch=0&sheet=183&dateFrom=" + dateFrom + "&dateTo=" + dateTo);
+                break;
+        }
+    }
+    
+</script>

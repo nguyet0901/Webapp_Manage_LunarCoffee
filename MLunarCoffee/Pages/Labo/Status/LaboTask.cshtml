@@ -1,0 +1,131 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Status.LaboTask
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+
+<div class="row ">
+    <div class="col-12">
+        <div class="card shadow-lg">
+
+            <div class="card-body pt-4 form3" id="labotask_form">
+                <div class="row px-2">
+                    <div class="col-12 col-sm-12 col-md-6 p-1">
+                        <label>@Local["Công việc"]</label>
+                        <div class="field ui fluid search selection dropdown form-control" id="LabTask_Task">
+                            <input type="hidden"  />
+                            <i class="dropdown icon"></i>
+                            <input id="searchSpecifiedService" class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Công việc"]</div>
+                            <div id="cbbLabTask_Task" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 p-1">
+                        <label>@Local["Nhân viên"]</label>
+                        <div class="field ui fluid search selection dropdown form-control" id="LabTask_Emp">
+                            <input type="hidden"  />
+                            <i class="dropdown icon"></i>
+                            <input id="searchSpecifiedService" class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Nhân viên"]</div>
+                            <div id="cbbLabTask_Emp" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-2">
+                    <div class="col-12 col-12 p-1">
+                        <label>@Local["Ghi chú"]</label>
+                        <textarea id="LabTask_Note" class="form-control" name="content"></textarea>
+                    </div>
+                     <div class="text-danger" id="LabTask_Message"></div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton pt-0">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="labotask_form" onclick="LabTask_ClosePopup()">@Local["Đóng"]</button>
+                        <button form="labotask_form" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                onclick="LabTask_SavePopup()"  >
+                            @Local["Lưu"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let TaskCurrentID = Number("@Model._CurrentID");
+    let TaskLaboID = Number("@Model._Laboid");
+    let DataLaboSup;
+    let flag_ChangeSub = 0;
+
+    $(document).ready(function () {
+        Load_Combo(LaboEmpinBranch, "cbbLabTask_Emp", true);
+        $("#LabTask_Emp").dropdown("refresh");
+        Load_Combo(LaboTask, "cbbLabTask_Task", true);
+        $("#LabTask_Task").dropdown("refresh");
+        if (TaskCurrentID !=0) LaboTask_LoadData();
+    })
+    function LaboTask_LoadData () {
+        AjaxLoad(url = "/Labo/Status/LaboTask/?handler=LoadData"
+            , data = {"CurrentID": TaskCurrentID}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                let data = JSON.parse(result);
+                $("#LabTask_Emp").dropdown("refresh");
+                $("#LabTask_Emp").dropdown("set selected", data[0].TaskEmp);
+                $("#LabTask_Task").dropdown("refresh");
+                $("#LabTask_Task").dropdown("set selected", data[0].Tasks);
+                $("#LabTask_Note").val(data[0].Content);
+            }
+
+        );
+    }
+    function LabTask_ClosePopup() {
+        if ($('#LaboDetailAddArea').length) {
+            $('#LaboDetailAddArea').fadeOut(300);
+            $('#LaboDetailAddArea').html('');
+        }
+    }
+    function LabTask_SavePopup () {
+        $('#LabTask_Message').html('');
+        let emp = (Number($('#LabTask_Emp').dropdown('get value')) ? Number($('#LabTask_Emp').dropdown('get value')) : 0);
+        let task = (Number($('#LabTask_Task').dropdown('get value')) ? Number($('#LabTask_Task').dropdown('get value')) : 0);
+        let note = $('#LabTask_Note').val();
+        if (emp != 0) {
+            AjaxLoad(url = "/Labo/Status/LaboTask/?handler=Save"
+                , data = {
+                    'CurrentID': TaskCurrentID
+                    , 'LaboID': TaskLaboID
+                    , 'emp': emp
+                    , 'task': task
+                    , 'note': note
+                }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        LabTask_ClosePopup();
+                        if (typeof LaboDetail_LoadTask == 'function' && $.isFunction(LaboDetail_LoadTask)) {
+                            LaboDetail_LoadTask(TaskCurrentID);
+                        }
+                    }
+                    else notiError();
+                }
+            );
+        }
+        else {
+            $('#LabTask_Message').html('@Local["Chọn nhân viên"]');
+        }
+    }
+
+
+</script>

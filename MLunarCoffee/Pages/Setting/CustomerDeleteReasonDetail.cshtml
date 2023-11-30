@@ -1,0 +1,84 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerDeleteReasonDetailModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Lý do xóa khách hàng"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết lý do xóa khách hàng"] </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formDeleteResson">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên lý do"]</label>
+                            <input id="CDR_Reason" class="form-control" name="name" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formDeleteResson" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button form="formDeleteResson" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_scheduler_reason_cancel" onclick="event.preventDefault();CDR_ExcuteData()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+        var ser_TeleCustomerDeleteReasonDetailID;
+        $(document).ready(function () {
+            ser_TeleCustomerDeleteReasonDetailID = @Model._TelePageCustomerDeleteReasonDetailID;
+            if (ser_TeleCustomerDeleteReasonDetailID!="0") CDR_LoadData();
+            Checking_TabControl_Permission();
+        });
+        function CDR_LoadData() {
+            AjaxLoad(url = "/Setting/CustomerDeleteReasonDetail/?handler=Loadata"
+                , data = { id: ser_TeleCustomerDeleteReasonDetailID }, async = true, error = null
+                , success = function (result) {
+                    let dataUnit = JSON.parse(result);
+                    $('#CDR_Reason').val((dataUnit[0].Name));
+                });
+        }
+        function CDR_ExcuteData() {
+            var data = new Object();
+            data.Name = $('#CDR_Reason').val() ? $('#CDR_Reason').val() : "";
+            $('#formDeleteResson').form('validate form');
+            if ($('#formDeleteResson').form('is valid')) {
+                AjaxLoad(url = "/Setting/CustomerDeleteReasonDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_TeleCustomerDeleteReasonDetailID
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            CustomerDeleteResonLoad();
+                            $('#DetailModal').modal('hide');
+                            $("#DetailModal_Content").html('');
+                        } else if (result == "-1") {
+                            $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+            }
+            return false;
+        }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

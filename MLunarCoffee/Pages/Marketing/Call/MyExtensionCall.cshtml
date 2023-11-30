@@ -1,0 +1,326 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.Call.MyExtensionCallModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<script>js_require('/js/LogCallCenter/LogCallGeneral.js');</script>
+<script>js_require('/assests/js/MD5.js');</script>
+
+<div class="card card-plain container-fluid px-0">
+    <div class="row m-0">
+        <div class="col-12 ">
+            <div class="row">
+                <div class="card card-plain px-2">
+                    <div class="vtcardheader card-header pb-0 px-1 pt-3">
+                        <div class="left">
+                            <h6 class="mb-0">Extension <span class="text-primary" id="ext_info"></span></h6>
+                            <p class="text-sm mb-0">@Local["Thao tác và thống kê lịch sử gọi ra, gọi vào của extension theo thời gian tìm kiếm"]</p>
+                        </div>
+                    </div>
+                    <div class="card-body px-1 py-1 mt-2">
+                        <div class="row">
+                            <div class="col-12 col-sm-12 col-md-4 col-xl-3 p-1 position-relative">
+                                <div class="m-0">
+                                    <div class="d-flex">
+                                        <input id="phonenumberType" type="text" placeholder="@Local["Số điện thoại"]" class="form-control">
+                                        <button class="btn text-nowrap btn-sm  bg-gradient-primary m-0 ms-1" onclick="event.preventDefault(); return onCallingNumberType();">@Local["Gọi"]</button>
+                                    </div>
+                                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                                </div>
+
+                            </div>
+                            <div class="col-12 col-sm-12 col-md-8 col-xl-9 p-1">
+                                <div class="px-0 m-0 px-lg-2">
+                                    <div class="mx-0 row">
+                                        <div class="col-12 col-sm-12 col-md-3 col-lg-4 px-1 py-1 pt-lg-0">
+                                            <input id="dateFillter" class="flatpickr form-control" type="text" onchange="event.preventDefault();" />
+                                        </div>
+                                        <div class="col-12 col-sm-12 col-md-3 col-lg-4 px-1 py-1 pt-lg-0">
+                                            <button class="btn btn-sm bg-gradient-primary " onclick="event.preventDefault(); return LoadLogsExtension();">@Local["OK"]</button>
+                                            <button class="btn btn-sm text-nowrap btn-dark   ms-2" onclick="event.preventDefault();return exportData();">@Local["Xuất"]</button>
+                                        </div>
+
+                                    </div>
+                                    <div class="d-lg-flex align-items-center gap-3 me-2">
+
+                                        <div class="row mx-0 mt-2 ms-1 mb-n2 mt-lg-0">
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalCall" class="text-primary mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark mb-0  fst-italic text-nowrap">@Local["Tổng cuộc gọi"]</p>
+                                                </div>
+                                            </div>
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalCallSuccess" class="text-success mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Thành công"]</p>
+                                                </div>
+                                            </div>
+                                            <div class="col ps-0 mb-lg-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 id="totalTime" class="text-info mb-0 mt-0 fw-bolder pe-2"></h5>
+                                                    <p class="text-sm text-dark  mb-0 fst-italic text-nowrap">@Local["Tổng phút"]</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-lg-flex align-items-center gap-3 me-2">
+                                        <div class="col-auto ms-auto mb-2 mt-lg-n4 mt-3">
+                                            <div class="">
+                                                <ul class="pagination mb-0">
+                                                    <li class="page-item ">
+                                                        <a id="backPage" class="page-link" onclick="event.preventDefault();return LoadPageBack();" href="javascript:;">
+                                                            <i class="fa fa-angle-left"></i>
+                                                            <span class="sr-only"></span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="page-item active">
+                                                        <a id="currentPage" class="page-link">1</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a id="nextPage" class="page-link" onclick="event.preventDefault();return LoadPageNext();" href="javascript:;">
+                                                            <i class="fa fa-angle-right"></i>
+                                                            <span class="sr-only"></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body m-0 table-responsive pt-0 position-relative px-2" style="height: calc(100vh - 275px);">
+                                    <div id="waiting_list_call" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <table class="table vt-table mb-0" id="dtContentLog">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 25px;">#</th>
+                                                <th>@Local["Từ"]</th>
+                                                <th>@Local["Gọi đến"]</th>
+                                                <th>@Local["Loại"]</th>
+                                                <th>@Local["Thời lượng"]</th>
+                                                <th>@Local["Tình trạng"]</th>
+                                                <th>@Local["Ngày gọi"]</th>
+                                                <th>@Local["Giờ gọi"]</th>
+                                                <th class="no-sort">@Local["Tệp ghi âm"]</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dtContentLogBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    var employeeName = '';
+    var totalCallSuccess = 0;
+    var currentPage = 1;
+    var extCurrent = '@Model._userCurrentExt';
+    var ser_dtConnectCall = "";
+    var dateFrom;
+    var dateTo;
+    var TotalTime = 0;
+
+    $(document).ready(function () {
+        let typeScript = '@Model._Type_LinkJS';
+        if (typeScript != '' && typeScript != '#') {
+            js_require_notasync(typeScript, true);
+        }
+        ser_dtConnectCall = JSON.parse(_dtConnectCall)[0];
+        $(".flatpickr").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            mode: "range",
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        var lastDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        $("#dateFillter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        dateFrom = formatDateClient(firstDay);
+        dateTo = formatDateClient(lastDay);
+        $('#ext_info').html(extCurrent);
+        $('#dtContentLog').tablesort();
+
+    });
+
+    ////
+    function onCallingNumberType() {
+        let phone = $("#phonenumberType").val();
+        if (isNaN(phone) || phone.length < 3 || phone.length > 12) {
+            $("#textShowMessage").html("@Local["Nhập số điện thoại"]!");
+        }
+        else {
+            $("#textShowMessage").html("");
+            if (phone != "" && typeof CCF_OutcomCallPhone !== 'undefined' && $.isFunction(CCF_OutcomCallPhone)) {
+                CCF_OutcomCallPhone(phone);
+            }
+        }
+        return false;
+    }
+    ////
+
+    function LoadLogsExtension() {
+
+        $("#currentPage").html(currentPage);
+        let date = $('#dateFillter').val() ? $('#dateFillter').val() : new Date();
+        if (date.search(" to ") > 0) {
+            date = date.split(' to ')
+            dateFrom = date[0];
+            dateTo = date[1];
+        }
+        else {
+            dateFrom = date;
+            dateTo = date;
+        }
+        currentPage = 1;
+        $("#currentPage").html(currentPage);
+        ViewDetail();
+    }
+
+    async function ViewDetail() {
+        if (ser_dtConnectCall != undefined && ser_dtConnectCall.length != 0) {
+            $("#dtContentLog").hide();
+            $("#waiting_list_call").show();
+            $(".rowExtension").addClass('disabled');
+            await ViewDetailAsync();
+            $("#dtContentLog").show();
+
+        } else {
+            notiWarning("@Local["Callcenter không kết nối"]!");
+        }
+    }
+
+    function Render_Call_Log_Execute(data) {
+        if (data != undefined && data != null && data.length != 0) {
+            Render_Call_Log(data, "dtContentLogBody");
+            $('#totalCallSuccess').html(totalCallSuccess);
+            $('#totalTime').html(secondsToHms(TotalTime));
+            $('#totalCallSuccess').show();
+            $('#totalCall').show();
+            $('#totalTime').show();
+           // $('#btnAction').show();
+            Checking_TabControl_Permission();
+        } else {
+            $('#totalCallSuccess').hide();
+            $('#totalCall').hide();
+            $('#totalTime').hide();
+        }
+        $("#waiting_list_call").hide();
+        $(".rowExtension").removeClass('disabled');
+        if (data.length == 0) {
+            $("#nextPage").parent().addClass('disabled');
+        } else {
+            $("#nextPage").parent().removeClass('disabled');
+        }
+    }
+
+    async function ViewDetailAsync() {
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                async () => {
+                    debugger
+                    var data = await LoadLogCall_ByPhoneEx(ser_dtConnectCall, dateFrom, dateTo, extCurrent, currentPage, 'ext', Render_Call_Log_Execute);
+                    totalCallSuccess = 0;
+                    TotalTime = 0;
+                    if (data != undefined && data != null && data.length != 0) {
+                        Render_Call_Log_Execute(data)
+                    } else {
+                        $("#dtContentLogBody").html('');
+                        $('#totalCallSuccess').hide();
+                        $('#totalCall').hide();
+                        $('#totalTime').hide();
+                        $("#waiting_list_call").hide();
+                        $(".rowExtension").removeClass('disabled');
+                        $("#nextPage").parent().addClass('disabled');
+                    }
+                    if (currentPage == 1) {
+                        $("#backPage").parent().addClass('disabled');
+                    }
+
+                    resolve()
+                },
+                100
+            )
+        })
+    }
+
+    function Render_Call_Log(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    if (item.status != undefined && item.status == 'SUCCESS') {
+                        totalCallSuccess = totalCallSuccess + 1;
+                        TotalTime = TotalTime + Number(item.duration)
+                    }
+                    let tr =
+                        '<td data-sortvalue="' + Number(i + 1) + '">' + (i + 1) + '</td>'
+                        + '<td class="_tab_control_" data-tab="phone_customer">' + item.from + '</td>'
+                        + '<td class="_tab_control_" data-tab="phone_customer" >' + item.to + '</td>'
+                        + '<td>' + item.direction + '</td>'
+                        + ((item.recordUrl != 'null' && item.recordUrl != '') ? ('<td><a target="_blank" href="' + item.recordUrl + '">' + secondsToHms(item.duration) + '</a></td>') : ('<td>' + secondsToHms(item.duration) + '</td>'))
+                        + '<td>' + item.state + '</td>'
+                        + '<td data-sortvalue="' + (new Date(item.start)).getTime() + '">' + yyyyMMddHHMMM_ddMMyyyy(item.start) + '</td>'
+                        + '<td>' + yyyyMMddHHMMM_HHMM(item.start) + '</td>'
+                        + ((item.recordUrl != 'null' && item.recordUrl != '') ? ('<td><audio style="min-width: 250px; height: 35px;" controls preload="none"> <source src="' + item.recordUrl + '" type="audio/wav"></audio></td>') : '<td></td>')
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+                $('#totalCall').html((data.length));
+            }
+            else {
+                $('#totalCall').html(0);
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    function LoadPageNext() {
+        currentPage += 1;
+        $("#currentPage").html(currentPage);
+        ViewDetail();
+        $("#backPage").parent().removeClass('disabled');
+    }
+
+    function LoadPageBack() {
+        if (currentPage != 1) {
+            currentPage -= 1;
+            $("#currentPage").html(currentPage);
+            ViewDetail();
+        } else {
+            $("#backPage").parent().addClass('disabled');
+        }
+    }
+
+    function exportData() {
+        let fileName = Outlang['Danh-sach-cuoc-goi-di'];
+        exportToExcel("dtContentLog", fileName + '-(' + employeeName + ')');
+        return false;
+    }
+
+</script>
+
+
+

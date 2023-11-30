@@ -1,0 +1,153 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketReasonDeleteListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Lý do xóa ticket"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="return AddNewTicketReasonDelete()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="waiting_reason_list" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentTicketReasonDelete">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["#"]</th>
+                                    <th>@Local["Tên lý do"]</th>
+                                    <th>@Local["Ghi chú"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                    <th id="grColumnDeleteTicketTeleGroup">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ddtContentTicketReasonDeleteBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    let DataUser;
+
+    $(document).ready(function () {
+        LoadTicketReasonDeleteAjax();
+        $('#dtContentTicketReasonDelete tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditTicketReasonDelete(ID);
+        });
+        $('#dtContentTicketReasonDelete tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteTicketReasonDelete(ID)
+        });
+    });
+
+    function LoadTicketReasonDeleteAjax() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Marketing/TicketReasonDeleteList/?handler=LoadData"
+                    , data = { }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+                        RenderTableTicketReasonDelete(data, 'ddtContentTicketReasonDeleteBody');
+                    }
+                );
+            });
+
+    }
+    function RenderTableTicketReasonDelete(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null && obj.EmployeeName != undefined) ? obj.EmployeeName : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+
+                    let note = (item.Note == '') ? '<span class="text">no content</span>' : item.Note;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="text-center">' + item.STT + '</td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass">' + item.Name + '</a></td>'
+                        + '<td><span class="content_line_clamp">' + note + '</span></td>'
+
+                        + '<td><div class="d-inline">'
+                        + '<img title="' + name + '" class="avatar avatar-xs me-2" src="' + img + '" alt="label-image">'
+                        + '<span>' + GetDateTime_String_DMYHM(item.DayEditor) + '</span>'
+                        + '</div></td>'
+
+                        + ((item.DeleteButton === 1)
+                            ? ('<td class="text-center"><button class="buttonGrid _tab_control_" data-tab="delete_tab_ticket_reason_delete" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td></td>')
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Hover_Edit(id);
+        Checking_TabControl_Permission();
+    }
+
+    function DeleteTicketReasonDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteTicketReasonDelete(id); }, function () { });
+    }
+    function ExecuteDeleteTicketReasonDelete(id) {
+        AjaxLoad(url = "/Marketing/TicketReasonDeleteList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadTicketReasonDeleteAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function AddNewTicketReasonDelete() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/TicketReasonDeleteDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EditTicketReasonDelete(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Marketing/TicketReasonDeleteDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js');</script>

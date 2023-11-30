@@ -1,0 +1,175 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketMoveDetail_OneModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div id="divTicketMoveDetail" class="container-fluid px-0" style="display:none;">
+    <div class="row">
+        <div  class="col-12" >
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Chuyển dữ liệu"]</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="Ticket_Change_Staff">
+                        <div class="field col-12 p-1 d-none">
+                            <label>@Local["Lý do chuyển"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="ReasonMoveTicket">
+                                <input type="hidden" name="ReasonMoveTicket" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Lý do chuyển"]</div>
+                                <div id="cbbReasonMoveTicket" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Đến tele"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="InvidualTeleTo">
+                                <input type="hidden" name="InvidualTeleTo" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">eg .@Local["Đến tele"]</div>
+                                <div id="cbbInvidualTeleTo" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div>
+                        <span class="badge bg-gradient-danger">
+                            <span id="ShowMess1"></span>
+                            <strong id="ShowMess2"></strong>
+                        </span>
+                    </div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="Ticket_Change_Staff" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                        <button id="btnSaveMove_TicketDetail" form="Ticket_Change_Staff" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return TicketMove_ExcuteData()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    let TicketIDPreapareMove = "@Model._TicketDetailID";
+
+    $(document).ready(function () {
+        $(".flatpickr").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            defaultDate: new Date(),
+        });
+        TicketMove_InitializeCombo();
+    });
+
+    function TicketMove_InitializeCombo() {
+        AjaxLoad(url = "/Marketing/TicketMoveDetail_One/?handler=InitializeCombo"
+            , data = { "ticketid": TicketIDPreapareMove }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    let data_Tele = data.Tele;
+                    let data_Staff = data.Staff;
+                    let data_Per = data.PerTele;
+                    let IsBlock = 0;
+                    if (data_Per && data_Per.length == 1) {
+                        let LevelTele = data_Per[0].LEVEL;
+                        let GroupTele = data_Per[0].GROUPID;
+
+                        //Hiển Thị Tên Người Phụ Trách
+                        let StaffGroup = 0;
+                        let StaffID = 0;
+                        if (data_Staff && data_Staff.length != 0 && data_Staff[0].StaffID != 0) {
+                            StaffID = data_Staff[0].StaffID;
+                            StaffGroup = data_Staff[0].GroupID;
+                            $("#ShowMess1").html("@Local["Ticket này thuộc"]");
+                            $("#ShowMess2").html(data_Staff[0].EmpName);
+                        }
+                        else $("#ShowMess1").html("@Local["Ticket này chưa có tele phụ trách"]");
+
+                        // Gán Tele Hiện Tại
+                        let isStaffCurrent = (data_Tele && data_Tele.length != 0 ? data_Tele[0].ID : 0)
+                        let dataFilter = data_Tele.filter((staff) => {
+                            return data_Staff[0].StaffID == staff.ID;
+                        });
+                        if (dataFilter && dataFilter.length != 0) {
+                            isStaffCurrent = data_Staff[0].StaffID
+                        }
+                        Load_Combo(data_Tele, "cbbInvidualTeleTo", true);
+                        $("#InvidualTeleTo").dropdown("refresh");
+                        $("#InvidualTeleTo").dropdown("set selected", isStaffCurrent);
+
+
+                        // Kiểm tra quyền
+                        if (LevelTele != 3) {
+                            if (LevelTele == 2 && GroupTele != StaffGroup) IsBlock = 1;
+                            if (LevelTele == 1 && StaffID != sys_userID_Main) IsBlock = 1;
+                            if (LevelTele == 0) IsBlock = 1;
+                        }
+
+                        if (IsBlock == 1) $("#btnSaveMove_TicketDetail").remove();
+
+                    }
+                    else {
+                        $("#btnSaveMove_TicketDetail").remove();
+                        CloseModal();
+                    }
+                    $("#divTicketMoveDetail").fadeIn(100);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+
+    function TicketMove_ExcuteData() {
+        var userTo = Number($('#InvidualTeleTo').dropdown('get value')) ? Number($('#InvidualTeleTo').dropdown('get value')) : 0;
+        if (userTo && userTo != 0) {
+            AjaxLoad(url = "/Marketing/TicketMoveDetail_One/?handler=ExcuteData"
+                , data = {
+                    'userTo': userTo
+                    , 'reason': 0
+                    , 'ticketid': TicketIDPreapareMove
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        fcm_senduser(Number(userTo), Master_circleAvatar, sys_employeeName_Main, 'Receipt Data (' + 1 + ' record)');
+                        if (typeof LoadDataUpdate === 'function') LoadDataUpdate();
+                        if (typeof TicketAction_LoadInfo === 'function') TicketAction_LoadInfo();
+                        CloseModal();
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        return false;
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+

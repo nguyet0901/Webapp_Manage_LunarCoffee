@@ -1,0 +1,325 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.StatusPrint.StatusPrintListModel
+@{
+    Layout = null;
+}
+
+<div  class="row">
+    <div class="col-12">
+        <div class="card">
+            <div id="SP_DivNonData" class="d-none card-body p-5 m-2 mb-0 bg-gray-200 border-radius-lg text-center">
+                <h6 class="my-auto">@Local["Chưa có dữ liệu"]</h6>
+            </div>
+            <div id="SP_DivHaveData" class="d-none">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Tình trạng"]</h6>
+                                <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1 d-flex align-items-center flex-wrap justify-content-end gap-1">
+                            <div class="bg-gray-100 border-2 border-success border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start d-flex rounded-0 p-2 py-1 align-items-center">
+                                <i class="ni ni-check-bold text-success text-lg fw-bold pe-2"></i>
+                                <span class="text-dark text-sm">@Local["Đã in"]</span>
+                            </div>
+                            <div class="bg-gray-100 border-2 border-dark border-radius-bottom-start-0 border-radius-lg border-radius-top-start-0 border-start d-flex rounded-0 p-2 py-1 align-items-center">
+                                <i class="ni ni-fat-remove text-dark h5 fw-bold mb-0"></i>
+                                <span class="text-dark text-sm">@Local["Chưa in"]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row pt-2">
+                        <div class="col-12">
+                            <div class="bg-gray-100 rounded-2 px-3 py-2 pb-1" id="SP_GuideBody">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0" id="SP_DivTable">
+                            <thead>
+                                <tr id="SP_GridHeader">
+                                    <th>#</th>
+                                    <th>@Local["Loại dịch vụ"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="SP_GridBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();return CloseModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    //#region //Load && Init
+    let SP_StogeRuleMain = [];
+    let SP_DtHeader = [];
+    let SP_DtHasPrint = {};
+
+    $(document).ready(function () {
+        SPrint_LoadInit();
+    })
+
+    function SPrint_LoadInit () {
+        AjaxLoad(url = "/Customer/StatusPrint/StatusPrintList/?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    SP_StogeRuleMain = data["StogeRule"];
+                    SPrint_Load();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function SPrint_Load () {
+        AjaxLoad(url = "/Customer/StatusPrint/StatusPrintList/?handler=LoadData"
+            , data = {"CustomerID": ser_MainCustomerID}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+
+                    SP_DtHeader = SPrint_HeaFill(SP_StogeRuleMain, data["Table"]);
+                    SP_DtHasPrint = data["Table1"].reduce((pre, arr) => {
+                        if (arr.RuleCode) pre[arr.RuleCode] = arr;
+                        return pre;
+                    }, {})
+
+                    SPrint_GuideRender(SP_DtHeader, "SP_GuideBody");
+                    SPrint_HeaRender(SP_DtHeader, "SP_GridHeader");
+                    SPrint_BodyRender(data["Table"], "SP_GridBody");
+
+
+                    if (data["Table"] && data["Table"].length > 0) {
+                        $("#SP_DivHaveData").removeClass("d-none");
+                    } else $("#SP_DivNonData").removeClass("d-none");
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //Guide
+
+    async function SPrint_GuideRender (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = item.Direct != 1 ? `
+                            <span class="badge badge-dot d-block text-start p-0 pb-1">
+                                <i class="bg-gradient-primary"></i>
+                                <span class="text-dark fw-bold text-sm">${item.Name} :</span>
+                                <span class="text-dark text-sm">${item.Guide}</span>
+                            </span>
+                        `: ``;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+
+            resolve();
+        })
+    }
+
+    //#endregion
+
+    //#region //Header
+
+    function SPrint_HeaFill (DTRaw, DTHead) {
+        try {
+            let result = [];
+
+            if (DTRaw && DTHead && DTRaw.length > 0 && DTHead.length > 0) {
+                for (let i = 0; i < DTRaw.length; i++) {
+                    let item = DTRaw[i];
+                    for (let j = 0; j < DTHead.length; j++) {
+                        let RuleType = ',' + DTHead[j].StogeRule;
+                        if (RuleType.includes(',' + item["ID"] + ',')) {
+                            result.push(item);
+                            j = DTHead.length;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        } catch (ex) {
+            return [];
+        }
+    }
+
+    async function SPrint_HeaRender (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = `<th>${item.Name}</th>`;
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            ToolPopper();
+            //SPrint_HeaEvent();
+            resolve();
+        })
+    }
+
+    //function SPrint_HeaOption (item) {
+    //    try {
+    //        let result = ``;
+
+    //        if (typeof SP_DtHasPrint[item.ID] != 'undefined') return result;
+
+    //        if (item["Direct"] == 0) {
+    //            result = `
+    //                <i class="fas fa-info text-dark" data-bs-toggle="tooltip" title="${item["Guide"]}"></i>
+    //            `;
+    //        } else {
+    //            result = `
+    //                <i class="fas fa-print btnPrint text-dark cursor-pointer" data-type="${item["PrintType"]}" data-dateFrom="${item["DateFromInt"]}" data-dateTo="${item["DateToInt"]}"></i>
+    //            `;
+    //        }
+
+    //        return result;
+    //    } catch (ex) {
+    //        return '';
+    //    }
+    //}
+
+    @*function SPrint_HeaEvent () {
+        $("#SP_GridHeader .btnPrint").unbind("click").click(function () {
+            let PrintType = $(this).attr("data-type") ? $(this).attr("data-type") : '';
+            let DateFrom = $(this).attr("data-dateFrom") ? $(this).attr("data-dateFrom") : 0;
+            let DateTo = $(this).attr("data-dateTo") ? $(this).attr("data-dateTo") : 0;
+
+            if (PrintType != '') {
+                switch (PrintType) {
+                    case "customer_record":
+                        SPrint_OpenPrint('/Print/print?Type=customer_record&DetailID=' + ser_MainCustomerID);
+                        break;
+                    case "service_all":
+                        SPrint_OpenPrint('/Print/print?Type=service_all&DetailID=' + ser_MainCustomerID);
+                        break;
+                    case "treatbyday":
+                        SPrint_OpenPrint('/Print/print?Type=treatbyday&DetailID=' + ser_MainCustomerID + '&datefrom=' + DateFrom + '&dateto=' + DateTo);
+                        break;
+                    case "treatment_records":
+                        SPrint_OpenPrint('/Print/print?Type=treatment_records&DetailID=' + ser_MainCustomerID);
+                        break;
+                    case "paymentbyday_form":
+                        SPrint_OpenPrint('/Print/print?Type=paymentbyday_form&DetailID=' + ser_MainCustomerID + '&datefrom=' + DateFrom + '&dateto=' + DateTo);
+                        break;
+                    default:
+                        notiWarning("@Local["Kiểm tra dữ liệu"]");
+                }
+            }
+        })
+    }*@
+
+    //#endregion
+
+    //#region //Body
+
+    async function SPrint_BodyRender (data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = SPrint_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    function SPrint_RenderEach (item) {
+        try {
+            let result = '';
+
+            result = `
+                <tr class="vt-number">
+                    <td class="vt-number-order"></td>
+                    <td>${item.SerTypeName}</td>
+                    ${SPrint_ChildPrint(item)}
+                </tr>
+            `;
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+
+    function SPrint_ChildPrint (item) {
+        try {
+            let result = '';
+            let RuleType = item["StogeRule"] != '' ? ',' + item["StogeRule"] : '';
+
+            if (SP_DtHeader && SP_DtHeader.length > 0) {
+                for (let i = 0; i < SP_DtHeader.length; i++) {
+                    if (RuleType.includes(',' + SP_DtHeader[i].ID + ',')) {
+                        if (typeof SP_DtHasPrint[SP_DtHeader[i].ID] != 'undefined') {
+                            result += `<td class="text-center"><i class="ni ni-check-bold text-success text-lg fw-bold"></i></td>`;
+                        } else {
+                            result += `<td class="text-center"><i class="ni ni-fat-remove text-dark h4 fw-bold mb-0"></i></td>`;
+                        }
+                    } else {
+                        result += `<td></td>`;
+                    }
+                }
+            }
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //Print
+
+    //function SPrint_OpenPrint (link) {
+    //    if (link != undefined && link != '') {
+    //        syslog_cutcon('p', ser_MainCustomerID, '');
+    //        CloseModal();
+    //        $("#DetailModal_Content").html('');
+    //        $("#DetailModal_Content").load(link);
+    //        $('#DetailModal').modal('show');
+    //    }
+    //}
+
+    //#endregion
+</script>

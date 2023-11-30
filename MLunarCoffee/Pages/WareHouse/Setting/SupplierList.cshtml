@@ -1,0 +1,187 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Setting.SupplierListModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid py-0 px-0" id="WSSup_Container">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Danh sách nhà cung cấp"]</h6>
+                        <p class="text-sm mb-0">@Local["Nhà cung cấp không được trùng tên, chỉ được xoá khi tên nhà cung cấp chưa được sử dụng"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="WSSup_btnAdd" class="btn bg-gradient-primary btn-sm mt-1" id="btnAddSupplier" onclick="event.preventDefault(); return AddNewSupplier();">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="waitingdiv_supplierlist" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentSupplier">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th style="width: 5%;">@Local["#"]</th>
+                                    <th style="width:20%">@Local["Tên"]</th>
+                                    <th style="width:20%">@Local["Liên hệ"]</th>
+                                    <th style="width:20% ">@Local["Ghi chú"]</th>
+                                    <th style="width: 10%;">@Local["Người sửa"]</th>
+                                    <th class="WSSup_thHandle" style="width: 5%;">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentSupplierBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+
+    var DataProduct;
+    let DataUser;
+
+    $(document).ready(function () {
+
+        Master_IndexDB_Reads(_Session_Data, [ _Session_User]
+            , function (data) {
+                DataUser = data[0];
+                LoadSupplierAjax();
+            });
+
+        $('#dtContentSupplier tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditSupplier(ID);
+        });
+        $('#dtContentSupplier tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteSupplierList(ID)
+        });
+
+    });
+
+    function LoadSupplierAjax() {
+        AjaxLoad(url = "/WareHouse/Setting/SupplierList/?handler=LoadDataSupplier"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data.length > 0) {
+                        RenderTableSupplier(data, 'dtContentSupplierBody');
+                    }
+                }
+            }
+        );
+    }
+
+    function DeleteSupplierList(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteSupplierList(id); }, function () { });
+    }
+
+    function ExecuteDeleteSupplierList(id) {
+        AjaxLoad(url = "/WareHouse/Setting/SupplierList/?handler=DeleteItem"
+            , data = { 'id': id }, async = false, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    LoadSupplierAjax();
+                    syslog_whr('d', result);
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    function AddNewSupplier() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/Setting/SupplierDetail?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EditSupplier(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/WareHouse/Setting/SupplierDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    function RenderTableSupplier(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+
+                    let tr =
+                        '<td style="display:none !important">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="buttonEditClass d-inline-block fw-bold border-bottom border-dark cursor-pointer" href="#">'
+                        + ((item.Code) ? (item.Code + ' - ') : '' )
+                        + item.Name
+                        + '</a></br>'
+                        + item.Person
+                        + '</td>'
+                        + '<td>'
+                        + '<ul class="list-group">'
+                        + '<li class="list-group-item border-0 ps-0 pt-0 text-sm pb-0" >'
+                        + '<span class="text-sm">@Local["Số điện thoại"]:</span> &nbsp;&nbsp;'
+                        + '<span class="text-dark font-weight-bold">' + item.Phone + '</span>'
+                        + '</li >'
+                        + '<li class="list-group-item border-0 ps-0 pb-0 text-sm">'
+                        + '<span class="text-sm">Email:</span> &nbsp;&nbsp;'
+                        + '<span class="text-dark font-weight-bold">' + item.Email + '</span>'
+                        + '</li>'
+                        + '<li class="list-group-item border-0 ps-0 pb-0 text-sm">'
+                        + '<span class="text-sm">@Local["Số tài khoản"]:</span> &nbsp;&nbsp;'
+                        + '<span class="text-dark font-weight-bold">' + item.Bank_number + '</span>'
+                        + '</li>'
+                        + '</ul >'
+                        + '</td>'
+                        + '<td>' + item.Note + '</td>'
+                        + '<td>'
+                        + '<div class="d-inline">'
+                        + '<img title="admin" class="avatar avatar-xs me-2" src="' + img + '" alt="label-image">'
+                        + '<span>' + GetDateTime_String_DMY(item.DayEditor) + '</span>'
+                        + '</div>'
+                        + '</td>'
+                        + ((item.DeleteButton === 1)
+                            ? ('<td class="WSSup_rowBtnHandle"><button class="buttonGrid _tab_control_" data-tab="delete_tab_supplier" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>')
+                            : '<td class="WSSup_rowBtnHandle"></td>')
+
+                    stringContent = stringContent + '<tr role="row" class="vt-number">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Checking_TabControl_Permission();
+    }
+
+</script>
+
+<script>js_require('/js/main.js');</script>
+

@@ -1,0 +1,128 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.History.HistoryList_SMSModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Lịch sử sms"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết lịch sử tin nhắn sms"]</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body pt-2 ">
+
+                    <div class="m-0 my-3 mobile-responsive">
+                        <div id="div_sms_history_waiting" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentSMS_History">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>@Local["Người tạo"]</th>
+                                    <th>@Local["Ngày tạo"]</th>
+                                    <th>@Local["Nội dung"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentSMS_HistoryBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+
+    var ser_CustomerSMSHistoryID ='@Model._SMSHistoryCustomerID' ;
+    var ser_TicketSMSHistoryID ='@Model._SMSHistoryTicketID';
+    var DataEmployee;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmployee = data[0];
+                Load_SMS_History_List();
+            })
+
+    });
+
+    function Load_SMS_History_List() {
+        AjaxLoad(url = "/Customer/History/HistoryList_SMS/?handler=LoadSMSHistory"
+            , data = { 'TicketID': ser_TicketSMSHistoryID, 'CustomerID': ser_CustomerSMSHistoryID  }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    RenderTable_SMSHistory(data, 'dtContentSMS_HistoryBody');
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#dtContentSMS_History").hide();
+                $("#div_sms_history_waiting").show();
+            }
+            , complete = function (e) {
+                $("#dtContentSMS_History").show();
+                $("#div_sms_history_waiting").hide();
+            }
+        );
+
+
+    }
+    function RenderTable_SMSHistory(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let stringcreated = '';
+                    if (Number(item.CreatedID) == 0) {
+                        stringcreated = '<span class="badge bg-gradient-info">System</span>';
+                    }
+                    else {
+                        let obj = Fun_GetObject_ByID(DataEmployee, item.CreatedID);
+                        stringcreated = '<div class="d-inline">'
+                            + '<img class="avatar avatar-xs me-2" src="' + obj.Avatar + '" alt="label-image" />'
+                            + '<span>' + obj.Name + '</span>'
+                            + '</div>';
+                    }
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td>'
+                        + stringcreated
+                        + '</td>'
+                        + '<td>' + ConvertDateTimeUTC_DMY_Remove1900(item.Created) + '</td>'
+                        + '<td>' + item.MessageContent + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+</script>

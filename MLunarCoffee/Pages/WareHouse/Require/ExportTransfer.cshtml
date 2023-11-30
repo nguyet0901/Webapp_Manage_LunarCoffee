@@ -1,0 +1,753 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Require.ExportTransferModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row m-0 viewcontent border-dashed border-1 border-secondary border-radius-md p-0">
+    <div class="col-12">
+        <div id="resubwait" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="resubmaster" class="mb-3">
+            <div class="card-header p-3 pb-0">
+                <div class="text-md font-weight-bold text-center position-relative">
+                    <span id="reware_header" class="text-md text-primary text-uppercase">@Local["Phiếu xác nhận xuất kho"]</span>
+                    <div>
+                        <span id="reware_ordercode" class="text-xs ps-2 text-primary "></span>
+                    </div>
+                    <i class="position-absolute text-gradient text-primary fas fa-redo end-1 top-0" onclick="event.preventDefault(); return ResupReload();"></i>
+                </div>
+                <div class="row px-1">
+                    <div class="field col-12 col-md-12 col-xl-8 px-1 mt-2">
+                        <div class="text-md text-dark mt-3">
+                            <span class="text-sm text-secondary">@Local["Kho nhận"]</span>
+                            <span id="reware_warename" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark d-none">
+                            <span class="text-sm text-secondary">@Local["Chứng từ nhập kho"]</span>
+                            <span id="reware_codereceipt" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark d-none">
+                            <span class="text-sm text-secondary">@Local["Chứng từ kho xuất"]</span>
+                            <span id="reware_codeexport" class="text-sm text-dark font-weight-bold ms-2"></span>
+                        </div>
+                        <div class="text-md text-dark">
+                            <span class="text-sm text-secondary">@Local["Người đề xuất"]</span>
+                            <span id="reware_createname" class="text-sm text-dark font-weight-bold ms-2"></span>
+                            <span id="reware_createdate" class="text-sm text-dark ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pt-2 my-3">
+                <div id="exware_blockinfo" class=" row mb-3">
+                    <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2">
+                        <label>@Local["Ngày xuất kho"]</label>
+                        <input id="reware_dateexport" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày xuất kho"]" />
+                    </div>
+                </div>
+                <div id="exware_watingapprove" class="mt-2 mb-2" style="display:none;">
+                    <div class="form-check" id="exware_reall" style="display:none;">
+                        <input id="checkedCompleteall" class="form-check-input pr-2 " type="checkbox">
+                        <label class="mt-1 custom-control-label text-uppercase">@Local["Xuất tất cả"]</label>
+                    </div>
+                    <div id="exware_redone" style="display:none;">
+                        <i class="text-success fas fa-check pe-2" aria-hidden="true"></i>
+                        <label class="mt-1 custom-control-label text-uppercase">@Local["Đã xuất hết"]</label>
+                    </div>
+                </div>
+                <ul class="list-group mt-0" id="resubContent">
+                </ul>
+                <div class="d-flex  mt-3">
+                    <div class="d-flex ms-auto my-auto mt-1">
+                        <div id="reware_approve" class="text-center text-md text-dark" style="min-width: 250px;display:none;">
+                            <span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Duyệt nhập kho"]</span>
+                            <div style="height: 100px;">
+                                <img id="reware_approveimg" class="cursor-pointer border-dashed border-1 border-secondary border-radius-md " style="height: 100px;" src="/default.png" />
+                            </div>
+                            <span id="reware_approvename" class="text-sm text-dark font-weight-bold"></span>
+                            <div id="reware_approvedate" class="text-center text-sm text-dark"> </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action_Save mt-3">
+                    <div class="action_Save-Content">
+                        <div class="mt-1 me-1 text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <button id="btnretran_unimport" style="display:none" form="form3" type="button" class="btn bg-gradient-success mt-2 me-2" onclick="return ReTran_UnImport()">@Local["Hủy nhập kho"]</button>
+                        <button id="btnreware_Cancel" class="btn btn-secondary" form="form3" onclick="event.preventDefault();reware_Cancel()">@Local["Đóng"]</button>
+                        <button id="btnreware_Delete" style="display:none" form="form3" type="button" class="btn bg-gradient-danger mt-2 me-2" onclick="return reware_Delete()">@Local["Xoá"]</button>
+                        <button id="btnreware_Check" style="display:none" form="form3" type="button" class="btn bg-gradient-warning mt-2 me-2" onclick="return reware_CheckQuanProduct()">@Local["Kiểm tra"]</button>
+                        <button id="btnreware_Export" style="display:none" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return reware_Export()">@Local["Xuất kho"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+    let data_supplier;
+    var data_reware = {};
+    let IsPackageNumber = 0;
+    let exware_DetailID = "@Model._Detail";
+    let exware_WareID = 0;
+    let exware_DataSignExport = '';
+    let exware_edit = 0;
+    let exware_DataUnit;
+
+    //#region // Load
+    $(document).ready(function () {
+        exware_GetData();
+    });
+    function ResupReload() {
+        exware_GetData();
+    }
+
+    function exware_GetData() {
+        data_reware = {};
+        IsPackageNumber = 0;
+        $("#resubContent").html('');
+        $("#reware_approve").hide();
+        $("#textShowMessage").html();
+        $("#btnreware_Export").show();
+        $("#exware_reall").hide();
+        $("#exware_redone").hide();
+        $("#exware_watingapprove").hide();
+        exware_DataSignExport = '';
+        AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=GetInfo"
+            , data = {
+                'DetailID': exware_DetailID
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result).Table;
+                    let datadetail = JSON.parse(result).Table1;
+                    exware_DataUnit = JSON.parse(result).Table2;
+                    if (data != undefined && data.length == 1) {
+                        let item = data[0];
+                        let lastestLock = new Date(item.LastLock) < new Date() ? new Date(item.LastLock) : new Date();
+                        IsPackageNumber = item.IsPackageNumber;
+                        exware_WareID = item.WareID
+                        $("#reware_ordercode").html(item.Code);
+                        $("#reware_warename").html(item.WareRequire);
+                        $("#reware_createname").html(item.CreatedName);
+                        $("#reware_createdate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.CreatedDate));
+                        if(item.CodeExport != undefined && item.CodeExport != ''){
+                            $("#reware_codeexport").html(item.CodeExport).parent().removeClass("d-none")
+                        }
+                        if (item.CodeReceipt != undefined && item.CodeReceipt != '') {
+                            $("#reware_codereceipt").html(item.CodeReceipt).parent().removeClass("d-none")
+                        }
+                        if (item.IsExport == 1) {
+                            $("#exware_watingapprove").hide();
+                            $("#reware_approve").show();
+                            $("#btnreware_Check").hide();
+                            $("#btnreware_Export").hide();
+                            if (item.ExportSignName != "") {
+                                $("#reware_approvedate").html(ConvertDateTimeUTC_Time_DOWFULLDAY(item.ExportSignDate));
+                                $("#reware_approvename").html(item.ExportSignName);
+                                $("#reware_approveimg").attr("src", item.ExportSignData);
+                                exware_DataSignExport = item.ExportSignData;
+                            }
+                            else {
+                                $("#reware_approveimg").attr("src", "data:image/png;base64," + preload_circleAvatar);
+                            }
+                        }
+                        else {
+                            $("#exware_watingapprove").show();
+                            $("#reware_approve").hide();
+                            $("#btnreware_Check").show();
+                            $("#btnreware_Export").show();
+                        }
+                        if (RequireWareID != undefined && exware_WareID != RequireWareID) {
+                            $("#btnreware_Export").hide();
+                            $("#btnreware_Check").hide();
+                            exware_edit = 1;
+                        }
+                        else{
+                            $("#reware_header").html("@Local["Phiếu yêu cầu nhập kho"]")
+                            if(item.IsExport == 1)
+                                $("#btnreware_Delete").show()
+                        }
+
+                        $("#reware_dateexport").flatpickr({
+                            dateFormat: 'd-m-Y H:i:s',
+                            enableTime: true,
+                            time_24hr: true,
+                            maxDate: new Date(),
+                            minDate: lastestLock,
+                            defaultDate: new Date(),
+                        });
+                        if (IsPackageNumber == 1) {
+                            $("#resubpackage").show();
+                        }
+                        else {
+                            $("#resubpackage").hide();
+                        }
+
+                    }
+
+                    let isExportDone = 1;
+                    if (datadetail != undefined && datadetail.length != 0) {
+                        for (let i = 0; i < datadetail.length; i++) {
+                            let element = {};
+                            if (datadetail[i].IsExport == 0) isExportDone = 0;
+                            element.current = datadetail[i].ID;
+                            element.productID = datadetail[i].ProductID;
+                            element.productName = datadetail[i].ProductName;
+                            element.supName = datadetail[i].SupName;
+                            element.unitName = datadetail[i].UnitName;
+                            element.unitStandName = datadetail[i].UnitStandName;
+                            element.unitid = datadetail[i].UnitID;
+                            element.unitstandid = datadetail[i].UnitStandID;
+                            element.number = datadetail[i].Number;
+                            element.price = datadetail[i].Price;
+                            element.amount = datadetail[i].Amount;
+                            element.supID = datadetail[i].SupID;
+                            element.expiredDay = datadetail[i].ExpiredDay;
+                            element.package = datadetail[i].PackageNumber;
+                            element.isexport = datadetail[i].IsExport;
+                            element.export = datadetail[i].Export;
+                            element.costprice = datadetail[i].CostPrice;
+                            data_reware[datadetail[i].ID] = element;
+                            reware_RenderRow(datadetail[i].ID, element, 'resubContent');
+                        }
+                        reware_EventRow();
+                    }
+                    if (isExportDone == 1) {
+                        $("#btnreware_Check").hide();
+                        $("#btnreware_Export").hide();
+                        $("#exware_redone").show();
+                        $("#exware_blockinfo").hide();
+                    }
+                    else {
+                        $("#exware_reall").show();
+                    }
+                    reware_Sign();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#resubmaster").hide();
+                $("#resubwait").show();
+            }
+            , complete = function (e) {
+                $("#resubwait").hide();
+                $("#resubmaster").show();
+            }
+        );
+    }
+    //#endregion
+
+    //#region // Render
+    function reware_RenderRow(key, value, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let ex = '<span><span class="text-dark text-sm fw-bold text-uppercase">' + value.productName + '</span>'
+                + '<span class="text-sm text-secondary ps-2 mt-1 font-italic">'
+                + formatNumber(Math.round(Number(value.number) * 100) / 100) + " " + value.unitName
+                + '</span>'
+                '</span></span>';
+            let tr =
+                '<div class="text-dark row w-100 px-2">'
+                + '<div class="col-12 p-1">'
+                + AddCell_CheckComplete(key, value.isexport)
+                + ex
+                + '<div id="receiptdiv_' + key + '" style="display:none;">'
+
+
+                + '<div class="row px-1 py-2">'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + '<label>@Local["Đơn giá"]</label>'
+                + AddCell_Price(key)
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + '<label>@Local["Thành tiền"]</label>'
+                + AddCell_Amount(key)
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + '<label>@Local["Số lượng"]</label>'
+                + AddCell_Number(key, value.unitName, value.productID)
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + '<label>@Local["Còn lại"]</label>'
+                + AddCell_NumberLeft(key, value.unitStandName, value.productID)
+                + '</div>'
+
+
+                + '</div>'
+
+                + '<div class="row px-1  pb-2">'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + ((IsPackageNumber == 1) ? AddCell_Package(key) : '')
+                + '</div>'
+                + '<div class="field col-12 col-sm-12 col-md-6 col-xl-6 p-1">'
+                + ((IsPackageNumber == 1) ? AddCell_Dateexpired(key) : '')
+                + '</div>'
+                + '</div>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+            tr = '<li  class="mb-2 d-flex mt-2">' + tr + '</li>'
+                + '<hr class="horizontal dark my-0">';
+            myNode.innerHTML += tr;
+        }
+        reware_FillData(key, value);
+
+    }
+
+    function AddCell_CheckComplete(randomNumber, value) {
+        if (value == 1) return '<i class="text-success fas fa-check pe-3"></i>';
+        let result = '<div class="d-inline-block form-check">'
+            + '<input class="form-check-input pr-2 checkedComplete" id="checkedComplete_' + randomNumber + '" type="checkbox" value="' + randomNumber + '">'
+            + '<label class="custom-control-label"></label>'
+            + '</div>'
+            ;
+        return result;
+    }
+
+    function AddCell_Package(randomNumber) {
+        let result = ' <div class="input-group">'
+            + '<span class="input-group-text">@Local["Số lô"]</span>'
+            + '<input class=" packageNumber form-control" placeholder="eg .@Local["Số lô"]" '
+            + ' id="packageNumber_' + randomNumber + '"  type="text" />'
+            + '</div>'
+
+        return result;
+    }
+
+    function AddCell_Dateexpired(randomNumber) {
+        let result = ' <div class="input-group">'
+            + '<span class="input-group-text">@Local["Ngày hết hạn"]</span>'
+            + '<input class="flatpickr dateexpired form-control" placeholder="eg .@Local["Ngày hết hạn"]" '
+            + ' id="dateexpired_' + randomNumber + '"  type="text" />'
+            + '</div>'
+        return result;
+    }
+
+    function AddCell_Number(randomNumber, unitname, productid) {
+        let result = ' <div class="input-group">'
+            + '<input class="numberexport form-control" data-productid="' + productid + '" value="0" id="numberexport_' + randomNumber + '" />'
+            + '<span class="input-group-text">' + unitname + '</span>'
+            + '</div>'
+
+        return result;
+    }
+
+    function AddCell_NumberLeft(randomNumber, unitname, productid) {
+        let result = ' <div class="input-group">'
+            + '<input class="numberleft form-control disabled" disabled="disabled" data-productid="' + productid + '" value="0" id="numberleft_' + randomNumber + '" />'
+            + '<span class="input-group-text">' + unitname + '</span>'
+            + '</div>'
+        return result;
+    }
+
+    function AddCell_Price(randomNumber) {
+        let result = ' <div class="input-group">'
+            + '<input type="text" class="priceReceive form-control" value="0" id="priceReceive_' + randomNumber + '" />'
+            + '<span class="input-group-text"><i class="fas fa-comment-dollar"></i></span>'
+            + '</div>'
+        return result;
+    }
+
+    function AddCell_Amount(randomNumber) {
+        let result = ' <div class="input-group">'
+            + '<input type="text" class="amountReceive form-control disabled" disabled="disabled" value="0" id="amountReceive_' + randomNumber + '" />'
+            + '<span class="input-group-text"><i class="fas fa-comment-dollar"></i></span>'
+            + '</div>'
+        return result;
+    }
+
+    function reware_FillData(key, value) {
+        $('#packageNumber_' + key).attr('value', value.package.replace("-" + value.productID, ''));
+        $('#numberexport_' + key).attr('value', value.number);
+        let factorUnit = reware_Factor(value);
+        let price = Math.floor(value.costprice * factorUnit);
+        let amount = Math.floor(price * value.number)
+        data_reware[key].price = price;
+        data_reware[key].amount = amount;
+        $('#priceReceive_' + key).attr('value', price);
+        $('#amountReceive_' + key).attr('value', amount);
+    }
+
+    function reware_EventRow() {
+        $('.priceReceive, .amountReceive').divide();
+        $("#resubContent .dateexpired").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            time_24hr: true
+        });
+        $("#resubContent .dateexpired").unbind('change').change(function () {
+            let idcom = this.id
+            let id = idcom.replace("dateexpired_", "")
+            let expiredDay = $('#' + idcom).val() ? $('#' + idcom).val() : '01-01-1900'
+            data_reware[id].expiredDay = expiredDay;
+        });
+        $("#resubContent .priceReceive").unbind('change').change(function () {
+            let id = this.id.replace("priceReceive_", "");
+            data_reware[id].price = Number($(this).val());
+            data_reware[id].amount = Math.floor(data_reware[id].number * data_reware[id].price);
+            $("#amountReceive_" + id).val(data_reware[id].amount);
+        });
+        $("#resubContent .numberexport").unbind('change').change(function () {
+            let id = this.id.replace("numberexport_", "")
+            data_reware[id].number = Number($(this).val());
+            data_reware[id].amount = Math.floor(data_reware[id].number * data_reware[id].price);
+            $("#amountReceive_" + id).val(data_reware[id].amount);
+        });
+        $("#resubContent .packageNumber").unbind('change').change(function () {
+            let id = this.id.replace("packageNumber_", "")
+            data_reware[id].package = this.value + "-" + data_reware[id].productID;
+            reware_GetExpiredDate(id, data_reware[id].productID, data_reware[id].package)
+        });
+        $("#checkedCompleteall").unbind().change(function () {
+            if ($("#checkedCompleteall")[0].checked == true) {
+                $(".checkedComplete").prop('checked', true);
+                for ([key, value] of Object.entries(data_reware)) {
+                    if (value.isexport == 0) {
+                        $("#receiptdiv_" + key).show();
+                        value.export = 1;
+                    }
+                }
+            }
+            else {
+                $(".checkedComplete").prop('checked', false);
+                for ([key, value] of Object.entries(data_reware)) {
+                    if (value.isexport == 0) {
+                        $("#receiptdiv_" + key).hide();
+                        value.export = 0;
+                    }
+                }
+            }
+        });
+        $("#resubContent .checkedComplete").unbind().change(function () {
+            let id = this.id.replace("checkedComplete_", "")
+            if ($("#checkedComplete_" + id)[0].checked == true) {
+                data_reware[id].export = 1;
+                $("#receiptdiv_" + id).show();
+
+            }
+            else {
+                data_reware[id].export = 0;
+                $("#receiptdiv_" + id).hide();
+            }
+        });
+    }
+    function reware_GetExpiredDate(id, productid, packagenumber) {
+        AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=GetExpiredDate"
+            , data = {
+                'productid': productid
+                , 'packagenumber': packagenumber
+
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                let isexp = 0;
+                if (result != "0") {
+                    let dte = JSON.parse(result);
+                    if (dte != undefined && dte.length != 0) {
+                        let dexp = dte[0].Expired;
+                        if (!dexp.includes('1900')) {
+                            isexp = 1;
+                            $("#dateexpired_" + id).flatpickr({
+                                dateFormat: 'd-m-Y',
+                                enableTime: false,
+                                defaultDate: new Date(dexp),
+                            });
+                            $("#dateexpired_" + id).prop('disabled', true);
+                        }
+                    }
+                }
+                if (isexp == 0) {
+                    $("#dateexpired_" + id).flatpickr({
+                        dateFormat: 'd-m-Y',
+                        enableTime: false,
+                        defaultDate: new Date(),
+                    });
+                    $("#dateexpired_" + id).prop('disabled', false);
+                }
+
+                data_reware[id].expiredDay = $('#dateexpired_' + id).val();
+
+            }
+        );
+    }
+    //#endregion
+
+    //#region // Main Event
+
+    function reware_Check() {
+        $('#textShowMessage').html('')
+        let nonvalid = 0;
+
+        for ([key, value] of Object.entries(data_reware)) {
+
+            if ((!$.isNumeric(value.number) || Number(value.number) <= 0) && value.export == 1) {
+                $('#numberexport_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#numberexport_' + key).removeClass('error');
+            if ((isNaN(value.price) || Number(value.price) < 0) && value.export == 1) {
+                $('#priceReceive_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else $('#priceReceive_' + key).removeClass('error');
+
+            if (IsPackageNumber == 1 && value.export == 1 && (value.expiredDay == "" || value.expiredDay.includes('1900'))) {
+                $('#dateexpired_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#dateexpired_' + key).removeClass('error');
+            }
+
+            if (IsPackageNumber == 1 && value.export == 1 && (value.package == "" || value.package == "-" + value.productID)) {
+                $('#packageNumber_' + key).addClass('error');
+                nonvalid = 1;
+            }
+            else {
+                $('#packageNumber_' + key).removeClass('error');
+            }
+        }
+        if (nonvalid == 1) $('#textShowMessage').html("@Local["Kiểm tra dữ liệu"]");
+    }
+
+    async function reware_Export() {
+        let SumAmount = 0;
+        let arrayobj = Object.values(data_reware);
+        let datafilter = arrayobj.filter(function (item) {
+            if (item["export"] == 1) return true;
+            return false;
+        });
+        if (datafilter != undefined && datafilter.length > 0) {
+            $("#textShowMessage").html("");
+            reware_Check();
+            $.each(datafilter, function () {
+                SumAmount += this.amount;
+            })
+        }
+
+        else $("#textShowMessage").html("@Local["Chọn hàng xuất"]");
+        let checkQuantity = await reware_CheckQuanProduct();
+        if ($("#textShowMessage").html() == "" && checkQuantity == 1) {
+            const promise = notiConfirm('@Local["Xác nhận xuất kho"]');
+            promise.then(function () {
+                let DateExecute = $('#reware_dateexport').val() ? $('#reware_dateexport').val() : "";
+                AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=ExcuteData"
+                    , data = {
+                        'data': JSON.stringify(datafilter)
+                        , 'DateExecute': DateExecute
+                        , 'IsPackageNumber': IsPackageNumber
+                        , 'CurrentID': exware_DetailID
+                        , 'IntAmount': SumAmount
+                    }
+                    , async = true
+                    , error = null
+                    , success = function (result) {
+                        if (result != "0") {
+                            notiSuccessMess("@Local["Chứng từ nhập kho"] " + result);
+                            RequireList_Load(ismore = 0, curid = exware_DetailID, 2);
+                            exware_GetData();
+                        }
+                        else {
+                            notiWarning('@Local["Ngày nhập hàng không hợp lệ hoặc đơn hàng đã được nhập"]');
+                        }
+                    }
+                );
+            }, function () {
+
+            });
+        }
+    }
+
+    //#endregion
+
+    //#region // SIGN
+
+    function reware_Sign() {
+        $("#reware_approveimg").unbind("click").bind('click', function () {
+            if (exware_edit == 1) {
+                reware_SignExe(exware_DetailID, exware_DataSignExport);
+            }
+        });
+    }
+
+    async function reware_SignExe(id, signdata) {
+        await Signature_Action(signdata, 1);
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=UpdateSign"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        RequireList_Load(ismore = 0, curid = id, 2);
+                        exware_GetData();
+                        syslog_whr('s', result);
+                    }
+                    else {
+                        notiError("@Local["Phiếu chưa được nhập kho"]");
+                    }
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // DELETE
+
+    function reware_Delete(){
+        let title = "@Local["Chứng từ kho xuất"]" + " " + $("#reware_codeexport").text() + " @Local["Sẽ bị xoá"]";
+        title += $("#reware_codereceipt").text() != "" ? "<br/>" + "@Local["Chứng từ nhập kho"] " + $("#reware_codereceipt").text() + " @Local["Sẽ bị xoá"]" : "";
+        const promise = notiConfirm(title);
+        promise.then(function () {
+            reware_DeleteExecute(exware_DetailID)
+        });
+    }
+
+    function reware_DeleteExecute(id){
+        AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=DeleteItem"
+            , data = {
+                'id': id
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    if ($('#reqdetail_' + id + '-2').length) $('#reqdetail_' + id + '-2').remove();
+                    syslog_whr('d', result);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region // Check Product Quantity
+
+    async function reware_CheckQuanProduct() {
+        return new Promise((resolve) => {
+            let dateExecute = $("#reware_dateexport").val() ? $("#reware_dateexport").val() : "";
+            let dataProductCheck = [];
+            if (data_reware && Object.keys(data_reware).length != 0) {
+                for ([key, value] of Object.entries(data_reware)) {
+                    if(value.export == 1){
+                        let e = {};
+                        e.package = value.package;
+                        e.productID = value.productID;
+                        e.number = Number(value.number * reware_Factor(value));
+                        dataProductCheck.push(e);
+                    }
+                }
+            }
+            AjaxLoad(url = "/WareHouse/Require/ExportTransfer/?handler=CheckQuantityRealTime"
+                , data = {
+                    'data': JSON.stringify(dataProductCheck),
+                    'ware': Number(exware_WareID),
+                    'DateExecute': dateExecute
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let dataResult = JSON.parse(result);
+                        let dataNext = dataResult.Table;
+                        let dataProductExist = dataResult.Table1;
+                        if (dataNext && dataNext.length != 0 && dataNext[0].RESULT != 1) {
+                            notiWarning('@Local["Ngày xử lý phải lớn hơn ngày chốt kho gần nhất"].');
+                        }
+                        else {
+                            if (reware_StockQuantityError(dataProductExist) == 1) {
+                                resolve(1);
+                            }
+                            else {
+                                notiWarning('@Local["Số lượng xuất kho không lớn hơn số lượng tồn kho"].');
+                                resolve(0);
+                            }
+                        }
+                    }
+                    else {
+                        notiError_SW();
+                        resolve(0);
+                    }
+                }
+            );
+        })
+    }
+
+    function reware_Factor(value) {
+        try {
+            let numdefault = 1;
+            if (value.unitid == value.unitstandid) return numdefault;
+            let proFilter = exware_DataUnit.filter((work) => {
+                return (work["ProductID"] == value.productID && work["UnitChange"] == value.unitid);
+            })
+            if(proFilter && proFilter.length != 0){
+                return proFilter[0].Number;
+            }
+            return numdefault;
+        }
+        catch (ex) {
+            return 1;
+        }
+    }
+
+    function reware_StockQuantityError(data) {
+        let isNext = 1;
+        if (data && data.length != 0) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let _id = 'numberexport[data-productid="' + item.ProductID + '"]';
+                let _idLeft = 'numberleft[data-productid="' + item.ProductID + '"]';
+                $("." + _idLeft).val(formatNumber(item.FinalNum));
+                let _finalNum = Number(item.FinalNum) ? Number(item.FinalNum) : 0;
+                if (_finalNum < 0) {
+                    isNext = 0;
+                    $("." + _id).addClass("error")
+                }
+                else {
+                    $("." + _id).removeClass("error")
+                }
+            }
+        }
+        return isNext;
+    }
+
+    function reware_Cancel() {
+        $('#re_view').empty()
+    }
+
+    //#endregion
+
+</script>
+
+<style>
+    #resubContent li input[type=text] {
+        display: block;
+    }
+
+    #resubContent .error {
+        background: #fff6f6 !important;
+        border-color: #e0b4b4 !important;
+    }
+
+    #resubContent .buttonDeleteClass:hover {
+        opacity: 1 !important;
+    }
+</style>

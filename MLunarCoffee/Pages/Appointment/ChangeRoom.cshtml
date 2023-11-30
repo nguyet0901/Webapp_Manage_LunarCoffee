@@ -1,0 +1,273 @@
+﻿@page
+@model MLunarCoffee.Pages.Appointment.ChangeRoomModel
+@{
+    Layout = null;
+}
+
+<div class="row position-relative">
+    <div class="col-12">
+        <div class="card">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Chọn phòng"]</h6>
+                    <p class="text-dark mb-0 pe-2">@Local["Cập nhật phòng hẹn"]</p>
+                </div>
+                <div class="right">
+                </div>
+            </div>
+            <div class="card-body pt-2 position-relative">
+                <div id="cr_waiting" class="position-absolute top-0 start-50 translate-middle-x z-index-3 waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">@Local["Đang tải"]</span>
+                    </div>
+                </div>
+                <div class="ps-0 ms-n3">
+                    <ul class="bg-transparent nav nav-horizontal nav-pills pb-1 px-2 pt-0" role="tablist" id="csr_typeroom">
+                    </ul>
+                </div>
+                <div class="row mx-0">
+                    <div class="field col-12 px-1 mt-2 flex-grow-1" id="Manufacture_Room">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="crtextmessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="CloseModal()">@Local["Đóng"]</button>
+                        <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="CRExecuted()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    //#region // Declare, Initialize Data
+    var SDataType = [{ID: 1, Name: "@Local["Thu ngân"]"}, {ID: 2, Name: "@Local["Điều trị"]"}
+        , {ID: 3, Name: "@Local["Khám"] - @Local["Tư vấn"]"}, {ID: 4, Name: "@Local["X-quang"] - @Local["Lab"]"}];
+    let ser_AppCurrent = (@Model._AppDetailID);
+    var SDataRoom = [];
+    var SDataLevel = [];
+
+    $(document).ready(function () {
+        ChangeRoom_Ini();
+        CR_TypeRender(SDataType, "csr_typeroom");
+    });
+    function ChangeRoom_Ini () {
+        AjaxLoad(url = "/Appointment/ChangeRoom/?handler=InitializeData"
+            , data = {'CurrentID': ser_AppCurrent}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                let datas = JSON.parse(result);
+                SDataRoom = datas.Table1;
+                SDataLevel = datas.Table;
+                if (SDataLevel.length != 0 || SDataRoom.length != 0) {
+                    CR_FloorRender(SDataLevel, SDataRoom, "Manufacture_Room");
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $("#cr_waiting").show();
+            }
+            , complete = function (e) {
+                $("#cr_waiting").hide();
+            }
+        );
+    }
+    function CR_FloorRender (Level, Room, id) {
+        var myNode = document.getElementById(id);
+        let stringContent = '';
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            for (let i = 0; i < Level.length; i++) {
+                let item_level = Level[i];
+                let item_room = Room.filter(word => word["LevelID"] == item_level.ID);
+                if (item_room && item_room.length == 0) continue;
+                let tr = `<div class="row">
+                        <div class="col-md-12 mx-auto">
+                            <div class="accordion">
+                                <div class="accordion-item mb-3">
+                                    <h5 class="accordion-header" id="cthlevel_${item_level.ID}">
+                                        <button class="accordion-button p-2 collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#ctlevel_${item_level.ID}" aria-expanded="true" aria-controls="ctlevel_${item_level.ID}">
+                                             <i class="collapse-close fa fa-plus text-xs  position-absolute start-0 me-3" aria-hidden="true"></i>
+                                            <i class="collapse-open fa fa-minus text-xs  position-absolute start-0 me-3" aria-hidden="true"></i>
+                                            <span class="text-sm text-primary fw-bold ps-2">${item_level.Name}</span>
+                                        </button>
+                                    </h5>
+                                    <div id="ctlevel_${item_level.ID}" class="accordion-collapse collapsesticky collapse show" aria-labelledby="cthlevel_${item_level.ID}">
+                                        <div class="accordion-body p-0 text-sm">
+                                              <div class="row">
+                                                ${CR_RoomRender(item_room)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>`;
+                stringContent = stringContent + tr;
+            }
+        }
+        myNode.innerHTML = stringContent;
+        CR_Event();
+    }
+    function CR_RoomRender (item_room) {
+        let res = '';
+        for (let i = 0; i < item_room.length; i++) {
+            let item = item_room[i];
+            let chair = ``;
+            if (Number(item.ChairID) != 0) {
+                chair = `<div class="text-nowrap fst-italic text-xs">${item.NameChair}</div>`;
+            }
+ 
+            let tr =
+                `<div class="roomDetail cursor-pointer text-dark d-inline-block position-relative  m-1 p-0"
+                        data-IsCashier="${item.IsCashier}" data-IsTreatment="${item.IsTreatment}"
+                        data-IsXquang="${item.IsXquang}" data-IsExamination="${item.IsExamination}"
+                        data-id="${item.ID}" data-chairid="${item.ChairID}">
+
+                    <div class="roomContent p-2  border-1 border border-light border-radius-md bg-gray-200 h-100">
+                        <div class="text-sm text-center mb-0 overflow-hidden">
+                              <div class="text-nowrap ">${item.NameRoom}</div>
+                              ${chair}
+                           </div>
+                    </div>
+                </div>`  ;
+            res = res + tr;
+        }
+        return res;
+    }
+ 
+    function CR_Event () {
+        $('#Manufacture_Room .roomDetail').on('click', function () {
+            $('#Manufacture_Room .roomDetail').removeClass('active');
+            $(this).addClass('active');
+        });
+
+    }
+    //#endregion
+    //#region // Room type
+    function CR_TypeRender (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                stringContent =
+                    '<li class="nav-item" role="presentation">'
+                    + '<a class="roomtype nav-link cursor-pointer py-1" data-bs-toggle="pill" data-id="' + 0 + '"  role="tab"><i class=" text-gradient text-primary fas fa-filter"></i></a>'
+                    + '</li>';
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    stringContent = stringContent
+                        + '<li class="nav-item" role="presentation">'
+                        + '<a class="roomtype nav-link cursor-pointer nav-item-text py-1" data-bs-toggle="pill" data-id="' + item.ID + '"  role="tab">' + item.Name + '</a>'
+                        + '</li>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        CR_TypeEvent()
+    }
+    function CR_TypeEvent () {
+        $('#csr_typeroom .roomtype').unbind().click(function () {
+            let _ty = Number($(this).attr('data-id'));
+            switch (_ty) {
+                case 0: {
+                    $('#Manufacture_Room .roomDetail').removeClass('d-none');
+                }
+                    break;
+                case 1: {
+                    $('#Manufacture_Room .roomDetail').addClass('d-none');
+                    $('#Manufacture_Room .roomDetail[data-iscashier=1]').removeClass('d-none');
+
+                }
+                    break;
+                case 2: {
+                    $('#Manufacture_Room .roomDetail').addClass('d-none');
+                    $('#Manufacture_Room .roomDetail[data-istreatment=1]').removeClass('d-none');
+                }
+                    break;
+                case 3: {
+                    $('#Manufacture_Room .roomDetail').addClass('d-none');
+                    $('#Manufacture_Room .roomDetail[data-isexamination=1]').removeClass('d-none');
+
+                }
+                    break;
+                case 4: {
+                    $('#Manufacture_Room .roomDetail').addClass('d-none');
+                    $('#Manufacture_Room .roomDetail[data-isxquang=1]').removeClass('d-none');
+                }
+                    break;
+            }
+        });
+    }
+
+     //#endregion
+
+    //#region // Excute Data
+    function CRExecuted () {
+        let RoomID = ($("#Manufacture_Room .roomDetail.active")) ? ($("#Manufacture_Room .roomDetail.active").attr("data-id")) : 0;
+        let Chairid = ($("#Manufacture_Room .roomDetail.active")) ? ($("#Manufacture_Room .roomDetail.active").attr("data-chairid")) : 0;
+
+        if (RoomID != undefined && RoomID != 0) {
+            AjaxLoad(url = "/Appointment/ChangeRoom/?handler=ExcuteData"
+                , data = {'RoomID': RoomID, 'Chairid': Chairid, 'CurrentID': ser_AppCurrent}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+
+                        if (typeof LoadAppointmentListAjax !== 'undefined' && $.isFunction(LoadAppointmentListAjax)) {
+                            LoadAppointmentListAjax(ser_AppCurrent);
+                        }
+                        if (typeof LoadAppointmentCashierListAjax !== 'undefined' && $.isFunction(LoadAppointmentCashierListAjax)) {
+                            LoadAppointmentCashierListAjax(ser_AppCurrent);
+                        }
+                        if (typeof LoadAppointmentDoctorListAjax !== 'undefined' && $.isFunction(LoadAppointmentDoctorListAjax)) {
+                            LoadAppointmentDoctorListAjax(ser_AppCurrent);
+                        }
+                        $('#DetailModal').modal('hide');
+                        $('#DetailModal_Content').html('');
+                        $("#crtextmessage").html("");
+                    }
+                    else {
+                        notiError_SW();
+                    }
+                }
+                , sender = null
+            );
+
+        } else {
+            $("#crtextmessage").html("@Local["Chọn phòng"]");
+        }
+        return false;
+    }
+    //#endregion
+
+
+</script>
+<style>
+    #Manufacture_Room .roomDetail.active .roomContent {
+        background-color: rgb(var(--bs-primary) ) !important;
+        color: white;
+    }
+    #Manufacture_Room .roomDetail {
+        max-width: 120px;
+        width: auto;
+        min-width: 100px;
+    }
+
+</style>
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require('/js/main.js')</script>
+<script>js_require_notasync('/js/customjs/custom-validation.js')</script>
+
+

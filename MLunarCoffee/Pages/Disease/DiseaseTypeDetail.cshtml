@@ -1,0 +1,158 @@
+﻿@page
+@model MLunarCoffee.Pages.Disease.DiseaseTypeDetailModel
+@{
+    Layout = null;
+}
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Loại bệnh"]</h6>
+                                <p class="text-sm mb-0">@Local["Cấu hình loại bệnh"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2 ">
+                    <div class="d-md-flex px-2 align-items-start">
+                        <div class="pe-2 text-sm-center">
+                            <div>
+                                <span class="text-xs text-danger mb-0 text-nowrap">50 x 50 px</span>
+                                <hr class="horizontal dark mt-0 mb-2">
+                            </div>
+                            <div class="avatar avatar-xxl position-relative d-inline-block" >
+                                <img id="Distype_Image" class="border-radius-md border border-1 border-gray" alt="team-2" src="/default.png" style="width:50px;height:50px;" onerror="Master_OnLoad_Error_Image(this)">
+                                <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="Distype_ImageLoad" accept="image/*" type="file" name="files[]">
+                                <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0 " id="Material_btnUpload">
+                                    <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2 p-0">
+                                        <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ps-md-4 row flex-grow-1">
+                            <div class="row px-1 ps-0 ps-lg-3 form3" id="DiseaseTypeDetail">
+                                <div class="field col-12 px-1 mt-2">
+                                    <label>@Local["Tên"]</label>
+                                    <input class="form-control" id="distypename" name="name" placeholder="eg .@Local["Tên"]" />
+                                </div>
+                                <div class="field col-12 px-1 mt-2">
+                                    <label>@Local["Nội dung"]</label>
+                                    <input class="form-control" id="distypenote" name="note" placeholder="eg .@Local["Nội dung"]" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="DiseaseTypeDetail" onclick="CloseModal()">@Local["Đóng"]</button>
+                        <button form="DiseaseTypeDetail" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="DiseaseType_Excute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var Distype_CurrentImage = '';
+        var Distypeurl = "/Api/Upload/Upload?Type=Disease";
+        var DisImage_Option = {
+            size: 102400,
+            width: 50,
+            height: 50,
+            format: ['svg', 'png', 'jpeg', 'jpg']
+        }
+
+        var DistypeID ='@Model.DistypeID';
+ 
+     
+        $(document).ready(function () {
+            DisImage_UploadEvent();
+            if (DistypeID!="0") DiseaseType_LoadData();
+        })
+        function DisImage_UploadEvent () {
+            UploadImage({
+                inputFile: 'Distype_ImageLoad'
+                , btnInput: 'Material_btnUpload'
+                , avatar: 'Distype_Image'
+                , condition: DisImage_Option
+                , success: (data) => {
+
+                }
+                , error: (err) => {
+
+                }
+            })
+        }
+        function DiseaseType_LoadData() {
+            AjaxLoad(url="/Disease/DiseaseTypeDetail/?handler=Loadata"
+                , data={'id': DistypeID}
+                , async=true
+                , error=function () {notiError_SW()}
+                , success=function (result) {
+                    if (result!="0") {
+                        let data = JSON.parse(result);
+                        if (data != undefined && data.length==1) {
+                            $('#distypename').val(data[0].Name);
+                            $('#distypenote').val(data[0].Note);
+                            if (data[0].Image != '') {
+                                $("#Distype_Image").attr("src", Dissys_Url + data[0].Image);
+                                Distype_CurrentImage = data[0].Image;
+                            }
+      
+                        }
+                    }
+                }
+            );
+        }
+
+        async function DiseaseType_Excute () {
+            let Image = $("#Distype_ImageLoad")[0].files.length != 0 ? await AjaxUpload_Image(Distypeurl, 'Distype_ImageLoad') : Distype_CurrentImage;
+            $('#textShowMessage').html('');
+
+            $('#DiseaseTypeDetail').form('validate form');
+            if ($('#DiseaseTypeDetail').form('is valid')) {
+                AjaxLoad(url="/Disease/DiseaseTypeDetail/?handler=ExcuteData"
+                    , data={
+                        'Name': $('#distypename').val(),
+                        'Note': $('#distypenote').val(),
+                        'Image': Image,
+                        'CurrentID': DistypeID
+                    }
+                    , async=true
+                    , error=function () {notiError_SW()}
+                    , success=function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            if (typeof DiseaseType_Initialize !== 'undefined' && $.isFunction(DiseaseType_Initialize)) {
+                                DiseaseType_Initialize();
+                                CloseModal();
+                            }
+                        }
+                        else $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    }
+                );
+            }
+            return false;
+        }
+    </script>
+
+    <script>js_require('/js/main.js');</script>
+    <script>js_require('/js/comon/initialize_setting.js');</script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+</body>
+</html>
+

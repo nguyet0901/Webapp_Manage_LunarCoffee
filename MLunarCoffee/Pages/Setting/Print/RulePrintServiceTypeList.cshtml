@@ -1,0 +1,228 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Print.RulePrintServiceTypeListModel
+@{
+    Layout = null;
+}
+<div class="row m-0">
+    <div class="col-12 px-0"> 
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Yêu cầu in theo loại dịch vụ"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+                <div class="right">
+                    <div class="form-check my-auto">
+                        <input id="TP_AllService" class="form-check-input pr-2" type="checkbox">
+                        <label>@Local["Tất cả loại"]</label>
+                    </div>
+                    <button class="btn bg-gradient-primary btn-sm mt-1" onclick="RuleP_Edit(0)">@Local["Cập nhật"]</button>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 my-3 mobile-responsive" style="max-height: 80vh;overflow: scroll;">
+                    <table class="table vt-table mb-0" id="TP_DivGrid">
+                        <thead>
+                            <tr id="TP_HeaderGrid">
+                            </tr>
+                        </thead>
+                        <tbody id="TP_BodyGrid" class="ALL"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 px-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Loại in"]</h6>
+                    <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                </div>
+            </div>
+            <div class="card-body pt-0 px-2">
+                <div class="m-0 my-3 mobile-responsive">
+                    <table id="TPPrintType_Grid" class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th>@Local["#"]</th>
+                                <th>@Local["Tên"]</th>
+                                <th>@Local["Ghi chú"]</th>
+                                <th>@Local["Giới hạn ngày"]</th>
+                                <th>@Local["Mã"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="TPPrintType_AreaBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+<script>
+
+    //#region //Load && Init
+    let RP_DtHeader = [];
+
+    $(document).ready(function () {
+        RuleP_Load();
+    })
+
+    function RuleP_Load() {
+        AjaxLoad(url = "/Setting/Print/RulePrintServiceTypeList/?handler=Loadata"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '') {
+                    let data = JSON.parse(result);
+                    RP_DtHeader = data["Table"];
+                    RuleP_RenderHeader(RP_DtHeader, "TP_HeaderGrid");
+                    RuleP_RenderBody(data["Table1"], "TP_BodyGrid");
+
+                    RuleP_RenderPrintType(RP_DtHeader, "TPPrintType_AreaBody");
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region //Render
+    async function RuleP_RenderHeader(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            myNode.innerHTML = '';
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = ``;
+                        if (i == 0) {
+                            tr = `<th class="d-none">ID</th>
+                                          <th>#</th>
+                                          <th>@Local["Loại dịch vụ"]</th>
+                                    `;
+                        }
+                        tr += `
+                                    <th>${item.Name}</th>
+                                `
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            resolve();
+        })
+    }
+
+    async function RuleP_RenderBody(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            myNode.innerHTML = '';
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = RuleP_RenderEach(item);
+                        myNode.insertAdjacentHTML('beforeend', tr);
+                    }
+                }
+            }
+            RuleP_Event();
+            resolve();
+        })
+    }
+
+    function RuleP_RenderEach(item) {
+        try {
+            let result = ``;
+            let RulePrint = ``;
+            let TokenRule = ',' + item.StogeRule;
+
+            if (RP_DtHeader && RP_DtHeader.length > 0) {
+                for (let j = 0; j < RP_DtHeader.length; j++) {
+                    let itemJ = RP_DtHeader[j];
+                    RulePrint += (TokenRule != '' && TokenRule.includes(',' + itemJ.Code + ',')) ? `<td class="text-center"><i class="ni ni-check-bold text-primary text-lg fw-bold"></i></td>` : `<td></td>`;
+                }
+            }
+            result = `
+                        <tr class="vt-number ${item.StogeRule != '' ? '' : 'table-active'}" role="row">
+                            <td class="vt-number-order"></td>
+                            <td><a class="text-primary border-bottom border-primary btnEdit" data-id="${item.ID}">${item.CategoryName}</a></td>
+                            ${RulePrint}
+                        </tr>
+                    `;
+
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //Event
+
+    function RuleP_Event() {
+        $("#TP_DivGrid .btnEdit").unbind("click").click(function () {
+            let ID = $(this).attr("data-id") ? Number($(this).attr("data-id")) : 0;
+            RuleP_Edit(ID);
+        })
+        $("#TP_AllService").unbind('click').click(function () {
+            checked = $("#TP_AllService").is(":checked");
+            if (checked) $("#TP_BodyGrid").removeClass("ALL");
+            else $("#TP_BodyGrid").addClass("ALL");
+        });
+    }
+
+    //#endregion
+
+    //#region //Detail
+
+    function RuleP_Edit(ID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Print/RulePrintServiceTypeDetail/?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //#endregion
+
+    //#region //PrintType
+    async function RuleP_RenderPrintType(data, id) {
+        new Promise((resolve) => {
+            var myNode = document.getElementById(id);
+            myNode.innerHTML = '';
+            let tr = '';
+            if (myNode != null) {
+                if (data && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        tr +=
+                            `<tr class="vt-number" role="row">
+                                <td class="d-none">${item.ID}</td>
+                                <td class="vt-number-order"></td>
+                                <td class="text-primary">${item.Name}</td>
+                                <td>${item.Direct != 1 ? item.Guide : ''}</td>
+                                <td>${item.LimitDay != 0 ? item.LimitDay : ''}</td>
+                                <td class="text-center">${item.Code}</td>
+                            </tr>
+
+                            `;
+                    }
+                    myNode.innerHTML = tr;
+                }
+            }
+            resolve();
+        })
+    }
+        //#endregion
+</script>
+<style>
+    #TP_BodyGrid .table-active {
+        display: table-row;
+    }
+
+    #TP_BodyGrid.ALL .table-active {
+        display: none;
+    }
+</style>

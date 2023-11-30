@@ -1,0 +1,226 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Payment.PaymentDetail_QuickNote
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Ghi chú nhanh"] - @Local["Hình thức thanh toán"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết ghi chú thanh toán"] - @Local["Hình thức thanh toán"]</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="PMSQuickNote">
+                        <div class="col-12 d-none" id="PMSQuickNote_MethodArea">
+                            <div class="row">
+                                <div class="field col-12 col-xl-6 px-1 mt-2">
+                                    <label>@Local["Hình thức"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="PMSQuickNote_Method">
+                                        <input type="hidden" name="paymentMethod" onchange="event.preventDefault();return PMSQuickNote_MethodChange();" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">@Local["Hình thức"]</div>
+                                        <div id="ccbPMSQuickNote_Method" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-xl-6 px-1 mt-2">
+                                    <label>@Local["Chi tiết"]</label>
+                                    <div class="ui fluid search selection dropdown form-control disabled" id="PMSQuickNote_MethodType">
+                                        <input type="hidden" name="paymentMethodType" class="input payment" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg.@Local["Chi tiết"]</div>
+                                        <div id="ccbPMSQuickNote_MethodType" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea class="form-control _validation_option_" data-validation="content_customer" id="PMSQuickNote_Content" name="content" type="text" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="PMSQuickNote" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button form="PMSQuickNote" type="button" class="btn bg-gradient-primary mt-2 me-2 setting_projectclosure" onclick="event.preventDefault();return  PMSQuickNote_ContentExcute()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //#region //Load && Init && Executed
+
+    var SerQN_CurrentID = '@Model._currentID';
+    var SerQN_Type='@Model._Type';
+    var SerQN_IsRefund = '@Model._isRefund';
+    var SerQN_PerEditPassingDate  = 0;
+    let data_payment_method;
+    let data_payment_method_type;
+    var data_Main = [];
+    $(document).ready(function () {
+        PMSQuickNote_Init();
+
+    });
+    function PMSQuickNote_Init() {
+        AjaxLoad(url = "/Customer/Payment/PaymentDetail_QuickNote/?handler=LoadInitialize"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                let data_payment_method = data.Method;
+                data_payment_method_type = data.MethodType;
+
+                Load_Combo(data_payment_method, "ccbPMSQuickNote_Method", true);
+                $("#PMSQuickNote_Method").dropdown("refresh");
+                $("#PMSQuickNote_Method").dropdown("set selected", Number(data_payment_method[0].ID));
+
+                if (SerQN_CurrentID != "0") {
+                    PMSQuickNote_LoadUpdate();
+                }
+            }
+            , sender = null
+            , before = null
+            , complete = null
+        );
+    }
+
+    function PMSQuickNote_LoadUpdate () {
+        AjaxLoad(url = "/Customer/Payment/PaymentDetail_QuickNote/?handler=Loadata"
+            , data = {
+                id: SerQN_CurrentID,
+                type: SerQN_Type == 'payment' ? 1 : 0,
+            }, async = true, error = null
+            , success = function (result) {
+                data_Main = JSON.parse(result);
+                data = data_Main;
+                SerQN_PerEditPassingDate = data[0].IsUpdate;
+                if (data != undefined && data.length == 1) {                    
+                    $('#PMSQuickNote_Content').val(data[0].Content);
+                    if(SerQN_PerEditPassingDate == 1){
+                        $('#PMSQuickNote_MethodArea').removeClass('d-none');
+                        $("#PMSQuickNote_Method").dropdown("refresh");
+                        $("#PMSQuickNote_Method").dropdown("set selected", Number(data[0].Method));
+
+                        let methoddetail = 0;
+                        if (data[0].Method == 4) methoddetail = data[0].TransferType;
+                        if (data[0].Method == 5) methoddetail = data[0].PosType;
+                        if (data[0].Method != 5 && data[0].Method != 4) methoddetail = data[0].MethodDetail_Type_ID;
+                        $("#PMSQuickNote_MethodType").dropdown("refresh");
+                        $("#PMSQuickNote_MethodType").dropdown("set selected", Number(methoddetail));
+                    }
+                }
+            }
+        );
+    }
+
+
+    function PMSQuickNote_ContentExcute () {
+        Checking_Require_Validation('@Model._dtPermissionCurrentPage');
+        let data = {};
+        let Method_Type = Number($('#PMSQuickNote_MethodType').dropdown('get value')) ? Number($('#PMSQuickNote_MethodType').dropdown('get value')) : 0;
+        data.Content = $('#PMSQuickNote_Content').val() ? $('#PMSQuickNote_Content').val() : "";
+        data.MethodID = SerQN_PerEditPassingDate == 1 ? (Number($('#PMSQuickNote_Method').dropdown('get value')) ? Number($('#PMSQuickNote_Method').dropdown('get value')) : 0) : data_Main[0].Method;
+        data.PosType = SerQN_PerEditPassingDate == 1 ? (data.MethodID == 5 ? Method_Type : 0) : data_Main[0].PosType;
+        data.TransferType = SerQN_PerEditPassingDate == 1 ? (data.MethodID == 4 ? Method_Type : 0) : data_Main[0].TransferType;
+        data.MedthodDetail = SerQN_PerEditPassingDate == 1 ? (data.MethodID != 4 && data.MethodID != 5 ? Method_Type : 0) : data_Main[0].MethodDetail_Type_ID;;
+        $('#PMSQuickNote').form('validate form');
+        if ($('#PMSQuickNote').form('is valid')) {
+            AjaxLoad(url = "/Customer/Payment/PaymentDetail_QuickNote/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    type: SerQN_Type == 'payment' ? 1 : 0,
+                    id: SerQN_CurrentID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        PMSQuickNote_UpdateThirdAccount(SerQN_CurrentID)
+                        LoadPaymentAjax(SerQN_CurrentID, SerQN_Type);
+                        $('#DetailModal').modal('hide');
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        return false;
+    }
+    //#endregion
+
+
+    //#region //Event
+
+    function PMSQuickNote_MethodChange () {
+        let method = $("#PMSQuickNote_Method").dropdown('get value') ? $("#PMSQuickNote_Method").dropdown('get value') : 0;
+        let dataMethodTypeNew =  data_payment_method_type.filter(word => word["Type"] == method);
+        if (dataMethodTypeNew && dataMethodTypeNew.length != 0) { 
+            $("#PMSQuickNote_MethodType").removeClass('disabled');
+            $("#PMSQuickNote_MethodType input.payment").attr('name', "paymentMethodType");
+            Load_Combo(dataMethodTypeNew, "ccbPMSQuickNote_MethodType", true);
+            $("#PMSQuickNote_MethodType").dropdown("refresh");
+            $("#PMSQuickNote_MethodType").dropdown("set selected", Number(dataMethodTypeNew[0].ID));
+        }
+        else {
+            $("#PMSQuickNote_MethodType").addClass("disabled");
+            $("#PMSQuickNote_MethodType").dropdown("clear");
+            $("#PMSQuickNote_MethodType input.payment").attr('name', "");
+        }
+    }
+
+    //#endregion
+
+    //#region //ThirdAccount
+    function PMSQuickNote_UpdateThirdAccount(id) {
+        if (typeof syn_Accountbrand != 'undefined' && syn_Accountbrand && syn_Accountbrand != "") {
+            let voucherType = PMSQuickNote_getVoucherType(SerQN_Type, SerQN_IsRefund)
+            if (voucherType == -1) return;
+            APIAccount_Excute(currentID = id, type = voucherType, action = "save"
+                , beforefunc = function () { }
+                , successfunc = function (e) {
+                    if (typeof LoadPaymentAjax == 'function') LoadPaymentAjax(id, SerQN_Type);
+                }
+                , failfunc = function (message) { }
+                , completefunc = function () { }
+            );
+        }
+    }
+
+    function PMSQuickNote_getVoucherType(sertype, isrefund) {
+        let result = -1;
+        if (sertype == 'payment' && isrefund == 0)
+            result = 1;
+        else if(sertype == 'payment' && isrefund == 1)
+            result = 2;
+        else if (sertype != 'payment' && isrefund == 0)
+            result = 3;
+        else if(sertype != 'payment' && isrefund == 1)
+            result = 4;
+        return result;
+    }
+        //#endregion
+
+
+</script>
+<script src="/js/main.js"></script>
+<script src="/js/customjs/custom-validation.js"></script>

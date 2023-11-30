@@ -1,0 +1,295 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Assay.AssayDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid ">
+    <form class="ui form segment form1 ">
+        <div class="row px-1">
+            <div class="field col-12 col-xl-6 px-1 mt-2">
+                <label>@Local["Mẫu"]</label>
+                <div class="ui fluid search selection dropdown form-control" id="_IDAssay" onchange="OnChangeAssayTemplate()">
+                    <input type="hidden" name="name" />
+                    <i class="dropdown icon"></i>
+                    <input class="search" autocomplete="off" tabindex="0" />
+                    <div class="default text">eg .@Local["Mẫu"]</div>
+                    <div id="ccbAssayTemplate" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+            <div class="field col-12 col-xl-6 px-1 mt-2">
+                <label>@Local["Ghi chú"]</label>
+                <input class="form-control" id="txtAssayNote" type="text" name="name" placeholder="eg .@Local["Ghi chú"]" />
+            </div>
+        </div>
+
+        <div class="row overflow-auto border-dashed border-radius-md  border-1 border-secondary m-0 position-relative mt-3">
+
+            <div id="Assay_Waiting" class="position-absolute top-0 start-50 translate-middle waitingdiv text-center w-100 mt-5 d-none">
+                <div class="spinner-border text-primary" role="status">
+                </div>
+            </div>
+            <div class="row w-100 d-flex justify-content-center" id="list_questions_assay">
+            </div>
+        </div>
+        <div class="field my-4  action_Save ">
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" onclick="CAL_CloseDetail()">@Local["Đóng"]</button>
+                <button class="btn bg-gradient-info mt-2 me-2 printbutton" onclick="Assay_Print_Confirm()">@Local["In"]</button>
+                <button id="assay_delete" class="btn bg-gradient-danger mt-2 me-2 d-none" onclick="DeleteAssayCusList()">@Local["Xóa"]</button>
+                <button id="assay_save" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="ExcuteDataAssayCus()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    let DataAssayCustomer = {};
+    let ListAssayCustomer = [];
+    let DataFieldForm = {};
+    let _CurrentID = '@Model._CurrentID';
+    let _CustomerID = '@Model._CustomerID';
+    let AssayFlag = 0;
+    let Assay_StogeSignCode = 0;
+    let Assay_StogeSignName = '';
+    $(document).ready(function() {
+        LoadDataAssay_Ini();
+    });
+    function LoadDataAssay_Ini() {
+        AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=LoadInitializeData"
+            , data = { 'CurrentID': _CurrentID }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                let data = JSON.parse(result);
+                ListAssayCustomer = data.form;
+                DataFieldForm = data.field;
+
+                Assay_StogeSignCode = ListAssayCustomer[0].SignCode;
+                Assay_StogeSignName = ListAssayCustomer[0].SignName;
+
+                Load_Combo(ListAssayCustomer, "ccbAssayTemplate", true);
+                if (_CurrentID == 0) {
+                    AssayFlag = 1;
+                    $("#_IDAssay").dropdown("refresh");
+                    $("#_IDAssay").dropdown("set selected", ListAssayCustomer[0].ID);
+                    $('#assay_delete').remove();
+                    $('.printbutton').addClass('d-none');
+                }
+                else {
+                    $('.printbutton').removeClass('d-none');
+                    LoadDataUpdateAssayCus();
+                }
+
+            }
+
+
+        );
+    }
+    async function RenderAssayList(data, datafield, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id);
+                }
+                Assay_QuestionEvent();
+                $('.vt-header').addClass('d-none');
+                $('.vtprint-hiderow').addClass('d-none');
+                $('.vt-area').each(function() {
+                    this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+                }).on('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+            }
+        });
+    }
+    function LoadDataUpdateAssayCus() {
+        AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=Loadata"
+            , data = { 'id': _CurrentID }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                let DataUpdate = JSON.parse(result);
+                DataAssayCustomer = JSON.parse(DataUpdate[0].Data);
+                if (Number(DataUpdate[0].Edit) == 1) {
+                    $('#assay_delete').removeClass('d-none');
+                    $('#assay_save').removeClass('d-none');
+                }
+                else {
+                    $('#assay_save').remove();
+                    $('#assay_delete').remove();
+                }
+                $('#txtAssayNote').val((DataUpdate[0].Note));
+                $("#_IDAssay").dropdown("refresh");
+                $("#_IDAssay").dropdown("set selected", DataUpdate[0].AssayID);
+                RenderAssayList(DataAssayCustomer, DataFieldForm, "list_questions_assay");
+                AssayFlag = 1;
+
+            }
+        );
+    }
+    function ExcuteDataAssayCus() {
+        let Note = $('#txtAssayNote').val() ? $('#txtAssayNote').val() : "";
+        let AssayID = Number($('#_IDAssay').dropdown('get value')) ? Number($('#_IDAssay').dropdown('get value')) : 0;
+        AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(DataAssayCustomer),
+                'CustomerID': _CustomerID,
+                'Note': Note,
+                'AssayID': AssayID,
+                'CurrentID': _CurrentID,
+                'BranchID': ser_MainBranchID
+            }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                if (result != "0") {
+                    syslog_cuttes(_CurrentID == 0 ? 'i' : 'u', _CustomerID, '');
+                    if (typeof CAL_Load === "function") CAL_Load(_CurrentID, 0);
+                    if (typeof CAL_CloseDetail === "function") CAL_CloseDetail();
+                    notiSuccess();
+                }
+            }
+            , sender = $("#assay_save")
+
+        );
+        return false
+    }
+    function OnChangeAssayTemplate() {
+        if (AssayFlag == 1) {
+            let AssayID = Number($('#_IDAssay').dropdown('get value')) ? Number($('#_IDAssay').dropdown('get value')) : 0;
+            let dataAssay = ListAssayCustomer.filter(word => word["ID"] == AssayID);
+            DataAssayCustomer = JSON.parse(dataAssay[0].Form);
+            RenderAssayList(DataAssayCustomer, DataFieldForm, "list_questions_assay");
+        }
+    }
+    function Assay_QuestionEvent() {
+        $("#list_questions_assay input[type='checkbox']").change(function(event) {
+            let answer = this.checked;
+            let id = $(this).attr("id");
+            fn_FormUpdate(id, answer, DataAssayCustomer);
+        });
+        $("#list_questions_assay input[type='radio']").change(function(event) {
+
+            let id = $(this).attr("id");
+            let name = $(this).attr("name");
+            let _obj = $('#list_questions_assay input[type="radio"][name="' + name + '"]');
+            if (_obj != undefined) {
+                _obj.each(function() {
+                    if ($(this).attr("id") == id) {
+                        fn_FormUpdate($(this).attr("id"), 'on', DataAssayCustomer);
+                    } else fn_FormUpdate($(this).attr("id"), '', DataAssayCustomer);
+
+                });
+            }
+
+
+
+        });
+        $("#list_questions_assay input[type!='checkbox'][type!='radio'],#list_questions_assay textarea").change(function() {
+            let id = $(this).attr("id");
+            let answer = $(this).val();
+            fn_FormUpdate(id, answer, DataAssayCustomer);
+
+        })
+    }
+    function DeleteAssayCusList() {
+        const promise = notiConfirm();
+        promise.then(function() { ExecuteDeleteAssayCusList(_CurrentID); }, function() { });
+    }
+    function ExecuteDeleteAssayCusList(id) {
+        AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function() { notiError_SW() }
+            , success = function(result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cuttes('d', ser_CustomerAssayID, '');
+                    if (typeof CAL_Load === "function") CAL_Load(id, 0);
+                    if (typeof CAL_CloseDetail === "function") CAL_CloseDetail();
+                } else {
+                    notiError_SW();
+                }
+            }
+
+        );
+
+    }    
+    function Assay_Print_Confirm() {
+        if (typeof ser_MainCustomerID != 'undefined' && ser_MainCustomerID != 0 && Assay_StogeSignCode != 0) {
+            AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=CheckStogeSign"
+                , data = {
+                    "CustomerID": ser_MainCustomerID
+                    , "StogeRule": Assay_StogeSignCode
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != '0') {
+                        const promise = notiConfirm("@Local["Xác nhận"] @Local["In"]: " + Assay_StogeSignName);
+                        promise.then(function () {
+                            AssayCusPrint();
+                            Assay_Print_SaveSign(Assay_StogeSignCode);
+                        }, function () { });
+
+                    } else {
+                        AssayCusPrint();
+                    }
+                }
+            );
+        } else {
+            AssayCusPrint();
+        }
+    }
+    function Assay_Print_SaveSign(StogeSign) {
+        AjaxLoad(url = "/Customer/Assay/AssayDetail/?handler=SaveStogeSign"
+            , data = { "CustomerID": ser_MainCustomerID, "StogeSign": StogeSign }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) { }
+        );
+    }
+    function AssayCusPrePrint() {
+        $('.vt-header').removeClass('d-none');
+        $('.vtprint-hiderow').removeClass('d-none');
+        var inputcheck = $('.vt-checked');
+        inputcheck.each((item) => {
+            if (!inputcheck[item].checked) {
+                inputcheck[item].parentNode.parentNode.remove();
+
+            }
+        })
+        var divCheck = $('.div-checked');
+        divCheck.each((item) => {
+            let tmp = divCheck[item].getElementsByClassName('vt-checked');
+            if (tmp[0] == undefined) {
+                divCheck[item].remove();
+            }
+        })
+    }
+    function AssayCusPrint() {
+        AssayCusPrePrint();
+        fn_Print(printedid = "list_questions_assay"
+            , beforefun = function() {
+                $('#Assay_Waiting').removeClass('d-none');
+            }
+            , afterfun = function() {
+                $('#Assay_Waiting').addClass('d-none');
+                RenderAssayList(DataAssayCustomer, DataFieldForm, "list_questions_assay");
+            }
+        );
+        syslog_cuttes('p', _CustomerID, '');
+
+
+    }
+</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+

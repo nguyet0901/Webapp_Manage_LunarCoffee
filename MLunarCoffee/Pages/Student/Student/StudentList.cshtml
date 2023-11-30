@@ -1,0 +1,446 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Student.StudentListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row" id="SL_DivStudentList">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Danh sách học viên"]</h6>
+                    <p class="text-sm mb-0">@Local["Tìm kiếm học viên theo tên, số điện thoại, email"]</p>
+                </div>
+                <div class="right">
+                    <div class="form-check me-2 my-auto">
+                        <input id="SL_StudentDisabled" class="form-check-input pr-2" type="checkbox">
+                        <label>@Local["Học viên ẩn"]</label>
+                    </div>
+                    <button class="btn bg-gradient-primary btn-sm mt-1 me-1" onclick="SList_New();">@Local["Thêm mới"]</button>
+                    <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#SL_ColLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="SL_ColLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Gender" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Giới tính"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Identity" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["CCCD"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Source" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Nguồn"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Email" type="checkbox">
+                                </div>
+                                <p class="text-sm">Email</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Birthday" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ngày sinh"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="col-Note" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Ghi chú"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="vtcondition">
+                    <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                    <div class="fulllap collapse collapsesticky show">
+                        <div class="row px-2">
+                            <div class="col-12 col-sm-12 col-xl-4 p-1">
+                                <div class="input-group">
+                                    <div class="input-group-text"><span class="fa fa-search form-control-feedback"></span></div>
+                                    <input type="text" id="SL_TextSearch" class="form-control" placeholder="eg. Search">
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                <input id="SL_date" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày"]">
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                <div class="d-sm-flex">
+                                    <div class="w-100">
+                                        <div class="ui fluid search selection dropdown form-control" id="SL_Source">
+                                            <input type="hidden" name="branch" />
+                                            <input class="search" autocomplete="off" tabindex="0" />
+                                            <div class="default text">eg.Source</div>
+                                            <div id="SL_CbbSource" class="menu" tabindex="-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="py-0 ms-0 ms-lg-2" style="width:132px;">
+                                        <button class="btn w-100 bg-gradient-primary m-0 mt-1 mt-sm-0" id="SL_Search" onclick="event.preventDefault();return SList_Load(0, 0);">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                    <div id="SL_Loadding" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table class="table vt-table mb-0" id="SL_DivContent">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th style="width: 40px;">#</th>
+                                <th>@Local["Mã"]</th>
+                                <th data-name="col-Gender">@Local["Giới tính"]</th>
+                                <th data-name="col-Identity">CCCD</th>
+                                <th>@Local["Số điện thoại"]</th>
+                                <th data-name="col-Source">@Local["Nguồn"]</th>
+                                <th data-name="col-Email">Email</th>
+                                <th data-name="col-Birthday">@Local["Ngày sinh"]</th>
+                                <th data-name="col-Note">@Local["Ghi chú"]</th>
+                                <th>@Local["Địa chỉ"]</th>
+                                <th>@Local["Khách hàng"]</th>
+                                <th style="width: 40px;">@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="SL_BodyContent">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btnsysmore btn btn-secondary w-100 p-1" onclick="SList_Load(1, 0)">@Local["Xem thêm"]</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="SL_DivStudentDetail">
+
+</div>
+<script type="text/javascript">
+
+    let SL_BeginID = 0;
+    let SL_LimitLoad = 50;
+    let SL_DataSource = {};
+
+    $(document).ready(function () {
+
+        let lastDay = new Date();
+        let firstDay = new Date();
+        firstDay.setDate(firstDay.getDate() - 7);
+        $("#SL_date").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        $("#SL_date").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+
+        SList_Init();
+        shtable = $("#SL_DivContent").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+
+        SList_EventInit();
+    })
+
+    //#region //LOAD
+
+    function SList_Init() {
+        AjaxLoad(url = "/Student/Student/StudentList/?handler=LoadCombo"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data, "SL_CbbSource", false);
+                    $("#SL_Source").dropdown("refresh");
+                    SL_DataSource = data.reduce((pre, arr) => {
+                        if (arr.ID) pre[arr.ID] = arr;
+                        return pre;
+                    }, {});
+                    SList_Load(0, 0);
+                }
+            }
+        );
+    }
+
+
+    function SList_Load (NonReLoad, id) {
+        if (NonReLoad == 0) {
+            SL_BeginID = 0;
+            $("#SL_BodyContent").empty();
+        }
+        let FillSearch = $("#SL_TextSearch") ? xoa_dau($("#SL_TextSearch").val().toLowerCase()).trim() : "";
+        let SourceID = $("#SL_Source").dropdown('get value') ? Number($("#SL_Source").dropdown('get value')) : 0;
+        let date = $('#SL_date').val() ? $('#SL_date').val() : new Date();
+        let dateFrom = '01-01-1900';
+        let dateTo = '01-01-1900';
+        if (FillSearch == '') {
+            if (date.includes(" to ")) {
+                date = date.replace(" to ", "#");
+                dateFrom = date.split('#')[0];
+                dateTo = date.split('#')[1];
+            }
+            else {
+                dateFrom = date;
+                dateTo = date;
+            }
+        }
+
+        AjaxLoad(url = "/Student/Student/StudentList/?handler=LoadData"
+            , data = {
+                "textsearch": FillSearch
+                , "BeginID": SL_BeginID
+                , "CurrentID": id
+                , "limit": SL_LimitLoad
+                , "sourceId": SourceID
+                , "dateFrom": dateFrom
+                , "dateTo": dateTo
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        if (id == 0) {
+                            SL_BeginID = Number(data[data.length - 1].ID);
+                            fnRenderBlock(data, "SL_BodyContent"
+                                , blocknum = 50
+                                , fnrender = SList_Render
+                                , fnsuccess = null
+                            )
+                        } else {
+                            if ($("#SL_TrStudent" + id).length) {
+                                $("#SL_TrStudent" + id).replaceWith(SList_RenderEach(data[0]));
+                                SList_Event();
+                                shtable.Refresh();
+                            }
+                        }
+                    }
+                }
+                else notiError_SW();
+            }
+            , sender = $('#SL_Search')
+            , before = function (e) {
+                $('#SL_Loadding').show();
+            }
+            , complete = function (e) {
+                $('#SL_Loadding').hide();
+            }
+        )
+    }
+    //#endregion
+
+    //#region //RENDER
+    async function SList_Render (data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = SList_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                SList_Event();
+                shtable.Refresh();
+                resolve();
+            }, 100)
+        })
+    }
+
+    function SList_RenderEach (item) {
+        try {
+            let tr = `
+                <td class="d-none">${item.ID}</td>
+                <td class="vt-number-order text-center"></td>
+                <td>
+                    <div class="d-flex">
+                        <div class="ps-1">
+                            <img class="avatar avatar-sm me-2 mt-1" src="${item.Avatar == '' ? Master_Default_Pic : item.Avatar}" alt="label-image">
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span><a href="/Student/student/studentmain?studentid=${item.ID}" target="_blank" class="mb-0 detail border-bottom text-sm fw-bold border-primary">${item.Code}</a></span>
+                            <span>${item.Name}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="" data-name="col-Gender">${Slist_FillGender(item.GenderID)}</td>
+                <td class="" data-name="col-Identity">${item.Identity_Card}</td>
+                <td class="">${item.Phone}</td>
+                <td class="" data-name="col-Source">${Fun_GetName_ByID(SL_DataSource, item.SourceID)}</td>
+                <td class="" data-name="col-Email">${item.Email}</td>
+                <td class="" data-name="col-Birthday">${(!item.Birthday.includes('1900') ? ConvertDateTimeUTC_DMY(item.Birthday) : '')}</td>
+                <td class="" data-name="col-Note">${item.Note}</td>
+                <td class="">${item.Address}</td>
+                <td class="">
+                <div class="d-flex flex-column">
+                <span><a href="/Customer/MainCustomer?CustomerID=${item.CustomerID}&ver=${versionofWebApplication}" target="_blank" class="mb-0 detail border-bottom text-sm fw-bold border-primary">${item.CustCode}</a></span>
+                <span>${item.CustomerName}</span>
+                </div>
+                </td>
+                <td class="text-nowrap cursor-pointer">
+                    ${Slist_RenderButtonGroup(item.ID, item.IsDisabled)}
+                </td>
+            `
+            tr = `<tr class="vt-number ${item.IsDisabled === 1 ? "table-active" : ""}" id="SL_TrStudent${item.ID}" role="row">${tr}</tr>`
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function Slist_FillGender(GenderID) {
+        try {
+            let Gender = '';
+            switch (GenderID) {
+                case 60:
+                    Gender = '@Local["Nam"]';
+                    break;
+                case 61:
+                    Gender = '@Local["Nữ"]'
+                    break;
+            }
+            return Gender;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function Slist_RenderButtonGroup (id, IsDisabled) {
+        try {
+            let buttons = [];
+            if (IsDisabled !== 1) {
+                buttons.push('<button class="buttonGrid" value="' + id + '">'
+                    + '<i data-id="' + id + '" class="vtt-icon vttech-icon-edit btnEdit"></i>'
+                    + '</button>');
+            }
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                + ((IsDisabled === 1)
+                    ? '<i data-id="' + id + '" class="vtt-icon vttech-icon-hide btnDisabled"></i>'
+                    : '<i data-id="' + id + '" class="vtt-icon vttech-icon-nohide btnDisabled"></i>')
+                + '</button>');
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region //EVENT
+
+    function SList_EventInit () {
+        $('#SL_StudentDisabled').change(function (event) {
+            if ($('#SL_StudentDisabled').is(':checked'))
+                $('#SL_DivContent').addClass('showdis');
+            else $('#SL_DivContent').removeClass('showdis');
+        });
+    }
+
+    function SList_Event () {
+        $('#SL_BodyContent .btnEdit').unbind('click').click(function () {
+            let ID = $(this).closest("tr").children()[0].innerHTML;
+            SList_Edit(ID);
+        })
+        $('#SL_BodyContent .btnDisabled').unbind('click').click(function () {
+            let ID = $(this).closest("tr").children()[0].innerHTML;
+            SList_Disabled(ID);
+        })
+    }
+
+    //#region
+
+    //#region //Disabled
+
+    function SList_Disabled (ID) {
+        const promise = notiConfirm();
+        promise.then(function () {SList_ExecuteDisable(ID)}, function () { });
+    }
+
+    function SList_ExecuteDisable (ID) {
+        AjaxLoad(url = "/Student/Student/StudentList/?handler=DisableItem"
+            , data = {CurrentID: ID}
+            , async = false
+            , error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    SList_Load(1, ID);
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        )
+    }
+    //#endregion
+
+
+    //#region //DETAIL
+    function SList_Edit (CurrentID) {
+        SList_OpenDetail();
+        $("#SL_DivStudentDetail").load("/Student/Student/StudentDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#SL_DivStudentDetail').show();
+        return false;
+    }
+    function SList_New () {
+        SList_OpenDetail();
+        $("#SL_DivStudentDetail").load("/Student/Student/StudentDetail" + "?ver=" + versionofWebApplication);
+        $('#SL_DivStudentDetail').show();
+        return false;
+    }
+
+    function SList_OpenDetail () {
+        $("#SL_DivStudentDetail").empty();
+        $("#SL_DivStudentList").hide();
+        document.getElementById("SL_DivStudentDetail").innerHTML = '';
+    }
+    function SList_CloseDetail () {
+        document.getElementById("SL_DivStudentDetail").innerHTML = '';
+        $("#SL_DivStudentList").show();
+        $("#SL_DivStudentDetail").hide();
+    }
+    //#endregion
+</script>
+<style>
+    .table-active {
+        display: none;
+    }
+    .showdis .table-active {
+        display: table-row !important;
+    }
+</style>

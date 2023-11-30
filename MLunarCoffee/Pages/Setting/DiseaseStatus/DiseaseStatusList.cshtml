@@ -1,0 +1,316 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.DiseaseListModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/DiseaseStatusInitialize_setting.js');</script>
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0" id="DiseaseStatus_Main">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0 text-capitalize">@Local["Danh sách trạng thái chẩn đoán"]</h6>
+                        <p class="text-sm mb-0">@Local["Trạng thái chẩn đoán"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" data-value="fade up" onclick="return DiseaseStatusAdd()">
+                            @Local["Thêm mới"]
+                        </button>
+                        <button id="btn_addDiseaseType" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure d-none" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-original-title="@Local["Thêm mới"] @Local["Loại"]"
+                                data-value="fade up" onclick="return DiseaseStatusAdd_Type()"
+                                style="width:90px!important">
+                            <i class="fa fa-plus" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row mx-n1">
+                                <div class="col-12 col-sm-4 col-xl-4 p-1" id="DiseaseStatus_IsTeethArea">
+                                    <div class="ui fluid search selection dropdown form-control" id="DiseaseStatus_IsTeeth">
+                                        <input type="hidden" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbDiseaseStatus_IsTeeth" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm col-xl p-1 DiseaseStatus_Fillter" id="DiseaseStatus_FillterTypeArea">
+                                    <div class="ui fluid search selection dropdown form-control" id="DiseaseStatus_FillterType">
+                                        <input type="hidden" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbDiseaseStatus_FillterType" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm col-xl p-1 DiseaseStatus_Fillter" id="DiseaseStatus_FillterSignArea">
+                                    <div class="ui fluid search selection dropdown form-control" id="DiseaseStatus_FillterSign">
+                                        <input type="hidden" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="cbbDiseaseStatus_FillterSign" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto p-1">
+                                    <button onclick="DiseaseStatus_Fillter()" class="btn bg-gradient-primary mb-0 w-100 text-nowrap DiseaseStatus_Fillter" style="width:90px!important">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-0 overflow-y" style="max-height:94vh;">
+                        <div class=" m-0 my-3 mobile-responsive">
+                            <table id="dtContentDisease" class="table vt-table mb-0">
+                                <thead class="hiddenCollapse">
+                                    <tr role="row">
+                                        <th class="d-none">ID</th>
+                                        <th style="width:40px;">@Local["#"]</th>
+                                        <th>@Local["Bệnh"]</th>
+                                        <th>@Local["Nội dung"]</th>
+                                        <th class="Cosmetic">@Local["Màu"]</th>
+                                        <th class="Cosmetic">@Local["Loại"]</th>
+                                        <th class="Cosmetic">@Local["Ký hiệu"]</th>
+                                        <th>@Local["Người tạo"]</th>
+                                        <th>@Local["Người sửa"]</th>
+                                        <th style="width:40px;" class="setting_projectclosure">@Local["Xoá"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ddtContentDiseaseBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="DiseaseStatus_Sign_Area" class="DiseaseStatus_Fillter" style="display:none;">
+    </div>
+</div>
+
+<script type="text/javascript">
+    let DataEmployee;    
+    let ser_IsTeeth = 1;
+    let dataTeeth = [{
+        "ID": "0"
+        , "Name": "@Local["Răng"]"
+    },
+    {
+        "ID": "1"
+        , "Name": "@Local["Khác"]"
+    }]
+    let DataDisMain = [];
+    let DataDisMain_Fillter = [];
+    
+    $(document).ready(function() {        
+        ToolPopper();
+        DiseaseStatusInit();        
+        if (sys_dencos_Main == 0) $("#DiseaseStatus_IsTeethArea").remove();
+    });
+    function DiseaseStatusInit() {
+        DataEmployee = MTDataEmployee;
+        DiseaseStatusLoadList();
+        DiseaseStatus_LoadDataCompoInit();                              
+        DiseaseStatusEvenInit();
+    }
+    function DiseaseStatusEvenInit(){
+        $('#dtContentDisease tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DiseaseEdit(ID);
+        });
+        $('#dtContentDisease tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteDisease(ID)
+        });
+        //$('#dtContentDisease tbody').on('click', '.typeDise', function () {
+        //    let ID = $(this).attr("datatype");
+        //    DiseaseStatusEdit_Type(ID);
+        //});
+        $('#DiseaseStatus_IsTeeth').on('change', function () {
+            ser_IsTeeth = ($(this).dropdown('get value') == '' || sys_dencos_Main == 0) ? 1 : $(this).dropdown('get value');
+            DiseaseStatusLoadList();
+            if (ser_IsTeeth == "0") {
+                $(".DiseaseStatus_Fillter").addClass('d-none');
+            }
+            else {
+                $(".DiseaseStatus_Fillter").removeClass('d-none');
+            }
+        });
+        Load_Combo(dataTeeth, "cbbDiseaseStatus_IsTeeth", true);
+        $("#DiseaseStatus_IsTeeth").dropdown("refresh");
+        $("#DiseaseStatus_IsTeeth").dropdown("set selected", dataTeeth[0].ID);
+    }
+    function DiseaseStatus_LoadDataCompoInit(){
+        AjaxLoad(url = "/Setting/DiseaseStatus/DiseaseStatusList/?handler=LoadInitializeData"
+            , data = {}, async = false, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    dataComboDiseaseType = JSON.parse(result).Type;
+                    dataComboDiseaseSign = JSON.parse(result).Sign;
+                    let _e = {"ID" : "0" , "Name" : "@Local["Tất cả"]"}
+                    dataComboDiseaseType.unshift(_e);
+                    dataComboDiseaseSign.unshift(_e)
+                    
+                    
+                    Load_Combo(dataComboDiseaseType, "cbbDiseaseStatus_FillterType", true);
+                    $("#DiseaseStatus_FillterType").dropdown("refresh");
+                    $("#DiseaseStatus_FillterType").dropdown("set selected", dataComboDiseaseType[0].ID);
+
+                    Load_Combo(dataComboDiseaseSign, "cbbDiseaseStatus_FillterSign", true);
+                    $("#DiseaseStatus_FillterSign").dropdown("refresh");
+                    $("#DiseaseStatus_FillterSign").dropdown("set selected", dataComboDiseaseSign[0].ID);
+                }
+            });
+    }
+    
+    async function DiseaseStatusLoadList() {
+        AjaxLoad(url = "/Setting/DiseaseStatus/DiseaseStatusList/?handler=LoadData"
+            , data = { IsTeeth: ser_IsTeeth }, async = true, error = null
+            , success = function(result) {
+                if (result != "") {
+                    DataDisMain = JSON.parse(result);
+                    DiseaseStatusRenderList(DataDisMain, "ddtContentDiseaseBody");
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function DiseaseStatusRenderList(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let objCreated = DataEmployee[item.CreatedBy] != undefined ? DataEmployee[item.CreatedBy] : "";
+                    let objModified = DataEmployee[item.ModifiedBy];
+                    objModified = objModified != null ? objModified : objCreated;
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a href="#" class="text-decoration-underline fw-bold buttonEditClass">' + item.Name + '</a></td>'
+                        + '<td>' + item.Content + '</td>'
+                        + '<td class="Cosmetic">'
+                        + '<div style="background-color:' + item.Color + ';color:#ffffff;text-align:center;padding:4px 0">' + item.Color
+                        + '</div>'
+                        + '</td>'
+                        + '<td class="Cosmetic">' + item.Type + '</td>'
+                        + '<td class="Cosmetic">' + item.Sign + '</td>'
+                        + '<td>'
+                        + '<div class="d-flex">'
+                        + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+                        + '<img class="avatar avatar-xs mt-2" src="' + (objCreated.Avatar || Master_Default_Pic) + ' " alt="label-image">'
+                        + '</div>'
+                        + '<div class = "d-grid justify-content-center align-items-center">'
+                        + '<h6 class="text-dark text-sm mb-0">' + objCreated.Name + '</h6>'
+                        + '<span class="text-xs mb-0">' + ConvertDateTimeUTC_YMD(item.Created) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+
+                        + '<td>'
+                        + '<div class="d-flex">'
+                        + '<div class="icon icon-shape icon-sm me-2 text-center" >'
+                        + '<img class="avatar avatar-xs mt-2" src="' + (objModified.Avatar || Master_Default_Pic) + ' " alt="label-image">'
+                        + '</div>'
+                        + '<div class = "d-grid justify-content-center align-items-center">'
+                        + '<h6 class="text-dark text-sm mb-0">' + objModified.Name + '</h6>'
+                        + '<span class="text-xs mb-0">' + ConvertDateTimeUTC_YMD(item.Modified) + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td class="setting_projectclosure">'
+
+                        + '<td class="text-center setting_projectclosure">'
+                        + '<i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i>'
+                        + '</td>';
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;   
+            if (ser_IsTeeth == "0") {
+                $(".Cosmetic").addClass('d-none');    
+                $("#btn_addDiseaseType").addClass('d-none');
+            }
+            else {
+                $(".Cosmetic").removeClass('d-none');
+                $("#btn_addDiseaseType").removeClass('d-none');
+            }
+        }
+    }
+    //#region //Event other
+    function DiseaseEdit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/DiseaseStatus/DiseaseStatusDetail?CurrentID=" + CurrentID + "&IsTeeth=" + ser_IsTeeth + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function DiseaseStatusAdd() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/DiseaseStatus/DiseaseStatusDetail" + "?IsTeeth=" + ser_IsTeeth + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function DiseaseStatusAdd_Type(){
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/DiseaseStatus/DiseaseStatusType" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    //function DiseaseStatusEdit_Type(ID){
+    //    $("#DetailModal_Content").html('');
+    //    $("#DetailModal_Content").load("/Setting/DiseaseStatus/DiseaseStatusType?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+    //    $('#DetailModal').modal('show');
+    //}
+    function DeleteDisease(id) {
+        const promise = notiConfirm();
+        promise.then(function() { ExecuteDeleteDisease(id); }, function() { });
+    }
+    function ExecuteDeleteDisease(id) {
+        AjaxLoad(url = "/Setting/DiseaseStatus/DiseaseStatusList/?handler=DeleteItem"
+            , data = { 'id': id, 'IsTeeth': ser_IsTeeth }
+            , async = true
+            , error = function() { notiError_SW(); }
+            , success = function(result) {
+                if (result == "1") {
+                    notiSuccess();
+                    DiseaseStatusLoadList();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+    //#region //Filter
+    function DiseaseStatus_Fillter() {        
+        let typeID = $("#DiseaseStatus_FillterType").dropdown('get value') == '' ? "0" : $("#DiseaseStatus_FillterType").dropdown('get value');
+        let signID = $("#DiseaseStatus_FillterSign").dropdown('get value') == '' ? "0" : $("#DiseaseStatus_FillterSign").dropdown('get value');
+        DataDisMain_Fillter = DataDisMain.reduce((newArray, element) => {
+            newArray.push(element);
+            return newArray;
+        }, []);
+        if (typeID != '0') {
+            DataDisMain_Fillter = DataDisMain_Fillter.filter(word => (word["TypeID"] == typeID));            
+        }
+        if (signID != "0"){
+            DataDisMain_Fillter = DataDisMain_Fillter.filter(word => (word["SignID"] == signID));
+        }
+        DiseaseStatusRenderList(DataDisMain_Fillter, "ddtContentDiseaseBody");   
+        if(typeID == 3){
+            $("#DiseaseStatus_Sign_Area").show();
+            $("#DiseaseStatus_Sign_Area").load("/Setting/DiseaseStatus/DiseaseSignList");
+        }
+        else{
+            $("#DiseaseStatus_Sign_Area").hide();
+        }
+    }
+
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>

@@ -1,0 +1,516 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Student.StudentEvaluateCourseModel
+@{
+    Layout = null;
+}
+
+<div class="row" id="StuEvaCou_Detail">
+    <div class="col-12">
+        <div class="card mb-3">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0  fw-bold">
+                                <span>@Local["Học viên"] </span>
+                                <span id="StuEvaCou_StuCode" class="text-primary"></span>
+                                <span> (</span>
+                                <span id="StuEvaCou_StuName"></span>
+                                <span>)</span>
+                            </h6>
+     
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="row px-2 ">
+                    <div class="col-12 col-sm-12 col-lg-3 mt-2 px-1">
+                        <div class="input-group" id="StuEvaCou_InputSearchBlock">
+                            <div class="input-group-text input-group-text px-2 icon-search">
+                                <i class="fas fa-search" aria-hidden="true" style="display: block;"></i>
+                                <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                            </div>
+                            <input id="StuEvaCou_InputSearch" type="text" class="form-control ps-2" placeholder="eg .search">
+                            <span class="input-group-text"><i class="btn_clear fas fa-minus-circle"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="StuEvaCou_CertiSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Certificate</div>
+                            <div id="cbbStuEvaCou_Certi" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="StuEvaCou_ReviSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Revision</div>
+                            <div id="cbbStuEvaCou_Revi" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mt-2 px-1">
+                        <div class="ui fluid search selection dropdown form-control" id="StuEvaCou_LevelSta">
+                            <input type="hidden" name="" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">eg. Level</div>
+                            <div id="cbbStuEvaCou_Level" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 px-1 my-3 min-height-300">
+                        <table id="StuEvaCou_dtTableCourseStatus" class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-1" colspan="3">
+                                        <p class="mb-0 text-sm text-dark fw-bold">@Local["Khóa học"]</p>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Cấp chứng chỉ"]</span>
+                                        <div id="CertiStatusAll" data-key="CertiStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbCertiStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Tình trạng"]</span>
+                                        <div id="ReviStatusAll" data-key="ReviStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbReviStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <span class="mb-0 text-sm text-dark fw-bold">@Local["Đánh giá"]</span>
+                                        <div id="LevelStatusAll" data-key="LevelStatus" class="ui dropdown ps-0 text-dark fw-bold text-sm border-0 " tabindex="0">
+                                            <i class="dropdown icon"></i>
+                                            <input type="hidden" value="0">
+                                            <div class="text d-none"></div>
+                                            <div id="cbbLevelStatusAll" class="menu" tabindex="-1"></div>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="StuEvaCou_TBodyContent">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton">
+            <div class="action_Save">
+                <div class="action_Save-Content">
+                    <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();StuEvaCou_CloseDetail()">@Local["Đóng"]</button>
+                    <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return StuEvaCou_Execute()">@Local["Lưu"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>js_require('/js/main.js');</script>
+
+<script>
+
+    //#region // INIT
+
+    let StuEvaCou_CurrentID = '@Model._StudentID';
+    let StuEvaCou_DataCourse = [];
+    let StuEvaCou_DataMain = {};
+    let StuEvaCou_DataStaRevi, StuEvaCou_DataStaLevel, StuEvaCou_DataStaCerti;
+    let StuEvaCou_StuNameOutSearch;
+
+    let StuEvaCou_KeyClass = {
+        'LevelStatus': 'stuLevel',
+        'ReviStatus': 'stuRevi',
+        'CertiStatus': 'stuCerti',
+    }
+
+    $(document).ready(function () {
+        StuEvaCou_Event();
+        StuEvaCou_Init();
+    })
+
+    function StuEvaCou_Init() {
+        if (StuEvaCou_CurrentID && StuEvaCou_CurrentID != '0') {
+            AjaxLoad(url = "/Student/Student/StudentEvaluateCourse/?handler=Init"
+                , data = {
+                    'classid': StuEvaCou_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        StuEvaCou_DataStaCerti = data.StatusCerti;
+                        StuEvaCou_DataStaLevel = data.StatusLevel;
+                        StuEvaCou_DataStaRevi = data.StatusRevi;
+
+                        let dataStuLevel = JSON.parse(JSON.stringify(data.StatusLevel));
+                        let dataStuRevi = JSON.parse(JSON.stringify(data.StatusRevi));
+                        let dataStuCerti = JSON.parse(JSON.stringify(data.StatusCerti));
+                        dataStuLevel.unshift({ ID: -1, Name: '@Local["Chưa đánh giá"]' });
+                        dataStuRevi.unshift({ ID: -1, Name: '@Local["Chưa có tình trạng"]' });
+
+                        Load_Combo(dataStuLevel, 'cbbStuEvaCou_Level', true, '@Local["Tất cả đánh giá"]');
+                        $("#StuEvaCou_LevelSta").dropdown('refresh');
+                        $("#StuEvaCou_LevelSta").dropdown('set selected', '0');
+
+                        Load_Combo(dataStuRevi, 'cbbStuEvaCou_Revi', true, '@Local["Tất cả tình trạng"]');
+                        $("#StuEvaCou_ReviSta").dropdown('refresh');
+                        $("#StuEvaCou_ReviSta").dropdown('set selected', '0');
+
+                        Load_Combo(dataStuCerti, 'cbbStuEvaCou_Certi', true, '@Local["Tất cả chứng chỉ"]');
+                        $("#StuEvaCou_CertiSta").dropdown('refresh');
+                        $("#StuEvaCou_CertiSta").dropdown('set selected', '0');
+
+                        $("#cbbCertiStatusAll").html(StuEvaCou_RenderEach_ComboData(StuEvaCou_DataStaCerti));
+                        $("#cbbReviStatusAll").html(StuEvaCou_RenderEach_ComboData(StuEvaCou_DataStaRevi));
+                        $("#cbbLevelStatusAll").html(StuEvaCou_RenderEach_ComboData(StuEvaCou_DataStaLevel));
+
+                        StuEvaCou_LoadData();
+
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // LOAD DETAIL
+
+    function StuEvaCou_LoadData() {
+        if (StuEvaCou_CurrentID && StuEvaCou_CurrentID != '0') {
+            AjaxLoad(url = "/Student/Student/StudentEvaluateCourse/?handler=LoadDetail"
+                , data = {
+                    'studentid': StuEvaCou_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        let dataInfo = data.Table;
+                        StuEvaCou_DataCourse = data.Table1;
+                        if (StuEvaCou_DataCourse && StuEvaCou_DataCourse.length != 0) {
+                            StuEvaCou_DataMain = StuEvaCou_DataCourse.reduce((pre, arr) => {
+                                if (arr.ID) pre[arr.ID] = arr;
+                                return pre;
+                            }, {});
+                        }
+                        StuEvaCou_FillData(dataInfo);
+                        StuEvaCou_Render(StuEvaCou_DataCourse, 'StuEvaCou_TBodyContent');
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) { }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // SEARCH
+
+
+    function StuEvaCou_Event() {
+
+        $('#StuEvaCou_InputSearch').unbind('keyup').keyup(function () {
+            let btnClear = $("#StuEvaCou_InputSearchBlock .btn_clear");
+            if ($(this).val().length > 0) btnClear.removeClass('opacity-1');
+            else btnClear.addClass('opacity-1');
+            $("#StuEvaCou_InputSearchBlock .fa-search").hide();
+            $("#StuEvaCou_InputSearchBlock .spinner-border").show();
+            clearTimeout(StuEvaCou_StuNameOutSearch);
+            StuEvaCou_StuNameOutSearch = setTimeout(function (e) {
+                StuEvaCou_SearchStu();
+            }, 500);
+        });
+
+        $("#StuEvaCou_InputSearchBlock .btn_clear").unbind('click').on('click', function (e) {
+            $('#StuEvaCou_InputSearch').val('');
+            $(this).children(".btn_clear").addClass('opacity-1');
+            StuEvaCou_SearchStu();
+        });
+
+        $("#StuEvaCou_ReviSta, #StuEvaCou_LevelSta, #StuEvaCou_CertiSta").unbind('change').change(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            StuEvaCou_SearchStu();
+        })
+
+        $("#CertiStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (StuEvaCou_DataMain && Object.entries(StuEvaCou_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(StuEvaCou_DataMain)) {
+                        $("#stuCerti_" + key).dropdown('refresh');
+                        $("#stuCerti_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+        $("#ReviStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (StuEvaCou_DataMain && Object.entries(StuEvaCou_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(StuEvaCou_DataMain)) {
+                        $("#stuRevi_" + key).dropdown('refresh');
+                        $("#stuRevi_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+        $("#LevelStatusAll").change(function () {
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_value && !isNaN(_value) && _value != 0) {
+                if (StuEvaCou_DataMain && Object.entries(StuEvaCou_DataMain).length != 0) {
+                    for ([key, value] of Object.entries(StuEvaCou_DataMain)) {
+                        $("#stuLevel_" + key).dropdown('refresh');
+                        $("#stuLevel_" + key).dropdown('set selected', _value.toString());
+                    }
+                }
+            }
+
+        })
+
+    }
+
+    function StuEvaCou_SearchStu() {
+        let text = xoa_dau($('#StuEvaCou_InputSearch').val().toLowerCase()).trim();
+        let _revi = $('#StuEvaCou_ReviSta').dropdown('get value') ? Number($('#StuEvaCou_ReviSta').dropdown('get value')) : 0;
+        let _level = $('#StuEvaCou_LevelSta').dropdown('get value') ? Number($('#StuEvaCou_LevelSta').dropdown('get value')) : 0;
+        let _certi = $('#StuEvaCou_CertiSta').dropdown('get value') ? Number($('#StuEvaCou_CertiSta').dropdown('get value')) : 0;
+        if (text == '' && _revi == 0 && _level == 0 && _certi == 0) {
+            $("#StuEvaCou_Detail #StuEvaCou_dtTableCourseStatus").removeClass('search');
+            $("#StuEvaCou_Detail #StuEvaCou_dtTableCourseStatus tr.row-hidden").removeClass('row-hidden');
+        }
+        else {
+            $("#StuEvaCou_Detail #StuEvaCou_dtTableCourseStatus").addClass('search');
+            let a = Object.values(StuEvaCou_DataMain).filter(s => {
+                if ((xoa_dau(s.CourseCode).trim().toLowerCase().includes(text)
+                    || xoa_dau(s.CourseName).trim().toLowerCase().includes(text))
+                    && (_revi == 0 || (_revi == -1 && s.ReviStatus == 0) || _revi == s.ReviStatus)
+                    && (_level == 0 || (_level == -1 && s.LevelStatus == 0) || _level == s.LevelStatus)
+                    && (_certi == 0 || (_certi == -1 && s.CertiStatus == 0) || _certi == s.CertiStatus)
+                ) {
+                    $("#rowCourse_" + s.ID).removeClass('row-hidden');
+                }
+                else $("#rowCourse_" + s.ID).addClass('row-hidden');
+            });
+        }
+        $("#StuEvaCou_InputSearchBlock .fa-search").show();
+        $("#StuEvaCou_InputSearchBlock .spinner-border").hide();
+    }
+
+    //#endregion
+
+    //#region // FILL DATA
+
+    function StuEvaCou_FillData(data, dataClass) {
+        if (data && data.length != 0) {
+            let item = data[0];
+            let nameClass = dataClass && dataClass.length != 0 ? dataClass.map((item) => item.SubjectName).join(', ') : '';
+            $("#StuEvaCou_StuCode").html(item.StuCode);
+            $("#StuEvaCou_StuName").html(item.StuName);
+        }
+    }
+
+    //#endregion
+
+    //#region // RENDER DATA
+
+    async function StuEvaCou_Render(data, id) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = StuEvaCou_RenderEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                $('#' + id + ' .dropdown-item').dropdown();
+                StuEvaCou_FillDataStudent();
+                StuEvaCou_EventChange();
+                resolve();
+            }, 100)
+        })
+    }
+
+    function StuEvaCou_RenderEach(item) {
+        try {
+            let tr = `
+                    <td class="ps-1" colspan="3">
+                        <div class="my-auto">
+                            <h6 class="text-dark text-sm mb-0 fw-bold">
+                                <span class="text-primary" >${item.CourseCode}</span>
+                            </h6>
+                            <span class="text-xs">${item.CourseName}</span>
+                        </div>
+                    </td>
+
+                    <td>${StuEvaCou_RenderEach_Combo(item.ID, StuEvaCou_DataStaCerti, StuEvaCou_KeyClass['CertiStatus'], "CertiStatus")}</td>
+                    <td>${StuEvaCou_RenderEach_Combo(item.ID, StuEvaCou_DataStaRevi, StuEvaCou_KeyClass['ReviStatus'], "ReviStatus")}</td>
+                    <td>${StuEvaCou_RenderEach_Combo(item.ID, StuEvaCou_DataStaLevel, StuEvaCou_KeyClass['LevelStatus'], "LevelStatus")}</td>
+                `
+            return `<tr id="rowCourse_${item.ID}" data-id="${item.ID}" >${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function StuEvaCou_RenderEach_Combo(id, data, clsName, type) {
+        try {
+            let result = `
+                    <div id="${clsName}_${id}" data-id="${id}" data-key="${type}" class="${clsName} ui dropdown ps-0 text-dark fw-bold text-sm border-0 dropdown-item w-auto" tabindex="0">
+                        <i class="dropdown icon"></i>
+                        <input type="hidden" value="0">
+                        <div class="text">selected</div>
+                        <div class="menu" tabindex="-1">${StuEvaCou_RenderEach_ComboData(data)}</div>
+                    </div>
+                `
+            return result;
+        }
+        catch (ex) {
+            return ''
+        }
+    }
+
+    function StuEvaCou_RenderEach_ComboData(data) {
+        try {
+            let result = ``;
+            if (data && data.length != 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    result += `<div class="item" data-value="${item.ID}">${item.Name}</div>`
+                }
+            }
+            return result
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region // EVENT CHANGE
+
+    function StuEvaCou_EventChange() {
+        $("#StuEvaCou_TBodyContent .dropdown-item").unbind('change').change(function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            let _id = Number($(this).attr('data-id'));
+            let _keyAttr = $(this).attr('data-key');
+            let _value = $(this).dropdown('get value') ? Number($(this).dropdown('get value')) : 0;
+            if (_id && !isNaN(_id) && _id != 0) {
+                if (StuEvaCou_DataMain && StuEvaCou_DataMain[_id] != undefined) {
+                    StuEvaCou_DataMain[_id][_keyAttr] = _value;
+                }
+            }
+        })
+    }
+
+    //#endregion
+
+    //#region // FILL DATA STUDENTS
+
+    function StuEvaCou_FillDataStudent() {
+        if (StuEvaCou_DataMain && Object.entries(StuEvaCou_DataMain).length != 0) {
+            for ([key, value] of Object.entries(StuEvaCou_DataMain)) {
+                let staCerti = value.CertiStatus;
+                let staLevel = value.LevelStatus;
+                let staRevi = value.ReviStatus;
+                if (staCerti != undefined && staCerti != 0) {
+                    $('#stuCerti_' + key).dropdown("refresh")
+                    $('#stuCerti_' + key).dropdown("set selected", staCerti.toString())
+                }
+                if (staLevel != undefined && staLevel != 0) {
+                    $('#stuLevel_' + key).dropdown("refresh")
+                    $('#stuLevel_' + key).dropdown("set selected", staLevel.toString())
+                }
+                if (staRevi != undefined && staRevi != 0) {
+                    $('#stuRevi_' + key).dropdown("refresh")
+                    $('#stuRevi_' + key).dropdown("set selected", staRevi.toString())
+                }
+            }
+        }
+    }
+
+    //#endregion
+
+    //#region // EXECUTE
+
+    function StuEvaCou_Execute() {
+        AjaxLoad(url = "/Student/Student/StudentEvaluateCourse/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(Object.values(StuEvaCou_DataMain))
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result == '1') {
+                    notiSuccess();
+                    if (typeof Course_LoadViewDetail == 'function') Course_LoadViewDetail();
+                    if (typeof smain_Loadcourse == 'function') smain_Loadcourse();
+                    StuEvaCou_CloseDetail();
+                }
+                else notiError_SW();
+            }
+            , sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+
+    //#endregion
+
+    //#region // OTHER
+
+    function StuEvaCou_CloseDetail() {
+        if (typeof smain_closeDetailDiv === 'function') smain_closeDetailDiv();
+    }
+
+        //#endregion
+
+</script>
+
+<style>
+
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: transparent !important;
+    }
+
+    .icon-search {
+        min-width: 40px;
+    }
+
+    #StuEvaCou_Detail #StuEvaCou_dtTableCourseStatus.search tr.row-hidden {
+        display: none !important;
+    }
+</style>

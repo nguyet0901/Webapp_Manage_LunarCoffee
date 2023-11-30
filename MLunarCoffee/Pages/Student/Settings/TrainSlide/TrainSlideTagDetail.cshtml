@@ -1,0 +1,118 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.TrainSlide.TrainSlideTagDetail.TrainSlideTagDetailModel
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="mb-3 ps-4 card-header">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0 text-capitalize">@Local["Thẻ gắn tài liệu"]</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="p-3 pt-0">
+                    <div class="row px-1 form3" id="formTrainSlideTag">
+                        <div class="field col-6">
+                            <label>@Local["Tên thẻ"]</label>
+                            <input id="TrainSlideTagName" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-6">
+                            <label>@Local["Màu"]</label>
+                            <div class="field col-12 p-1 borderColorDiv">
+                                <input id="TrainSlideColor" name="fillCode" type="text" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="field col-6">
+                            <label>@Local["Mã"]</label>
+                            <input id="TrainSlideTagCode" name="code" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-6">
+                            <label>@Local["Ghi chú"]</label>
+                            <input id="TrainSlideTagNote" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fixed-botombutton d-flex align-items-center">
+            <div class="text-danger text-gadient text-sm font-weight-bold pe-2" id="textShowMessage">
+            </div>
+            <div class="action_Save-Content mt-2">
+                <button class="btn btn-secondary" onclick=" event.preventDefault(); return TrainSlideTag_CloseDetail()">@Local["Đóng"]</button>
+                <button id="TrainSlideTagbtnDetail" type="button" class="btn bg-gradient-primary _tab_control_" onclick="event.preventDefault();TrainSlideTag_ExcuteDetail()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var ser_SourceDetailID;
+    $(document).ready(function() {
+        ser_SourceDetailID = '@Model._DataDetailID';
+        if (ser_SourceDetailID != "0") TrainSlideTag_LoadDataUpdate();
+        $("#TrainSlideColor").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            showInput: true,
+            color: '#cb0c9f',
+            palette: [
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+    });
+    function TrainSlideTag_LoadDataUpdate() {
+        AjaxLoad(url = "/Student/Settings/TrainSlide/TrainSlideTagDetail?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, asyns = true, error = null
+            , success = function(result) {
+                Data = JSON.parse(result);
+                TrainSlideTag_FillDataDetail(Data[0]);
+            }
+        )
+    }
+    function TrainSlideTag_FillDataDetail(item) {
+        $('#TrainSlideTagName').val((item.Name));
+        $("#TrainSlideColor").spectrum("set", item.Color);
+        $('#TrainSlideTagCode').val((item.Code));
+        $('#TrainSlideTagNote').val((item.Note));
+    }
+    function TrainSlideTag_ExcuteDetail() {
+        var data = new Object();
+        data.Name = $('#TrainSlideTagName').val() ? $('#TrainSlideTagName').val() : "";
+        data.Color = $("#TrainSlideColor").spectrum('get').toHexString();
+        data.Code = $('#TrainSlideTagCode').val() ? $('#TrainSlideTagCode').val() : "";
+        data.Note = $('#TrainSlideTagNote').val() ? $('#TrainSlideTagNote').val() : "";
+        $('#formTrainSlideTag').form('validate form');
+        if ($('#formTrainSlideTag').form('is valid')) {
+            AjaxLoad(url = "/Student/Settings/TrainSlide/TrainSlideTagDetail?handler=ExcuteData"
+                , data = { data: JSON.stringify(data), CurrentID: ser_SourceDetailID }, async = true, error = null
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        TrainSlideTag_LoadList();
+                        TrainSlideTag_CloseDetail();
+                    } else {
+                        document.getElementById("textShowMessage").innerHTML = '@Local["Trùng dữ liệu"]!';
+                    }
+                });
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    #formTrainSlideTag .borderColorDiv{
+        border: 1px solid #d2d6da;
+        border-radius: 0.5rem;
+    }
+</style>

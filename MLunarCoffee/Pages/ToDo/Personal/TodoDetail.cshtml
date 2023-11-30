@@ -1,0 +1,587 @@
+﻿@page
+@model MLunarCoffee.Pages.ToDo.Personal.TodoDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row">
+    <div class="col-12">
+        <!--Master-->
+        <div class="" id="####">
+            <div class="card-header pb-0">
+                <div class="d-flex">
+                    <div class="avatar avatar-lg">
+                        <img alt="Image placeholder" src="/default.png" id="tododetail_send_image">
+                    </div>
+                    <div class="ms-2">
+                        <h6 class="mb-0" id="tododetail_send_name"></h6>
+                        <p class="text-xs mb-0" id="tododetail_time_send"></p>
+                        <span>to</span>
+                        <p id="tododetail_recieve_name"></p>
+                    </div>
+                    <div class="ms-auto mt-1">
+                        <!-- #region button -->
+                        <button class="btn btn-sm bg-gradient-danger mb-0" id="tododetail_send_close">close</button>
+                        <button id="tododetail_remind" class="btn btn-sm bg-gradient-success mb-0"></button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card-body pt-0">
+                <p class="mb-4" id="tododetail_content">
+                </p>
+                <div class="row">
+                    <div class="d-flex">
+                        <div class="d-flex align-items-center" id="tododetail_reaction_a" onclick="Todo_Detail_Reaction_Header_Click()">
+                            <i class="fas fa-heart me-1 cursor-pointer" data-reaction="[]" id="tododetail_reaction_icon"></i>
+                            <span class="text-sm me-3" id="tododetail_reaction_num"></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div id="tododetail_status_color" class="badge badge-sm">
+                                <div id="tododetail_status_name"></div>
+                            </div>
+                            @*<i class="ni ni-bell-55 text-success text-gradient"></i> <span class="ps-1 text-dark text-sm font-weight-bold">Status change</span>*@
+                        </div>
+                    </div>
+                    <div class="ms-auto">
+                        <div class="d-flex align-items-center justify-content-sm-end">
+                            <div class="d-flex align-items-center" id="todo_detail_group">
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="horizontal dark my-3">
+                </div>
+                <!-- Comments -->
+                <div class="mb-1">
+                    <div class="d-flex mt-1 chat-form col-12 col-sm-12 ms-2">
+                        <div class="flex-grow-1 my-auto">
+                            <form>
+                                <textarea class="form-control" placeholder="Type your message" rows="2" id="todo_message_input"></textarea>
+                            </form>
+                        </div>
+                        <div class="flex-shrink-0 my-auto">
+                            <button class="btn badge badge-sm bg-gradient-info ms-2 py-3 px-3" id="todo_message_send" onclick="Todo_Detail_Message_Send()">Send</button>
+                            <button class="btn badge badge-sm bg-gradient-info ms-2 py-3 px-3" id="todo_message_cancel" onclick="Todo_Detail_Message_Cancel()">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="todo_detail_message">
+
+                    </div>
+                    <button id="todo_detail_message_more" class="loadmore btn btn-secondary w-100 p-1" onclick="ToDoDetail_LoadMessage()">Load more</button>
+                    <div id="todo_detail_message_wait" class="ui segment waitingdiv" style="display: none; position: relative !important">
+                        <div class="ui active inverted dimmer">
+                            <div class="ui small text loader"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Detail-->
+        <div id="####">
+        </div>
+    </div>
+</div>
+ 
+<script>
+
+
+    let todo_detail_begin = 0;
+    let todo_detail_limit = 5;
+    let todo_detail_current = 0;
+
+    let toto_detail_close = 0;
+  
+    $(document).ready(function () {
+        Todo_Detail_Load_Data_Outside();
+    });
+    function Todo_Detail_Load_Data_Outside () {
+        todo_detail_begin = 0;
+        Todo_Detail_Update_Read();
+        Todo_Detail_UnEdit();
+        ToDoDetail_LoadData();
+        ToDoDetail_LoadMessage();
+        if ($('#todo_message_input').hasClass('noticeMess'))
+            $('#todo_message_input').removeClass('noticeMess')
+        $('#todo_detail_message').html('')
+    }
+    function ToDoDetail_LoadData () {
+        AjaxLoad(url = "/Todo/Personal/TodoDetail/?handler=LoadData"
+            , data = {CurrentID: current_todo_id}, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result).Table;
+                    let datagroup = JSON.parse(result).Table1;
+                    if (data != undefined && data.length != 0) {
+                        TodoDetail_FillData(data[0]);
+                    }
+                    if (datagroup != undefined && datagroup.length != 0) {
+                        TodoDetail_FillDataGroup(datagroup);
+                    }
+                }
+            });
+    }
+    function TodoDetail_FillDataGroup (data) {
+
+        let content = '';
+        for (i = 0; i < data.length; i++) {
+            let obj = Fun_GetObject_ByID(DataUser, data[i].UserID);
+            let name = (obj != null) ? obj.Name : '';
+            let image = (obj != null) ? obj.Avatar : Master_Default_Image;
+            content = content
+                + ((i == 0) ? '<i style="color: #767676;" class="fas fa-key text-sm"></i>' : '')
+                + '<a href = "javascript:;" class="avatar avatar-xs rounded-circle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="' + name + '">'
+                + ' <img alt="Image placeholder" src="' + image + '"> '
+                + '</a> '
+        }
+        $('#todo_detail_group').html(content);
+        $(".group_team_image").popup({
+            transition: "scale up",
+            position: "top right"
+        });
+
+
+    }
+    function TodoDetail_FillData (item) {
+
+        let obj_from = Fun_GetObject_ByID(DataUser, item.UserFrom);
+        let obj_to = Fun_GetObject_ByID(DataUser, item.UserTo);
+        let name_from, image_from, name_to, image_to;
+        name_from = (obj_from != null) ? obj_from.Name : '';
+        image_from = (obj_from != null) ? obj_from.Avatar : Master_Default_Image;
+        name_to = (obj_to != null) ? obj_to.Name : '<span style="color: #767676;">me</span>';
+        image_to = (obj_to != null) ? obj_to.Avatar : Master_Default_Image;
+
+        $('#tododetail_send_name').html(name_from);
+        $('#tododetail_send_image').attr('src', image_from);
+
+        $('#tododetail_recieve_name').html((item.UserTo != sys_userID_Main) ? name_to : 'me');
+        if (item.Content != '') {
+            $('#tododetail_content').html(item.Content);
+        }
+        else $('#tododetail_content').html('<span style="color: #d4d4d5;">no content</span>');
+
+        $('#tododetail_time_send').html(GetTimeAgo_FromCurrent(item.Created));
+        let userstring = '"' + sys_userID_Main + '"';
+        reaction = item.Reaction;
+        let classReac = '';
+        if (reaction != undefined && reaction != '') {
+            $('#tododetail_reaction_icon').attr('data-reaction', reaction)
+            let _ob = JSON.parse(reaction)
+            let count = _ob.length;
+            $('#tododetail_reaction_num').html(count)
+            if (reaction.includes(userstring)) {
+                if (!$('#tododetail_reaction_icon').hasClass('liked'))
+                    $('#tododetail_reaction_icon').addClass('liked')
+            }
+            else {
+                if ($('#tododetail_reaction_icon').hasClass('liked'))
+                    $('#tododetail_reaction_icon').removeClass('liked')
+            }
+
+        }
+        else {
+            $('#tododetail_reaction_num').html('0')
+            if ($('#tododetail_reaction_icon').hasClass(classReac))
+                $('#tododetail_reaction_icon').removeClass(classReac)
+
+
+        }
+        let statusName = item.StatusName;
+        let statusColor = item.StatusColor;
+        if (statusName != '') {
+            $('#tododetail_status_name').html(statusName);
+            $("#tododetail_status_color").css("background-color", statusColor);
+        }
+        else {
+            $('#tododetail_status_name').html('');
+            $("#tododetail_status_color").css("background-color", 'white');
+        }
+        if (Number(item.IsRemind) == 1) {
+            $('#tododetail_remind').show();
+            $('#tododetail_remind').html('REMIND ' + ConvertDateTimeUTC_NoYear(item.TimeRemind));
+        }
+        else {
+            $('#tododetail_remind').hide();
+        }
+        toto_detail_close = Number(item.IsClose);
+        Todo_Detail_SH_WhenClose(toto_detail_close);
+    }
+    function ToDoDetail_LoadMessage (messageid) {
+        let mesid = (messageid != undefined) ? Number(messageid) : 0;
+        AjaxLoad(url = "/Todo/Personal/TodoDetail/?handler=LoadData_Message"
+            , data = {
+                CurrentID: current_todo_id
+                , limit: todo_detail_limit
+                , begin: todo_detail_begin
+                , mesid: mesid
+            }, async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length != 0) {
+                        if (mesid == 0) {
+                            if (todo_detail_begin == 0) $('#todo_detail_message').html('')
+                            for (i = 0; i < data.length; i++) {
+                                let el = TodoDetail_RenderMessage_Each(data[i])
+                                let obj = createElementFromHTML(el);
+                                $("#todo_detail_message").append(obj);
+                            }
+                            todo_detail_begin = data[data.length - 1].ID;
+                        }
+                        else {
+
+                            TodoDetail_EditRowItem(mesid, data[0]);
+
+                        }
+                        $('#todo_detail_message_more').show();
+                    }
+                    else {
+                        $('#todo_detail_message_more').hide();
+                    }
+                    Todo_Detail_Reaction_Message_Event();
+                }
+            },
+            before = function () {
+                $('#todo_detail_message_wait').show()
+
+            },
+            complete = function (e) {
+                $('#todo_detail_message_wait').hide()
+            });
+    }
+    function TodoDetail_Render_Reaction (reaction, id) {
+        let result = '';
+        let userstring = '"' + sys_userID_Main + '"';
+        if (reaction != undefined && reaction != '') {
+            let _ob = JSON.parse(reaction)
+            let count = _ob.length;
+            let classReac = '';
+            classReac = (reaction.includes(userstring)) ? 'liked' : '';
+            result = '<a class="like">'
+                + '<i id="todo_mess_' + id + '" data-reaction=' + reaction + ' data-id=' + id + ' style="color: gray;" class="like cursor-pointer fas fa-heart item_message_like ' + classReac + '"></i> '
+                + '<span class="text-sm me-2" id="todo_mess_count' + id + '">' + count + '</span>'
+                + '</a>';
+        }
+        return result;
+    }
+    function TodoDetail_Render_MessIcon (id, userSend) {
+        let result = '';
+        if (Number(userSend) == Number(sys_userID_Main) && toto_detail_close == 0) {
+            result = '<a data-id=' + id + ' class="todo_mess_edit"><i class="fas fa-edit alternate icon"></i></a>'
+                + '<a data-id=' + id + ' class="todo_mess_delete"><i class="fas fa-ban"></i></a>';
+        }
+        return result;
+    }
+    function TodoDetail_RenderMessage_Each (item) {
+
+        let stringContent = ''
+        if (item != undefined && item != null) {
+            let img, name, time;
+            let obj = Fun_GetObject_ByID(DataUser, item.UserSend);
+            name = (obj != null) ? obj.Name : '';
+            img = (obj != null) ? obj.Avatar : Master_Default_Image;
+            time = GetTimeAgo_FromCurrent(item.Created);
+            let editinfo = '';
+            if (item.Editor != 0) {
+                editinfo =
+                    '<i style="padding-left: 4px;" title='
+                    + GetTimeAgo_FromCurrent(item.Modified)
+                    + ' class="pencil alternate icon todo_mess_editinfo"></i>'
+
+            }
+            let tr =
+                '<div class="d-flex">'
+                + ' <div class="flex-shrink-0">'
+                + '<img alt="Image placeholder" class="avatar rounded-circle" src="' + img + '">'
+                + ' </div> '
+                + ' <div class="flex-grow-1 ms-3"> '
+                + '  <h6 class="mt-0">' + name + '<span class="text-xs ps-2">' + time + '</span>' + '</h6> '
+                //+ editinfo
+                + ' <p class="text-sm" id="todo_mess_content_' + item.ID + '">' + item.Content + '</p>'
+                + ' <div class="d-flex">'
+                + TodoDetail_Render_Reaction(item.Reaction, item.ID)
+                + TodoDetail_Render_MessIcon(item.ID, item.UserSend)
+                + '  </div> '
+                + '   </div>   '
+                + ' </div>  '
+            stringContent = '<div id="todo_message_item_' + item.ID + '" class="todo_message_item">' + tr + '</div>';
+
+
+
+     @*       '<img class="todo_mess_img"  src="data:image/png;base64, ' + img + '" alt="label-image">'
+                + '<div style="margin-left: 40px;">'
+                + '<span class="todo_mess_name">' + name + '</span>'
+                + '<span class="todo_mess_time">' + time + '</span>'
+                + editinfo
+                + '<div id="todo_mess_content_' + item.ID + '" class="todo_mess_content">' + item.Content + '</div>'
+                + TodoDetail_Render_Reaction(item.Reaction, item.ID)
+                + TodoDetail_Render_MessIcon(item.ID, item.UserSend)
+                + '</div>';
+
+            stringContent = '<div id="todo_message_item_' + item.ID + '" class="todo_message_item">' + tr + '</div>';*@
+        }
+        return stringContent;
+
+    }
+    //#region // Handle Row
+    function TodoDetail_DeleteMessage (id) {
+        let _row_todo = $("#todo_message_item_" + id);
+        if (_row_todo.length) {
+            _row_todo.remove();
+        }
+    }
+    function TodoDetail_EditRowItem (id, item) {
+
+        let el = TodoDetail_RenderMessage_Each(item)
+        let obj = createElementFromHTML(el);
+        if ($('#todo_message_item_' + id).length) {
+            let currentnode = document.getElementById('todo_message_item_' + id);
+            currentnode.parentNode.replaceChild(obj, currentnode);
+        }
+        else {
+            $('#todo_detail_message').prepend(el);
+        }
+    }
+
+    function TodoDetail_AddTopRowItem (id, item) {
+        if (!$('#todo_message_item_' + id).length) {
+            let el = TodoDetail_RenderMessage_Each(item)
+            $('#todo_detail_message').prepend(el);
+        }
+    }
+
+    //#endregion
+</script>
+<style>
+    #tododetail_edit {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 0px;
+        cursor: pointer;
+    }
+
+    #todo_message_cancel {
+        display: none;
+        float: right;
+        color: #767676;
+        font-size: 12px;
+        background: #e6e6e6;
+        padding: 1px 20px;
+        cursor: pointer;
+        margin-top: 7px;
+        margin-right: 4px;
+    }
+
+    #todo_message_send {
+        display: none;
+        float: right;
+        color: white;
+        font-size: 12px;
+        background: #2185d0;
+        padding: 1px 20px;
+        cursor: pointer;
+        margin-top: 7px;
+    }
+
+
+
+    @* #tododetail_remind {
+        display: none;
+        font-size: 11px;
+        background: #00ad67;
+        padding: 0px 5px;
+        color: white;
+        margin-right: 4px;
+        position: absolute;
+        right: -2px;
+        top: 21px;
+        border-radius: 3px;
+        * @
+    }
+
+@*    #tododetail_status_color {
+        height: 10px;
+        width: 10px;
+        display: inline-block;
+        background-color: rgb(0, 255, 255);
+        margin-left: 5px;
+    }*@
+
+@*    #tododetail_status {
+        display: inline-block;
+    }
+
+    #tododetail_status_name {
+        display: inline-block;
+        color: #767676;
+        font-size: 13px;
+    }*@
+
+/*    #tododetail_send_close {
+        display: none;
+        position: absolute;
+        right: 0;
+        background: #ff0000b3;
+        padding: 0px 4px;
+        color: white;
+        border-radius: 3px;
+    }*/
+
+@*    #todo_message_input {
+        border-radius: 2px;
+        background: #f5fbff;
+        width: 100%;
+        height: 50px;
+        border: 1px solid #e6e6e6;
+        font-size: 13px;
+        padding-left: 10px;
+    }*@
+
+    .todo_mess_name {
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .todo_mess_time {
+        color: #767676;
+        font-size: 12px;
+        margin-left: 4px;
+    }
+
+    .todo_mess_content {
+        font-size: 13px;
+        color: #3e3e3e;
+    }
+
+    .todo_message_item {
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .todo_mess_img {
+        width: 28px;
+        height: 28px;
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        border-radius: 4px;
+        border: solid #e6e6e6 1px;
+    }
+
+    #todo_detail_message {
+        margin: 30px 0px 0px 3px;
+    }
+
+@*    #tododetail_content {
+        margin: 15px 0px 2px 1px;
+        padding-bottom: 20px;
+    }*@
+
+    #tododetail_send_image {
+@*        width: 28px;
+        height: 28px;
+        position: absolute;
+        top: 5px;
+        left: 0;
+        border-radius: 4px;
+        border: solid #e6e6e6 1px;*@
+    }
+
+    #todo_detail_info {
+        margin: 10px 3px 5px 8px;
+        position: relative;
+        font-size: 13px;
+    }
+
+    #tododetail_send_name {
+        color: #1b1c1d;
+        font-weight: 600;
+    }
+
+    #tododetail_time_send {
+        color: #767676;
+    }
+
+    #tododetail_recieve_name {
+        display: inline-flex;
+        color: #260077;
+    }
+
+    .liked:before {
+        color: red;
+    }
+
+    #todo_message_input:disabled {
+        background: #f9f9f9;
+    }
+
+    .noticeMess {
+        background: #db282814 !important;
+    }
+
+    a.disabled {
+        pointer-events: none;
+        cursor: default;
+    }
+
+    /*    .loadmore {
+        height: 20px;
+        width: 100%;
+        border-style: none;
+        border-radius: 20px;
+        font-size: 12px;
+        color: #db2828;
+        font-weight: 500;
+        background: transparent;
+
+    }*/
+
+    .todo_mess_edit {
+        opacity: 0.3;
+        color: #d4d4d5;
+    }
+
+    .todo_mess_delete {
+        opacity: 0.3;
+        color: #d4d4d5;
+    }
+
+    .message_edit {
+        border: 1px #2185d0 dotted;
+        background: #e6e6e652;
+    }
+
+    .todo_message_item:hover {
+        background: #e6e6e638;
+    }
+
+        .todo_message_item:hover .todo_mess_edit {
+            opacity: 1;
+        }
+
+        .todo_message_item:hover .todo_mess_delete {
+            opacity: 1;
+        }
+
+    #todo_detail_group img {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        margin: 2px;
+        border-radius: 4px;
+        border: 1px solid #e6e6e62e;
+    }
+
+    #todo_detail_group {
+        position: relative;
+        display: inline-flex;
+        text-align: right;
+        width: 100%;
+        height: 20px;
+        justify-content: flex-end;
+        padding-right: 2px;
+    }
+</style>

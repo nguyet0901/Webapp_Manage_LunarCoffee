@@ -1,0 +1,208 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.ServiceStatus.Refund.RefundPie
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Hoàn tiền khách hàng"]</h6>
+            <p class="text-sm mb-0">@Local["Báo cáo hoàn tiền khách hàng theo lý do"]</p>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#RR_DivPie" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return RR_LoadDataReport()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return RR_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="RR_DivPie">
+        <div class="card-body p-0">
+            <div class="row px-2">
+                <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Lý do hoàn tiền"]:
+                        <span id="RR_PieTotalPrice" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-0 mt-md-4 my-2" style="min-height: 150px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="RR_PiePrice" class="chart-canvas" height="180"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-xl-8 p-1">
+                    <div class="mt-2 table-responsive mobile-responsive">
+                        <table class="table vt-table mb-0" id="RR_Grid">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="ps-6">@Local["Lý do hoàn tiền"]</th>
+                                    <th>@Local["Số lần hoàn tiền"]</th>
+                                    <th>@Local["Tổng tiền"]</th>
+                                    <th>@Local["Tỷ lệ"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="RR_GridBody">
+                            <tbody id="RR_GridBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        ToolPopper();
+        RR_LoadDataReport();
+        Checking_TabControl_Permission();
+    });
+    function RR_LoadDataReport() {
+        let _branch = "@Model._branch";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/ServiceStatus/Refund/RefundPie?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let pieprice = JSON.parse(result);
+
+                    let TotalAmount = 0;
+                    for (let i = 0; i < pieprice.length; i++) {
+                        TotalAmount += Number(pieprice[i]['Amount']);
+                    }
+                    $('#RR_PieTotalPrice').html(formatNumberToMilion(Number(TotalAmount)));
+                    RR_ReportPie_Description(pieprice, TotalAmount, 'RR_GridBody');
+                    rp_pie("RR_PiePrice", pieprice, 'Name', 'Amount')
+
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+
+    }
+
+    function RR_ReportPie_Description(data, total, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let  = 0;
+            let totalNumber = 0;
+            let totalProportion = 0;
+            let percent = 0;
+            if (data && data.length > 0) {
+                for (let j = 0; j < data.length; j++) {
+                    let item = data[j];
+                    let _color = colorChart[j % colorChart.length];
+                    totalNumber += Number(item['NumberOfRefund']);
+                    percent = item['Proportion'];
+
+                    if (j == data.length - 1)
+                    {
+                       percent = (100 - totalProportion).toFixed(2);
+                    }
+                    totalProportion += Number(percent);
+                    let tr = `<td class="vt-number-order"></td>
+                              <td>
+                                  <div class="d-flex px-2 py-0">
+                                      <span class="badge" style="background-color: ${_color}; width: 21px; height: 21px"> </span>
+                                      <div class="d-flex flex-column justify-content-center ms-4 ps-1">
+                                        <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-id="${item['ReasonID']}" data-name="${item['ReasonName']}">
+                                            ${item['ReasonName']}
+                                        </a>
+                                      </div>
+                                  </div>
+                              </td>
+                              <td class="align-middle text-end text-dark text-sm ">
+                                  <span class="pe-2 fw-bold me-2"> ${formatNumber(item['NumberOfRefund'])} </span>
+                              </td>
+                              <td class="align-middle text-end text-dark text-sm ">
+                                  <span class="pe-2 fw-bold me-2"> ${formatNumber(item['Amount'])} </span>
+                              </td>
+                              <td class="align-middle text-end text-dark text-sm ">
+                                  <span class="fw-normal"> ${percent} % </span>
+                              </td>`;
+
+                    stringContent += `<tr class="vt-number"> ${tr} </tr>`;
+                }
+                stringContent += `<tr class="vt-number text-white bg-gradient bg-primary mt-2">
+                                    <td></td>
+                                    <td class="text-start">
+                                        <div class="d-flex px-2 py-0">
+                                            <span class="badge bg-gradient bg-primary" style="width: 21px; height: 21px"> </span>
+                                            <div class="d-flex flex-column justify-content-center ms-4 ps-1">
+                                                 <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white mb-0 text-sm fw-bold" data-id="0">@Local["Tất cả"]</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-normal me-2 pe-2"> ${formatNumber(totalNumber)} </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-normal me-2 pe-2"> ${formatNumber(total)} </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-normal"> 100 %</span>
+                                    </td>
+                                 </tr>`;
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            RR_GeneralEvent();
+        }
+    }
+
+    //#region //Event
+    function RR_GeneralEvent () {
+        $("#RR_GridBody .buttonViewClass").unbind('click').on("click", function () {
+            let id = $(this).attr('data-id');
+            let name = $(this).attr('data-name');
+            $("#RD_GeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#RD_GeneralDetail").offset().top
+            }, 300);
+            if (id == "0") {
+
+                $("#RD_DetailRefund").html('@Local["Tất cả lý do"]');
+            }
+            else {
+                $("#RD_DetailRefund").html('@Local["Lý do"]: ' + name);
+            }
+            RD_DetailLoad(id);
+        })
+    }
+    function RR_Export () {
+        syslog_ExpExcel('e', Outlang["Hoan_tien_khach_hang"]);
+        exportToExcel("RR_Grid", Outlang["Hoan_tien_khach_hang"]);
+    }
+    //#endregion
+</script>

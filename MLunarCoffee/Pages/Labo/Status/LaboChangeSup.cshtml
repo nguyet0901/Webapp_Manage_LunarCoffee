@@ -1,0 +1,208 @@
+﻿@page
+@model MLunarCoffee.Pages.Labo.Status.LaboChangeSupModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js')</script>
+
+<div class="row ">
+    <div class="col-12">
+        <div class="card shadow-lg">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="col-auto my-auto">
+                        <div class="h-100">
+                            <h6 class="mb-0">@Local["Chỉnh sữa"]</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2 form3" id="formLaboDetail">
+                <div class="row px-2">
+                    <div class="col-12 p-1">
+                        <label>@Local["Nhà cung cấp"]</label>
+                        <div class="ui fluid search selection dropdown form-control" id="Labo_DetailSup" onchange="event.preventDefault();return OnLaboChangeStatus();">
+                            <input type="hidden" name="appointment" />
+                            <i class="dropdown icon"></i>
+                            <input id="searchSpecifiedService" class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Nhà cung cấp"]</div>
+                            <div id="ccbLabo_DetailSup" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row px-2">
+                    <div class="col-12 col-sm-6 col-md-6 col-xl-4 p-1">
+                        <label>@Local["Đơn giá"]</label>
+                        <input id="Labo_DetailSupUniPrice" name="source" type="text" class="form-control money"
+                               placeholder="eg .@Local["Đơn giá"]"
+                               onchange="event.preventDefault();return OnLaboChangeStatus_UnitPrice();" />
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-6 col-xl-4 p-1">
+                        <label>@Local["Số lượng"]</label>
+                        <input id="Labo_DetailQuantity" name="source" type="text" class="form-control money"
+                               placeholder="eg .@Local["Số lượng"]" disabled />
+                    </div>
+                    <div class="col-12 col-md-12 col-xl-4 p-1">
+                        <label>@Local["Thành tiền"]</label>
+                        <input id="Labo_DetailSupPrice" name="source" type="text" class="form-control money"
+                               placeholder="eg .@Local["Thành tiền"]"/>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessageLaboSub"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="formLaboDetail" onclick="Labo_Sup_ClosePopup()">@Local["Đóng"]</button>
+                        <button id="changesub_execute" form="formLaboDetail" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                onclick="Labo_Sup_SavePopup()" style="display: none;">
+                            @Local["Lưu"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let ser_ChangeSub_LaboID = Number("@Model._CurrentID");
+    let DataLaboSup;
+    let flag_ChangeSub = 0;
+
+    $(document).ready(function () {
+        Labo_Sup_LoadSupplier();
+    })
+    function Labo_Sup_LoadSupplier () {
+        AjaxLoad(url = "/Labo/Status/LaboChangeSup/?handler=LaboSup"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                DataLaboSup = JSON.parse(result);
+                Load_Combo(DataLaboSup, "ccbLabo_DetailSup", true);
+                LaboChangeSub_Load();
+                $('#Labo_DetailSupPrice').divide();
+                $('#Labo_DetailSupUniPrice').divide();
+                $('.ui.dropdown').dropdown();
+            }
+
+        );
+    }
+    function Labo_Sup_ClosePopup() {
+        if ($('#DetailModalLaboChangeSub').length) {
+            $('#DetailModalLaboChaneSub').fadeOut(300);
+            $('#DetailModalLaboChangeSub').html('');
+        }
+    }
+    function Labo_Sup_SavePopup() {
+        let unitprice = $('#Labo_DetailSupUniPrice').val() ? $('#Labo_DetailSupUniPrice').val() : 0;
+        let price = $('#Labo_DetailSupPrice').val() ? $('#Labo_DetailSupPrice').val() : 0;
+        let sub = Number($('#Labo_DetailSup').dropdown('get value')) ? Number($('#Labo_DetailSup').dropdown('get value')) : 0;
+
+        AjaxLoad(url = "/Labo/Status/LaboChangeSup/?handler=ChangePrice"
+            , data = {
+                'CurrentID': ser_ChangeSub_LaboID
+                , 'unitprice': unitprice
+                , 'price': price
+                , 'sub': sub
+            }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    if (data != undefined && data.length == 1 && data[0].RESULT == 1) {
+                        notiSuccess();
+                        Labo_Sup_ClosePopup();
+                        if (typeof LaboDetail_LoadData == 'function' && $.isFunction(LaboDetail_LoadData)) LaboDetail_LoadData();
+                        let OldSub = data[0].OldSub;
+                        let NewSub = data[0].NewSub;
+                        let OldPrice = data[0].OldPrice;
+                        let NewPrice = data[0].NewPrice;
+                        if (OldSub != NewSub || OldPrice != NewPrice) {
+                            if (typeof Labo_Detail_Message_Send_Execute == 'function' && $.isFunction(Labo_Detail_Message_Send_Execute)) {
+                                let content = '';
+                                content = content + ((OldSub != NewSub) ? (' [ ' + OldSub + ' -- ' + NewSub + ' ] ') : '')
+                                content = content + ((OldPrice != NewPrice) ? (' [ ' + formatNumber(OldPrice) + ' -- ' + formatNumber(NewPrice) + ' ] ') : '')
+                                Labo_Detail_Message_Send_Execute(content);
+                            }
+
+                        }
+                    }
+                    else {
+                        notiError("@Local["Đã thanh toán không thể thay cập nhật"]")
+                    }
+
+                }
+                else notiError();
+            }
+        );
+    }
+    function OnLaboChangeStatus_UnitPrice() {
+        if (flag_ChangeSub == 1) {
+            let _quantity = $('#Labo_DetailQuantity').val() ? $('#Labo_DetailQuantity').val() : "0";
+            let _price = $('#Labo_DetailSupUniPrice').val() ? $('#Labo_DetailSupUniPrice').val() : "0";
+            $('#Labo_DetailSupPrice').val(_quantity * _price);
+        }
+    }
+    function OnLaboChangeStatus() {
+        if (flag_ChangeSub == 1) {
+            let sub = Number($('#Labo_DetailSup').dropdown('get value')) ? Number($('#Labo_DetailSup').dropdown('get value')) : 0;
+
+            AjaxLoad(url = "/Labo/Status/LaboChangeSup/?handler=GetPrice"
+                , data = {
+                    'CurrentID': ser_ChangeSub_LaboID, 'Sub': sub
+                }, async = true
+                , error = function () {
+                    notiError_SW();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data != undefined && data.length == 1) {
+                            if (data[0].Amount != 0) {
+                                $('#Labo_DetailSupUniPrice').val(data[0].Amount);
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    }
+    function LaboChangeSub_Load() {
+        AjaxLoad(url = "/Labo/Status/LaboChangeSup/?handler=LoadData"
+            , data = {
+                'CurrentID': ser_ChangeSub_LaboID
+            }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let ispaid = (data[0].Paid == 0) ? false : true;
+                    if (ispaid) {
+                        $('#Labo_DetailSup').addClass("disabled");
+                        $("#Labo_DetailSupUniPrice").prop('disabled', true);
+                        $("#Labo_DetailSupPrice").prop('disabled', true);
+                        $('#changesub_execute').remove();
+                    }
+                    else {
+                        $('#changesub_execute').show();
+                    }
+                    $("#Labo_DetailSup ").dropdown("refresh");
+                    $("#Labo_DetailSup ").dropdown("set selected", data[0].SupID);
+                    $('#Labo_DetailSupUniPrice').val(data[0].UnitPrice);
+                    $('#Labo_DetailSupPrice').val(data[0].Price);
+                    $('#Labo_DetailQuantity').val(data[0].Number);
+                    flag_ChangeSub = 1;
+                }
+            }
+        );
+    }
+</script>

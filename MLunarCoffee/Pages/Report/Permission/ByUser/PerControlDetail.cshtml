@@ -1,0 +1,355 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Permission.ByUser.PerControlDetailModel
+@{
+    Layout = null;
+}
+<div class="pcd_MasterContainer">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+
+        </div>
+        <div class="right">
+            <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                <span id="pcd_currentData">0</span>
+                <span class="mx-2">/</span>
+                <span id="pcd_totalData">0</span>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#pcd_dtUserArea" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return pcd_loadData()"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local[" Xuất excel"]">
+                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                   onclick="event.preventDefault(); return pcd_Export()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="pcd_dtUserArea">
+        <div class="card-body px-0 pt-0">
+            <div id="pcd_LoaderList" class="waitingdiv text-center w-100 mt-2 position-absolute start-50 translate-middle-x" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div id="pcd_viewuser">
+                <div class="m-0 my-3 mobile-responsive position-relative vt-header-sticky vt-hs-height overflow-auto">
+                    <table class="table vt-table mb-0" id="pcd_dtUser">
+                        <thead id="pcd_tbHeader">
+                            <tr id="pcd_Row_Parrent" role="row">
+                            </tr>
+                            <tr id="pcd_Row_Child" role="row">
+                            </tr>
+                        </thead>
+                        <tbody id="pcd_dtUserBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return pcd_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+            <div id="pcd_viewrole" class="d-none">
+                <div class="m-0 my-3 mobile-responsive position-relative vt-header-sticky vt-hs-height overflow-auto">
+                    <table data-name="pcd_dtRole" class="table vt-table mb-0" id="pcd_dtRole">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px">#</th>
+                                <th>@Local["Nhóm phân quyền"]</th>
+                                <th>@Local["Phân quyền"]</th>
+                                <th>@Local["Nhóm"]</th>
+                                <th>@Local["Nhân viên"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pcd_dtRoleBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return pcd_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //#region //INIT - DECLARE
+    let pcd_DataReportMain, pcd_DataReportMainSlice;
+    let pcd_xhrLoadDetail;
+    let pcd_IndexReport = 0;
+    let pcd_timeoutCount;
+    let pcd_objRole = {};
+    let pcd_dataRole = [...pug_DataAllControl];
+    let pcd_groupUserID = -1;
+    let pcd_groupID = -1;
+    let pcd_menuID = -1;
+    let pcd_idTableBody = '';
+    let pcd_idTable = '';
+    let pcd_blocknum = 20;
+    $(document).ready(function () {
+        ToolPopper();
+        if (pug_serView == "user") {
+            pcd_idTableBody = 'pcd_dtUserBody';
+            pcd_renderHeader(pcd_dataRole, 'pcd_Row_Parrent', 'pcd_Row_Child');
+            pcd_blocknum = 100;
+        }
+        else {
+            pcd_idTableBody = 'pcd_dtRoleBody';
+            pcd_blocknum = 50;
+        }
+        pcd_idTable = $(`#${pcd_idTableBody}`).closest('table').attr('id');
+        pcd_loadData();
+        Checking_TabControl_Permission();
+    });
+    //#endregion
+
+    //#region //LOADDATA
+    function pcd_loadData() {
+        if (pcd_xhrLoadDetail && pcd_xhrLoadDetail.readyState != 4) pcd_xhrLoadDetail.abort();
+        $(`#${pcd_idTableBody}`).empty();
+        pcd_IndexReport = 0;
+        pcd_DataReportMain = [];
+        pcd_DataReportMainSlice = {};
+        pcd_groupUserID = -1;
+        pcd_menuID = -1;
+        pcd_groupID = -1;
+        AjaxLoad(url = "/Report/Permission/ByUser/PerControlDetail/?handler=Loadata"
+            , data = {
+                'data': JSON.stringify(pug_DataUserGroup),
+            }
+            , async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    let dataUser = [...pug_DataUser]
+
+                    pcd_objRole = data.reduce((pre, arr) => { if (arr["ID"] && arr["UserGroup"]) pre[`${arr["UserGroup"]}_${arr["ID"]}`] = arr; return pre }, {})
+
+                    switch (pug_serView) {
+                        case "user":
+                            $('#pcd_viewuser').removeClass('d-none');
+                            $('#pcd_viewrole').addClass('d-none');
+                            pcd_DataReportMain = JSON.parse(JSON.stringify(dataUser));
+                            pcd_DataReportMainSlice = sliceIntoChunks(dataUser, 200);
+                            fnRenderBlock(pcd_DataReportMainSlice[pcd_IndexReport], pcd_idTableBody
+                                , blocknum = pcd_blocknum
+                                , fnrender = pcd_renderdata
+                                , fnsuccess = null
+                            );
+                            Count_Up("pcd_totalData", pcd_DataReportMain.length);
+                            break;
+                        case "role":
+                            $('#pcd_viewrole').removeClass('d-none');
+                            $('#pcd_viewuser').addClass('d-none');
+                            data.sort((a, b) => {
+                                if ((a?.GroupID ?? 0) < (b?.GroupID ?? 0)) return -1;
+                                if ((a?.GroupID ?? 0) > (b?.GroupID ?? 0)) return 1;
+
+                                if ((a?.ID ?? 0) < (b?.ID ?? 0)) return -1;
+                                if ((a?.ID ?? 0) > (b?.ID ?? 0)) return 1;
+                                // Both idential, return 0
+                                return 0;
+                            });
+                            pcd_DataReportMain = JSON.parse(JSON.stringify(data));
+                            pcd_DataReportMainSlice = sliceIntoChunks(data, 100);
+                            fnRenderBlock(pcd_DataReportMainSlice[pcd_IndexReport], pcd_idTableBody
+                                , blocknum = pcd_blocknum
+                                , fnrender = pcd_renderdata
+                                , fnsuccess = null
+                            );
+                            Count_Up("pcd_totalData", pcd_DataReportMain.length);
+                            break;
+                    }
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#pcd_LoaderList').show();
+                $('#pcd_dtUser').addClass('d-none');
+            }
+            , complete = function (e) {
+                $('#pcd_LoaderList').hide();
+                $('#pcd_dtUser').removeClass('d-none');
+            }
+        );
+        return false;
+    }
+
+    function pcd_RenderMore() {
+        pcd_IndexReport += 1;
+        if (pcd_DataReportMainSlice && pcd_DataReportMainSlice[pcd_IndexReport]) {
+            fnRenderBlock(pcd_DataReportMainSlice[pcd_IndexReport], pcd_idTableBody
+                , blocknum = pcd_blocknum
+                , fnrender = pcd_renderdata
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region //RENDER
+    async function pcd_renderHeader(data, idGroup, id) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+
+                var myNodeGroup = document.getElementById(idGroup);
+                var myNode = document.getElementById(id);
+                if (myNode != null & myNodeGroup != null) {
+                    if (data && data.length != 0) {
+                        let groupID = -1, colspan = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            if ((groupID != - 1 && groupID != item.GroupID)) {
+                                $(`.pcd_group_${groupID}`).attr('colspan', colspan)
+                            }
+
+                            if (groupID != item.GroupID) {
+                                let trGroup = `<th rowspan="1" class="pcd_group_${item.GroupID}  class="vtt-filter no-sort"" style="min-width: 150px">
+                                ${Outlang[item.GroupNameLangKey] ?? item.GroupName}
+                                </th>`;
+                                myNodeGroup.insertAdjacentHTML('beforeend', trGroup);
+                                groupID = item.GroupID;
+                                colspan = 0;
+                            }
+                            colspan++;
+                            if (i == data.length - 1) {
+                                $(`.pcd_group_${groupID}`).attr('colspan', colspan);
+                                let trGroup = `<th rowspan="2">#</th>
+                                               <th class="" rowspan="2" style="min-width: 150px">@Local["Nhóm"]</th>
+                                               <th class="" rowspan="2" style="min-width: 150px">@Local["Nhân viên"]</th>`;
+                                myNodeGroup.insertAdjacentHTML('afterbegin', trGroup);
+                            }
+                            let tr = `<th id="${item.ID}"  rowspan="1" class="pcd_groupchild_${item.GroupID}" style="min-width: 200px">
+                            ${Outlang[item.DescriptionLangKey] ?? item.Description}
+                            </th>`
+
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                resolve();
+            }, 10)
+
+        })
+    }
+
+    async function pcd_renderdata(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+
+                    if (data && data.length != 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let tr = '';
+                            let item = data[i];
+                            switch (pug_serView) {
+                                case "user":
+                                    tr = pcd_renderEachUser(item);
+                                    break;
+                                case "role":
+                                    tr = pcd_renderEachRole(item);
+                                    break;
+                            }
+
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                clearTimeout(pcd_timeoutCount);
+                pcd_timeoutCount = setTimeout(() => {
+                    Count_Up("pcd_currentData", $("#" + id).children().length);
+                }, 300);
+                $('#' + pcd_idTable).tablesort();
+                resolve();
+            }, 10)
+
+        })
+    }
+
+    function pcd_renderEachUser(item) {
+        let tr = '';
+        let tdGroup = '';
+        if (pcd_groupUserID != item.GroupID) {
+            pcd_groupUserID = item.GroupID;
+            let objGroup = Fun_GetObject_ByID(pug_objUserGroup, item.GroupID);
+            let rowspan = objGroup.totalUser;
+            tdGroup = `<td id="pcd_ug${item.GroupID}" rowspan="${rowspan}">${Fun_GetName_ByID(pug_objUserGroup, item.GroupID)}</td>`;
+        }
+        for (let j = 0; j < pcd_dataRole.length; j++) {
+            let itemHeader = pcd_dataRole[j];
+            let isBlock = pcd_objRole[`${item.GroupID}_${itemHeader.ID}`]?.isBlock ?? 1;
+            tr += ` <td class="pcd_ug${item.GroupID} text-center">${isBlock == 1 ? '' : '<i class="fas fa-check text-success"></i><span class="opacity-0">x<span>'}</td>`;
+        }
+        tr = `<tr id="pcd_user_${item.ID}" class="vt-number">
+                                 <td class="vt-number-order"></td>
+                                 ${tdGroup}
+                                 <td>${item.Name}</td>
+                                 ${tr}
+                            </tr>`;
+        return tr;
+    }
+
+    function pcd_renderEachRole(item) {
+        let tr = '';
+        let data = pug_objUserByGroup[item.UserGroup];
+        for (let i = 0; i < (data?.length ?? 0); i++) {
+            let itemUser = data[i]
+            let tdGroup = '';
+            let tdMenu = '';
+            if (pcd_groupID != item.GroupID) {
+                pcd_groupID = item.GroupID;
+                let dataGroup = pcd_DataReportMain.filter(e => e.GroupID == item.GroupID);
+                let rowspanG = dataGroup.reduce((pre, arr) => {
+                    pre += Fun_GetObject_ByID(pug_objUserGroup, arr.UserGroup).totalUser
+                    return pre;
+                }, 0);
+                tdGroup = `<td id="pcd_ug${item.GroupID}" rowspan="${rowspanG}">${Outlang[item.GroupNameLangKey] ?? item.GroupName}</td>`;
+            }
+            if (pcd_menuID != item.ID) {
+                pcd_menuID = item.ID;
+                let dataMenu = pcd_DataReportMain.filter(e => item.ID == e.ID);
+                let rowspanM = dataMenu.reduce((pre, arr) => {
+                    pre += Fun_GetObject_ByID(pug_objUserGroup, arr.UserGroup).totalUser
+                    return pre;
+                }, 0);
+                tdMenu = `<td id="pcd_ugMenu${item.ID}" rowspan="${rowspanM}">${Outlang[item.NameLangKey] ?? item.Name}</td>`;
+            }
+            tr += `<tr id="pcd_role_${itemUser.ID}_${item.ID}" class="vt-number">
+                                 <td class="vt-number-order"></td>
+                                 ${tdGroup}
+                                 ${tdMenu}
+                                 <td >${Fun_GetName_ByID(pug_objUserGroup, itemUser.GroupID)}</td>
+                                 <td>${itemUser.Name}</td>
+                            </tr>`
+        }
+
+        return tr;
+    }
+    //#endregion
+
+    //#region //EXPORT
+    async function pcd_Export() {
+        syslog_ExpExcel('e', Outlang["Sys_phan_quyen_menu"]);
+
+        await exportToExcel(pcd_idTable, Outlang["Sys_phan_quyen_menu"]);
+    }
+    //#endregion
+</script>

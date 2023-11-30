@@ -1,0 +1,374 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Dash.FindTicket
+@{
+    Layout=null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Biến động sản phẩm"]</h6>
+                    <p class="text-sm mb-0">@Local["Xem biến động sản phẩm theo kho và ngày"]</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="divticketfind" class="waitingdiv text-center" style="display: none; position: absolute; left: 50%;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div class="row form3">
+                    <div class="vtcondition">
+                        <a class="sign" data-open="@Local[" Hiển thị"]" data-close="@Local[" Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <p class="text-dark text-sm mb-2">@Local["Nhập mã sản phẩm để tìm kiếm"]</p>
+                            <div class="row m-0">
+                                <div class="field col-12 col-md-6 col-xl-3 px-0 py-1 pe-sm-2">
+                                    <div class="form-group mb-1">
+                                        <div class="input-group bg-gray-200" id="divFindTicket">
+                                            <div class="input-group-text input-group-text px-2" id="FindTicketSpinner">
+                                                <i class="fas fa-search" aria-hidden="true"></i>
+                                                <div class="spinner-border spinner-border-sm d-none"></div>
+                                            </div>
+                                            <input id="txtFindTicket" class="form-control" placeholder="eg .@Local[" Mã sản phẩm"]" type="text">
+                                            <div class="input-group-text"><i class="btn_clear fas fa-minus-circle opacity-1"></i></div>
+                                            <span class="input-group-text bg-transparent" data-bs-toggle="tooltip" data-bs-placement="top"><i class="fas fa-barcode"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="stickytable card shadow-lg d-none" id="FindTicketDiv">
+                                        <div class="card-header pb-0 p-3">
+                                            <h6 class="mb-0">@Local["Danh sách sản phẩm"]</h6>
+                                        </div>
+                                        <div class="contentsearch card-body p-0 mt-3">
+                                            <table class="table vt-table mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>@Local["Mã"]</th>
+                                                        <th>@Local["Tên"]</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="FindTicketBody">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-xl-3 col-xl-3 px-0 py-1 pe-sm-2">
+                                    <div class="field ui fluid search selection dropdown form-control" id="FindTicketWare">
+                                        <input type="hidden" name="branch" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Kho"]</div>
+                                        <div id="cbbFindTicketWare" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field col-12 col-md-6 col-xl-3 px-0 py-1 pe-sm-2">
+                                    <input id="FindTicketDate" class="flatpickr form-control" type="text" placeholder="eg .@Local[" Ngày"]" />
+                                </div>
+                                <div class="field col-12 col-md-6 col-xl-3  px-0 py-1">
+                                    <a class="btn  btn-outline-secondary" onclick="Action_FindTicketDetail()">@Local["OK"]</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12  col-xl-12 p-1 mt-2">
+                        <p id="FindTicketNoresult" class="text-gradient text-danger text-sm mb-1" style="display:none;">@Local["Không có kết quả"].</p>
+                        <div class="border-dashed border-1 border-secondary border-radius-md mt-lg-4 p-3" style="display:none" id="FindTicketDetail">
+                            <div id="ft_name" class="text-md text-primary font-weight-bold text-center"></div>
+                            <div class="text-md text-dark font-weight-bold text-center">
+                                <span id="ft_datefrom" class="text-sm text-dark font-weight-bold ms-2"></span>
+                                <span class="text-sm text-dark font-weight-bold ms-2">-</span>
+                                <span id="ft_dateto" class="text-sm text-dark font-weight-bold ms-2"></span>
+                            </div>
+                            <div class="m-0 my-3 mobile-responsive">
+                                <table class="table vt-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" style="width: 25px;">@Local["#"]</th>
+                                            <th colspan="3">@Local["Chứng từ"]</th>
+                                            <th rowspan="2">@Local["Nhập"]</th>
+                                            <th colspan="3">@Local["Xuất"]</th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                        <tr>
+                                            <th>@Local["Mã sản phẩm"]</th>
+                                            <th>@Local["Ngày"]</th>
+                                            <th>@Local["Mã khách hàng"]</th>
+                                            <th>@Local["Xuất"]</th>
+                                            <th>@Local["Xuất bán"]</th>
+                                            <th>@Local["Xuất điều trị"]</th>
+                                            <th>@Local["Thực tế"]</th>
+                                            <th>@Local["Hệ số"]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ftContentDetail">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+
+    let FT_Timer;
+
+    //#region //Load
+    $(document).ready(function () {
+        FindTicketLoad();
+        let lastDay = new Date();
+        let firstDay = new Date();
+        firstDay.setDate(firstDay.getDate() - 7);
+        $("#FindTicketDate").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        $("#FindTicketDate").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        FindTicketEvent();
+    })
+
+
+    function FindTicketLoad () {
+        AjaxLoad(url = "/WareHouse/Dash/FindTicket/?handler=Initialize"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                if (result != "[]") {
+                    let data = JSON.parse(result);
+                    Load_Combo(data.Warehouse, "cbbFindTicketWare", true);
+                    $("#FindTicketWare").dropdown("clear");
+                    $("#FindTicketWare").dropdown("refresh");
+                    $("#FindTicketWare").dropdown("set selected", data.Warehouse[0].ID);
+
+                }
+            }
+        );
+    }
+    //#endregion
+
+    //#region //Executed
+    function Action_FindTicketDetail () {
+        let code = xoa_dau($('#txtFindTicket').val().toLowerCase()).trim();
+        let wareID = Number($('#FindTicketWare').dropdown('get value')) ? Number($('#FindTicketWare').dropdown('get value')) : 0;
+        let date = $('#FindTicketDate').val() ? $('#FindTicketDate').val() : new Date();
+        let dateFrom;
+        let dateTo;
+        if (date.includes(" to ")) {
+            date = date.replace(" to ", "#");
+            dateFrom = date.split('#')[0];
+            dateTo = date.split('#')[1];
+        }
+        else {
+            dateFrom = date;
+            dateTo = date;
+        }
+        if (code != undefined && code.length >= 2) {
+            AjaxLoad(url = "/WareHouse/Dash/FindTicket/?handler=LoadData"
+                , data = {
+                    'code': code
+                    , 'wareID': wareID
+                    , 'dateFrom': dateFrom
+                    , 'dateTo': dateTo
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let dataheader = data.Table;
+                        let datadetail = data.Table1;
+                        if (dataheader != undefined && dataheader.length == 1) {
+                            $('#FindTicketDetail').show();
+                            $('#ft_name').html(dataheader[0].Code + " - " + dataheader[0].Name + " ( " + dataheader[0].UnitName + " )");
+                            $('#ft_datefrom').html(GetDateTime_String_DMY(dataheader[0].DateFrom));
+                            $('#ft_dateto').html(GetDateTime_String_DMY(dataheader[0].DateTo));
+
+                        }
+                        FindTicket_Render(datadetail, "ftContentDetail");
+                    }
+                    else {
+                        $("#FindTicketNoresult").show();
+                    }
+                },
+                sender = null,
+                before = function (e) {
+                    $('#FindTicketDetail').hide();
+                    $("#FindTicketNoresult").hide();
+                    $("#divticketfind").show();
+                },
+                complete = function (e) {
+                    $("#divticketfind").hide();
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region //Render
+    function FindTicket_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '';
+                    if (item.Type != 1) {
+                        tr =
+                            '<td class="vt-number-order"></td>'
+                            + '<td >'
+                            + '<a class="cursor-pointer viewform d-block fw-bold">' + item.Code + '</a>'
+                            + '</td>'
+                            + '<td>' + GetDateTime_String_DMYHM(item.DateExe) + '</td>'
+                            + '<td >'
+                            + ((item.CustCode != '')
+                                ? '<a class="d-block fw-bold" target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + '">' + item.CustCode + '</a>'
+                                : ''
+                            )
+                            + '</td>'
+                            + '<td>' + ((item.Type == 2 || item.Type == 3) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                            + '<td>' + ((item.Type == 4 || item.Type == 5) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                            + '<td>' + ((item.Type == 7) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                            + '<td>' + ((item.Type == 6) ? formatNumber(Math.round(item.Number * 100) / 100) : '') + '</td>'
+                            + '<td>'
+                            + formatNumber(item.NumberExe) + ' ' + item.UnitNameExe
+                            + '</td>'
+                            + '<td>'
+                            + ((item.NumberExe != 0) ? item.Number / item.NumberExe : '-')
+                            + '</td>';
+
+                        stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+
+                    }
+                    else {
+                        tr = '<td class="vt-number-order"></td>'
+                            + '<td>' + '<i class="text-md text-gradient text-warning pe-3 fas fa-lock"></i>' + '</td>'
+                            + '<td>' + GetDateTime_String_DMYHM(item.DateExe) + '</td>'
+                            + '<td colspan="7" class="text-center">'
+                            + '<span class="fw-bold text-md">' + formatNumber(Math.round(item.Number * 100) / 100) + '</span>'
+                            + '</td>'
+                        stringContent = stringContent + '<tr class="bg-gray-100 vt-number" role="row">' + tr + '</tr>';
+                    }
+
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    async function FindTicket_RenderProduct (data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                let stringContent = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let tr = '';
+                        tr = `
+                            <td class="CodeProduct">${item.code}</td>
+                            <td>${item.Name}</td>
+                        `
+                        stringContent = stringContent + `<tr class="RowProduct cursor-pointer" role="row">${tr}</tr>`;
+                    }
+                }
+                myNode.innerHTML = stringContent;
+                FindTicket_EventProduct();
+            }
+            resolve();
+        })
+    }
+    //#endregion
+
+    //#region //Event
+
+    function FindTicketEvent () {
+        $("#txtFindTicket").on("keyup", function () {
+            if ($(this).val().length > 0) $(".btn_clear").removeClass('opacity-1');
+            else $(".btn_clear").addClass('opacity-1');
+
+            $("#FindTicketSpinner .fa-search").hide();
+            $("#FindTicketSpinner .spinner-border").removeClass('d-none');
+            clearTimeout(FT_Timer);
+            FT_Timer = setTimeout(function (e) {
+                FindTicket_Search();
+            }, 500);
+        })
+        $("#divFindTicket .btn_clear").on("click", function () {
+            $("#txtFindTicket").val("");
+            FindTicket_Search();
+        })
+
+
+        $(document).click(function (e) {
+            let AreaTable = $("#FindTicketDiv");
+            if (!$(AreaTable).is(e.target) && $(AreaTable).has(e.target).length === 0) {
+                $('#FindTicketDiv').addClass("d-none");
+            }
+        })
+    }
+    function FindTicket_Search () {
+
+        let SeachText = $("#txtFindTicket").val() ? xoa_dau($("#txtFindTicket").val().toLowerCase()).trim() : '';
+        if (SeachText != undefined && SeachText.length >= 2) {
+            AjaxLoad(url = "/WareHouse/Dash/FindTicket/?handler=SeachProduct"
+                , data = {
+                    "TextSeach": SeachText
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "[]") {
+                        let data = JSON.parse(result);
+                        if (data.length != 1 || xoa_dau(data[0].code.toLowerCase()).trim() != SeachText) {
+                            FindTicket_RenderProduct(data, "FindTicketBody");
+                            $("#FindTicketDiv").removeClass("d-none");
+                        }
+
+                    } else {
+                        $("#FindTicketDiv").addClass("d-none");
+                    }
+                }
+                , sender = null
+                , before = function (e) { }
+                , complete = function (e) {
+                    $("#FindTicketSpinner .fa-search").show();
+                    $("#FindTicketSpinner .spinner-border").addClass('d-none');
+                }
+            );
+        } else {
+            $("#FindTicketSpinner .fa-search").show();
+            $("#FindTicketSpinner .spinner-border").addClass('d-none');
+        }
+    }
+    function FindTicket_EventProduct () {
+        $("#FindTicketBody .RowProduct").unbind("click").click(function () {
+            let text = $(this).children(".CodeProduct").html();
+            $("#txtFindTicket").val(text);
+            $('#FindTicketDiv').addClass("d-none");
+
+        })
+    }
+    //#endregion
+
+</script>
+<style>
+    .RowProduct:hover {
+        background: #7b809a1a;
+    }
+</style>

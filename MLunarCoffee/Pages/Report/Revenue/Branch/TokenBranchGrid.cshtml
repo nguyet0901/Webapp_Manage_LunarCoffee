@@ -1,0 +1,179 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Revenue.Branch.TokenBranchGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-50 col-auto my-auto">
+                <p class="text-md text-dark font-weight-bold mb-1">
+                    @Local["Doanh thu chi nhánh theo ngày"]
+                </p>
+                <p class="text-sm mb-0">@Local["Báo cáo doanh thu chi nhánh theo ngày"]</p>
+
+            </div>
+            <div class="ms-auto my-auto d-flex align-items-center">
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Thu gọn"]">
+                    <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                       data-bs-toggle="collapse" href="#TokenBranchGrid" aria-expanded="true"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Tải lại"]">
+                    <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                       onclick="event.preventDefault(); return Revenue_TokenBrand_LoadDataReport()"></i>
+                </div>
+                <div class="icon-hover mx-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     data-bs-original-title="@Local["Xuất excel"]">
+                    <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+                       onclick="event.preventDefault(); return ExportData_Revenue_TokenBrand()"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="collapsesticky collapse show" id="TokenBranchGrid">
+
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+
+                </div>
+                <table class="table vt-table mb-0" id="dtContentReportMaster">
+                    <thead class="hiddenCollapse" id="headerTableReportMaster">
+                    </thead>
+                    <tbody id="dtContentReportMasterBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        ToolPopper();
+        Revenue_TokenBrand_LoadDataReport();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function Revenue_TokenBrand_LoadDataReport() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _TokenBranch = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/Revenue/Branch/TokenBranchGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _TokenBranch }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0" && result != "") {
+                    let listBranch = JSON.parse(result)["Table1"];
+                    let listReason = JSON.parse(result)["Table2"];
+                    let data = JSON.parse(result)["Table"];
+                    RenderReport_Header(listReason, "headerTableReportMaster");
+                    RenderReportMater(listReason, listBranch, data, "dtContentReportMasterBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function () {
+                $("#dtContentReportMaster").hide();
+                $("#loaderList").show();
+            }
+            , complete = function (e) {
+                $("#dtContentReportMaster").show();
+                $("#loaderList").hide();
+            }
+        );
+        return false;
+    }
+    function RenderReport_Header(HeaderReason, id) {
+        if (HeaderReason && HeaderReason.length > 0) {
+            let stringContent = '';
+            let tr = '<th class="fixed-side" style="width:20px">#</th>'
+                + '<th class="fixed-side">@Local["Chi nhánh"]</th>'
+                + '<th class="fixed-side">@Local["Tổng"]</th>';
+            for (var i = 0; i < HeaderReason.length; i++) {
+                let item = HeaderReason[i];
+                tr += '<th class="date_show">' + item.DatePaymentShow + '</th>';
+            }
+            stringContent += '<tr role="row">' + tr + '</tr>'
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    function RenderReportMater(listDate, listBranch, data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < listBranch.length - 1; i++) {
+                    let sv = listBranch[i];
+                    let items = data.filter(data => data.BranchID == listBranch[i].BranchID);
+
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td>' + sv.BranchName + '</td>'
+                        + '<td>' + formatNumber(sv.TotalAmount) + '</td>';
+
+                    for (var j = 0; j < listDate.length; j++) {
+                        let item = items.filter(data => data.DatePayment == listDate[j].DatePayment);
+                        if (item.length > 0)
+                            tr += '<td>' + formatNumber(item[0].Amount) + '</td>';
+                        else {
+                            tr += '<td> 0 </td>';
+                        }
+                    }
+
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+                let row_toatal =
+                    '<td class="vt-number-order"></td>'
+                    + '<td>' + formatNumber(listBranch[listBranch.length - 1].BranchName) + '</td>'
+                    + '<td >' + formatNumber(listBranch[listBranch.length - 1].TotalAmount) + '</td>';
+                for (var j = 0; j < listDate.length; j++) {
+                    let item = listDate[j];
+                    row_toatal += '<td>' + formatNumber(item.TotalAmount) + '</td>';
+                }
+                stringContent = stringContent + '<tr  role="row" class="vt-number active">' + row_toatal + '</tr>';
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+       // $("#dtContentReportMaster").tableHeadFixer({ "head": false, "headleft": true, "left": 3, "class": "fixed-side" });
+    }
+    function ExportData_Revenue_TokenBrand() {
+        exportToExcel("dtContentReportMaster", Outlang['Bao_cao_xuat_doanh_thu_chi_nhanh_theo_ngay']);
+    }
+
+</script>
+<style type="text/css">
+/*    .date_show {
+        white-space: nowrap;
+        background: #e2ae1926 !important;
+    }
+
+    .AppendTable {
+        height: unset !important;
+    }
+
+    .total_all_branch {
+        background-color: rgb(97, 159, 205);
+        color: #fff;
+    }*/
+</style>

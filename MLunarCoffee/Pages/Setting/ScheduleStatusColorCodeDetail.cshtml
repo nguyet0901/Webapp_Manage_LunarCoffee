@@ -1,0 +1,125 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ScheduleStatusColorCodeDetailModel
+@{
+    Layout = null;
+}
+    <div class="container-fluid px-0">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header p-3 pb-0">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <div class="h-100">
+                                    <h6 class="mb-0">@Local["Mã màu trạng thái lịch hẹn"]</h6>
+                                    <p class="text-sm mb-0">@Local["Chi tiết mã màu trạng thái lịch hẹn"]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-3 pt-2">
+                        <div class="row px-1 form3" id="formScheduleStatus">
+
+                            <div class="field col-12 col-md-12 p-1">
+                                <label>@Local["Mã màu"]</label>
+                                <input id="SSColor_ColorCode" class="form-control" name="fillCode" type="text" />
+                                <input id="SSColorName" class="form-control d-none" name="name" type="text" disabled />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                        <div class="action_Save-Content">
+                            <button class="btn btn-secondary" form="formScheduleStatus" onclick="event.preventDefault();CloseModal()">@Local["Đóng"]</button>
+                            <button id="button_Schedule_Color_Code_save" form="formScheduleStatus" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_ setting_projectclosure" data-tab="edit_tab_Schedule_Status" onclick="event.preventDefault();ScheduleStatusExcute()">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var ser_scheduleColorID;
+        var ser_scheduleType = (@Model._dataType);
+
+        $(document).ready(function () {
+            ser_scheduleColorID = (@Model._scheduleColorID);
+            $("#SSColor_ColorCode").spectrum({
+                showPaletteOnly: true,
+                togglePaletteOnly: true,
+                showInput: true,
+                color: '#ffffff',
+                palette: [
+                    ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                    ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                    ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                    ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                    ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                    ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                    ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+                ]
+            });
+            if (ser_scheduleColorID != "0") ScheduleStatusLoadUpdate();
+        });
+        function ScheduleStatusExcute() {
+            var data = new Object();
+            data.StatusName = "";
+            data.ColorCode = $("#SSColor_ColorCode").spectrum('get').toHexString();
+            $('#formScheduleStatus').form('validate form');
+            if ($('#formScheduleStatus').form('is valid')) {
+                AjaxLoad(url = "/Setting/ScheduleStatusColorCodeDetail/?handler=ExcuteData"
+                    , data = {
+                        data: JSON.stringify(data),
+                        CurrentID: ser_scheduleColorID,
+                         type: ser_scheduleType
+                    }, async = true, error = null
+                    , success = function (result) {
+                        if (result == "1") {
+                            notiSuccess();
+                            ScheduleStatusLoad();
+                        } else {
+                            notiError_SW();
+                        }
+                    });
+                $('#DetailModal').modal('hide');
+                $("#DetailModal_Content").html('');
+            }
+            return false;
+        }
+
+        function ScheduleStatusLoadUpdate() {
+            AjaxLoad(url = "/Setting/ScheduleStatusColorCodeDetail/?handler=Loadata"
+                , data = {
+                    id: ser_scheduleColorID
+                    , type: ser_scheduleType
+
+                }, async = true, error = null
+                , success = function (result) {
+                    let dataColor = JSON.parse(result);
+                    //$('#StatusName').val(Outlang[(dataColor[0].StatusNameLangOther)]);
+                    $('#SSColorName').val((dataColor[0].StatusName));
+                    $("#SSColor_ColorCode").spectrum("set", dataColor[0].Color);
+                });
+        }
+    </script>
+    <script>js_require('/js/customjs/custom-validation.js');</script>
+    <script>js_require('/js/main.js');</script>
+    <style>
+        .sp-replacer {
+            display: block !IMPORTANT;
+            width: 100% !IMPORTANT;
+            padding: 0.5rem 0.75rem !IMPORTANT;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.4rem;
+            color: #495057 !important;
+            background-color: #fff !IMPORTANT;
+            background-clip: padding-box !important;
+            border: 1px solid #d2d6da !IMPORTANT;
+            height: auto !important;
+            border-radius: 0.5rem;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+    </style>

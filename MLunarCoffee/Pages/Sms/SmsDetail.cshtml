@@ -1,0 +1,416 @@
+﻿@page
+@model MLunarCoffee.Pages.Sms.SmsDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="">
+                                <h6 class="mb-0">@Local["SMS khách hàng"] (brandname)</h6>
+                                <span id="SMSDetail_txtbrand" class="d-block text-sm  mt-n1 fw-bold text-primary"></span>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto d-flex ">
+                            <div class="ms-2 mt-1 ms-lg-0 d-flex align-content-center">
+                                <div id="SMSDetail_ZaloZNS" class="d-none pe-2">
+                                    <span class="text-primary text-info fw-bold fs-5">ZALO ZNS</span>
+                                </div>
+                            </div>
+                            <ul class="nav nav-pills nav-fill bg-transparent d-inline-flex language_smsdetail" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="vn px-2 py-1 nav-link cursor-pointer" data-bs-toggle="pill" role="tab">
+                                        <img class="" src="/assests/img/ButtonImg/flag-vn.png">
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="en px-2 py-1 nav-link cursor-pointer" data-bs-toggle="pill" role="tab">
+                                        <img class="" src="/assests/img/ButtonImg/flag-en.png">
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-3 pt-0">
+                    <div class="row px-2 form3" id="formSMS_Detail">
+                        <div class="d-lg-flex px-0">
+                            <div class="col-w-250">
+                                <div class="field col-12 mt-2 px-1" id="sms_detail_custcode" style="display: none">
+                                    <label>@Local["Mã"]</label>
+                                    <input id="SMSDetail_txtMSKH" name="MSKH" type="text" disabled="disabled" class="form-control" />
+                                </div>
+                                <div class="field col-12 mt-2 px-1">
+                                    <label>@Local["Tên"]</label>
+                                    <input id="SMSDetail_txtName" name="name" type="text" disabled="disabled" class="form-control" />
+                                </div>
+                                <div class="field col-12 mt-2 px-1">
+                                    <label>@Local["Điện thoại"] (@Local["10 ký tự số"])</label>
+                                    <input data-tab="phone_customer" class="_tab_control_ form-control" id="SMSDetail_txtPhone" name="phonenumber" type="text" />
+                                </div>
+                                <div class="field col-12 mt-2 px-1" id="sms_detail_cbbbranch" style="display: none">
+                                    <label>@Local["Chi nhánh"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="BranchSMSID" onchange="SMSDetail_LoadContent()">
+                                        <input type="hidden" name="branchSMS" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="ccbBranchSMSID" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 px-lg-2">
+                                <div class="field col-12 mt-2 px-1">
+                                    <label>@Local["Loại"]</label>
+                                    <div class="ui fluid search selection dropdown" id="SMSDetail_TypeID" onchange="SMSDetail_LoadContent()">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text"></div>
+                                        <div id="SMSDetail_Typecbb" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field position-relative col-12 mt-2 px-1">
+                                    <label>@Local["Nội dung"]</label>
+                                    <div class="position-relative">
+                                        <textarea id="SMSDetail_txtcontent" name="name" rows="8" class="form-control"></textarea>
+                                        <span id="SMSDetail_txtcount" class="position-absolute bottom-0 end-0 text-sm me-2 mb-2 fw-bold text-primary"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row px-2 mt-3">
+                        <div class="d-lg-flex">
+                            <div class="w-50 col-auto my-auto">
+                                <a class="text-sm text-dark" data-bs-toggle="collapse" href="#smskeyban_area" role="button" aria-expanded="false">
+                                    <i class="fas fa-angle-down pe-2"></i>
+                                    <span class="text-dark">@Local["Từ khóa vi phạm"]</span>
+                                </a>
+                            </div>
+                            <div class="ms-auto my-auto mt-1">
+                                <span id="smsdetail_checkstatus" class="fw-bold text-sm py-2 text-danger d-inline"></span>
+                            </div>
+                        </div>
+
+                        <div class="collapsesticky z-index-sticky w-100 mt-2 collapse" id="smskeyban_area">
+                            <div class="ps-3 text-sm" id="Sms_Detail_Rules">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault();SMSDetail_CloseModal()">@Local["Đóng"]</button>
+                        <button class="btn btn-warning" form="form3" onclick="event.preventDefault();SMSDetail_Checkbanned()">@Local["Kiểm tra nội dung"]</button>
+                        <button id="SMSDetail_Btnsend" form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="return SMSDetail_SendSMS()">@Local["Gửi"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var ser_SMSDetailCustomerID = ("@Model.SMSDetailCustomerID");
+    var ser_SMSDetailCustCardID = ("@Model.SMSDetailCustCardID");
+    var ser_SMSDetailTicketID = ("@Model.SMSDetailTicketID");
+    var ser_SMSDetailAppID = ("@Model.SMSDetailAppID");
+    var ser_SMSDetailType = ("@Model.SMSDetailType");
+    var ser_SMSDetailTypeCare = ("@Model.SMSDetailTypeCare");
+    var ser_SMSDetailMasterID = ("@Model.SMSDetailMasterID");
+    var ser_SMSDetailNameTemp = decodeURIComponent("@Model.SMSDetailNameTemp");
+    var ser_SMSDetailPhone = ("@Model.SMSDetailPhone");
+    var ser_ContentDemo = "@Model._ContentDemo";
+    var ser_DetailPaymentStudentID = "@Model.SMSDetailPaymentStudentID";
+    var ser_DetailTreatID = "@Model.SMSDetailTreatID";
+    var ser_DetailPaymentID = "@Model.SMSDetailPaymentID";
+    var ser_DetailDate = "@Model.SMSDetailDate";
+    let SMSDetail_LEFTTREAT = 0;
+    let SMSDetail_LEFTTAB = 0;
+    let SMSPaymentStudentID = 0;
+    let SMSDetailType;
+    let ser_SMSZMSType=0;
+    let SMSDetailFlag = 1;
+
+    $(document).ready(function () {
+        SMSDetail_Initialize();
+        $("#SMSDetail_txtcontent").keyup(function () {
+            $("#SMSDetail_txtcount").html('chars: ' + $(this).val().length);
+
+        });
+        $('.language_smsdetail a').on('click', function () {
+            SMSDetail_LoadContent();
+        });
+        ToolPopper();
+    });
+
+    function SMSDetail_Initialize() {
+        AjaxLoad(url = "/Sms/SmsDetail/?handler=LoadInitiallize"
+            , data = {
+                CustomerID: ser_SMSDetailCustomerID
+                , TicketID: ser_SMSDetailTicketID
+                , PaymentStudentID: ser_DetailPaymentStudentID
+            }
+            , async = true, error = null
+            , success = function (result) {
+                if (result != "") {
+
+                    SMSDetailFlag = 0;
+                    let data = JSON.parse(result);
+                    let dataBranchSMS = data.cbbBranch;
+                    let dataInfo = data.dataInfo;
+                    let dataSmsRules = data.dataSmsRules;
+                    let dataInfoStudent = data.InfoStudent;
+                    let dataInfoPayment = data.PaymentInfo;
+                    SMSDetail_DetectPayment(dataInfoPayment);
+                    SMSDetailType = data.dataSmsType;
+                    Load_Combo(SMSDetailType, "SMSDetail_Typecbb", true);
+                    if (ser_SMSZMSType==1) $('#SMSDetail_ZaloZNS').removeClass('d-none');
+                    if (ser_SMSDetailType) {
+                        let itemselect = [];
+                        if (ser_SMSDetailType != '') {
+                            itemselect = SMSDetailType.filter(v => v.Type.toLowerCase().trim() == ser_SMSDetailType.toLowerCase().trim());
+                        }
+                        else {
+                            itemselect = SMSDetailType.filter(v => v.IsZns == ser_SMSZMSType);
+                        }
+                        if (itemselect != undefined && itemselect.length == 1) {
+                            $("#SMSDetail_TypeID").dropdown("refresh");
+                            $("#SMSDetail_TypeID").dropdown("set selected", itemselect[0].ID);
+                        }
+                        else {
+                            $("#SMSDetail_TypeID").dropdown("refresh");
+                            $("#SMSDetail_TypeID").dropdown("set selected", SMSDetailType[0].ID);
+                        }
+                    }
+                    if (ser_SMSDetailCustomerID != "0" || ser_SMSDetailTicketID != "0")
+                    {
+                        $('#SMSDetail_txtMSKH').val((dataInfo[0].Cust_Code));
+                        $('#SMSDetail_txtName').val((dataInfo[0].Name));
+                        $('#SMSDetail_txtPhone').val((dataInfo[0].Phone));
+                        if (dataInfo[0].NationalID == 4 || dataInfo[0].NationalID == 0) $('.language_smsdetail a.vn').tab('show');
+                        else $('.language_smsdetail a.en').tab('show');
+                        if (ser_SMSDetailCustomerID != "0") {
+                            $("#sms_detail_cbbbranch").show();
+                            $("#sms_detail_custcode").show();
+                            Load_Combo(dataBranchSMS, "ccbBranchSMSID", true);
+                            $("#BranchSMSID").dropdown("refresh");
+                            $("#BranchSMSID").dropdown("set selected", Number(dataInfo[0].BranchID));
+                        }
+                    } else if (ser_DetailPaymentStudentID != "0") {
+                        SMSPaymentStudentID = dataInfoStudent[0].StuID;
+                        $('#SMSDetail_txtMSKH').val(dataInfoStudent[0].StuCode);
+                        $('#SMSDetail_txtName').val(dataInfoStudent[0].StuName);
+                        $('#SMSDetail_txtPhone').val(dataInfoStudent[0].StuPhone);
+
+                        $('.language_smsdetail a.vn').tab('show');
+                        $("#sms_detail_cbbbranch").show();
+                        $("#sms_detail_custcode").show();
+                        Load_Combo(dataBranchSMS, "ccbBranchSMSID", true);
+                        $("#BranchSMSID").dropdown("refresh");
+                        $("#BranchSMSID").dropdown("set selected", Number(Master_branchID));
+                    }
+                    else {
+                        $('#SMSDetail_txtName').val(ser_SMSDetailNameTemp) ;
+                        $('#SMSDetail_txtPhone').val(ser_SMSDetailPhone);
+                    }
+                    SMSDetailFlag = 1;
+                    SMSDetail_LoadContent();
+                    Render_List_Sms_Rules(dataSmsRules, 'Sms_Detail_Rules');
+                    Checking_TabControl_Permission();
+
+
+                }
+            });
+    }
+    function SMSDetail_DetectPayment(_data){
+        let dataPaymentInfo = _data[0];
+        if (dataPaymentInfo != undefined) {
+            let PRICE_DISCOUNTED = dataPaymentInfo.PRICE_DISCOUNTED;
+            let PAID = dataPaymentInfo.PAID;
+            let PRICE_TREAT = dataPaymentInfo.PRICE_TREAT;
+            SMSDetail_LEFTTREAT = (PRICE_TREAT - PAID > 0 ? PRICE_TREAT - PAID : 0);
+            SMSDetail_LEFTTAB = PRICE_DISCOUNTED - PAID;
+        }
+    }
+    function SMSDetail_SendSMS () {
+
+        let _phone = $('#SMSDetail_txtPhone').val() ? $('#SMSDetail_txtPhone').val() : "";
+        let _content = $('#SMSDetail_txtcontent').val() ? $('#SMSDetail_txtcontent').val() : "";
+        let _brandname = $('#SMSDetail_txtbrand').html() ? $('#SMSDetail_txtbrand').html() : "";
+        let typeSMS = $('#SMSDetail_TypeID').dropdown('get value') ? Number($('#SMSDetail_TypeID').dropdown('get value')) : 0
+        let typecare = Number(ser_SMSDetailTypeCare) != 0 ? Number(ser_SMSDetailTypeCare) : typeSMS;
+        $('#formSMS_Detail').form('validate form');
+        if ($('#formSMS_Detail').form('is valid')) {
+            $("#SMSDetail_Btnsend").prop("disabled", true);
+
+            SMSSYS_Pending(
+                _custid = ser_SMSDetailCustomerID, _phone = _phone, _content = _content, _amount = 0, _brandname = _brandname
+                , _typecare = typecare, _ticketid = ser_SMSDetailTicketID, _appid = ser_SMSDetailAppID, _studentid = SMSPaymentStudentID
+                , _znssms = ser_SMSZMSType
+                , function (_idsms) {
+                    SMSSYS_ActionSend(_phone, _content, 0, _brandname, ser_SMSZMSType, _idsms
+                        , _successfunc = function () {
+                            notiSuccess();
+                            if (typeof TicketAction_SMSLoad === 'function') TicketAction_SMSLoad();
+                            if (typeof DetectFormAppear !== 'undefined')  DetectFormAppear = 1;
+                            SMSDetail_CloseModal();
+                        }
+                        , _errorfunc = function () {
+                            notiError_SW();
+                            $("#SMSDetail_Btnsend").prop("disabled", false);
+                        }
+                        , _bannedfunc = function () {
+                            $("#SMSDetail_Btnsend").prop("disabled", true);
+                            SMSDetail_Checkbanned();
+                        }
+                    )
+                })
+        }
+    }
+    function SMSDetail_Checkbanned () {
+        $('#smsdetail_checkstatus').html('');
+        var content = $('#SMSDetail_txtcontent').val();
+        content = xoa_dau(content);
+        if (content != "") {
+            AjaxLoad(url = "/Sms/SmsDetail/?handler=CheckContent"
+                , data = {content: content}, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        $('#smsdetail_checkstatus').html('@Local["Tin nhắn hợp lệ"]');
+                        $('#smsdetail_checkstatus').removeClass('text-danger').addClass('text-success');
+                        $("#SMSDetail_Btnsend").prop("disabled", false);
+                    }
+                    else {
+                        if (result == "-2") {
+                            $('#smsdetail_checkstatus').html('@Local["Tin nhắn rỗng hoặc số ký tự quá ít (lớn hơn 5)"]');
+                            $('#smsdetail_checkstatus').removeClass('text-success').addClass('text-danger');
+                            $("#SMSDetail_Btnsend").prop("disabled", true);
+                        }
+                        else {
+                            $('#smsdetail_checkstatus').html('@Local["Từ vi phạm"] :' + result);
+                            $('#smsdetail_checkstatus').removeClass('text-success').addClass('text-danger');
+                            $("#SMSDetail_Btnsend").prop("disabled", true);
+                        }
+                    }
+                });
+        }
+        else {
+            $('#smsdetail_checkstatus').html('@Local["Kiểm tra dữ liệu"]');
+        }
+        return false;
+    }
+    function SMSDetail_DetectBrand (brandname) {
+        if (brandname != "") $('#SMSDetail_txtbrand').html(brandname);
+        else {
+            if (SMSBrandName != undefined && SMSBrandName.length > 0) {
+                $('#SMSDetail_txtbrand').html(SMSBrandName[0]);
+            }
+            else $('#SMSDetail_txtbrand').html('');
+        }
+    }
+    function SMSDetail_LoadContent () {
+        if (SMSDetailFlag == 1) {
+            let branchID = Number($('#BranchSMSID').dropdown('get value')) ? Number($('#BranchSMSID').dropdown('get value')) : 0;
+            let LanguageSms = $('.language_smsdetail a.vn').hasClass('active') ? 0 : 1;
+            let idtype = $('#SMSDetail_TypeID').dropdown('get value') ? Number($('#SMSDetail_TypeID').dropdown('get value')) : 0;
+            if (idtype == 0) ser_SMSDetailType = '';
+            else {
+                let itemselect = SMSDetailType.filter(v => v.ID == idtype);
+                if (itemselect != undefined && itemselect.length == 1) {
+                    ser_SMSDetailType = itemselect[0].Type;
+                    ser_SMSZMSType = itemselect[0].IsZns;
+                    if (ser_SMSZMSType == 1) $('#SMSDetail_ZaloZNS').removeClass('d-none');
+                    else $('#SMSDetail_ZaloZNS').addClass('d-none');
+                }
+
+
+
+            }
+            AjaxLoad(url = "/Sms/SmsDetail/?handler=LoadData"
+                , data = {
+                    branchID: branchID
+                    , CustomerID: ser_SMSDetailCustomerID
+                    , CustCardID: ser_SMSDetailCustCardID
+                    , AppID: ser_SMSDetailAppID
+                    , PayStudentID: ser_DetailPaymentStudentID
+                    , type: ser_SMSDetailType
+                    , contentid: idtype
+                    , treatid: ser_DetailTreatID
+                    , PaymentID: ser_DetailPaymentID
+                    , lefttreat: (SMSDetail_LEFTTREAT != 0 ? formatNumber(SMSDetail_LEFTTREAT)  :"0" )
+                    , lefttab: (SMSDetail_LEFTTAB != 0 ? formatNumber(SMSDetail_LEFTTAB) :"0" )
+                    , date: ser_DetailDate
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let dataContent = JSON.parse(result);
+                        if(dataContent && dataContent.length != 0){
+                            let sms_item = dataContent[0];
+                            let sms_BranchName = sms_item.SMSBrandName;
+                            let sms_ContentVI = sms_item.SMSContentVI;
+                            let sms_ContentEN = sms_item.SMSContentEN;
+                            SMSDetail_DetectBrand(sms_BranchName);
+                            $('#SMSDetail_txtcontent').val((LanguageSms == 1) ? sms_ContentEN : sms_ContentVI);
+
+                        }
+                        $("#SMSDetail_txtcount").html('@Local["Ký tự"] : ' + $('#SMSDetail_txtcontent').val().length);
+                    }
+                    else {
+                        $('#SMSDetail_txtcontent').val("");
+                    }
+                }
+            );
+        }
+    }
+
+    async function Render_List_Sms_Rules (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let stringContent = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = '<span class="text-dark mb-1 ms-1">' + item.Text + '</span>';
+                            if (i != data.length - 1) {
+                                tr = tr + ',';
+                            }
+                            stringContent = stringContent + tr;
+                        }
+                    }
+                    document.getElementById(id).innerHTML = stringContent;
+                }
+            }, 100)
+        })
+    }
+
+    function SMSDetail_CloseModal() {
+        CloseModal();
+    }
+
+   
+</script>
+<script>js_require('/js/main.js');</script>
+
+<script>js_require('/js/customjs/custom-validation.js');</script>

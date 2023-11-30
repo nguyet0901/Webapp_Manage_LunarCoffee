@@ -1,0 +1,619 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Service.ServiceChangeModel
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-0">@Local["Đổi dịch vụ"]</h6>
+                            <p class="text-sm mb-0">@Local["Chi tiết đổi dịch vụ"]</p>
+                        </div>
+                        <div class="ms-auto d-flex">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-3  position-relative">
+
+                    <div id="tran_wait" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x ">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-4 col-md-5 col-12 px-1">
+                            <div class="card-body m-3 mt-0 p-3 ms-0 bg-gray-100 border-radius-lg">
+                                <h6 class="mb-3 ps-1  fw-bold  text-primary">@Local["Dịch vụ hiện tại"]</h6>
+                                <div class="ps-1 pt-0 text-dark text-sm">
+                                    <p class="mb-0 text-sm mt-3">@Local["Tên dịch vụ"]</p>
+                                    <p id="tran_ServiceName" class="text-sm fw-bold my-auto d-block">-</p>
+                                    <hr class="horizontal dark">
+                                    <div class="d-flex">
+                                        <div>
+                                            <p class="mb-0 text-sm mt-3">@Local["Giá tiền"]</p>
+                                            <p id="tran_ServicePrice" class="text-sm font-weight-bold my-auto">-</p>
+                                        </div>
+                                        <div id="tran_BoxServiceTreat" class="ps-3">
+                                            <p class="mb-0 text-sm mt-3">@Local["Đã điều trị"]</p>
+                                            <p id="tran_ServiceTreat" class="text-sm font-weight-bold my-auto">-</p>
+                                        </div>
+                                    </div>
+
+
+
+                                    <hr class="horizontal dark">
+                                    <p class="mb-0 text-sm mt-3">@Local["Chi phí khách hàng đã điều trị"] <b class="text-danger">A</b></p>
+                                    <p id="tran_TreatAmount" class="text-sm font-weight-bold my-auto">-</p>
+
+                                    <hr class="horizontal dark">
+                                    <p class="mb-0 text-sm mt-3">@Local["Đã Thanh Toán"] <b class="text-danger">B</b></p>
+                                    <p id="tran_Paidamount" class="text-sm font-weight-bold my-auto">-</p>
+
+                                    <hr class="horizontal dark">
+                                    <p class="mb-0 text-sm mt-3">@Local["Nguời tư vấn"]</p>
+                                    <div class="d-flex align-items-center ps-1 py-2">
+                                        <div class="avatar avatar-sm">
+                                            <img class="icon icon-shape icon-sm me-3 shadow text-center" id="tran_ConsulAvatar" src="/default.png" alt="label-image">
+                                        </div>
+                                        <div class="text-dark ms-2 my-auto text-sm">
+                                            <span id="tran_ConsulName" class="d-block fw-bold">-</span>
+                                            <span id="tran_ConsulDate" class="d-block">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-8 col-md-7 col-12 form3 px-1" id="chanform">
+                            <div class="card-body ms-0 m-3 mt-0 p-3 bg-gray-100 border-radius-lg">
+                                <div class="pb-0 w-100 d-flex align-items-center">
+                                    <div>
+                                        <h6 class="mb-2 fw-bold text-primary">@Local["Dịch vụ mới"]</h6>
+                                    </div>
+                                    <div class=" col-auto my-auto ms-auto">
+                                        <ul class="nav nav-pills nav-pills p-1 bg-transparent " role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <a class="nav-link cursor-pointer active" data-bs-toggle="pill" data-bs-target="#chantab_general" role="tab">
+                                                    @Local["Thông tin chung"]
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <a id="nav-link cursor-pointer" class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#chantab_other" role="tab">@Local["Khác"]</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="chantab_general" role="tabpanel">
+                                        <div class="row px-1">
+                                            <div class="field col-12 col-md-6 col-xl-8 px-1 mt-2">
+                                                <label>@Local["Loại dịch vụ"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="ChangeServiceType"
+                                                     onchange="event.preventDefault();return chan_onServiceType();">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <i class="remove icon"></i>
+                                                    <input id="searchServiceType" class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Loại"]</div>
+                                                    <div id="ccbChangeServiceType" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2">
+                                                <label>@Local["Lý do đổi"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chan_reasonchange">
+                                                    <input type="hidden" name="name" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Lý do đổi"]</div>
+                                                    <div id="ccbchan_reasonchange" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-8 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Dịch vụ"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="ChangeService"
+                                                     onchange="event.preventDefault();return chan_onService();">
+                                                    <input type="hidden" name="branch" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input id="searchServiceTab" class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Dịch vụ"]</div>
+                                                    <div id="cbbChangeService" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row px-1">
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1 ">
+                                                <label>@Local["Đơn giá"] <b class="text-danger">(1)</b></label>
+                                                <input id="chan_unitcost" type="text" class="form-control money" onchange="event.preventDefault();return chan_CountAll();" />
+                                            </div>
+                                            <div class=" field col-12 col-md-6 col-xl-2 px-1 mt-2 flex-grow-1 ">
+                                                <label>@Local["Số lượng"] <b class="text-danger">(2)</b></label>
+                                                <input class="form-control" id="chan_quantity" type="number" name="content"
+                                                       onchange="event.preventDefault();return chan_CountAll();" disabled />
+                                            </div>
+                                            <div class="change_cos field col-12 col-md-6 col-xl-2 px-1 mt-2 flex-grow-1 d-none">
+                                                <label>@Local["Số lần điều trị"]</label>
+                                                <input class="form-control" id="chan_timetotreat" type="number" name="content" disabled />
+                                            </div>
+                                            <div class=" field col-12 col-md-6 col-xl-4 px-1 mt-2">
+                                                <label>@Local["Giá tiền"]<b class="text-danger"> D = (1) x (2)</b></label>
+                                                <input class="form-control money" id="chan_newprice" type="text" disabled />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="chantab_other" role="tabpanel">
+                                        <div class="row px-1">
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Nguồn dịch vụ"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chanSourceService">
+                                                    <input type="hidden"/>
+                                                    <i class="dropdown icon"></i>
+                                                    <i class="remove icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">eg .@Local["Nguồn dịch vụ"]</div>
+                                                    <div id="cbbchanSourceService" class="menu" tabindex="-1"></div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Telesale"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chanTelesale">
+                                                    <input type="hidden" name=""/>
+                                                    <i class="dropdown icon"></i>
+                                                    <div class="default text">@Local["Telesale"]</div>
+                                                    <div id="ccbchanTelesale" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Telesale"] 2</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chanTelesale1">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <div class="default text">@Local["Telesale"] 1</div>
+                                                    <div id="ccbchanTelesale1" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Người tư vấn"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chanConsult">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <div class="default text">@Local["Người tư vấn"]</div>
+                                                    <div id="ccbchanConsult" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Người tư vấn"] 1</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="chanConsult1">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <i class="remove icon"></i>
+                                                    <div class="default text">eg .@Local["Người tư vấn"]</div>
+                                                    <div id="ccbchanConsult1" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="chan_blockdate" class="field col-12 col-md-6 col-xl-4 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Ngày tạo"]</label>
+                                                <input id="chan_datecreated" class="form-control flatpickr" type="text" placeholder="eg .@Local["Ngày tạo"]" />
+                                            </div>
+                                            <div class="field col-12 col-md-12 col-xl-12 px-1 mt-2 flex-grow-1">
+                                                <label>@Local["Ghi chú"]</label>
+                                                <textarea id="chanNote" cols="3" class="form-control" placeholder="eg .@Local["Ghi chú"]"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="horizontal mt-4 mb-2 dark  ">
+                                <div class="row px-1">
+
+                                    <div class="field col-12 col-md-6 col-xl-8 px-1 mt-2">
+                                        <label>@Local["Tiền thừa"] <b class="text-danger">C = B - A</b></label>
+                                        <input id="chan_minuscost" type="text"
+                                               onchange="event.preventDefault();return chan_CountAll();"
+                                               class="form-control money" disabled />
+                                    </div>
+                                    <div class="field col-12 col-md-6 col-xl-4 px-1 mt-2">
+                                        <label>@Local["Thành tiền"]<b class="text-danger"> E = D - C</b></label>
+
+                                        <input id="chan_finalprice" name="" type="text" class="form-control money"
+                                               onchange="event.preventDefault();return chan_DetectRule();" disabled />
+                                    </div>
+                                </div>
+                                <div class="row px-1">
+                                    <div class="field col-12 col-md-12 col-xl-12 px-1 mt-2 flex-grow-1">
+                                        <label class="text-danger pt-2" id="chan_newrange"></label>
+                                    </div>
+                                </div>
+
+
+
+                            </div>
+                            <p class="text-dark fw-bold text-sm pt-2" id="chan_message"></p>
+                            <div id="chanform_afterguide" class="d-none">
+                                <h6 class="ps-1 mb-2 fw-bold text-primary">@Local["Kết quả"]</h6>
+                                <div class="m-0 mobile-responsive">
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-1" colspan="3">
+                                                    <p class="mb-0 text-sm text-dark fw-bold">@Local["Dịch vụ"]</p>
+                                                </th>
+                                                <th class="ps-1">
+                                                    <span class="mb-0 text-sm text-dark fw-bold">@Local["Giá tiền"]</span>
+                                                </th>
+                                                <th class="ps-1">
+                                                    <span class="mb-0 text-sm text-dark fw-bold">@Local["Đã thanh toán"]</span>
+                                                </th>
+                                                <th class="ps-1">
+                                                    <div class="mb-0 text-sm text-dark fw-bold">@Local["Khóa"]</div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ps-1" colspan="3">
+                                                    <span id="tran_ServiceNameguide" class="text-dark mb-0 text-sm">
+
+                                                    </span>
+                                                </td>
+                                                <td class="text-dark text-sm">
+                                                    <span id="tran_ServicePriceguide"></span>
+                                                </td>
+                                                <td class="fw-bold text-sm text-dark">
+                                                    <span id="tran_Paidamountguide"></span>
+                                                </td>
+                                                <td class="text-dark text-sm"><i class="text-danger fas fa-lock"></i></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ps-1" colspan="3">
+                                                    <span id="tran_ServiceNamenewguide" class="text-dark mb-0 text-sm">
+
+                                                    </span>
+                                                </td>
+                                                <td class="text-dark text-sm">
+                                                    <span id="tran_ServicePricenewguide"></span>
+                                                </td>
+                                                <td class="text-dark text-sm">
+                                                    <span>0</span>
+                                                </td>
+                                                <td class="fw-bold text-sm text-dark">
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer fixed-botombutton">
+                        <div class="action_Save">
+                            <div class="action_Save-Content">
+                                <button class="btn btn-secondary" onclick="CloseModal()">@Local["Đóng"]</button>
+                                <button type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="chan_ExcuteData()">@Local["Lưu"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let change_ServiceCurrentID = '@Model._ServiceCurrentID';
+    let change_treatplan = '@Model._treatplan';
+    let change_dencos = Number('@Model.sys_DentistCosmetic');
+    let change_choosedate = Number('@Model._ChooseDateCustomer');
+    var change_date;
+
+    let chan_servicetypedata;
+    let chan_servicedata, chan_serroot;
+    let chan_flag = 0, chan_minprice = 0, chan_maxprice = 0, chan_timetotreat = 0, chan_paid = 0, chan_pricediscounted = 0;
+    $(document).ready(function () {
+        Chanser_Init();
+        Chanser_LoadService();
+        Chanser_LoadData();
+        $('#chan_finalprice').divide();
+        $('#chan_minuscost').divide();
+        $('#chan_unitcost').divide();
+        $('#chan_newprice').divide();
+        $('#chan_quantity').val(1);
+        ToolPopper();
+    });
+
+    function Chanser_Init(){
+         change_date = $("#chan_datecreated").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            enableTime: true,
+            defaultDate: new Date()
+        });
+
+        if (change_dencos == 0) $('.change_cos').removeClass('d-none');
+        if (change_choosedate == 1) $("#chan_blockdate").removeClass("d-none");
+
+    }
+
+    async function Chanser_LoadService() {
+        $('#tran_wait').show();
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                AjaxLoad(url = "/Customer/Service/ServiceChange/?handler=LoadServiceChange"
+                    , data = { "tabid": change_ServiceCurrentID }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            chan_servicetypedata = data.Table;
+                            chan_servicedata = data.Table1;
+                            chan_serroot = JSON.parse(JSON.stringify(chan_servicedata));
+                            Load_Combo(chan_servicetypedata, "ccbChangeServiceType", false);
+                            Load_Combo(chan_servicedata, "cbbChangeService", true);
+                        }
+                    }
+                    , sender = null
+                    , before = function (e) { }
+                    , complete = function (e) {
+                        $('#tran_wait').hide();
+                    }
+                );
+                resolve();
+            }, 200)
+
+        });
+    }
+    async function Chanser_LoadData() {
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                AjaxLoad(url = "/Customer/Service/ServiceChange/?handler=Loadata"
+                    , data = { "tabid": change_ServiceCurrentID }
+                    , async = true
+                    , error = function () { notiError_SW() }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            Load_Combo(data.ReasonChange, "ccbchan_reasonchange", true);
+                            Load_Combo(data.Tele, "ccbchanTelesale", false);
+                            Load_Combo(data.Tele, "ccbchanTelesale1", false);
+                            Load_Combo(data.SourceService, "cbbchanSourceService", false);
+                            let dataEmployee = sys_MainEmp;
+                            Load_Combo(dataEmployee, "ccbchanConsult", false);
+                            Load_Combo(dataEmployee, "ccbchanConsult1", false);
+
+                            Chanser_FillData(data.ServiceCurrent);
+                        }
+                        chan_flag = 1;
+                    }
+                );
+                resolve();
+            }, 200)
+
+        });
+    }
+    function Chanser_FillData(data) {
+        if (data != undefined && data.length == 1) {
+            let item = data[0];
+            chan_paid = item.Paid;
+            chan_pricediscounted = item.Price;
+            if (item.ConsulAvatar != "") $('#tran_ConsulAvatar').attr('src', item.ConsulAvatar)
+            $('#tran_ConsulName').html(item.ConsulName);
+            $('#tran_ConsulDate').html(GetDateTime_String_DMY(item.ConsulDate));
+            $('#tran_ServiceName').html(item.ServiceName);
+            $('#tran_ServiceNameguide').html(item.ServiceName);
+            $('#tran_ServicePrice').html(formatNumber(chan_pricediscounted));
+            $('#tran_ServicePriceguide').html(formatNumber(chan_paid));
+            $('#tran_Paidamount').html(formatNumber(chan_paid));
+            $('#tran_Paidamountguide').html(formatNumber(chan_paid));
+            if (item.IsProduct == 1) $("#tran_BoxServiceTreat").addClass("d-none"); // Kiểm tra là sản phẩm thì không hiển thị số lần điều trị.
+            let percent = 0;
+            if (sys_dencos_Main == 1) {
+                if (item.Treat_Percent_Detail != "") {
+                    percent = item.Quantity != 0 ? (item.Treat_Percent_Detail / item.Quantity) : 0;
+                    percent = Math.ceil(percent);
+                }
+                else {
+                    percent = item.PercentOfService;
+                }
+                $('#tran_ServiceTreat').html(
+                    `<span class="pe-2 text-primary">${formatNumber(percent)} %</span>`
+                );
+            }
+            else {
+                $('#tran_ServiceTreat').html(
+                    `<span class="pe-2 text-primary">${formatNumber(item.IndexTreat)}</span>/
+                    <span class="ps-1">${formatNumber(item.TimeToTreatment)}</span>`
+                );
+                percent = item.TimeToTreatment != 0 ? ((item.IndexTreat / item.TimeToTreatment) * 100) : 0;
+            }
+            let _amountreat = (item.Price * (percent / 100)).toFixed(2)
+            $('#tran_TreatAmount').html(formatNumber(_amountreat));
+            if (chan_paid > _amountreat) $('#chan_minuscost').val(formatNumber(chan_paid - _amountreat));
+            else $('#chan_minuscost').val(0);
+            change_date.set('minDate', new Date(item.Created));
+        }
+        else {
+
+        }
+
+    }
+
+    function chan_ExcuteData () {
+        $('#chanform').form('validate form');
+        if ($('#chanform').form('is valid')) {
+            $('#chan_message').html('');
+            let ServiceTab = Number($('#ChangeService').dropdown('get value')) ? Number($('#ChangeService').dropdown('get value')) : 0;
+            if (ServiceTab != 0) {
+                chan_DetectRule();
+                let message = $('#chan_message').html();
+                if (message == "") {
+                    var data = new Object();
+                    let chan_finalprice = Number($('#chan_finalprice').val()) ? Number($('#chan_finalprice').val()) : 0;
+                    let number_new = Number($('#chan_quantity').val()) ? Number($('#chan_quantity').val()) : 1;
+                    let chan_timetotreat = Number($('#chan_timetotreat').val()) ? Number($('#chan_timetotreat').val()) : 1;
+                    let newamount = chan_finalprice > 0 ? chan_finalprice : 0
+                    data.reasonID = Number($('#chan_reasonchange').dropdown('get value')) ? Number($('#chan_reasonchange').dropdown('get value')) : 0;
+                    data.serviceTabChange = ServiceTab;
+                    data.newAmount = newamount;
+                    data.Quantity = number_new;
+                    data.TimeToTreatment = chan_timetotreat;
+                    data.Created = $('#chan_datecreated').val() ? $('#chan_datecreated').val() : new Date();
+
+                    data.SourceService = Number($('#chanSourceService').dropdown('get value')) ? Number($('#chanSourceService').dropdown('get value')) : 0;
+                    data.ChanTelesale = Number($('#chanTelesale').dropdown('get value')) ? Number($('#chanTelesale').dropdown('get value')) : 0;
+                    data.ChanTelesale1 = Number($('#chanTelesale1').dropdown('get value')) ? Number($('#chanTelesale1').dropdown('get value')) : 0;
+                    data.ChanConsult = Number($('#chanConsult').dropdown('get value')) ? Number($('#chanConsult').dropdown('get value')) : 0;
+                    data.ChanConsult1 = Number($('#chanConsult1').dropdown('get value')) ? Number($('#chanConsult1').dropdown('get value')) : 0;
+                    data.ChanNote = $('#chanNote').val() ? $('#chanNote').val() : '';
+
+                    AjaxLoad(url = "/Customer/Service/ServiceChange/?handler=ExcuteData"
+                        , data = { 'data': JSON.stringify(data), 'CurrentID': change_ServiceCurrentID, 'Treatplan': change_treatplan }
+                        , async = true
+                        , error = function () { notiError_SW() }
+                        , success = function (result) {
+                            if (result == "1") {
+                                notiSuccess();
+                                if (typeof TabList_Service_Loading_After_Modified_Service === 'function')  TabList_Service_Loading_After_Modified_Service(0);
+                                CloseModal();
+                            }
+                            else if (result == "0") $('#chan_message').html("@Local["Kiểm tra điều kiện đổi dịch vụ"]");
+                            else notiError_SW();
+                        }
+                    );
+                }
+            }
+        }
+        return false;
+    }
+    function chan_onServiceType() {
+        let serviceType = Number($('#ChangeServiceType').dropdown('get value')) ? Number($('#ChangeServiceType').dropdown('get value')) : 0;
+        if (serviceType == 0) chan_servicedata = chan_serroot;
+        else chan_servicedata = chan_serroot.filter(word => word["CatID"] == serviceType);
+        Load_Combo(chan_servicedata, "cbbChangeService", true);
+        $('#ChangeService').dropdown('clear');
+        chan_CountAll();
+    }
+
+    function chan_onService(){
+        let ServiceTab = Number($('#ChangeService').dropdown('get value')) ? Number($('#ChangeService').dropdown('get value')) : 0;
+        if (chan_servicedata != undefined && chan_servicedata != null && chan_servicedata.length != 0 && ServiceTab != 0) {
+            let Service = chan_servicedata.find(word => word["ID"] == ServiceTab);
+            let price = 0
+            if (Service != undefined){
+                chan_minprice = Service["Price"] ?? 0;
+                chan_maxprice = Service["Price_Max"] ?? 0;
+                chan_timetotreat = Service["TimeToTreatment"] ?? 0;
+                price = chan_minprice;
+            }
+            if (chan_maxprice != 0 && chan_minprice != chan_maxprice) {
+                $("#chan_unitcost").prop('disabled', false);
+            }
+            else{
+                $("#chan_unitcost").prop('disabled', true);
+            }
+            $('#chan_unitcost').val(formatNumber(price));
+        }
+        chan_CountAll();
+    }
+
+    function chan_CountAll() {
+        if (chan_flag == 1) {
+            chan_flag = 0;
+            let ServiceTab = Number($('#ChangeService').dropdown('get value')) ? Number($('#ChangeService').dropdown('get value')) : 0;
+            if (chan_servicedata != undefined && chan_servicedata != null && chan_servicedata.length != 0 && ServiceTab != 0) {
+                $("#chan_minuscost").prop('disabled', false);
+                if (Number(change_dencos) == 0) {
+                    $("#chan_quantity").prop('disabled', false);
+                }
+                $("#chan_finalprice").prop('disabled', false);
+                let chan_minuscost = Number($('#chan_minuscost').val()) ? Number($('#chan_minuscost').val()) : 0;
+                let price = Number($('#chan_unitcost').val()) ? Number($('#chan_unitcost').val()) : 0;
+                let times = chan_timetotreat;
+                if (times > 0) {
+                    let number = Number($('#chan_quantity').val()) ? Number($('#chan_quantity').val()) : 0;
+                    if (number >= 1) {
+                        times = times * number;
+                        $('#chan_timetotreat').val(times);
+                        let newprice = price * number;
+                        $('#chan_newprice').val(formatNumber(newprice));
+                        if (newprice > chan_minuscost) $('#chan_finalprice').val(newprice - chan_minuscost);
+                        else $('#chan_finalprice').val(0);
+                    }
+                    else {
+                        $('#chan_newprice').val(price);
+                        $('#chan_timetotreat').val(timetotreat)
+                        $('#chan_finalprice').val(price);
+                        if (price > chan_minuscost) $('#chan_finalprice').val(price - chan_minuscost);
+                        else $('#chan_finalprice').val(0);
+                        $('#chan_quantity').val(1);
+                    }
+                }
+            }
+            chan_DetectRule();
+            chan_flag = 1;
+        }
+    }
+    function chan_DetectRule() {
+        let message = '';
+        let _finalprice = Number($('#chan_finalprice').val()) ? Number($('#chan_finalprice').val()) : 0;
+        let _newprice = Number($('#chan_newprice').val()) ? Number($('#chan_newprice').val()) : 0;
+        let _minuscost = Number($('#chan_minuscost').val()) ? Number($('#chan_minuscost').val()) : 0;
+        let ServiceTab = Number($('#ChangeService').dropdown('get value')) ? Number($('#ChangeService').dropdown('get value')) : 0;
+        let quantity = Number($('#chan_quantity').dropdown('get value')) ? Number($('#chan_quantity').dropdown('get value')) : 0;
+        let price = Number($('#chan_unitcost').val()) ? Number($('#chan_unitcost').val()) : 0;
+
+        if (_newprice < _minuscost) {
+            let minus = _minuscost - _newprice;
+            message = `${Outlang["Phai_hoan_tien_truoc_khi_chuyen"]} <b class="text-danger">C - D</b> <span class="text-danger ps-2">${Outlang["So_tien_hoan"]}: ${formatNumber(minus)}</span>`;
+        }
+        if (_minuscost > chan_paid) message = `@Local["Tối đa"] : ${formatNumber(chan_paid)} (@Local["Tiền thừa"])`;
+        if (ServiceTab == 0) message = "@Local["Chọn dịch vụ đổi"]";
+        if (_finalprice < 0) message = "@Local["Số tiền dịch vụ không thể âm"]";
+        if (quantity < 0) message = "@Local["Số lượng phải lớn hơn 0"]";
+         
+        if (price < 0 || price < chan_minprice || (chan_maxprice != 0 && price > chan_maxprice)) message = "@Local["Kiểm tra thông tin"]";
+        if (message == "") {
+            $('#chanform_afterguide').removeClass('d-none');
+            var filerser = chan_servicedata.filter(function (obj) {
+                return (obj.ID === ServiceTab);
+            });
+            if (filerser != undefined && filerser.length == 1) {
+                $('#tran_ServiceNamenewguide').html(filerser[0].Name);
+                $('#tran_ServicePricenewguide').html(formatNumber(_finalprice > 0 ? _finalprice : 0));
+            }
+        }
+        else {
+            $('#chanform_afterguide').addClass('d-none');
+        }
+        $('#chan_message').html(message);
+    }
+</script>
+
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<style>
+    .servicetype_num {
+        color: #220957;
+        display: inline-block;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .ui.label {
+        font-size: 12px;
+        line-height: 1.5em;
+        letter-spacing: 0.2px;
+    }
+</style>
+

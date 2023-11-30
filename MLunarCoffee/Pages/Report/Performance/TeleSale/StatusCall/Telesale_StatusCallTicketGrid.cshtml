@@ -1,0 +1,144 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Performance.TeleSale.StatusCall.Telesale_StatusCallTicketGridModel
+@{
+    Layout = null;
+}
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="list_tickettelesale_status_call_header"
+                   class="text-md text-dark font-weight-bold mb-1">Danh sách ticket Telesale theo trạng thái gọi</p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#Telesale_StatusCallGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport()"></i>
+                <i class="vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData()"></i>
+               
+            </div>
+        </div>
+        <div class="row p-2 pb-0 ps-0">
+            <div class="col-lg-12">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 data-languagedyn="total" class="text-sm text-primary text-gradient mb-0">Tổng</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalTicket">0</span></h6>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="collapsesticky collapse show" id="Telesale_StatusCallGrid">
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReportMaster">
+                    <thead id="headerTableReportMaster">
+
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportMasterBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        
+        LoadDataReport();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function LoadDataReport() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/Performance/TeleSale/StatusCall/Telesale_StatusCallTicketGrid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let listCallStatus = JSON.parse(result)["Table"];
+                    let listUser = JSON.parse(result)["Table1"];
+                    let data = JSON.parse(result)["Table2"];
+                    let dataTotal = JSON.parse(result)["Table3"];
+                    RenderReport_HeaderBranch(listCallStatus, "headerTableReportMaster");
+                    RenderReportMater(listCallStatus, listUser, data, dataTotal, "dtContentReportMasterBody");
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+        return false;
+    }
+    function RenderReport_HeaderBranch(dataCallStatus, id) {
+        if (dataCallStatus && dataCallStatus.length > 0) {
+            let stringContent = '<th>Nhân Viên</th>';
+            for (var i = 0; i < dataCallStatus.length; i++) {
+                let item = dataCallStatus[i];
+                stringContent = stringContent
+                    + '<th>' + item.Name + '</th>';
+            }
+            document.getElementById(id).innerHTML = '<tr>' + stringContent + '<th>Total</th>' + '</tr>';
+        }
+    }
+
+    function RenderReportMater(dataCallStatus, listUser, data, dataTotal, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let totalTicket = 0;
+            let trTotal = '<tr role="row" class="active">';
+            let sum = 0;
+            if (data && data.length > 0) {
+                for (var i = 0; i < listUser.length; i++) {
+                    let sv = listUser[i];
+                    let items = data.filter(data => data.UserID == listUser[i].UserID);
+                    totalTicket += items[0].TotalTicket;
+                    let tr = '<td style="text-align:left">' + sv.User_Name + '</td>'
+                    for (let j = 0; j < dataCallStatus.length; j++) {
+                        let item = items.filter(data => data.statusCallID == dataCallStatus[j].ID);
+                        if (item.length > 0) {
+                            tr = tr
+                                + '<td class="selectedtd">' + item[0].Toatal_Status + '</td>'
+                        } else {
+                            tr = tr
+                                + '<td class="selectedtd">0</td>'
+                        }
+                    }
+                    tr += '<td>' + items[0].TotalTicket + '</td>'
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+                trTotal += '<td>Tổng</td>';
+                for (var j = 0; j < dataTotal.length; j++) {
+                    let itemTotal = dataTotal[j];
+                    sum += itemTotal.TotalTicket;
+                    trTotal += '<td>' + itemTotal.TotalTicket + '</td>'
+                }
+                trTotal += '<td>' + sum + '</td>'
+            }
+
+            document.getElementById(id).innerHTML = stringContent + trTotal + '</tr>';
+            Count_Up('lbTotalTicket', totalTicket)
+ 
+        }
+    }
+    function exportData() {
+        exportToExcel("dtContentReportMaster", 'Ticket-Telesale-theo-trang-thai-goi');
+    }
+</script>
+

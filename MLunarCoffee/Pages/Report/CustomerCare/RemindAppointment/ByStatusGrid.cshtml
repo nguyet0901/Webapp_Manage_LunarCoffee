@@ -1,0 +1,544 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.CustomerCare.RemindAppointment.ByStatusGridModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="vtcardheader card-header pb-0 px-0">
+    <div class="left">
+        <h6 class="mb-0">@Local["Nhắc lịch hẹn"]</h6>
+        <p class="text-sm mb-0">@Local["Báo cáo nhắc lịch hẹn khách hàng"]</p>
+    </div>
+    <div class="right">
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["Thu gọn"]">
+            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+               data-bs-toggle="collapse" href="#CC_RemindApp" aria-expanded="true"></i>
+        </div>
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["Tải lại"]">
+            <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+               onclick="event.preventDefault(); return RSG_LoadDataReport()"></i>
+        </div>
+        <div class="icon-hover mx-1"
+             data-bs-toggle="tooltip" data-bs-placement="top"
+             data-bs-original-title="@Local["Xuất excel"]">
+            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer _tab_control_" data-tab="export_excel"
+               onclick="event.preventDefault(); return RSG_Export()"></i>
+        </div>
+    </div> 
+</div>
+<div class="collapsesticky collapse show" id="CC_RemindApp">
+    <div class="card-body p-0 pt-0">
+        <div class="row px-2">
+            <div class="col-12 col-sm-12 col-md-12 col-xl-4 p-1">
+                <div class="fw-bold text-center text-dark text-sm">
+                    @Local["Trạng thái nhắc lịch"]:
+                    <span id="RSG_PieTotal" class="fw-bolder"></span>
+                </div>
+                <div class="position-relative mt-0 mt-md-4 my-2" style="min-height: 150px;">
+                    <div class="chart position-absolute top-50 start-50 translate-middle">
+                        <canvas id="RSG_pienumber" class="chart-canvas" height="180"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-12 col-md-12 col-xl-8 p-1">
+                <div class="mt-2 table-responsive">
+                    <table class="table vt-table mb-0" id="RSG_Grid">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="ps-6">@Local["Tình trạng"]</th>
+                                <th>@Local["Số lịch hẹn"]</th>
+                                <th>@Local["Tỷ lệ"] (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="RSG_GridBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="RSG_GeneralDetail" style="display: none">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <p id="RSG_DetailRemind" class="text-md text-dark font-weight-bold mb-1"></p>
+        </div>
+        <div class="right">
+            <div class="wrap">
+                <div class="wrapblock">
+                    <div class="text-primary fw-bold d-inline  mx-2 text-nowrap mt-1">
+                        <span id="RSG_currentdetaildata">0</span>
+                        <span class="mx-2">/</span>
+                        <span id="RSG_totaldetaildata">0</span>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["Thu gọn"]">
+                        <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                           data-bs-toggle="collapse" href="#RSG_DivDetail" aria-expanded="true"></i>
+                    </div>
+                    <div class="icon-hover mx-1 mt-1"
+                         data-bs-toggle="tooltip" data-bs-placement="top"
+                         data-bs-original-title="@Local["In báo cáo"]">
+                        <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                           onclick="event.preventDefault(); RSG_DetailPrintReport()"></i>
+                    </div>
+                    <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                        <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Xuất excel"]">
+                            <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                        </div>
+                        <div class="input-group-text icon-hover w-auto vttech-input-item">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RSG_ExportDetail(0)">@Local["Tất cả"]</i>
+                        </div>
+                        <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                            <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RSG_ExportDetail(1)">@Local["Tùy chọn"]</i>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="toggle">
+            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                <ul class="card card-body text-dark text-capitalize opacity-10">
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="executedcontent" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi tiết xử lý"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="branch" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="executed" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Ngày nhắc lịch"]</p>
+                    </li>
+                    <li class="d-flex">
+                        <div class="form-check form-switch">
+                            <input class="shtoogleDetail form-check-input" data-name="executedby" type="checkbox">
+                        </div>
+                        <p class="text-sm">@Local["Người nhắc lịch"]</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="RSG_DivDetail">
+        <div class="card-body p-0 pt-0">
+            <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                <div id="RSG_LoaderList" class="waitingdiv text-center w-100 mt-n9 position-absolute top-100 start-50 translate-middle-x" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <table data-name="RSG_GridDetail" class="table vt-table mb-0" id="RSG_GridDetail">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th data-name="custcode" style="min-width: 130px">@Local["Mã khách hàng"]</th>
+                            <th data-name="custname" style="min-width: 200px">@Local["Khách hàng"]</th>
+                            <th data-name="appdate" style="min-width: 130px">@Local["Ngày hẹn"]</th>
+                            <th style="min-width: 200px">@Local["Nội dung lịch hẹn"]</th>
+                            <th data-name="state">@Local["Tình trạng"]</th>
+                            <th data-name="executedcontent" style="min-width: 200px">@Local["Chi tiết xử lý"]</th>
+                            <th data-name="branch" style="min-width: 130px">@Local["Chi nhánh"]</th>
+                            <th data-name="executed" style="min-width: 130px">@Local["Ngày nhắc lịch"]</th>
+                            <th data-name="executedby" style="min-width: 130px">@Local["Người nhắc lịch"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="RSG_GridDetailBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return RSG_RenderDetailMore();">
+                @Local["Xem thêm"]
+            </button>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    let xhrLoadList, xhrLoadDetail;
+    let shtableDetail;
+    let DataEmp;
+    let _branchID = "@Model._branchID";
+    let _dateFrom = "@Model._dateFrom";
+    let _dateTo = "@Model._dateTo";
+    let IndexReportDetail = 0;
+    let timeoutCountDetail;
+    $(document).ready(function () {
+        ToolPopper();
+        RSG_LoadDataReport();
+        shtableDetail = $("#RSG_GridDetail").TableExpandColumn({
+            shtoogle: $('.shtoogleDetail')
+        });
+        RSG_LoadEmployee();
+        Checking_TabControl_Permission();
+    });
+
+    function RSG_LoadDataReport() {
+        AjaxLoad(url = "/Report/CustomerCare/RemindAppointment/ByStatusGrid?handler=Loadata"
+            , data = {
+                'branchID': _branchID,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    let pienumber = JSON.parse(result);
+                    let pietotal = 0;
+                    for (let i = 0; i < pienumber.length; i++) {
+                        pienumber[i].Name = pienumber[i].RemindState == 0 ? '@Local["Chưa nhắc"]' : '@Local["Đã nhắc"]';
+                        pietotal += Number(pienumber[i]['NumberOfApp']);
+                    }
+                    $('#RSG_PieTotal').html(formatNumber(Number(pietotal)));
+                    RSG_ReportPie_Description(pienumber, pietotal, 'RSG_GridBody');
+                    rp_pie("RSG_pienumber", pienumber, 'Name', 'NumberOfApp')
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+
+    }
+
+    function RSG_ReportPie_Description(data, total, id) {
+
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            let = 0;
+            let totalProportion = 0;
+            let percent = 0;
+            if (data && data.length > 0) {
+                for (let j = 0; j < data.length; j++) {
+                    let item = data[j];
+                    let _color = colorChart[j % colorChart.length];
+                    percent = item['Proportion'];
+
+                    if (j == data.length - 1) {
+                        percent = (100 - totalProportion).toFixed(2);
+                    }
+                    totalProportion += Number(percent);
+                    let tr = `<td class="vt-number-order"></td>
+                                                          <td>
+                                                              <div class="d-flex px-2 py-0">
+                                                                  <span class="badge" style="background-color: ${_color}; width: 21px; height: 21px"> </span>
+                                                                  <div class="d-flex flex-column justify-content-center ms-4 ps-1">
+                                                                    <a href="#" class="border-1 border-primary border-bottom buttonViewClass mb-0 text-sm fw-bold" data-id="${item['RemindState']}" data-name="${item['Name']}">
+                                                                        ${item['Name']}
+                                                                    </a>
+                                                                  </div>
+                                                              </div>
+                                                          </td>
+                                                          <td class="align-middle text-end text-dark text-sm ">
+                                                              <span class="pe-2 fw-bold me-2"> ${formatNumberToMilion(item['NumberOfApp'])} </span>
+                                                          </td>
+                                                          <td class="align-middle text-end text-dark text-sm ">
+                                                              <span class="fw-normal"> ${percent}</span>
+                                                          </td>`;
+
+                    stringContent += `<tr class="vt-number"> ${tr} </tr>`;
+                }
+                stringContent += `<tr class="vt-number text-white bg-gradient bg-primary mt-2">
+                                                                <td></td>
+                                                                <td class="text-start">
+                                                                    <div class="d-flex px-2 py-0">
+                                                                        <span class="badge bg-gradient bg-primary" style="width: 21px; height: 21px"> </span>
+                                                                        <div class="d-flex flex-column justify-content-center ms-4 ps-1">
+                                                                             <a href="#" class="border-1 border-white border-bottom buttonViewClass text-white mb-0 text-sm fw-bold" data-id="-1">@Local["Tất cả"]</a>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <span class="fw-normal me-2 pe-2"> ${formatNumberToMilion(total)} </span>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <span class="fw-normal"> ${totalProportion}</span>
+                                                                </td>
+                                                             </tr>`;
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            RSG_GeneralEvent();
+        }
+    }
+
+    //#region // LOAD EMPLOYEE
+    function RSG_LoadEmployee() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                DataEmp = data[0];
+            });
+    }
+    //#endregion
+    //#region // LOAD DETAIL AND RENDER
+    async function RSG_DetailLoad(id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                if (xhrLoadDetail && xhrLoadDetail.readyState != 4) xhrLoadDetail.abort();
+                IndexReportDetail = 0;/*console.time("Time this");*/
+                xhrLoadDetail = AjaxLoad(url = "/Report/CustomerCare/RemindAppointment/ByStatusGrid?handler=LoadataDetail"
+                    , data = {
+                        'branchID': _branchID,
+                        'statusRemind': id,
+                        'dateFrom': _dateFrom,
+                        'dateTo': _dateTo,
+                    }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            DataReportMainDetail = JSON.parse(JSON.stringify(data));
+                            DataReportMainDetailSlice = sliceIntoChunks(data, 500);
+                            $("#RSG_GridDetailBody").empty();
+                            if (DataReportMainDetailSlice && DataReportMainDetailSlice.length != 0) {
+                                fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "RSG_GridDetailBody"
+                                    , blocknum = 100
+                                    , fnrender = RSG_DetailRender
+                                    , fnsuccess = null
+                                );
+                            }
+                            Count_Up("RSG_totaldetaildata", DataReportMainDetail.length);
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    }
+                    , sender = null
+                    , before = function (e) {
+                        $('#RSG_LoaderList').show();
+                    }
+                    , complete = function (e) {/*console.timeEnd("Time this");*/
+                        $('#RSG_LoaderList').hide();
+                    }
+                );
+                resolve();
+            }, 10)
+        });
+    }
+    function RSG_RenderDetailMore() {
+        IndexReportDetail += 1;
+        if (DataReportMainDetailSlice && DataReportMainDetailSlice[IndexReportDetail]) {
+            fnRenderBlock(DataReportMainDetailSlice[IndexReportDetail], "RSG_GridDetailBody"
+                , blocknum = 100
+                , fnrender = RSG_DetailRender
+                , fnsuccess = null
+            );
+        }
+    }
+    async function RSG_DetailRender(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length != 0) {
+                        let tr = '';
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let state = item.IsExcuted == 1 ? '<span class="text-primary fw-bold">@Local["Đã nhắc"]</span>' : '<span class="text-secondary">@Local["Chưa nhắc"]</span>';
+                            let executedContent = `${item.StatusCall}. ${item.TypeCareParent} - ${item.TypeCare}. ${item.Content}, ${item.ContentLast} `;
+                            let tr = `<tr class="vt-number" role="row">
+                                              <td class="vt-number-order"></td>
+                                              <td data-name="custcode">
+                                                  <a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}">
+                                                     ${item.CustCode}
+                                                  </a>
+                                              </td>
+                                              <td data-name="custname">${item.CustName}</td>
+                                              <td data-name="service">${ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(item.AppDate))}</td>
+                                              <td>${item.AppContent}</td>
+                                              <td data-name="state">${state}</td>
+                                              <td data-name="executedcontent">${RSG_RenderItemContent(item.StatusCall, item.TypeCareParent, item.TypeCare, item.Content, item.ContentLast)}</td>
+                                              <td data-name="branch">${(RP_DataBranch[item.BranchID] != undefined ? RP_DataBranch[item.BranchID].Name : '')}</td>
+                                              <td data-name="executed">${ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(item.Executed))}</td>
+                                              <td data-name="executedby">${(DataEmp[item.ExecuteBy] != undefined) ? DataEmp[item.ExecuteBy].Name : ''}</td>
+                                          </tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                shtableDetail.Refresh();
+                clearTimeout(timeoutCountDetail);
+                timeoutCountDetail = setTimeout(() => {
+                    Count_Up("RSG_currentdetaildata", $("#" + id).children().length);
+                }, 300)
+                resolve();
+            }, 10)
+        })
+    }
+    function RSG_RenderItemContent(StatusCall, TypeCareParent, TypeCare, Content, ContentLast) {
+        let typeCareParent = TypeCareParent != '' ? `. ${TypeCareParent}` : '';
+        let typeCare = TypeCare != '' ? ` - ${TypeCare}` : '';
+        let content = Content != '' ? `, ${Content}` : '';
+        let contentLast = ContentLast != '' ? `, ${ContentLast}.` : '';
+        let executedContent = StatusCall + typeCareParent + typeCare + content + contentLast;
+        return executedContent;
+    }
+    //#endregion
+
+    //#region //Event
+    function RSG_GeneralEvent() {
+        $("#RSG_GridBody .buttonViewClass").unbind('click').on("click", function () {
+            let id = $(this).attr('data-id');
+            let name = $(this).attr('data-name');
+            $("#RSG_GeneralDetail").fadeIn('slow');
+            $('html, body').animate({
+                scrollTop: $("#RSG_GeneralDetail").offset().top
+            }, 300);
+            if (id == "-1") {
+                $("#RSG_DetailRemind").html('@Local["Tất cả lịch hẹn"]');
+            }
+            else {
+                $("#RSG_DetailRemind").html('@Local["Tình trạng"]: ' + name);
+            }
+            $("#RSG_GridDetailBody").empty();
+            RSG_DetailLoad(id);
+        })
+    }
+    function RSG_Export(isOption = 0) {
+        syslog_ExpExcel('e', Outlang['Bao-cao-nhac-lich-hen']);
+        exportToExcel("RSG_Grid", Outlang['Bao-cao-nhac-lich-hen']);
+    }
+    async function RSG_ExportDetail(isOption = 0) {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#RSG_GeneralDetail');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "AppDate": ["@Local["Ngày hẹn"]", (value) => { return ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(value)) }],
+                    "AppContent": ["@Local["Nội dung lịch hẹn"]"],
+                    "IsExcuted": ["@Local["Tình trạng"]", (value, { IsExcuted }) => {
+                        return IsExcuted == 1 ? decodeHtml('@Local["Đã nhắc"]') : decodeHtml('@Local["Chưa nhắc"]');
+                    }],
+                    "ExecutedContent": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='executedcontent']`)).is(":checked"),
+                        data: ["@Local["Chi tiết xử lý"]", (value, { StatusCall, TypeCareParent, TypeCare, Content, ContentLast }) => {
+                            return RSG_RenderItemContent(StatusCall, TypeCareParent, TypeCare, Content, ContentLast);
+                        }]
+                    },
+                    "BranchID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='branch']`)).is(":checked"),
+                        data: ["@Local["Chi nhánh"]", (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }]
+                    },
+                    "Executed": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='executed']`)).is(":checked"),
+                        data: ["@Local["Ngày nhắc lịch"]", (value) => { return ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(value)) }]
+                    },
+                    "ExecuteBy": {
+                        isShow: isAll || (eleContainer.find(`.shtoogleDetail[data-name='executedby']`)).is(":checked"),
+                        data: ["@Local["Người nhắc lịch"]", (value, { ExecuteBy }) => {
+                            return (DataEmp[ExecuteBy] != undefined) ? DataEmp[ExecuteBy].Name : '';
+                        }]
+                    },
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RSG_GridDetailBody', PermissionTable_TabControl);
+                let fileName = xoa_dau($("#RSG_DetailRemind").text()).replaceAll(' ', '-');
+                syslog_ExpExcel('e', fileName);
+                exportJsonToExcel(fileName, DataReportMainDetail, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+
+    async function RSG_DetailPrintReport() {
+        try {
+            if (DataReportMainDetail && DataReportMainDetail.length != 0) {
+                let _branchID = "@Model._branchID";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "CustName": ["@Local["Khách hàng"]"],
+                    "AppDate": ["@Local["Ngày hẹn"]"],
+                    "AppContent": ["@Local["Nội dung lịch hẹn"]"],
+                    "IsExcuted": ["@Local["Tình trạng"]", {
+                        callbackRenderValue: (value, { IsExcuted }) => {
+                            return IsExcuted == 1 ? decodeHtml('@Local["Đã nhắc"]') : decodeHtml('@Local["Chưa nhắc"]');
+                        }
+                    }],
+                    "ExecutedContent": ["@Local["Chi tiết xử lý"]", {
+                        isShow: $(`.shtoogleDetail[data-name='executedcontent']`).is(":checked"),
+                        callbackRenderValue: (value, { StatusCall, TypeCareParent, TypeCare, Content, ContentLast }) => {
+                            return RSG_RenderItemContent(StatusCall, TypeCareParent, TypeCare, Content, ContentLast);
+                        }
+                    }],
+                    "BranchID": ["@Local["Chi nhánh"]", {
+                        isShow: $(`.shtoogleDetail[data-name='branch']`).is(":checked"),
+                        callbackRenderValue: (value, { BranchID }) => {
+                            return (RP_DataBranch[BranchID] != undefined) ? RP_DataBranch[BranchID].Name : '';
+                        }
+                    }],
+                    "Executed": ["@Local["Ngày nhắc lịch"]", {
+                        isShow: $(`.shtoogleDetail[data-name='executed']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMYHM(value) }
+                    }],
+                    "ExecuteBy": ["@Local["Người nhắc lịch"]", {
+                        isShow: $(`.shtoogleDetail[data-name='executedby']`).is(":checked"),
+                        callbackRenderValue: (value, { CreatedBy }) => {
+                            return (DataEmp[CreatedBy] != undefined) ? DataEmp[CreatedBy].Name : '';
+                        }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = $("#RSG_DetailRemind").text(), DataReportMainDetail, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                //#endregion
+</script>

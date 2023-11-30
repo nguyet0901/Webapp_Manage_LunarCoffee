@@ -1,0 +1,2110 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.CustomerDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js')</script>
+<script>js_require_notasync('/js/Calendar_Custom/datetime.js', true)</script>
+<script>js_require_notasync('/js/WorkScheduler/workscheduler.js', true)</script>
+<div class="position-relative">
+    <div id="CD_DivMaster" class="position-relative">
+        <div id="CD_LoaderCus" style="border: none; height: -webkit-fill-available;" class="position-absolute top-0 start-50 translate-middle-x z-index-3">
+            <div class="ui active inverted dimmer">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+        <div class="form3 opacity-0" id="CD_FormCus" onsubmit="event.preventDefault(); return false;">
+            <div class="d-lg-flex">
+                <div class="flex-grow-1">
+                    <div id="CD_DivCusDetail" class="m-2">
+                        <div class="card p-3 border-radius-xl bg-white mt-0 p-4" data-animation="FadeIn">
+                            <div class="d-lg-flex">
+                                <div class="col-auto my-auto">
+                                    <div class="h-100">
+                                        <h6 class="font-weight-bolder mb-0">@Local["Hồ sơ khách hàng"]</h6>
+                                        <p class="mb-0 text-sm">@Local["Thông tin cá nhân"]</p>
+                                    </div>
+                                </div>
+                                <div class="col-auto ms-auto">
+                                    <ul class="nav nav-pills p-1 bg-transparent detailcus" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#CD_TabInfo" role="tab">
+                                                @Local["Thông tin chung"]
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link cursor-pointer" data-bs-toggle="pill" data-bs-target="#CD_TabContact" role="tab">
+                                                @Local["Khác"]
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="nav-wrapper position-relative end-0">
+                                <div class="tab-content" id="pills-tabContent">
+                                    <div class="tab-pane fade" id="CD_TabInfo" role="tabpanel">
+                                        <div class="row">
+                                            <div class="field col-12 col-md-3 col-lg-3 px-1 my-lg-0 my-3 d-flex justify-content-center align-items-center">
+                                                <div class="avatar avatar-xxl position-relative d-inline-block">
+                                                    <img id="CD_AvtCus" class="border-radius-md avatar-xxl border border-1 border-gray" alt="team-2" src="/default.png" style="object-fit: cover;" onerror="Master_OnLoad_Error_Image(this)">
+                                                    <input class="opacity-0 cursor-pointer w-0 h-0 d-none" id="CD_AvtCusUpload" accept="image/*" type="file" name="files[]" />
+                                                    <div class="upload-btn-wrapper d-block position-absolute bottom-0 end-0 " id="CD_AvtBtnCusUpload">
+                                                        <a href="javascript:;" class="btn btn-sm btn-icon-only bg-gradient-light mb-n2 me-n2">
+                                                            <i class="fa fa-pen top-0" aria-hidden="true"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-9 col-lg-9 px-3">
+                                                <div class="flex-grow-1 mt-2">
+                                                    <div class="d-lg-flex">
+                                                        <div class="mt-0">
+                                                            <div class="ms-2 ms-lg-0 d-flex" style="min-height:32px;" id="CD_GenderCus">
+                                                            </div>
+                                                        </div>
+                                                        <div id="CD_ScheduleCheck" class="mt-0 ms-2" style="display: none; text-align: left;">
+                                                            <div class="form-check">
+                                                                <input id="CD_ScheduleInput" class="form-check-input" type="checkbox" checked="checked" onchange="event.preventDefault(); return ShowFormSchedule()">
+                                                                <label class="form-check-label mb-0" for="CD_ScheduleInput">
+                                                                    @Local["Tạo lịch hẹn"]
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex mt-3 mt-lg-0 align-items-center ms-auto mb-2 ">
+                                                            <div class="d-flex px-2 py-0">
+                                                                <div id="CD_AllowEdit" class="form-check _tab_control_" data-tab="cd_rule_allow">
+                                                                    <input class="form-check-input" type="checkbox" checked="checked" disabled>
+                                                                    <label class="form-check-label mb-0">
+                                                                        @Local["Cho phép chỉnh sửa"]
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="CDRulearea d-flex px-2 py-0 d-none">
+                                                                <span class="badge-sm  badge-circle bg-gradient-danger me-3"> </span>
+                                                                <div class="d-flex flex-column justify-content-center">
+                                                                    <h6 class="mb-0 text-sm">@Local["Bắt buộc"]</h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="CDRulearea d-flex px-2 py-0 d-none">
+                                                                <span class="badge-sm  badge-circle bg-gradient-success me-3"> </span>
+                                                                <div class="d-flex flex-column justify-content-center">
+                                                                    <h6 class="mb-0 text-sm">@Local["Không chỉnh sửa"]</h6>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label>@Local["Họ và tên"]</label>
+                                                        <input class="form-control _rule_customerDetail_" id="CD_NameCus" name="name" data-rule="custName" type="text" placeholder="eg. @Local["Họ và tên"]" />
+                                                    </div>
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label id="CDL_BirthdayCus"></label>
+                                                        <div class="div-birthday" style="position: relative;">
+                                                            <input autocomplete="cc-number" class="form-control _rule_customerDetail_" data-rule="birthday" id="CD_BirthdayCus" maxlength="10" />
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label>@Local["Điện thoại"]</label>
+                                                        <input data-tab="phone_customer" class="form-control _tab_control_ _rule_customerDetail_" data-rule="phone1" type="tel"
+                                                               style="padding-left: 45px; width: 100%;" name="phonenumber" id="CD_Phone1Cus" maxlength="11" />
+                                                    </div>
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label>@Local["Chi nhánh"]</label>
+                                                        <div class="ui fluid search selection dropdown form-control _rule_customerDetail_" data-rule="branch" id="CD_BranchCus">
+                                                            <input type="hidden" name="branch" />
+                                                            <input class="search" autocomplete="off" tabindex="0" />
+                                                            <div class="default text">@Local["Chi nhánh"]</div>
+                                                            <div id="CD_CbbBranchCus" class="menu" tabindex="-1">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label>@Local["Nhóm khách hàng"]</label>
+                                                        <div class="ui fluid search selection dropdown form-control _rule_customerDetail_" data-rule="custGroup" id="CD_GroupCus">
+                                                            <input type="hidden" name="" />
+                                                            <i class="dropdown icon"></i>
+                                                            <i class="remove icon"></i>
+                                                            <div class="default text">@Local["Nhóm khách hàng"]</div>
+                                                            <div id="CD_CbbGroupCus" class="menu" tabindex="-1">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="field col-12 col-md-6 col-xl-4 mt-2 mt-xl-0 px-1 divField">
+                                                        <label>@Local["Nguồn khách hàng"]</label>
+                                                        <div class="ui fluid search selection dropdown form-control _rule_customerDetail_" data-rule="source" id="CD_TypeCatCus" onchange="event.preventDefault(); ChangeCustomerSource();">
+                                                            <input type="hidden" name="source" />
+                                                            <i class="dropdown icon"></i>
+                                                            <input class="search" autocomplete="off" tabindex="0" />
+                                                            <div class="default text">@Local["Nguồn khách hàng"]</div>
+                                                            <div id="CD_CbbSouceTypeCatCus" class="menu" tabindex="-1">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row px-1">
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField ">
+                                                <label>@Local["Email"]</label>
+                                                <input class="form-control _rule_customerDetail_" data-rule="email" id="CD_Email" name="email" type="text" placeholder="eg. @Local["Email"]" />
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField ">
+                                                <label>@Local["Quốc tịch"]</label>
+                                                <div class="ui fluid search selection dropdown form-control _rule_customerDetail_" data-rule="nationality" id="CD_NationalCus">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input id="searchNational" class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Quốc tịch"]</div>
+                                                    <div id="CD_CbbNational" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField">
+                                                <label>@Local["Nghề nghiệp"]</label>
+                                                <div class="ui fluid search selection dropdown form-control _rule_customerDetail_" data-rule="career" id="CD_Career">
+                                                    <input data-validation="caree_customer" class="_validation_option_" type="hidden" />
+                                                    <div class="default text">@Local["Nghề nghiệp"]</div>
+                                                    <div id="CD_CbbCareer" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField">
+                                                <label class="field hide">@Local["Địa chỉ"]</label>
+                                                <div class="position-relative">
+                                                    <input class="form-control _tab_control_ _validation_option_ _rule_customerDetail_" data-rule="address" id="CD_AddressCus"
+                                                           data-tab="address_customer" data-validation="address_customer" placeholder="eg .@Local["Địa chỉ"]" />
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField">
+                                                <label class="field hide">@Local["Tỉnh/Thành phố"]</label>
+                                                <div class="ui fluid search selection dropdown address_customer_dropdown form-control _rule_customerDetail_" data-rule="city" id="CD_CityCus" onchange="event.preventDefault(); return onchangeCity()">
+                                                    <input data-validation="cbbcity_customer" class="_validation_option_ " type="hidden" name="" />
+                                                    <div class="default text">eg .@Local["Tỉnh/Thành phố"]</div>
+                                                    <div id="CD_CbbCityCus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField">
+                                                <label class="field hide">@Local["Quận huyện"]</label>
+                                                <div class="ui fluid search selection dropdown address_customer_dropdown form-control _rule_customerDetail_" data-rule="district" id="CD_DistrictCus" onchange="event.preventDefault(); return onchangeDistrict()">
+                                                    <input data-validation="cbbdistrict_customer" class="_validation_option_ " type="hidden" name="" />
+                                                    <div class="default text">eg .@Local["Quận huyện"]</div>
+                                                    <div id="CD_CbbDistrictCus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2 divField">
+                                                <label class="field hide">@Local["Phường xã"]</label>
+                                                <div class="ui fluid search selection dropdown address_customer_dropdown form-control _rule_customerDetail_" data-rule="commune" id="CD_CommuneCus">
+                                                    <input class="" type="hidden" name="" />
+                                                    <div class="default text">eg .@Local["Phường xã"]</div>
+                                                    <div id="CD_CbbCommuneCus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2">
+                                                <label for="CD_CheckboxOldCus">
+                                                    @Local["Khách cũ"]
+                                                </label>
+                                                <div class="input-group">
+                                                    <div class="input-group-text px-2 py-0 cursor-pointer">
+                                                        <div class="form-check mb-0 me-0 ms-1">
+                                                            <input id="CD_CheckboxOldCus" class="form-check-input" value="" type="checkbox" onchange="event.preventDefault(); return ShowInputCustCodeOld()">
+                                                        </div>
+                                                    </div>
+                                                    <input id="CustCodeOld" class="form-control ps-2" type="text" placeholder="eg. @Local["Mã khách hàng cũ"]" />
+                                                </div>
+                                            </div>
+                                            <div id="CD_Memberarea" class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2">
+                                                <label class="field hide">@Local["Mã thành viên"]</label>
+                                                <input class="form-control" id="CD_Membercode" type="text" placeholder="eg. @Local["Mã thành viên"]" />
+                                            </div>
+
+                                            <div id="CD_ModifyCus" class="field col-12 col-md-6 col-lg-6 col-xl-3 px-1 mt-2">
+                                                <label for="CD_EditCreateCus">
+                                                    @Local["Chỉnh sửa ngày tạo"]
+                                                </label>
+                                                <div class="input-group">
+                                                    <div class="input-group-text px-2 py-0 cursor-pointer">
+                                                        <div class="form-check mb-0 me-0 ms-1">
+                                                            <input id="CD_EditCreateCus" class="form-check-input" value="" type="checkbox" onchange="event.preventDefault(); return ShowInputEditCreated()">
+                                                        </div>
+                                                    </div>
+                                                    <input id="CD_CreateCus" class="form-control DateCreated ps-2" type="text" placeholder="eg. @Local["Ngày tạo"]" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="CD_TabContact" role="tabpanel">
+                                        <div class="row">
+                                            <div class="field col-12 col-sm-4 px-1 d-none mt-2">
+                                                <label>@Local["Ngôn ngữ"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="CD_LanguageCus" onchange="event.preventDefault();">
+                                                    <input type="hidden" name="language" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Ngôn ngữ"]</div>
+                                                    <div id="CD_CbbLanguageCus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="per_CustDetail_FbUrl" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label" for="CD_FaceBookCus">@Local["Facebook"]</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-gray-200 w-40 w-lg-30 w-sm-50" id="CD_FaceBookCus_Default">Facebook.com/</span>
+                                                        <input type="text" class="form-control ps-2" id="CD_FaceBookCus">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="per_CustDetail_ZaloUrl" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label" for="CD_ZaloCus">@Local["Zalo"]</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-gray-200 w-40 w-lg-30 w-sm-50" id="CD_ZaloCus_Default">Zalo.me/</span>
+                                                        <input type="text" class="form-control ps-2" id="CD_ZaloCus">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-1">
+                                            <div id="per_CustDetail_ViberUrl" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label" for="CD_ViberCus">@Local["Viber"]</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-gray-200 w-40 w-lg-30 w-sm-50" id="CD_ViberCus_Default">Viber.com/</span>
+                                                        <input type="text" class="form-control ps-2" id="CD_ViberCus">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="per_CustDetail_ItUrl" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label">Instagram</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-gray-200 w-40 w-lg-30 w-sm-50">Instagram.com/</span>
+                                                        <input type="text" class="form-control ps-2" id="CD_instgramurl">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-1">
+                                            <div id="per_CustDetail_SexualOrientation" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <label>@Local["Xu hướng tình dục"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="CD_SexualOrienID">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Xu hướng tình dục"]</div>
+                                                    <div id="CD_CbbSexualOrien" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="per_CustDetail_MaritalStatus" class="field col-12 col-sm-12 col-md-6 col-xl-6 flex-grow-1 px-1 mt-2">
+                                                <label>@Local["Tình trạng hôn nhân"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="CD_MaritalStatusID">
+                                                    <input type="hidden" name="language" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Tình trạng hôn nhân"]</div>
+                                                    <div id="CD_CbbMaritalStatus" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="field col-12 col-md-6 col-lg-4 mt-2 px-1 divField">
+                                                <label>@Local["CMND/CC"]</label>
+                                                <div class="d-inline-block position-relative">
+                                                    <div id="CD_IDnumLoader" style="border: none; height: -webkit-fill-available; display: none;" class="z-index-3">
+                                                        <div class="ui active inverted dimmer">
+                                                            <div class="spinner-border text-primary spinner-border-sm" role="status">
+                                                                <span class="sr-only">Loading...</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span id="CD_IDnumMess"></span>
+                                                </div>
+                                                <input class="form-control _rule_customerDetail_" id="CD_IDnum" data-rule="IDIssuenum" placeholder="eg. @Local["CMND/CC"]"  onchange="event.preventDefault(); return CustDetail_SearchIdentityCard();" />
+                                            </div>
+                                            <div class="field col-12 col-md-6 col-lg-4  mt-2 px-1">
+                                                <label>@Local["Ngày cấp"]</label>
+                                                <input class="form-control" id="CD_IDissuedate" placeholder="eg .dd-mm-yyyy" maxlength="10" />
+                                            </div>
+                                            <div class="field col-12 col-md-12 col-lg-4  mt-2 px-1">
+                                                <label>@Local["Nơi cấp"]</label>
+                                                <input class="form-control" id="CD_IDissueplace" placeholder="eg. @Local["Nơi cấp"]" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div id="per_CustDetail_HInum" class="field col-12 col-md-6 col-lg-4 mt-2 px-1">
+                                                <label>@Local["Bảo hiểm"]</label>
+                                                <input class="form-control" id="CD_HInum" placeholder="eg. @Local["Bảo hiểm"]" />
+                                            </div>
+                                            <div id="per_CustDetail_HIExpireddate" class="field col-12 col-md-6 col-lg-4 mt-2 px-1">
+                                                <label>@Local["Ngày hết hạn"]</label>
+                                                <input class="form-control" id="CD_HIExpireddate" placeholder="eg .dd-mm-yyyy" maxlength="10" />
+                                            </div>
+                                            <div class="field col-12 col-md-12 col-lg-2 mt-2 px-1 flex-grow-1">
+                                                <label>@Local["Dân tộc"]</label>
+                                                <input class="form-control" id="CD_Nation" placeholder="eg. @Local["Dân tộc"]" />
+                                            </div>
+                                            <div class="field col-12 col-md-12 col-lg-2 mt-2 px-1 flex-grow-1">
+                                                <label>@Local["Tôn giáo"]</label>
+                                                <div class="ui fluid search selection dropdown form-control" id="CD_ReligionID">
+                                                    <input type="hidden" name="" />
+                                                    <i class="dropdown icon"></i>
+                                                    <input class="search" autocomplete="off" tabindex="0" />
+                                                    <div class="default text">@Local["Tôn giáo"]</div>
+                                                    <div id="CD_CbbReligion" class="menu" tabindex="-1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="field col-12 col-sm-12 col-md-6 col-xl-4 flex-grow-1 px-1 mt-2">
+                                                <label>@Local["Điện thoại"] 2 ( @Local["10 ký tự số"] )</label>
+                                                <input data-tab="phone_customer" class="form-control _tab_control_" id="CD_Phone2" name="phonenumberNotMain" type="text" placeholder="eg. @Local["10 ký tự số"]" />
+                                            </div>
+                                            <div class="field col-12 col-sm-12 col-md-6 col-xl-4 flex-grow-1 px-1 mt-2">
+                                                <label>@Local["Gclid"]</label>
+                                                <input class="form-control" id="CD_GclidCus" placeholder="eg. @Local["Gclid"]" />
+                                            </div>
+                                            <div class="field col-12 col-sm-12 col-md-6 col-xl-4 px-1 mt-2">
+                                                <label>@Local["Ghi chú"]</label>
+                                                <input class="form-control" id="CD_NoteContentCus" name="content" placeholder="eg. @Local["Ghi chú"]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="CD_DivBrokerCus" class="card card-plain p-3 border-radius-xl bg-white mt-3 p-4" data-animation="FadeIn" style="display:none;">
+                            <div class="vtcardheader card-header pb-0 px-0">
+                                <div class="left">
+                                    <h6 class="mb-0">@Local["Người giới thiệu"]</h6>
+                                    <p class="text-sm mb-0">@Local["Thêm người giới thiệu"]</p>
+                                </div>
+                                <div class="right my-auto">
+                                    <span class="text-sm text-dark">@Local["Người giới thiệu"] :</span>
+                                    <span class="text-sm text-primary fw-bold" id="CD_BrokerCusText"></span>
+                                </div>
+                            </div>
+                            <div class="row px-1">
+                                <div class="col-12 px-1 mt-2">
+                                    <div class="input-group flex-nowrap mt-1">
+                                        <input id="CD_InpFilterBroker" type="text" class="form-control" placeholder="eg .@Local["Tìm kiếm theo tên, số điện thoại hoặc mã số"]">
+                                        <div id="CD_BtnFilterBroker" class="input-group-text cursor-pointer">
+                                            <div class="position-relative">
+                                                <i class="add text-primary fas fa-search"></i>
+                                            </div>
+                                        </div>
+                                        <div class="input-group-text cursor-pointer" onclick="return CustDetail_NewBroker_Open();">
+                                            <div class="position-relative d-inline">
+                                                <i class="fa fa-plus text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="input-group-text cursor-pointer" id="CD_ClickHideBroker">
+                                            <div class="position-relative">
+                                                <i class="fas fa-chevron-up text-primary"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 px-1 mt-0" id="CD_DivTableBroker">
+                                    <div class="m-0 my-3 mobile-responsive max-height-300 overflow-y">
+                                        <table class="table vt-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>@Local["Tên"]</th>
+                                                    <th>@Local["Mã"]</th>
+                                                    <th>@Local["Số điện thoại"]</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="CD_BrokerBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="CD_DivRepresentCus" class="card p-3 border-radius-xl bg-white mt-3 p-4" data-animation="FadeIn" style="display:none;">
+                            <h6 class="font-weight-bolder mb-0">@Local["Người giám hộ"]</h6>
+                            <p class="mb-0 text-sm">@Local["Khách hàng nhỏ hơn 16 tuổi cần thêm người giám hộ"]</p>
+                            <div class="row px-1">
+                                <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                                    <label>@Local["Tên người giám hộ"]</label>
+                                    <input class="form-control" id="CD_RepNameCus" type="text" placeholder="eg. @Local["Tên người giám hộ"]" />
+                                </div>
+                                <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                                    <label>@Local["CMND/CC"]</label>
+                                    <input class="form-control" id="CD_RepIdentityCus" type="text" placeholder="eg. @Local["CMND/CC"]" />
+                                </div>
+                            </div>
+                            <div class="row px-1">
+                                <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                                    <label>@Local["SĐT người giám hộ"]</label>
+                                    <input id="CD_RepPhoneCus" maxlength="11" data-tab="phone_customer" class="form-control _tab_control_" type="tel" placeholder="eg. @Local["SĐT người giám hộ"]" />
+                                </div>
+                                <div class="field col-12 col-sm-6 px-1 mt-2 ">
+                                    <label>@Local["Quan hệ"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CD_RepRelationshipCus">
+                                        <input type="hidden" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">@Local["Quan hệ"]</div>
+                                        <div id="CD_CbbRepRelationshipCard" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="CD_DivScheduleCus" class="card p-3 border-radius-xl bg-white mt-3 px-4" data-animation="FadeIn" style="display:none;">
+                            <h6 class="font-weight-bolder mb-0">@Local["Lịch hẹn"]</h6>
+                            <p class="mb-0 text-sm">@Local["Thông tin lịch hẹn"]</p>
+
+                            <div class="d-lg-flex mt-3">
+                                <div class="col-w-350 mx-auto">
+                                    <input id="CD_DateFromCus" class="form-control DateFrom d-none" type="text" placeholder="eg .@Local["Ngày hẹn"]" onchange="event.preventDefault(); CustDetail_onChangeDateApp()" />
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="row">
+                                        <div class="field col-12 col-md-6 col-xl-6 px-1 mt-2 flex-grow-1">
+                                            <label>@Local["Bác sĩ"]</label>
+                                            <div class="ui fluid search selection dropdown form-control" id="CD_DocCus">
+                                                <input id="inputdoctor1" type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input id="inputdoctor" class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">eg .@Local["Bác sĩ"]</div>
+                                                <div id="CD_CBbDocCus" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="per_CustDetail_Consult" class="field col-12 col-md-6 col-xl-6 px-1 mt-2 flex-grow-1">
+                                            <label>@Local["Tư vấn"]</label>
+                                            <div class="ui fluid search selection dropdown form-control" id="CD_ConsultCus">
+                                                <input id="inputConsult" type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <i class="remove icon"></i>
+                                                <input id="inputConsultSearch" class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">@Local["Tư vấn"]</div>
+                                                <div id="CD_CbbConsultCus" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field col-12 px-1 mt-2 ">
+                                            <label>@Local["Dịch vụ quan tâm"]</label>
+                                            <div class="ui fluid search multiple selection dropdown form-control" id="CD_TKServiceCus">
+                                                <input id="CD_TKInputServiceCus" name="" type="hidden" />
+                                                <i class="dropdown icon"></i>
+                                                <input id="inputtokenServiceCare" class="search" autocomplete="off" tabindex="0" />
+                                                <div class="default text">@Local["Dịch vụ quan tâm"]</div>
+                                                <div id="CD_CbbTKServiceCus" class="menu" tabindex="-1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="field col-12 px-1 mt-2 ">
+                                            <label>@Local["Nội dung"] </label>
+                                            <textarea id="CD_NoteScheduleCus" class="form-control" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-3">
+            <div id="CD_DivCheckAgree" class="form-check">
+                <input id="CD_ChkAgreeCus" class="form-check-input" type="checkbox" checked="checked">
+                <label id="CD_LbAgree" class="form-check-label text-sm font-weight-bold" for="CD_ChkAgreeCus">
+                </label>
+            </div>
+        </div>
+        <div class="action_Save">
+            <div class="text-danger text-gradient text-sm font-weight-bold" id="CD_textShowMessageCus"></div>
+            <div class="action_Save-Content">
+                <button class="btn btn-secondary" form="CD_FormCus" onclick="event.preventDefault();return CloseModalCustomerDetail()">@Local["Đóng"]</button>
+                <div id="btnCustomerDetailSave" class="_tab_control_" data-tab="edit_tab_customer">
+                    <button id="CD_BtnCustomerDetail" form="CD_FormCus" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                            onclick="event.preventDefault();return ExcuteDataCustomer_Detail(1)">
+                        @Local["Lưu"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-none" id="CD_Preview">
+
+    </div>
+    <div class="card" id="CD_DivDuplicateCus" style="display:none">
+        <div class="card-header pb-0 p-3">
+            <div class="d-flex align-items-center">
+                <h6 class="mb-0">@Local["Danh sách khách hàng trùng"]</h6>
+            </div>
+        </div>
+        <div class="card-body p-3">
+            <div class="row">
+                <div class="col-5 text-center">
+                    <div class="d-flex h-100 align-items-center justify-content-center">
+                        <div>
+                            <h5 class="m-0" id="CD_PhoneDuplicateCus"></h5>
+                            <span id="CD_TextDuplicateCus" class="text-lg d-block font-weight-bold text-gradient text-danger"> </span>
+                            <span> @Local["Đã có hồ sơ có số điện thoại này"] </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-7">
+                    <div class="table-responsive" style=" max-height: 500px;">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="CD_BodyDuplicateCus">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="button-row d-flex mt-4">
+                <button class="btn bg-gradient-light mb-0 js-btn-prev" type="button" onclick="event.preventDefault();CustomerDuplicateBack()">@Local["Quay lại"]</button>
+                <button id="CD_BtnSaveDuplicateCus" data-tab="edit_tab_customer_phone_duplicate" class="_tab_control_ btn bg-gradient-dark ms-auto mb-0 js-btn-next"
+                        type="button" onclick="event.preventDefault();ExcuteDataCustomer_Detail(0)">
+                    @Local["Lưu trùng số"]
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="CD_DivBrokerDetail" class="d-none position-fixed start-0 top-0 w-100 h-100">
+        <form id="formBroker" class="position-relative w-100 h-100 form3">
+            <div id="CD_BrokerContentCus" class="position-absolute shadow-lg rounded-3 max-width-500 top-50 start-50 bg-white p-3 w-80">
+                <div class="card-header p-3 pb-0">
+                    <h6 class="mb-0 font-weight-bold mb-0">@Local["Thêm người giới thiệu"]</h6>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="row px-2">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tìm kiếm khách hàng"]</label>
+                            <div id="CD_blockSearchBroker" class="input-group mb-3">
+                                <div class="input-group-text">
+                                    <div class="form-check" style="min-height:unset;">
+                                        <input id="CD_CheckedSearchCust" class="form-check-input mt-0" type="checkbox" onchange="event.preventDefault(); return CustDetail_ToggleSearchBroker(this);">
+                                    </div>
+                                </div>
+                                <input id="CD_InputSearchBroker" type="text" class="form-control ps-1" placeholder="@Local["Số điện thoại, tên hoặc mã khách hàng"]" disabled="disabled" onkeyup="event.preventDefault(); return CustDetail_SearchCust();">
+                                <div class="input-group-text px-3 p-0">
+                                    <i class="btnsear_clear fas fa-minus-circle opacity-1" onclick="event.preventDefault(); return CustDetail_SearchCustClear();"></i>
+                                    <div class="spinner-border spinner-border-sm" style="display:none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 p-1">
+                            <label class="CD_FirstUpperCase">@Local["Mã"] <i>(@Local["Không được trùng"])</i></label>
+                            <input id="CD_BrokerCode" type="text" class="form-control" autocomplete="off">
+                        </div>
+                        <div id="CD_OptionCustomerChoose" class="field col-12 p-1 d-none">
+                            <label>@Local["Khách hàng"]</label>
+                            <div class="ui fluid search selection dropdown form-control" id="CD_CustID">
+                                <input type="hidden" name="cust" />
+                                <input class="search" autocomplete="off" tabindex="0" />
+                                <div class="default text">@Local["Khách hàng"]</div>
+                                <div id="CD_CbbCust" class="menu" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="CD_OptionCustomerManual" class="row px-2">
+                        <div class="field col-12 p-1">
+                            <label>@Local["Tên"]</label>
+                            <input id="CD_BrokerName" type="text" class="form-control" autocomplete="off" name="name">
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Số điện thoại"]</label>
+                            <input id="CD_BrokerPhone" type="text" class="form-control" autocomplete="off" name="phone">
+                        </div>
+                    </div>
+                </div>
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="CD_textShowMessageBroker"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" onclick="event.preventDefault();return CustDetail_NewBroker_Close();">@Local["Đóng"]</button>
+                        <button id="CD_btnCustDetailBroker" form="formBroker" type="button" class="btn bg-gradient-primary mt-2 me-2"
+                                onclick="event.preventDefault();return CustDetail_ChkExeBroker();">
+                            @Local["Lưu"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    let urlAvatar = "/Api/Upload/Upload?Type=AvatarCustomer&ToFormat=jpg";
+    let avatarCusDetail = Master_Default_Pic;
+    let dataNational, dataCommune = [];
+    let dataCity;
+    let dataSource;
+    var dataBroker = [];
+    let dataDistrict;
+    let cusdetail_noti = '';
+    let Checkphone = '';
+    let phoneCustomerAnila_Detail;
+    let checkPageAddSchedule = '@Model._checkPageAddSchedule';
+    let RepresentPerson = '@Model._RepresentPerson';
+    let RepresentPersonType = '@Model._RepresentPersonType';
+    var ser_CustomerDetailID = '@Model._CustomerDetailID';
+    let ser_ticketDetailID = '@Model._ticketDetailID';
+    var created = '@Model._sys_ChooseDateCustomer';
+    let _cusbir_year = '@Model._sys_BirthdayYearOnly';
+    let numberDateTo = '@Model._TimeSchedule';
+    let _type = '@Model._type';
+    let _tempid = '@Model._apptemid';
+    let _acappid = '@Model._acappid';
+    let cus_pageid = '@Model._pageid';
+    let  cus_psid = '@Model._psid';
+    let _phone = '@Model._phone';
+    let _customerName = decodeURIComponent('@Model._customerName');
+    let _dateAppointment = '@Model._dateAppointment';
+    let _doctorid = '@Model._doctorid';
+    let _servicecaretoken = '@Model._servicecaretoken';
+    let _NoteSchedule = decodeURIComponent('@Model._NoteSchedule');
+    let _BranchID = '@Model._BranchID';
+    let checkedSchedule = 0;
+    let SourceIsBroker = 0;
+    let dataDoctor = [];
+    let dataConsult = [];
+    let dataCareer = [];
+    let CD_dataRuleLoad = [];
+    let cd_ServiceCare;
+    let _preferredCountriesPhone = decodeURIComponent('@Model._preferredCountriesPhone');
+    let timerSearchBroker, xhrSearchBroker;
+    let CD_Sys_Image;
+    let CD_file ;
+    let CDRule_CustomerDetail = {};
+    let CDIsValid = 0;
+    $(document).ready(function () {
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_ServiceCare, _Session_City, _Session_District, _Session_National, _Session_Commune]
+            , function (data) {
+                cd_ServiceCare = data[0];
+                dataCity = Object.values(data[1]);
+                dataDistrict = Object.values(data[2]);
+                dataNational = Object.values(data[3]);
+                dataCommune = Object.values(data[4]);
+                CustomerDetail_Ini();
+                CustDetail_Event_ChangeInfoSocial();
+            }
+        );
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+        CD_Sys_Image = {
+            size: 1240000
+        }
+    });
+    //#region // Ini
+    function CustomerDetail_Ini() {
+
+        initNavs();
+
+        $("#CD_ModifyCus").hide();
+        $("#ChooseEditCreated").hide();
+
+        if (created == 1) {
+            $("#CD_ModifyCus").show();
+            $("#ChooseEditCreated").show();
+        }
+        else {
+            $("#CD_ModifyCus").empty();
+            $("#ChooseEditCreated").empty();
+        }
+        if (checkPageAddSchedule == 1) {
+            $("#CD_ScheduleCheck").show();
+            ShowFormSchedule();
+        }
+        else {
+            $("#CD_ModifyCus").empty();
+            $("#ChooseEditCreated").empty();
+            $("#CD_ScheduleCheck").empty();
+        }
+        $('.detailcus a:first').tab('show');
+        if (Number(_cusbir_year) == 0) {
+            $('#CD_BirthdayCus').date_validate();
+            $('#CD_BirthdayCus').attr("placeholder", "eg .dd-mm-yyyy");
+            $('#CDL_BirthdayCus').html('@Local["Ngày sinh"]');
+            if (RepresentPerson == 1 && RepresentPersonType == 0) {
+                $("#CD_BirthdayCus").attr('name', 'NotEmpty');
+                $("#CD_BirthdayCus").keyup(function () {
+                    ChangeRepresentPerson();
+                });
+            }
+        }
+        else {
+            $('#CD_BirthdayCus').attr("placeholder", "eg .yyyy");
+            $("#CD_BirthdayCus").prop("type", "number");
+            $("#CD_BirthdayCus").attr({
+                "max": (new Date()).getFullYear(),
+                "min": (new Date()).getFullYear()-100
+            });
+            $('#CDL_BirthdayCus').html('@Local["Năm sinh"]');
+        }
+
+        if (RepresentPersonType == 1) {
+            $("#CD_DivRepresentCus").slideDown(200);
+            $("#CD_RepNameCus, #CD_RepPhoneCus, #CD_RepIdentityCus").keyup(function () {
+                CustDetail_InputRepresentPerson();
+            });
+            $("#CD_RepRelationshipCus").change(function(){
+                CustDetail_InputRepresentPerson();
+            })
+        }
+
+        $('#CD_IDissuedate').date_validate();
+        $('#CD_HIExpireddate').date_validate();
+
+        window.google = {};
+        let input = document.querySelector("#CD_Phone1Cus");
+        let preferredCountries = ["vn", "us"];
+        if (_preferredCountriesPhone != '') preferredCountries = JSON.parse(_preferredCountriesPhone);
+        try {
+            phoneCustomerAnila_Detail = window.intlTelInput(input, ({
+                preferredCountries: preferredCountries,
+                placeholderNumberType: "MOBILE",
+            }));
+
+            let flag = CustDetail_GetFlagPhone();
+            if (flag == "vn") {
+                $('#CD_Phone1Cus').attr("maxlength", "11");
+                $('#CD_Phone1Cus').attr('name', 'phonenumber');
+            }
+            else {
+                $('#CD_Phone1Cus').attr('name', 'phonenumberNotVN');
+                $('#CD_Phone1Cus').attr("maxlength", "16");
+            }
+        }
+        catch (ex) { }
+        input.addEventListener("countrychange", function () {
+            let flag = CustDetail_GetFlagPhone();
+            if (flag == "vn") {
+                $('#CD_Phone1Cus').attr("maxlength", "11");
+                $('#CD_Phone1Cus').attr('name', 'phonenumber');
+            }
+            else {
+                $('#CD_Phone1Cus').attr('name', 'phonenumberNotVN');
+                $('#CD_Phone1Cus').attr("maxlength", "16");
+            }
+        });
+
+        $('#CD_AvtCus').attr('src', avatarCusDetail);
+        CustDetail_Initialize(ser_CustomerDetailID);
+
+        CD_SetDateFrom();
+
+        $(".DateCreated").flatpickr({
+            dateFormat: 'd-m-Y',
+            enableTime: true,
+            defaultDate: new Date(),
+            maxDate: new Date().fp_incr(1)
+        });
+
+        UploadImage({
+            inputFile: 'CD_AvtCusUpload'
+            , btnInput: 'CD_AvtBtnCusUpload'
+            , avatar: 'CD_AvtCus'
+            , condition: CD_Sys_Image
+            , success: (_file) => {
+                CD_file = _file;
+                CD_CropImage(_file);
+            }
+            , error: (err) => {
+
+            }
+        })
+
+        ShowInputCustCodeOld();
+        ShowInputEditCreated();
+        Checking_Require_Validation('@Model.CurrentPath');
+    }
+    function CD_SetDateFrom(value) {
+        if (value != undefined) {
+            value = new Date(value);
+        }
+        else {
+            value = new Date();
+            let min = value.getMinutes();
+            value.setMinutes(Math.floor(min / 10) * 10 + 10);
+        }
+        let dataNow = (new Date());
+        value = value < dataNow ? dataNow : value;
+
+        $("#CD_DateFromCus.DateFrom").flatpickr({
+            dateFormat: 'd-m-Y H:i',
+            inline: true,
+            enableTime: true,
+            minDate: "today",
+            defaultDate: value,
+            time_24hr: true,
+            minTime: "06:00",
+            maxTime: "22:30",
+        });
+    }
+    function onchangeCity() {
+        $("#CD_DistrictCus").dropdown("clear");
+        let CityID = Number($('#CD_CityCus').dropdown('get value')) ? Number($('#CD_CityCus').dropdown('get value')) : 0;
+        let data = [];
+        if (CityID != 0) {
+            data = dataDistrict.filter(a => a.CityID == CityID);
+        } else {
+            data = dataDistrict;
+        }
+        Load_Combo(data, "CD_CbbDistrictCus", false);
+    }
+    function onchangeDistrict(){
+        $("#CD_CommuneCus").dropdown("clear");
+        let DistrictID = Number($('#CD_DistrictCus').dropdown('get value')) ? Number($('#CD_DistrictCus').dropdown('get value')) : 0;
+        let data = [];
+        if (DistrictID != 0) {
+            data = dataCommune.filter(a => a.DistrictID == DistrictID);
+        } else {
+            data = dataCommune;
+        }
+        Load_Combo(data, "CD_CbbCommuneCus", false);
+    }
+    function CustDetail_onChangeDateApp() {
+        CustDetail_LoadEmployeeByGroup(groupID = 14, 'doctor')
+            .then((results) => {
+                dataDoctor = results ?? [];
+                Load_Combo(dataDoctor, "CD_CBbDocCus", false);
+            });
+    }
+    // #endregion
+
+    //#region // Execute
+    async function ExcuteDataCustomer_Detail (existPhoneNumber) {
+
+        CustDetail_SaveBefore();
+        var data = new Object();
+        var phoneCust = $('#CD_Phone1Cus').val() ? extract_numberic($('#CD_Phone1Cus').val()) : "";
+        data.Gender_ID = !isNaN(Number($('input[name=CD_GenderCus]:checked').val())) ? Number($('input[name=CD_GenderCus]:checked').val()) : 0;
+        data.source = Number($('#CD_TypeCatCus').dropdown('get value')) ? Number($('#CD_TypeCatCus').dropdown('get value')) : 0;
+        data.Language_ID = Number($('#CD_LanguageCus').dropdown('get value')) ? Number($('#CD_LanguageCus').dropdown('get value')) : 0;
+        data.nationality = Number($('#CD_NationalCus').dropdown('get value')) ? Number($('#CD_NationalCus').dropdown('get value')) : 0;
+        data.custGroup = Number($('#CD_GroupCus').dropdown('get value')) ? Number($('#CD_GroupCus').dropdown('get value')) : 0;
+        data.ReligionID = Number($('#CD_ReligionID').dropdown('get value')) ? Number($('#CD_ReligionID').dropdown('get value')) : 0;
+        data.SexualOrienID = Number($('#CD_SexualOrienID').dropdown('get value')) ? Number($('#CD_SexualOrienID').dropdown('get value')) : 0;
+        data.MaritalStatusID = Number($('#CD_MaritalStatusID').dropdown('get value')) ? Number($('#CD_MaritalStatusID').dropdown('get value')) : 0;
+        data.email = $('#CD_Email').val() ? $('#CD_Email').val() : "";
+        data.phone1 = $('#CD_Phone1Cus').val() ? extract_numberic($('#CD_Phone1Cus').val()) : "";
+        data.Phone2 = $('#CD_Phone2').val() ? extract_numberic($('#CD_Phone2').val()) : "";
+        data.custName = $('#CD_NameCus').val() ? $('#CD_NameCus').val().replace(/"/g, "") : "";
+        data.membercode = $('#CD_Membercode').val() ? $('#CD_Membercode').val().replace(/"/g, "") : "";
+        data.NameNoSign = xoa_dau(data.custName);
+
+        if (Number(_cusbir_year) == 0) {
+            data.birthday = !formatBirthday($('#CD_BirthdayCus').val()).includes("1900") ? formatBirthday($('#CD_BirthdayCus').val()) : "";
+            data.BirthYear = 0;
+        }
+        else {
+            data.birthday = $('#CD_BirthdayCus').val() != "" ? "1900-01-01" : "";
+            data.BirthYear = formatBirthNumber($('#CD_BirthdayCus').val());
+        }
+        data.instgramurl = $('#CD_instgramurl').val() ? 'https://instagram.com/' + $('#CD_instgramurl').val() : "";
+        data.facebookurl = $('#CD_FaceBookCus').val() ? 'https://facebook.com/' + $('#CD_FaceBookCus').val() : ""
+        data.zalomurl = $('#CD_ZaloCus').val() ? 'https://zalo.me/' + $('#CD_ZaloCus').val() : "";
+        data.viberurl = $('#CD_ViberCus').val() ? 'https://viber.com/' + $('#CD_ViberCus').val() : "";
+        data.phonecode = CustDetail_GetFlagPhone();
+        data.Note = $('#CD_NoteContentCus').val() ? $('#CD_NoteContentCus').val() : "";
+        data.Gclid = $('#CD_GclidCus').val() ? $('#CD_GclidCus').val() : "";
+
+        data.OldCustomer = (document.getElementById("CD_CheckboxOldCus").checked) ? "1" : "0";
+        data.career = Number($('#CD_Career').dropdown('get value')) ? Number($('#CD_Career').dropdown('get value')) : 0;
+        data.CustCodeOld = $('#CustCodeOld').val() ? $('#CustCodeOld').val() : "";
+        data.branch = Number($('#CD_BranchCus').dropdown('get value')) ? Number($('#CD_BranchCus').dropdown('get value')) : 0;
+        data.BranchSchedule_ID = Number($('#CD_BranchCus').dropdown('get value')) ? Number($('#CD_BranchCus').dropdown('get value')) : 0;//branch schedule using branch customer
+        data.Doctor_ID = Number($('#CD_DocCus').dropdown('get value')) ? Number($('#CD_DocCus').dropdown('get value')) : 0;
+        data.Consult_ID = Number($('#CD_ConsultCus').dropdown('get value')) ? Number($('#CD_ConsultCus').dropdown('get value')) : 0;
+        data.ServiceCare_ID = $('#CD_TKServiceCus').dropdown('get value') ? $('#CD_TKServiceCus').dropdown('get value') : "";
+        data.TypeSchedule = 1;
+        data.ContentSchedule = $('#CD_NoteScheduleCus').val() ? $('#CD_NoteScheduleCus').val() : "";
+        data.Date_from = $('#CD_DateFromCus').val() ? $('#CD_DateFromCus').val() : "";
+        data.numberDateTo = ((numberDateTo != 0) ? (numberDateTo) : ('30'));
+        data.checkPageAddSchedule = checkPageAddSchedule;
+        data.checkedSchedule = checkedSchedule;
+        data.existPhoneNumber = existPhoneNumber;
+
+        data.created = created = 0 ? '' : ($('#CD_CreateCus').val() ? $('#CD_CreateCus').val() : '1900-01-01');
+
+        data.syntax_scmcn = syntax_scmcn;
+        data.syntax_scmcn_doc = syntax_scmcn_doc;
+        data.syntax_sn = syntax_sn;
+        data.syntax_ss = syntax_ss;
+        data.pageid = cus_pageid;
+        data.psid = cus_psid;
+        data.syntax_customercode = syntax_customercode;
+        data.syntax_documentcode = syntax_documentcode;
+        data.IDIssuedate = formatBirthday($('#CD_IDissuedate').val());
+        data.IDIssuenum = $('#CD_IDnum').val() ? $('#CD_IDnum').val() : "";
+        data.IDIssueplace = $('#CD_IDissueplace').val() ? $('#CD_IDissueplace').val() : "";
+
+        data.HINumber = $('#CD_HInum').val() ? $('#CD_HInum').val() : "";
+        data.Nation = $('#CD_Nation').val() ? $('#CD_Nation').val() : "";
+        data.HIExpireddate = formatBirthday($('#CD_HIExpireddate').val());
+
+        //#region // Nguoi giam ho
+        if ($('#CD_RepNameCus').attr("name") != undefined) {
+            data.Represent_Name = $('#CD_RepNameCus').val() ? $('#CD_RepNameCus').val() : "";
+            data.Represent_Phone = $('#CD_RepPhoneCus').val() ? $('#CD_RepPhoneCus').val() : "";
+            data.Relationship = Number($('#CD_RepRelationshipCus').dropdown("get value")) ? Number($('#CD_RepRelationshipCus').dropdown("get value")) : 0;
+            data.IdentityCard = $('#CD_RepIdentityCus').val() ? $('#CD_RepIdentityCus').val() : "";
+        }
+        else {
+            data.Represent_Name = "";
+            data.Represent_Phone = "";
+            data.Relationship = 0;
+            data.IdentityCard = "";
+        }
+        //#endregion
+        data.isCheckIn = (_type == 'app_temp' ? 0 : 1);
+        //#region // address
+        data.address = $('#CD_AddressCus').val() ? $('#CD_AddressCus').val() : "";
+        data.city = Number($('#CD_CityCus').dropdown('get value')) ? Number($('#CD_CityCus').dropdown('get value')) : 0;
+        data.district = Number($('#CD_DistrictCus').dropdown('get value')) ? Number($('#CD_DistrictCus').dropdown('get value')) : 0;
+        data.commune = Number($('#CD_CommuneCus').dropdown('get value')) ? Number($('#CD_CommuneCus').dropdown('get value')) : 0;
+        //#endregion
+        data.Broker_ID = Number($('#CD_BrokerCusText').attr('data-id')) ? Number($('#CD_BrokerCusText').attr('data-id')) : 0;
+        if (data.Broker_ID == 0 && SourceIsBroker == 1) {
+            $("#CD_textShowMessageCus").html("@Local["Người giới thiệu"]");
+            CustDetail_SaveComplete();
+            return false;
+        }
+        $('#CD_FormCus').form('validate form');
+        if (!$('#CD_FormCus').form('is valid')) {
+            // $('#CD_FormCus').Require_Validation();
+            CustDetail_SaveComplete();
+            return true;
+        }
+
+        if (data.phonecode == "vn" && (data.phone1).length < 10 || (data.phone1).length >= 16) {
+            $("#CD_Phone1Cus").closest(".field").addClass("error");
+            CustDetail_SaveComplete();
+            return;
+        }
+
+        data.isAgree = document.getElementById('CD_ChkAgreeCus').checked ? 1 : 0;
+        if (Number(_cusbir_year) == 0) {
+            if (!$('#CD_BirthdayCus').date_validate().get_validate()) {
+                $("#CD_BirthdayCus").closest(".field").addClass("error");
+                CustDetail_SaveComplete();
+                return false;
+            }
+        }
+        else {
+            if (!validBirthNumber($('#CD_BirthdayCus').val())) {
+                $("#CD_BirthdayCus").closest(".field").addClass("error");
+                CustDetail_SaveComplete();
+                return false;
+            }
+        }
+        //let linkImg = await AjaxUpload_Image(urlAvatar, 'CD_AvtCusUpload');
+        let linkImg = await AjaxUpload_ImageByfile(urlAvatar, CD_file);
+        let ImageCust = linkImg.split("##")[0] != undefined ? linkImg.split("##")[0] : avatarCusDetail;
+        
+
+        AjaxLoad(url = "/Customer/CustomerDetail/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(data)
+                , 'avartar': ImageCust
+                , 'CurrentID': ser_CustomerDetailID
+                , 'TicketID': ser_ticketDetailID
+                , 'apptemid': _tempid
+                , 'acappid': _acappid
+                , 'dtRule': JSON.stringify(CDRule_CustomerDetail)
+                , 'alowrule': ($('#CD_AllowEdit').length) ? "1" : "0"
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result == "0") {
+                    notiError_SW();
+                }
+                else if (result == "-2") {
+                    notiWarning("@Local["Nhập đủ thông tin"]");
+                }
+                else {
+                    cusdetail_noti = JSON.parse(result)[0];
+                    Checkphone = cusdetail_noti["ErrorCode"];
+                    if (Checkphone == 2 || Checkphone == 3) {
+                        CustomerDuplicate(phoneCust);
+                    }
+                    else {
+                        if (Checkphone == 4) {
+                            notiWarning("@Local["Trùng dữ liệu"]");
+                        }
+                        else {
+                            syslog_cutprofile(ser_CustomerDetailID == 0 ? 'i' : 'u', cusdetail_noti.CustomerID);
+                            if (Checkphone == 0) {
+                                if (typeof Main_Customer_LoadInfo === 'function') Main_Customer_LoadInfo();
+                            }
+                            else {
+                                if (typeof TicketAction_LoadInfo === 'function') TicketAction_LoadInfo();
+                                if (typeof TicketList_Load === 'function') {
+                                    TicketList_Load(ser_ticketDetailID);
+                                }
+                                else {
+                                    if (_type == 'app_temp') {
+                                        if (typeof DAHD_CallBackAfterHandle == 'function') DAHD_CallBackAfterHandle(_acappid, 0)
+                                    }
+                                    if (_type == 'fromfb') {
+                                        if (typeof PInfo_LoadInfo == 'function') PInfo_LoadInfo( )
+
+
+                                    }
+                                    else {
+                                        window.open("/Customer/MainCustomer?CustomerID=" + cusdetail_noti["CustomerID"] + "&ver=" + versionofWebApplication);
+                                    }
+
+                                }
+                            }
+                            CloseModal();
+                        }
+                    }
+                }
+            }
+            , sender = $("#CD_BtnCustomerDetail")
+            , before = function (e) {
+                CustDetail_SaveBefore();
+            }
+            , complete = function (e) {
+                CustDetail_SaveComplete();
+            }
+        );
+
+        return false;
+    }
+    function CustomerDuplicate(Phone) {
+        AjaxLoad(url = "/Customer/CustomerDetail/?handler=LoadDuplicateData"
+            , data = { 'phone': Phone }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                if (data && data.length != 0) {
+                    RenderDuplicateCustomer(data, 'CD_BodyDuplicateCus');
+                    $('#CD_TextDuplicateCus').html(data.length + ' duplicate');
+                    $("#CD_DivDuplicateCus").show();
+                    $("#CD_DivMaster").hide();
+                    $("#CD_PhoneDuplicateCus").html(Phone);
+                }
+            }
+            , sender = null
+        );
+        return false;
+    }
+    function CustomerDuplicateBack() {
+        $('#CD_BodyDuplicateCus').html('');
+        $("#CD_DivDuplicateCus").hide();
+        $("#CD_DivMaster").show();
+    }
+    function RenderDuplicateCustomer(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<td>'
+                        + '<div class="d-flex px-2 py-0">'
+                        + '<span class="badge bg-gradient-primary me-3"> </span>'
+                        + '<div class="d-flex flex-column justify-content-center">'
+                        + '<h6 class="mb-0 text-sm">' + item.Name + '</h6>'
+                        + '</div>'
+                        + '</div>'
+                        + '</td>'
+                        + '<td class="text-sm">'
+                        + '<span class="text-xs font-weight-bold">'
+                        + '<a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.ID + "&ver=" + versionofWebApplication + '">' + item.Cust_Code + '</a>'
+                        + '</span>'
+                        + '</td>';
+
+                    stringContent = stringContent + '<tr>' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function CustDetail_Initialize(ser_CustomerDetailID) {
+        AjaxLoad(url = "/Customer/CustomerDetail/?handler=LoadInitializeData"
+            , data = { CustomerID: ser_CustomerDetailID }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    CustDetail_Fill(data);
+                    $('#CD_DateFromCus').change();
+                }
+
+            }
+            , sender = null
+            , before = function (e) {
+                $("#CD_LoaderCus").show();
+            }, complete = function (e) {
+                $("#CD_LoaderCus").hide();
+                $("#CD_FormCus").removeClass('opacity-0');
+            }
+        );
+    }
+
+    async function CustDetail_LoadEmployeeByGroup(groupID = 14, ver = "") {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                let currDate = $('#CD_DateFromCus').val() ? formatDMYHHMM_To_Date($('#CD_DateFromCus').val()) : new Date();
+                currDate.setHours(0, 0, 0, 0);
+                AjaxLoad(url = "/Customer/CustomerDetail/?handler=LoadEmployeeWork&ver=" + ver
+                    , data = {
+                        'datefrom': ConvertDateTimeUTC_YMD(currDate)
+                        , 'dateto': ConvertDateTimeUTC_YMD(currDate)
+                        , 'branchID': Master_branchID
+                        , 'groupID': groupID
+                    }
+                    , async = true
+                    , error = function () {
+                        notiError_SW();
+                        resolve([]);
+                    }
+                    , success = function (result) {
+                        if (result != undefined && result != null && result != "") {
+                            let datas = JSON.parse(result);
+                            let dtResult = [];
+                            let { Table: dtWork, Table1: dtWorkExt, Table2: dtShift, Table3: dtEmpWork, Table4: dtEmpAll, Table5: dtEmpNonWork } = datas
+                            let dataWork = Work_Scheduler_Get_From_TokenDoc(Master_branchID, currDate, currDate, dtWork, dtWorkExt, dtShift, dtEmpWork) ?? [];
+                            let objWorked = dataWork.reduce((pre, arr) => { if (arr.EmpID) pre[arr.EmpID] = arr; return pre; }, {});
+                            for (let i = 0; i < dtEmpAll.length; i++) {
+                                let item = dtEmpAll[i];
+                                let empWork = objWorked[item.ID];
+                                if ((empWork?.IsWork ?? 0) == 1) {
+                                    dtResult.push(item)
+                                }
+                            }
+                            dtResult = dtResult.concat(dtEmpNonWork ?? []);
+                            resolve(dtResult);
+                        }
+                        resolve([]);
+                    }
+                    , sender = null
+                    , before = null
+                    , complete = null
+                    , nolimit = true
+                );
+            }, 100)
+        })
+    }
+
+    async function CustDetail_Fill(data) {
+        new Promise((resolve) => {
+
+            Load_Combo(data.Branch, "CD_CbbBranchCus", true);
+            Load_Combo(Object.values(cd_ServiceCare), "CD_CbbTKServiceCus", true);
+            Load_Combo(data.Career, "CD_CbbCareer", false);
+            Render_Gender_Person(data.Gender, 'CD_GenderCus', 'CD_GenderCus');
+            Load_Combo(data.Source, "CD_CbbSouceTypeCatCus", true);
+            Load_Combo(dataNational, "CD_CbbNational", true);
+            Load_Combo(data.Language, "CD_CbbLanguageCus", true);
+            Load_Combo(data.Relationship, "CD_CbbRepRelationshipCard", false);
+            Load_Combo(data.CustomerGroup, "CD_CbbGroupCus", false);
+            Load_Combo(data.Religion, "CD_CbbReligion", false);
+            Load_Combo(data.SexualOrientation, "CD_CbbSexualOrien", false);
+            Load_Combo(data.MaritalStatus, "CD_CbbMaritalStatus", false);
+            dataSource = data.Source;
+
+            let _rule = data.RuleCust.length > 0 ? data.RuleCust[0].Value : '';
+            if (_rule != '') {
+                CDRule_CustomerDetail = JSON.parse(_rule);
+                for ([key, value] of Object.entries(CDRule_CustomerDetail)) {
+                    value.updated = 0;
+                }
+            }
+            dataConsult = data.EmpFull;
+            Load_Combo(dataConsult, "CD_CbbConsultCus", false);
+            dataCareer = data.Career;
+            let AgreementOption = data.AgreementOption;
+            Load_Combo(dataCity, "CD_CbbCityCus", false);
+            Load_Combo(dataDistrict, "CD_CbbDistrictCus", false);
+            Load_Combo(dataCommune, "CD_CbbCommuneCus", false);
+            $("#CD_LanguageCus").dropdown("refresh");
+            $("#CD_LanguageCus").dropdown("set selected", 64);
+            $("#CD_NationalCus").dropdown("refresh");
+            $("#CD_NationalCus").dropdown("set selected", dataNational[0].ID);
+            var datafilter = data.Source.filter(word => word["SPID"] == 1);
+            if (datafilter.length > 0) {
+                $("#CD_TypeCatCus").dropdown("refresh");
+                $("#CD_TypeCatCus").dropdown("set selected", datafilter[0].ID);
+            }
+            $("#CD_BranchCus").dropdown("refresh");
+            $("#CD_BranchCus").dropdown("set selected", _BranchID);
+            if (AgreementOption.length > 0) {
+                $("#CD_DivCheckAgree").show();
+                $('#CD_LbAgree').html(author_get("UserLang") == 'en' ? Outlang[AgreementOption[0].NameLangKey] : AgreementOption[0].Value);
+            } else {
+                $("#CD_DivCheckAgree").hide();
+            }
+            if (data.BranchLocation.length > 0 && ser_CustomerDetailID == "0" && sys_UsingbranchAddress==1){
+                $("#CD_CityCus").dropdown("refresh");
+                $("#CD_CityCus").dropdown("set selected", data.BranchLocation[0].CityCode);
+                $("#CD_DistrictCus").dropdown("refresh");
+                $("#CD_DistrictCus").dropdown("set selected", data.BranchLocation[0].District_ID);
+                $("#CD_CommuneCus").dropdown("refresh");
+                $("#CD_CommuneCus").dropdown("set selected", data.BranchLocation[0].CommuneCode);
+            }
+            if (data.Broker && data.Broker.length > 0) {
+                dataBroker = data.Broker;
+                CustDetail_CallRenderBro(dataBroker);
+
+            }
+            CustDetail_FromTemp();
+            CustDetail_LoadUpdate();
+
+        })
+    }
+    function CustDetail_LoadUpdate() {
+        let _customer = (ser_CustomerDetailID == "") ? 0 : Number(ser_CustomerDetailID)
+        let _ticket = (ser_ticketDetailID == "") ? 0 : Number(ser_ticketDetailID)
+        if (_customer + _ticket > 0) {
+            AjaxLoad(url = "/Customer/CustomerDetail/?handler=Loadata"
+                , data = { "Custumer_ID": _customer, "Ticket_ID": _ticket }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let dataInfo = JSON.parse(result);
+                        if (dataInfo != undefined && dataInfo.length == 1) {
+
+                            $('#prehistory_customer_detail').hide();
+                            phoneCustomerAnila_Detail.setCountry(dataInfo[0].phonecode);
+                            $("#CD_NationalCus").dropdown("refresh");
+                            $("#CD_NationalCus").dropdown("set selected", dataInfo[0].NationalID);
+                            $("#CD_NationalCus").attr('data-root', dataInfo[0].NationalID);
+
+                            $("#CD_GroupCus").dropdown("refresh");
+                            $("#CD_GroupCus").dropdown("set selected", dataInfo[0].Group_ID);
+                            $("#CD_GroupCus").attr('data-root', dataInfo[0].Group_ID);
+
+                            $("input[name=CD_GenderCus][value=" + dataInfo[0].Gender_ID + "]").attr('checked', 'checked');
+
+                            $("#CD_TypeCatCus").dropdown("refresh");
+                            $("#CD_TypeCatCus").dropdown("set value", dataInfo[0].Type_Cat_ID);
+                            $("#CD_TypeCatCus").dropdown("set text", dataInfo[0].Type_Cat_Name);
+                            $("#CD_TypeCatCus").attr('data-root', dataInfo[0].Type_Cat_ID);
+
+                            $("#CD_LanguageCus").dropdown("refresh");
+                            $("#CD_LanguageCus").dropdown("set selected", dataInfo[0].Language_ID);
+                            $("#CD_LanguageCus").attr('data-root', dataInfo[0].Language_ID);
+
+                            $("#CD_Career").dropdown("refresh");
+                            $("#CD_Career").dropdown("set selected", dataInfo[0].Career);
+                            $("#CD_Career").attr('data-root', dataInfo[0].Career);
+
+                            $('#CD_NameCus').val((dataInfo[0].Name));
+                            $("#CD_NameCus").attr('data-root', dataInfo[0].Name);
+                            $("#CD_Membercode").val(dataInfo[0].Membercode);
+
+                            $('#CustCodeOld').val(dataInfo[0].Cust_Code_Old);
+                            $('#CD_NoteContentCus').val((dataInfo[0].Note));
+                            $('#CD_GclidCus').val((dataInfo[0].Gclid));
+                            $('#CD_Email').val((dataInfo[0].Email1));
+                            $("#CD_Email").attr('data-root', dataInfo[0].Email1);
+
+                            $('#CD_Phone1Cus').val((dataInfo[0].Phone1));
+                            $("#CD_Phone1Cus").attr('data-root', dataInfo[0].Phone1);
+
+                            $('#CD_Phone2').val((dataInfo[0].Phone2));
+                            $('#CD_instgramurl').val(VU_RemoveDomain(dataInfo[0].instgramurl));
+
+                            $('#CD_FaceBookCus').val((VU_RemoveDomain(dataInfo[0].facebookurl)));
+                            $('#CD_ViberCus').val((VU_RemoveDomain(dataInfo[0].viberurl)));
+                            $('#CD_ZaloCus').val((VU_RemoveDomain(dataInfo[0].zalomurl)));
+
+                            $("#CD_CityCus").dropdown("refresh");
+                            $("#CD_CityCus").dropdown("set selected", dataInfo[0].City_ID);
+                            $("#CD_CityCus").attr('data-root', dataInfo[0].City_ID);
+
+                            $("#CD_DistrictCus").dropdown("refresh");
+                            $("#CD_DistrictCus").dropdown("set selected", dataInfo[0].District_ID);
+                            $("#CD_DistrictCus").attr('data-root', dataInfo[0].District_ID);
+
+
+                            $("#CD_CommuneCus").dropdown("refresh");
+                            $("#CD_CommuneCus").dropdown("set selected", dataInfo[0].Commune_ID);
+                            $("#CD_CommuneCus").attr('data-root', dataInfo[0].Commune_ID);
+
+                            $("#CD_BranchCus").dropdown("refresh");
+                            $("#CD_BranchCus").dropdown("set selected", dataInfo[0].BranchID);
+                            $("#CD_BranchCus").attr('data-root', dataInfo[0].BranchID);
+
+                            $("#CD_RepNameCus").val(dataInfo[0].Represent_Name);
+                            $("#CD_RepPhoneCus").val(dataInfo[0].Represent_Phone);
+                            $("#CD_RepRelationshipCus").dropdown("refresh");
+                            $("#CD_RepRelationshipCus").dropdown("set selected", dataInfo[0].RelationshipID);
+                            $("#CD_RepIdentityCus").val(dataInfo[0].IdentityCard);
+
+                            $("#CD_ReligionID").dropdown("refresh");
+                            $("#CD_ReligionID").dropdown("set selected", dataInfo[0].ReligionID);
+
+                            $("#CD_SexualOrienID").dropdown("refresh");
+                            $("#CD_SexualOrienID").dropdown("set selected", dataInfo[0].SexualOrienID);
+
+                            $("#CD_MaritalStatusID").dropdown("refresh");
+                            $("#CD_MaritalStatusID").dropdown("set selected", dataInfo[0].MaritalStatusID);
+
+                            if ((dataInfo[0].Represent_Name != '' && dataInfo[0].Represent_Name != undefined)
+                                || (dataInfo[0].Represent_Phone != '' && dataInfo[0].Represent_Phone != undefined)
+                                || (dataInfo[0].Relationship != '' && dataInfo[0].Relationship != undefined)
+                            ) {
+                                $("#CD_DivRepresentCus").slideDown(200);
+                                $("#CD_RepNameCus").attr('name', 'RepresentName');
+                                $("#CD_RepPhoneCus").attr('name', 'RepresentPhone');
+                                $("#CD_RepRelationshipCus").children('input[type="hidden"]').attr('name', 'RelationshipPerson');
+                                $("#CD_RepIdentityCus").attr('name', '');
+                            }
+
+                            $('#CD_AddressCus').val((dataInfo[0].Address));
+                            $("#CD_AddressCus").attr('data-root', dataInfo[0].Address);
+
+                            (dataInfo[0].OldCustomer) == 1 ? $("#CD_CheckboxOldCus").prop('checked', true) : $("#CD_CheckboxOldCus").prop('checked', false);
+
+                            if (dataInfo[0].Avatar == '' || dataInfo[0].Avatar == undefined) {
+                                $('#CD_AvtCus').attr('src', Master_Default_Pic);
+                            }
+                            else {
+                                $('#CD_AvtCus').attr('src', dataInfo[0].Avatar);
+                                avatarCusDetail = dataInfo[0].Avatar;
+                            }
+                            if (Number(_cusbir_year) == 0) $('#CD_BirthdayCus').val(dataInfo[0].Brithday.includes('1900') ? "" : dataInfo[0].Brithday);
+                            else $('#CD_BirthdayCus').val((dataInfo[0]?.BirthYear?.toString())?.includes('1900') ? "" : dataInfo[0].BirthYear);
+
+                            $('#CD_IDissuedate').val(dataInfo[0].IDIssuedate.includes('1900') ? "" : dataInfo[0].IDIssuedate);
+                            $('#CD_IDnum').val(dataInfo[0].IDIssuenum);
+                            $("#CD_IDnum").attr('data-root', dataInfo[0].IDIssuenum);
+                            $('#CD_IDissueplace').val((dataInfo[0].IDIssueplace));
+
+                            $('#CD_HIExpireddate').val(dataInfo[0].HIExpireddate.includes('1900') ? "" : dataInfo[0].HIExpireddate);
+                            $('#CD_HInum').val((dataInfo[0].HINumber));
+                            $('#CD_Nation').val((dataInfo[0].Nation));
+
+                            CustDetail_SetValueBroker(dataInfo[0].Broker_ID, dataInfo[0].Broker_Name);
+                            if (dataInfo[0].Broker_ID != undefined && Number(dataInfo[0].Broker_ID) != 0) {
+                                $("#CD_DivTableBroker").addClass("d-none");
+                                $("#CD_ClickHideBroker i").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                            }
+
+                            if ((dataInfo[0].isAgree) == 1) {
+                                $('#CD_ChkAgreeCus').prop('checked', true);
+                            } else {
+                                $('#CD_ChkAgreeCus').prop('checked', false);
+                            }
+                            CDIsValid = dataInfo[0].IsValid;
+                            Checking_TabControl_Permission();
+                            if (CDIsValid == 1) {
+                                for ([key, value] of Object.entries(CDRule_CustomerDetail)) {
+                                    if (value.isRequire == true) value.isUpdate = false;
+                                }
+                            }
+                            CustomerDetail_Rule();
+                            CustDetail_RuleChange();
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    } else {
+                        notiError_SW();
+                    }
+                }
+                ,
+                sender = null
+            );
+        }
+        else {
+            CustomerDetail_Rule();
+            Checking_TabControl_Permission();
+        }
+    }
+    function CustDetail_Event_ChangeInfoSocial() {
+        $('#CD_FaceBookCus').unbind('change').change(function () {
+            let value = $(this).val() != '' ? VU_RemoveDomain($(this).val()) : '';
+            $(this).val(value);
+        });
+        $('#CD_ZaloCus').unbind('change').change(function () {
+            let value = $(this).val() != '' ? VU_RemoveDomain($(this).val()) : '';
+            $(this).val(value);
+        });
+        $('#CD_ViberCus').unbind('change').change(function () {
+            let value = $(this).val() != '' ? VU_RemoveDomain($(this).val()) : '';
+            $(this).val(value);
+        });
+        $('#CD_instgramurl').unbind('change').change(function () {
+            let value = $(this).val() != '' ? VU_RemoveDomain($(this).val()) : '';
+            $(this).val(value);
+        });
+    }
+
+    function CustDetail_GetFlagPhone() {
+        try {
+            if (!typeof phoneCustomerAnila_Detail.getSelectedCountryData === 'function')
+                return 'vn';
+            return phoneCustomerAnila_Detail.getSelectedCountryData().iso2;
+        }
+        catch (ex) {
+            return 'vn';
+        }
+    }
+    function CustDetail_FromTemp () {
+        if (_type == 'app_temp') {
+            $("#CD_ScheduleInput").prop('checked', true);
+            $("#CD_ScheduleInput").attr("disabled", true);
+            $("#CD_EditCreateCus").attr("disabled", true);
+            $('#CD_NameCus').val(_customerName);
+            $('#CD_Phone1Cus').val(_phone);
+            let dateApp = ConvertStringDMY_YMD(_dateAppointment.split(' ')[0]) + ' ' + _dateAppointment.split(' ')[1];
+            CD_SetDateFrom(dateApp)
+            $('#CD_NoteScheduleCus').val(_NoteSchedule);
+            $("#CD_DocCus").dropdown("refresh");
+            $("#CD_DocCus").dropdown("set selected", _doctorid);
+            $("#CD_TKServiceCus").dropdown("refresh");
+            $("#CD_TKServiceCus").dropdown("set selected", _servicecaretoken.split(','));
+            $('#CD_textShowMessageCus').html('@Local["Thời gian hẹn trước thời gian hiện tại thì sẽ được trả về thời gian hiện tại"]');
+            Checking_TabControl_Permission();
+        }
+        if (_type == 'fromfb') {
+            $('#CD_NameCus').val(_customerName);
+            $('#CD_Phone1Cus').val(_phone);
+            if ($('#fmb_conurl').length) {
+
+                avatarCusDetail = $('#fmb_conurl').attr('src');
+                $('#CD_AvtCus').attr('src', avatarCusDetail);
+            }
+
+        }
+    }
+    function ShowInputEditCreated() {
+        if (document.getElementById('CD_EditCreateCus') != undefined) {
+            if (document.getElementById('CD_EditCreateCus').checked) {
+                $("#CD_ScheduleInput").prop('checked', false);
+                $("#CD_ScheduleInput").attr("disabled", true);
+                ShowFormSchedule();
+            } else {
+                $("#CD_CreateCus").val("");
+                $("#CD_ScheduleInput").prop('checked', true);
+                $("#CD_ScheduleInput").attr("disabled", false);
+                ShowFormSchedule();
+            }
+        }
+    }
+    function ShowInputCustCodeOld() {
+        if (document.getElementById('CD_CheckboxOldCus').checked) {
+            //$("#InputCustCodeOld").show();
+            $("#CustCodeOld").prop('disabled', false)
+        } else {
+            // $("#InputCustCodeOld").hide();
+            $("#CustCodeOld").val("");
+            $("#CustCodeOld").prop('disabled', true)
+        }
+    }
+    function ShowFormSchedule() {
+        if (document.getElementById('CD_ScheduleInput').checked) {
+            $("#CD_DivScheduleCus").slideDown(200)
+            $('#CD_DateFromCus').attr('name', 'date');
+            $("#CD_TKInputServiceCus").attr('name', 'tokenServiceCare');
+            checkedSchedule = 1;
+        } else {
+            $("#CD_DivScheduleCus").slideUp(200)
+            $('#CD_DateFromCus').removeAttr('name');
+            $('#CD_TKInputServiceCus').removeAttr('name');
+            checkedSchedule = 0;
+        }
+
+    }
+    function ChangeCustomerSource() {
+        let IDSouce = Number($('#CD_TypeCatCus').dropdown('get value')) ? Number($('#CD_TypeCatCus').dropdown('get value')) : 0;
+        if (IDSouce != null) {
+            let SPID = dataSource.filter(word => word["ID"] == IDSouce);
+            if (SPID && SPID.length > 0 && SPID[0].SPID == 2) {
+                $("#CD_DivBrokerCus").show();
+                SourceIsBroker = 1;
+            } else {
+                $("#CD_DivBrokerCus").hide();
+                CustDetail_SetValueBroker(0, "");
+                SourceIsBroker = 0;
+            }
+        }
+    }
+
+    //#endregion
+
+    //#region // RepresentPerson
+
+    function ChangeRepresentPerson() {
+        if(RepresentPersonType == 1) return;
+        let Birthday = $("#CD_BirthdayCus").val().replace(/[d|m|y|-]/g, '');
+        if (Birthday.length == 8) {
+            let date = new Date();
+            let DayBirth = Birthday.substring(0, 2);
+            let MonthBirth = Birthday.substring(Birthday.length - 6, Birthday.length - 4);
+            let YearBirth = Birthday.substring(Birthday.length - 4, Birthday.length);
+            let Age = CalculateAge(new Date(YearBirth, MonthBirth - 1, DayBirth));
+            if (Age < 16) {
+                $("#CD_DivRepresentCus").slideDown(200);
+                CustDetail_ValidRepresentPerson(1);
+            } else {
+                $("#CD_DivRepresentCus").hide();
+                CustDetail_ValidRepresentPerson(0);
+            }
+        }
+    }
+
+    function CustDetail_InputRepresentPerson(){
+        let repName = $("#CD_RepNameCus").val() ? ($("#CD_RepNameCus").val()).trim() : "";
+        let repPhone = $("#CD_RepPhoneCus").val() ? ($("#CD_RepPhoneCus").val()).trim() : "";
+        let repIdentity = $("#CD_RepIdentityCus").val() ? ($("#CD_RepIdentityCus").val()).trim() : "";
+        let repRelationship = Number($('#CD_RepRelationshipCus').dropdown("get value")) ? Number($('#CD_RepRelationshipCus').dropdown("get value")) : 0;
+        if (repName.length != 0 || repPhone.length != 0 || repIdentity.length != 0 || repRelationship != 0) {
+            CustDetail_ValidRepresentPerson(1);
+        }
+        else{
+            CustDetail_ValidRepresentPerson(0);
+        }
+    }
+
+    function CustDetail_ValidRepresentPerson(IsValid = 0){
+        if(IsValid == 1){
+            $("#CD_RepNameCus").attr('name', 'RepresentName');
+            $("#CD_RepPhoneCus").attr('name', 'RepresentPhone');
+            $("#CD_RepRelationshipCus").children('input[type="hidden"]').attr('name', 'RelationshipPerson');
+            $("#CD_RepIdentityCus").attr('name', '');
+        }
+        else{
+            $("#CD_RepNameCus").removeAttr('name').siblings(".ui.basic.red.pointing").remove();
+            $("#CD_RepPhoneCus").removeAttr('name').siblings(".ui.basic.red.pointing").remove();
+            $("#CD_RepRelationshipCus").children('input[type="hidden"]').removeAttr('name');
+            $("#CD_RepRelationshipCus").siblings(".ui.basic.red.pointing").remove();
+            $("#CD_RepIdentityCus").removeAttr('name');
+            $("#CD_DivRepresentCus").find('.error').removeClass("error");
+        }
+    }
+
+    function CalculateAge(birthday) {
+        var diff_ms = Date.now() - birthday.getTime();
+        var age_dt = new Date(diff_ms);
+        return Math.abs(age_dt.getFullYear() - 1970);
+    }
+
+    function CloseModalCustomerDetail() {
+        if (typeof DetectFormAppear !== 'undefined')
+            DetectFormAppear = 1;
+        CloseModal();
+    }
+    //#endregion
+
+    //#region // BROKER
+
+    function CustDetail_BrokerResetFill() {
+        $("#CD_CheckedSearchCust").prop("checked", false);
+        $("#CD_InputSearchBroker").prop("disabled", true);
+        $("#CD_InputSearchBroker").val('');
+        $("#CD_BrokerName").val('');
+        $("#CD_BrokerPhone").val('');
+        $("#CD_BrokerCode").val('');
+        $("#CD_OptionCustomerChoose").addClass('d-none');
+        $("#CD_OptionCustomerManual").removeClass('d-none');
+        $("#CD_CustID ").dropdown("clear");
+    }
+
+    function CustDetail_NewBroker_Open() {
+        $("#CD_DivMaster").addClass('opacity-5');
+        $("#CD_DivBrokerDetail").removeClass('d-none');
+    }
+
+    function CustDetail_NewBroker_Close() {
+        $("#CD_DivMaster").removeClass('opacity-5');
+        $("#CD_DivBrokerDetail").addClass('d-none');
+        CustDetail_BrokerResetFill();
+    }
+
+    function CustDetail_ToggleSearchBroker(e) {
+        if (e.checked) {
+            $("#CD_InputSearchBroker").val('');
+            $("#CD_InputSearchBroker").prop("disabled", false);
+            $("#CD_OptionCustomerChoose").removeClass('d-none')
+            $("#CD_OptionCustomerManual").addClass('d-none');
+            $("#CD_CustID ").dropdown("clear");
+        }
+        else {
+            $("#CD_InputSearchBroker").prop("disabled", true);
+            $("#CD_OptionCustomerChoose").addClass('d-none')
+            $("#CD_OptionCustomerManual").removeClass('d-none')
+        }
+    }
+
+    function CustDetail_SearchCust() {
+        let val = ($("#CD_InputSearchBroker").val()).trim();
+        if (val.length > 0) $("#CD_blockSearchBroker .btnsear_clear").removeClass('opacity-1').addClass('d-none');
+        else $("#CD_blockSearchBroker .btnsear_clear").addClass('opacity-1').addClass('d-none');
+        $("#CD_blockSearchBroker .fa-search").hide();
+        $("#CD_blockSearchBroker .spinner-border").show();
+        clearTimeout(timerSearchBroker);
+        timerSearchBroker = setTimeout(function (e) {
+            let valueSearch = xoa_dau(val.toLowerCase()).replaceAll(' ', '');
+            CustDetail_SearchCustExecute(valueSearch.replace(/[^a-zA-Z0-9 ]/g, ''));
+        }, 500);
+    }
+
+    function CustDetail_SearchCustExecute(_search_text) {
+        if (xhrSearchBroker && xhrSearchBroker.readyState != 4) xhrSearchBroker.abort();
+        if (_search_text.length > 3) {
+            xhrSearchBroker = AjaxLoad(url = "/Customer/CustomerDetail/?handler=BrokerSearchCustomer"
+                , data = {
+                    'search': _search_text,
+                    'CustomerID': ser_CustomerDetailID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        if (data != undefined && data.length != 0) {
+                            $("#CD_CustID ").dropdown("clear");
+                            data = data.reduce((pre, arr) => {
+                                arr.Name = '<h6 class="mb-0 text-primary text-sm">' + arr.CustCode + '</h6>' + arr.Name + ' (' + arr.Phone + ')';
+                                pre.push(arr);
+                                return pre;
+                            }, [])
+                            Load_Combo(data, 'CD_CbbCust', true);
+                            $("#CD_CustID ").dropdown("refresh");
+                            $("#CD_CustID ").dropdown("set selected", (data[0].ID).toString());
+                            Checking_TabControl_Permission();
+                        }
+                        else {
+                            $("#CD_CustID ").dropdown("clear");
+                        }
+                    }
+                }
+                , sender = null, before = null
+                , complete = function (e) {
+                    $("#CD_blockSearchBroker .fa-search").show();
+                    $("#CD_blockSearchBroker .spinner-border").hide();
+                    $("#CD_blockSearchBroker .btnsear_clear").removeClass('d-none')
+                }
+            );
+        }
+        else {
+            $("#CD_blockSearchBroker .fa-search").show();
+            $("#CD_blockSearchBroker .spinner-border").hide();
+            $("#CD_blockSearchBroker .btnsear_clear").removeClass('d-none')
+        }
+    }
+
+
+
+    function CustDetail_SearchIdentityCard() {
+        let val = ($("#CD_IDnum").val()).trim();
+        $("#CD_IDnumLoader").show();
+        $("#CD_IDnumMess").empty();
+        clearTimeout(timerSearchBroker);
+        timerSearchBroker = setTimeout(function (e) {
+            let valueSearch = xoa_dau(val.toLowerCase()).trim();
+            CustDetail_SearchIdentityExecute(valueSearch.replace(/[^a-zA-Z0-9]/g, ''));
+        }, 500);
+    }
+
+    function CustDetail_SearchIdentityExecute(_search_text) {
+        if (_search_text.length > 3) {
+            AjaxLoad(url = "/Customer/CustomerDetail/?handler=CheckDupIdentityCard"
+                , data = {
+                    'search': _search_text,
+                    'customerid': ser_CustomerDetailID
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result == "1") {
+                        $("#CD_IDnumMess").html(`<i class="fas fa-check text-success text-xs"></i>`);
+                    }
+                    else{
+                        $("#CD_IDnumMess").html(`<span class="fs-xs fw-bold ms-1 text-danger text-xs"><i class="fas fa-times me-1"></i>@Local["Trùng dữ liệu"]</span>`);
+                    }
+                }
+                , sender = null, before = null
+                , complete = function (e) {
+                    $("#CD_IDnumLoader").hide();
+                }
+            );
+        }
+        else {
+            $("#CD_IDnumMess").empty();
+            $("#CD_IDnumLoader").hide();
+        }
+    }
+
+    function CustDetail_SearchCustClear() {
+        $('#CD_InputSearchBroker').val('');
+        $("#CD_blockSearchBroker .btnsear_clear").addClass('opacity-1');
+        $("#CD_blockSearchBroker .fa-search").show();
+        $("#CD_blockSearchBroker .spinner-border").hide();
+    }
+
+    function CustDetail_ChkExeBroker () {
+        let _Obj = new Object();
+        let isOptionSearch = $("#CD_OptionCustomerChoose").is(':visible');
+        let isOptionManual = $("#CD_OptionCustomerManual").is(':visible');
+        _Obj.CustomerID = (isOptionSearch && Number($('#CD_CustID').dropdown('get value'))) ? Number($('#CD_CustID').dropdown('get value')) : 0;
+        _Obj.Name = (isOptionManual && $("#CD_BrokerName").val()) ? ($("#CD_BrokerName").val()).trim() : "";
+        _Obj.Phone = (isOptionManual && $("#CD_BrokerPhone").val()) ? ($("#CD_BrokerPhone").val()).trim() : "";
+        _Obj.Code = $("#CD_BrokerCode").val() ? $("#CD_BrokerCode").val().replace(/"/g, "") : "";
+
+        if (isOptionManual) $('#formBroker').form('validate form')
+        if ((isOptionSearch && _Obj.CustomerID != 0) || (isOptionManual && $('#formBroker').form('is valid'))) {
+            AjaxLoad(url = "/Customer/CustomerDetail/?handler=CheckPhone"
+                , data = {'Phone': _Obj.Phone, 'CusID': _Obj.CustomerID}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    let _data = JSON.parse(result);
+                    if (_data && _data.length > 0) {
+                        const promise = notiConfirm("@Local["Trùng số điện thoại"]");
+                        promise.then(function () {CustDetail_ExecuteBroker(_Obj)}, function () { });
+                    } else {
+                        CustDetail_ExecuteBroker(_Obj);
+                    }
+                }
+            );
+        }
+    }
+    function CustDetail_ExecuteBroker(_Data) {
+        try {
+            AjaxLoad(url = "/Customer/CustomerDetail/?handler=ExcuteDataBroker"
+                , data = {
+                    'CustomerID': _Data.CustomerID
+                    , 'Name': _Data.Name
+                    , 'Phone': _Data.Phone
+                    , 'Code': _Data.Code
+                }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        let TypeRes = (typeof data.Table[0] != "undefined") ? data.Table[0].RESULT.toString() : 0;
+
+                        switch (TypeRes) {
+                            case "-2":
+                                {
+                                    let _noti = "@Local["Trùng dữ liệu"]: @Local["Mã"]";
+                                    notiError(_noti);
+                                }
+                                break;
+                            case "-3":
+                                {
+                                    let _noti = "@Local["Khách hàng"]: @Local["Đã là broker"]";
+                                    notiError(_noti);
+                                }
+                                break;
+                            default:
+                                let _DTUpdBroker = (typeof data.Table1 != "undefined") ? data.Table1 : [];
+                                if (_DTUpdBroker && _DTUpdBroker.length > 0) {
+                                    let item = _DTUpdBroker[0];
+                                    dataBroker.push(item);
+                                    $("#CD_BrokerBody").prepend(CustDetail_RenderBrokerEach(_DTUpdBroker[0]));
+                                    $("#CD_BtnBroker_" + item.ID).attr("checked", true);
+                                    CustDetail_SetValueBroker(item.ID, item.BroName);
+                                    CustDetail_NewBroker_Close();
+                                    CustDetail_EventBroker();
+                                    notiSuccess();
+                                } else {
+                                    notiError_SW();
+                                }
+                        }
+                    }
+                    else notiError_SW();
+                }
+                , sender = $("#CD_btnCustDetailBroker")
+                , before = function (e) {
+                }
+                , complete = function (e) {
+                }
+            );
+        }
+        catch (ex) {
+
+        }
+    }
+
+    async function CustDetail_RenderBroker (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = CustDetail_RenderBrokerEach(item);
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                }
+                CustDetail_EventBroker();
+                resolve();
+            }, 30)
+        })
+    }
+    function CustDetail_RenderBrokerEach (item) {
+        try {
+            let result = ``;
+            result = `
+                <tr class="vt-number">
+                    <td class="vt-number-order text-center"></td>
+                    <td>
+                        <div class="d-flex px-2 py-0">
+                            <div class="form-check pt-1">
+                                <input id="CD_BtnBroker_${item.ID}" class="form-check-input CD_BtnBroker" type="radio" name="rdoBroker" value="${item.ID}">
+                                <label for="CD_BtnBroker_${item.ID}" class="mb-0 cursor-pointer fw-bold">${item.BroName}</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${item.BroCode}</td>
+                    <td>${item.Phone}</td>
+                </tr>
+            `;
+            return result;
+        } catch (ex) {
+            return '';
+        }
+    }
+    function CustDetail_EventBroker () {
+        $("#CD_BrokerBody .CD_BtnBroker").unbind("click").click(function () {
+            let _ID = $(this).attr("value") ? Number($(this).attr("value")) : 0;
+            if (_ID != 0) {
+                let _DtBroker = dataBroker.filter(item => {return item.ID == _ID});
+                if (_DtBroker && _DtBroker.length > 0) {
+                    CustDetail_SetValueBroker(_DtBroker[0].ID, _DtBroker[0].BroName);
+                }
+            }
+        });
+        $("#CD_ClickHideBroker").unbind("click").click(function () {
+            let _Status = $("#CD_ClickHideBroker i").hasClass("fa-chevron-up") ? 1 : 0; // 1 Đang hiện,0 Đang ẩn
+            if (_Status == 1) {
+                $("#CD_DivTableBroker").addClass("d-none");
+                $("#CD_ClickHideBroker i").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+            } else {
+                $("#CD_DivTableBroker").removeClass("d-none");
+                $("#CD_ClickHideBroker i").removeClass("fa-chevron-down").addClass("fa-chevron-up");
+            }
+        })
+        $("#CD_BtnFilterBroker").unbind("click").click(function () {
+            let _SeaText = $("#CD_InpFilterBroker").val() ? $("#CD_InpFilterBroker").val().toLowerCase().trim() : '';
+            let _Status = $("#CD_ClickHideBroker i").hasClass("fa-chevron-up") ? 1 : 0;
+            let _Data = dataBroker;
+            if (_SeaText != "" && dataBroker && dataBroker.length > 0) {
+                _Data = dataBroker.filter(item => {
+                    return (item["BroName"].toLowerCase().trim().includes(_SeaText)
+                        || item["BroCode"].toLowerCase().trim().includes(_SeaText)
+                        || item["Phone"].toLowerCase().trim().includes(_SeaText)
+                    )
+                });
+                if (_Status == 0) $("#CD_ClickHideBroker").trigger("click");
+            }
+            CustDetail_CallRenderBro(_Data);
+        })
+    }
+    function CustDetail_CallRenderBro (data) {
+        $("#CD_BrokerBody").empty();
+        let _blockNumBroker = data.length > 200 ? Math.floor(data.length / 3) : 50;
+        fnRenderBlock(data, "CD_BrokerBody"
+            , blocknum = _blockNumBroker
+            , fnrender = CustDetail_RenderBroker
+            , fnsuccess = function (e) { }
+            , fnbegin = function (e) { }
+        );
+    }
+    function CustDetail_SetValueBroker (ID, Name) {
+        if (ID == 0 && Name == "") {
+            $("#CD_BrokerCusText").html("-");
+            $("#CD_BrokerCusText").removeAttr("data-id");
+        } else if (Number(ID) != 0) {
+            $("#CD_BrokerCusText").html(Name);
+            $("#CD_BrokerCusText").attr("data-id", ID);
+        }
+    }
+    //#endregion
+
+    //#region //CHECK RULE
+    function CustomerDetail_Rule() {
+        try {
+            let y = document.getElementsByClassName("_rule_customerDetail_");
+            let divField = document.getElementsByClassName("divField");
+            if (y != undefined && y.length > 0) {
+                if (Object.keys(CDRule_CustomerDetail).length != 0) {
+                    let _customer = (ser_CustomerDetailID == "") ? 0 : Number(ser_CustomerDetailID)
+                    let _ticket = (ser_ticketDetailID == "") ? 0 : Number(ser_ticketDetailID)
+
+                    $('.CDRulearea').removeClass('d-none');
+                    let CDRule = JSON.parse(JSON.stringify(CDRule_CustomerDetail));
+                    for (let _i = 0; _i < y.length; _i++) {
+                        let valueRule = $(y[_i]).attr("data-rule");
+                        if (CDRule[valueRule] != undefined) {
+                            if (CDRule[valueRule].isRequire) {
+                                $(divField[_i]).prepend(`<div class="cdrule_require"></div>`);
+                                if (CDRule[valueRule].isUpdate == false) $(divField[_i]).prepend(`<div class="cdrule_notupdate" style="right:23px;"></div>`);
+                            }
+                            else if (CDRule[valueRule].isUpdate == false) $(divField[_i]).prepend(`<div class="cdrule_notupdate"></div>`);
+                            if (CDRule[valueRule].isShow == false) $(divField[_i]).addClass("d-none");
+                            if (CDRule[valueRule].isUpdate == false && (_customer + _ticket) != 0) {
+                                if (!$('#CD_AllowEdit').length) {
+                                    if ($(y[_i]).hasClass("dropdown") == true) $(y[_i]).addClass("disabled");
+                                    else $(y[_i]).prop("disabled", true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (ex) {
+        }
+    }
+    function CustDetail_RuleChange() {
+        if (Object.keys(CDRule_CustomerDetail).length != 0) {
+
+            $('#CD_FormCus ._rule_customerDetail_').unbind('change').change(function () {
+                let _rule = $(this).attr('data-rule');
+                let root = $(this).attr('data-root');
+                if (root != "" && root != "0") {
+                    let current;
+                    if ($(this).hasClass('dropdown')) current = Number($(this).dropdown('get value')) ? Number($(this).dropdown('get value')) : 0
+                    else current = $(this).val();
+                    if (current != root) {
+                        if (CDRule_CustomerDetail[_rule] != undefined) {
+                            CDRule_CustomerDetail[_rule].updated = 1;
+                        }
+                    }
+                    else {
+                        if (CDRule_CustomerDetail[_rule] != undefined) {
+                            CDRule_CustomerDetail[_rule].updated = 0;
+                        }
+                    }
+                }
+
+            });
+        }
+    }
+
+    function CustDetail_SaveBefore() {
+        $("#CD_BtnCustomerDetail").prop("disabled", true);
+        $("#CD_BtnSaveDuplicateCus").prop("disabled", true);
+    }
+    function CustDetail_SaveComplete() {
+        $("#CD_BtnCustomerDetail").prop("disabled", false);
+        $("#CD_BtnSaveDuplicateCus").prop("disabled", false);
+    }
+    //#endregion
+
+    //#region // Upload img
+    function CD_CropImage (_file) {
+        $("#CD_DivMaster").addClass('d-none');
+        $("#CD_Preview").removeClass('d-none');
+        $("#CD_Preview").html('');
+        $("#CD_Preview").load('/Image/Previewcrop'
+            , function (response, status, xhr) {
+                preview_Setimg(_file
+                    , closefn = function () {
+                        $("#CD_DivMaster").removeClass('d-none');
+                        $("#CD_Preview").addClass('d-none');
+                        $("#CD_Preview").html('');
+                    }
+                    , savefn = function (_f, _input) {
+                        CD_file = _input;
+                        $('#CD_AvtCus').attr('src', _f);
+                    });
+            });
+
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require_notasync('/assests/dist/Mask/dist/jquery.inputmask.js', true)</script>
+<script>js_require_notasync('/assests/dist/Mask/dist/bindings/inputmask.binding.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script>js_require_notasync('/js/AppCustomer/FileUpload.js', true);</script>
+<script>js_require('/js/comon/valid_url.js');</script>
+<style>
+    .div-birthday i {
+        font-size: 20px;
+        position: absolute;
+        top: 2px;
+        right: 1px;
+        color: #337ab7;
+    }
+
+    .error-birthday input {
+        background: #FFF6F6 !important;
+        border-color: #E0B4B4 !important;
+        color: #9F3A38 !important;
+    }
+
+    .error-birthday label {
+        color: #9F3A38 !important;
+    }
+
+    #CD_BrokerContentCus {
+        animation: BrokerShow 0.5s ease-in-out forwards;
+        transform: translate(-50%,-50%);
+    }
+
+    #CD_DateFromCus + .flatpickr-calendar {
+        box-shadow: none;
+        border: none;
+    }
+
+    @@keyframes BrokerShow {
+        from {
+            transform: scale(0.8) translate(-50%,-50%);
+        }
+
+        to {
+            transform: scale(1) translate(-50%,-50%);
+        }
+    }
+
+    .cdrule_require {
+        background: red;
+        height: 5px;
+        width: 14px;
+        right: 7px;
+        position: absolute;
+        top: 12px;
+    }
+
+    .cdrule_notupdate {
+        background: #4caf50;
+        height: 5px;
+        width: 14px;
+        right: 7px;
+        position: absolute;
+        top: 12px;
+    }
+
+    #CD_DivCusDetail .divField {
+        position: relative;
+    }
+    .CD_FirstUpperCase {
+        text-transform: lowercase;
+    }
+    .CD_FirstUpperCase::first-letter {
+        text-transform: uppercase;
+    }
+</style>

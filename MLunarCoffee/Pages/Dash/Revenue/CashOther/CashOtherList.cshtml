@@ -1,0 +1,90 @@
+﻿@page
+@model MLunarCoffee.Pages.Dash.Revenue.CashOther.CashOtherListModel
+@{
+    Layout = null;
+}
+
+<div class="row" style="background-color: white">
+    <div class="ui segments">
+        <div class="ui segment">
+            <div class="row">
+                <div class="example title_dash">
+                    <h2 class="ui header" data-languagestatic="purchasing_inday">Thanh Toán Trong Ngày</h2>
+                    <p data-languagestatic="purchasing_inday_sub">Danh sách thao tác thanh toán trong ngày</p>
+                </div>
+                <div class="sheet_cart_load_empty" style="" id="Dash_CashOtherEmpty">
+                    no content
+                </div>
+                <table id="CashOtherListContent" class="ui sortable celled table border_none">
+                    <tbody id="CashOtherListContentBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        Dasboard_Revenue_CashOther_LoadList();
+    });
+    function Dasboard_Revenue_CashOther_LoadList() {
+        AjaxLoad(url="/Dash/Revenue/CashOther/CashOtherList/?handler=Loadata"
+            , data={}
+            , async=true
+            , error=function () {notiError_SW()}
+            , success=function (result) {
+                if (result!="") {
+                    let data=JSON.parse(result)["Table"];
+                    if (data.length>0) {
+                        $("#Dash_CashOtherEmpty").hide();
+                        Dasboard_Revenue_CashOther_Render_List(data, 'CashOtherListContentBody');
+                    }
+                    else {
+                        $("#Dash_CashOtherEmpty").show();
+                    }
+                }
+            }
+        );
+    }
+    function Dasboard_Revenue_CashOther_Render_List(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<td>' + (i + 1) + '</td>'
+                        + '<td style="color:#7d7d7d"><i class="wait icon"></i>' + GetDateTime_String_HHMM(item.Created) + '</td>'
+                        + '<td>' + Dasboard_Revenue_CashOther_Image_Method(item.MethodID) + '</td>'
+                        + '<td>' + item.DetailString + '</td>'
+                        + '<td>' + ((item.TYPE_ID == 1) ? '<i class="green plus icon"></i>' : '<i class="red minus icon"></i>') + '</td>'
+                        + '<td>' + formatNumber(item.Amount) + '</td>'
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function Dasboard_Revenue_CashOther_Image_Method(type) {
+        let result = '';
+        switch (type) {
+            case 3: result = '<img class="image_method" title="Cash" src="/assests/img/Method/Cash.png" />'
+                break;
+            case 4: result = '<img class="image_method" title="Transfer" src="/assests/img/Method/Transfer.png" />'
+                break;
+            case 5: result = '<img class="image_method" title="Pos" src="/assests/img/Method/Pos.png" />'
+                break;
+            case 226: result = '<img class="image_method" title="Momo" src="/assests/img/Method/Momo.png" />'
+                break;
+            case 227: result = '<img class="image_method" title="Insurrance" src="/assests/img/Method/Insurrance.png" />'
+                break;
+            default:
+                result = '';
+                break;
+        }
+        return result;
+    }
+</script>

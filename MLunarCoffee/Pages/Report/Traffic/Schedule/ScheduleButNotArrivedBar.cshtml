@@ -1,0 +1,75 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Traffic.Schedule.ScheduleButNotArrivedBarModel
+@{
+    Layout = null;
+}
+
+
+<div class="card">
+    <div class="card-header p-3">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="chart_app_customer_not_arrived_header"
+                   class="text-md text-dark font-weight-bold mb-1">Biều đồ khách hàng hẹn không đến trong tháng</p>
+                <p class="text-xs text-muted mb-0 ">description here</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#ScheduleButNotArrivedBar" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadData_ReportScheduleNotArrivedBar()"></i>
+ 
+
+            </div>
+        </div>
+
+    </div>
+    <div class="collapsesticky collapse show" id="ScheduleButNotArrivedBar">
+        <div class="card-body p-3 pt-0">
+            <div class="chart">
+                <canvas id="ScheduleNotArrivedBar" class="chart-canvas" height="300"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>
+    $(document).ready(function () {
+ 
+        LoadData_ReportScheduleNotArrivedBar();
+    });
+    function LoadData_ReportScheduleNotArrivedBar() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _branchToken = "@Model._TokenBranch";
+
+        AjaxLoad(url = "/Report/Traffic/Schedule/ScheduleButNotArrivedBar/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _branchToken  }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result)["Table"];
+                    let cols = [];
+                    cols.push({'label': 'Total Schedule', 'value': 'TotalSchedule'});
+                    cols.push({'label': 'Not Arrived', 'value': 'TotalNotArrived'});
+                    rp_barcols('ScheduleNotArrivedBar', data, 'ShortName', cols);
+   
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+
+    }
+
+</script>

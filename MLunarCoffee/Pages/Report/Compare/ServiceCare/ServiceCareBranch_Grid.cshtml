@@ -1,0 +1,164 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Compare.ServiceCare.ServiceCareBranch_GridModel
+@{
+    Layout = null;
+}
+<div class="card">
+    <div class="card-header p-3 ">
+        <div class="d-lg-flex">
+            <div class="w-70 col-auto my-auto">
+                <p data-languagestatic="report_compare_servicecare" class="text-md text-dark font-weight-bold mb-1"></p>
+                <p class="text-sm mb-0">Some text of detail sub</p>
+            </div>
+            <div class="ms-auto my-auto mt-1">
+                <i class="vtt-icon vttech-icon-all text-sm text-gradient text-info"
+                   data-bs-toggle="collapse" data-bs-placement="top"
+                   href="#Report_CompareGrid" aria-expanded="true"
+                   data-bs-original-title="Collapse"></i>
+
+                <i class="vtt-icon  vttech-icon-refesh text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Refresh" onclick="LoadDataReport_CompareGrid()"></i>
+
+                <i data-tab="export_excel" class="_tab_control_ vtt-icon  vttech-icon-export-ex text-sm text-gradient text-info"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   data-bs-original-title="Excel" onclick="exportData_CompareGrid()"></i>
+ 
+            </div>
+        </div>
+        <div class="row p-2 pb-0 ps-0">
+            <div class="col-lg-4 col-6">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">Tổng Lịch</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalCust">0</span></h6>
+                </div>
+            </div>
+            <div class="col-lg-4 col-6">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">Lịch Checkedin</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalCust_Check">0</span></h6>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-6  mt-4 mt-lg-0">
+                <div class="border-dashed border-1 border-secondary border-radius-md p-2 mt-2 pb-0">
+                    <h6 class="text-sm text-primary text-gradient mb-0">Phát Sinh Tiền</h6>
+                    <h6 class="font-weight-bolder"> <span id="lbTotalPayment">0</span></h6>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="Report_CompareGrid">
+
+        <div class="card-body p-3 pt-0">
+            <div class="m-0 my-3 mobile-responsive">
+                <table class="table vt-table mb-0" id="dtContentReport_CompareGrid" data-languagedyn="div2">
+                    <thead id="HerderReport_CompareGrid">
+                    </thead>
+                    <tbody data-languagedyn="grid" id="dtContentReportBody_CompareGrid">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/main.js');</script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+ 
+        LoadDataReport_Compare_Grid();
+        //$("#divReportViewDetail table").closest("table").parent().addClass("stickytable");
+        Checking_TabControl_Permission();
+    });
+
+    function LoadDataReport_Compare_Grid() {
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _TokenBranch = "@Model._TokenBranch";
+        AjaxLoad(url = "/Report/Compare/ServiceCare/ServiceCareBranch_Grid/?handler=Loadata"
+            , data = { 'dateFrom': _dateFrom, 'dateTo': _dateTo, 'tokenBranch': _TokenBranch }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result)["Table3"];
+                    let dataDetail = JSON.parse(result)["Table1"];
+                    let dataMaster = JSON.parse(result)["Table4"];
+                    let dataBranch = JSON.parse(result)["Table2"];
+
+                    RenderReport_HeaderBranch(dataBranch, 'HerderReport_CompareGrid');
+                    Count_Up('lbTotalCust', dataMaster[0].TotalScheduler);
+                    Count_Up('lbTotalCust_Check', dataMaster[0].TotalSchedulerCheck);
+                    Count_Up('lbTotalPayment', dataMaster[0].TotalRasing);
+ 
+                    RenderReport_RevenueCustomer_SourceGrid(data, dataDetail, dataBranch, "dtContentReportBody_CompareGrid")
+                }
+            }
+        );
+
+        return false;
+    }
+
+    function RenderReport_HeaderBranch(dataBranch, id) {
+        if (dataBranch && dataBranch.length > 0) {
+            let stringContent = '';
+            let tr2 = '';
+            let tr =
+                '<th  rowspan="2" data-languagestatic="no" style = "width:50px" >#</th>'
+                + '<th rowspan="2" data-languagestatic="service_care">DVQT</th>'
+                + '<th class="_total_value" rowspan="2" data-languagestatic="appointment" >Lịch Hẹn</th>'
+                + '<th class="_total_value" rowspan="2" data-languagestatic="checked_in" >Lịch Đến</th>'
+                + '<th class="_total_value" rowspan="2" data-languagestatic="rasing_purchasing">Phát Sinh TT</th>'
+            for (var i = 0; i < dataBranch.length; i++) {
+                let item = dataBranch[i];
+                tr = tr + '<th colspan="3">' + item.BranchCode + '</th>';
+                tr2 = tr2 + '<th data-languagestatic="appointment">Lịch Hẹn</th>'
+                    + '<th data-languagestatic="checked_in">Lịch Đến</th>'
+                    + '<th data-languagestatic="rasing_purchasing">Phát Sinh TT</th>'
+            }
+            stringContent += '<tr class="vt-number" role="row">' + tr + '</tr>'
+                + '<tr class="vt-number">' + tr2 + '</tr>';
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function RenderReport_RevenueCustomer_SourceGrid(data, dataDetail, dataBranch, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let items = data[i];
+                    let tr =
+                        '<td class="vt-number-order"></td>'
+                        + '<td>' + items.ServiceCareName + '</td>'
+                        + '<td class="_total_value">' + items.Scheduler + '</td>'
+                        + '<td class="_total_value">' + items.SchedulerCheckedIn + '</td>'
+                        + '<td class="_total_value">' + items.ISRasingAmount + '</td>'
+
+                    for (let j = 0; j < dataBranch.length; j++) {
+                        let item = dataDetail.filter(_d => _d.BranchID == dataBranch[j].ID && _d.ServiceCareID == items.ID );
+                        let itemCheck = dataDetail.filter(_d => _d.BranchID == dataBranch[j].ID && _d.Status != 1 && _d.ServiceCareID == items.ID );
+                        let itemRasing = dataDetail.filter(_d => _d.BranchID == dataBranch[j].ID && _d.ISRASING_MONEY_INDAY == 1 && _d.ServiceCareID == items.ID );
+                        tr = tr
+                            + '<td>' + item.length + '</td>'
+                            + '<td>' + itemCheck.length + '</td>'
+                            + '<td>' + itemRasing.length + '</td>';
+
+                    }
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function exportData_CompareGrid() {
+        exportToExcel("dtContentReport_CompareGrid", 'Data');
+    }
+
+</script>
+ 

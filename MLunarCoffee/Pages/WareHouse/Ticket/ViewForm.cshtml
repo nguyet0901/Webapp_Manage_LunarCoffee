@@ -1,0 +1,460 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Ticket.ViewForm
+@{
+    Layout = null;
+}
+
+<div class="_viewformwait text-center" data-random="0" style="border: none; display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<div class="_viewform" data-random="0" id="VF_Form">
+</div>
+<div class="fixed-botombutton mt-2 btn-viewform-content">
+    <div class="action_Save">
+        <div class="action_Save-Content">
+            <button class="btn btn-secondary btn-viewform-item" form="form3" onclick="event.preventDefault();return ViewForm_Close(this)">@Local["Đóng"]</button>
+            <button class="btn btn-success btn-viewform-item" form="form3" onclick="event.preventDefault();return ViewForm_Print()">@Local["In"]</button>
+            <button class="btn btn-primary btn-viewform-item" form="form3" onclick="event.preventDefault();return ViewForm_Upload()">@Local["Upload"]</button>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    let random = "@Model.Random";
+    let type = "@Model.type";
+    let code = "@Model.code";
+    let VF_DateCreated = '';
+    let ticketproduct = "@Model.ticketproduct";
+    let dataProductStock = {};
+
+    $(document).ready(function () {
+        $('._viewform[data-random="' + 0 + '"]').attr("data-random", random);
+        $('._viewformwait[data-random="' + 0 + '"]').attr("data-code", code);
+        $('._viewformwait[data-random="' + 0 + '"]').attr("data-random", random);
+        ViewForm_Load(type, code, ticketproduct, random);
+    });
+
+    //#region // Viewform
+
+    function ViewForm_Load(type, code, ticketproduct, r) {
+        AjaxLoad(url = "/WareHouse/Ticket/ViewForm/?handler=LoadDataViewForm"
+            , data = { 'type': type, 'code': code }, async = true, error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+
+                    let datainfo = data.Table;
+                    let datacontent = data.Table1;
+                    ViewForm_RenderView(ticketproduct, type, datainfo, datacontent, r)
+
+
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('._viewformwait[data-random="' + r + '"]').show();
+            }
+            , complete = function (e) {
+                $('._viewformwait[data-random="' + r + '"]').hide();
+            }
+        );
+    }
+
+
+    async function ViewForm_LoadStockProduct(masterID = 0, wareID = 0, dataProduct, isPackageNumber = 0) {
+        return new Promise((resolve) => {
+
+            if (dataProduct == null || dataProduct.length == 0) {
+                resolve();
+                return;
+            }
+            var dataProStock = [];
+            for (let i = 0; i < dataProduct.length; i++) {
+                let itemPro = {};
+                itemPro.productID = dataProduct[i].ProductID;
+                itemPro.number = 0;
+                itemPro.package = '';
+                dataProStock.push(itemPro);
+            }
+
+            AjaxLoad(url = "/WareHouse/Ticket/ViewForm/?handler=LoadStockQuantity"
+                , data = {
+                    'DataProduct': JSON.stringify(dataProStock),
+                    'WareID': wareID,
+                    'CurrentID': masterID,
+                    'IsPackageNumber': isPackageNumber
+                }
+                , async = true, error = function () {
+                    resolve();
+                }
+                , success = function (result) {
+                    if (result != "0") {
+                        let data = JSON.parse(result);
+                        dataProductStock = data.reduce((pre, arr) => {
+                            if (arr.ProductID)
+                                pre[arr.ProductID] = arr;
+                            return pre;
+                        }, {});
+                        resolve();
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                }
+                , complete = function (e) {
+                }
+            );
+        });
+    }
+
+
+    async function ViewForm_RenderView(ticketProduct, type, dataInfo, dataProduct, ranID) {
+
+        let header = '', body = '', cust = '', sign = '', signapprove = '';
+        let wareID = 0;
+        if (dataInfo != undefined && dataInfo.length == 1) {
+            header = ViewForm_ViewFormRenderHeader(type, dataInfo[0]);
+            cust = ViewForm_ViewFormRenderCust(dataInfo[0]);
+            sign = ViewForm_ViewFormRenderSign(Number(type), dataInfo[0]);
+            signapprove = ViewForm_ViewFormRenderSignArrpove(Number(type), dataInfo[0]);
+            wareID = dataInfo[0].WareID;
+        }
+        await ViewForm_LoadStockProduct(0, wareID, dataProduct, 0);
+        if (dataProduct != undefined && dataProduct.length > 0)
+            body = ViewForm_ViewFormRenderBody(dataProduct, type, ticketProduct);
+        let headerform = '';
+
+        switch (Number(type)) {
+            case 2:
+            case 3: headerform = '@Local["Phiếu nhập kho"]'
+                break;
+            case 4: case 5: case 6:
+            case 7: headerform = '@Local["Phiếu xuất kho"]'
+                break;
+            case 8: headerform = '@Local["Phiếu yêu cầu nhà cung cấp"]'
+                break;
+            case 9: headerform = '@Local["Phiếu yêu cầu xuất kho"]'
+                break;
+            default: break;
+        }
+
+        $('._viewform[data-random="' + ranID + '"]').append(
+            '<div class="position-relative">'
+            + '<div class="position-absolute end-0 top-0 w-auto d-grid">'
+            + '<span class="mb-0 text-dark">@Local["Mã phiếu"] </span>'
+            + '<span class="text-uppercase text-primary text-sm header-code mt-n1 fw-bold">' + code + '</span>'
+            + '</div>'
+            + '</div>'
+            + '<table class="text-md text-primary" style="width: 100%; font-weight: 600 !important;">'
+            + '<tbody>'
+            + '<tr><td class="header-form" style="text-align:center;" colspan="1"><span class="text-md text-dark text-uppercase header-title">' + headerform + '</span></td></tr>'
+            + '<tr><td class="header-form" style="text-align:center;" colspan="1"><span class="text-sm mb-2 mt-n1 text-uppercase d-block header-code">' + ConvertDateTimeUTC_DMY(dataInfo[0].DateExe) + '</span></td></tr>'
+            + '</tbody>'
+            + '</table>'
+
+
+            + '<div class="d-flex">'
+            + '<div class="col-auto my-auto">'
+            + header
+            + '</div>'
+            + '<div class="w-35 ms-auto my-auto mt-1">'
+            + cust
+            + '</div>'
+            + '</div>'
+            + body
+            + '<div class="d-flex VF-areaSign">'
+            + '<div class="d-flex ms-auto my-auto mt-1">'
+            + signapprove
+            + sign
+            + '</div>'
+            + '</div>'
+        );
+        $('.header-form[colspan="1"]').attr("colspan", $(".table.vt-table tbody tr")[0].childElementCount);
+
+    }
+
+
+
+    function ViewForm_ViewFormRenderHeader(type, item) {
+        let tr = '';
+        let lbn = '';
+        switch (Number(type)) {
+            case 2:
+            case 3: lbn = '@Local["Ngày nhập kho"]';
+                break;
+            case 4: case 5: case 6:
+            case 7: lbn = '@Local["Ngày xuất kho"]';
+                break;
+            default: break;
+        }
+        VF_DateCreated = item.DateCreated;
+        tr =
+            '<div class="text-md text-dark">'
+            + '<span class="text-sm text-secondary">@Local["Kho"]:</span>'
+            + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.WareName + '</span>'
+            + '</div>'
+            + (((type == 2 || type == 3) && item.WareTo && item.TransferCode != '')
+                ? ('<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Từ kho"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.WareTo + '</span>'
+                    + '</div>'
+                    + '<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Chứng từ kho xuất"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.TransferCode + '</span>'
+                    + '</div>') : '')
+            + (((type == 4 || type == 5) && item.WareTo && item.TransferCode != '')
+                ? ('<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Từ kho"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.WareTo + '</span>'
+                    + '</div>'
+                    + '<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Chứng từ kho nhận"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.TransferCode + '</span>'
+                    + '</div>') : '')
+            + (((type == 8 || type == 9) && item.WareTo != '')
+                ? ('<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Yêu cầu đến kho"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.WareTo + '</span>'
+                    + '</div>') : '')
+            + '<div class="text-md text-dark">'
+            + '<span class="text-sm text-secondary">@Local["Người lập phiếu"]:</span>'
+            + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.CreatedName + '</span>'
+            + '</div>'
+            + ((type == 2 || type == 3) ? (
+                '<div class="text-md text-dark">'
+                + '<span class="text-sm text-secondary">@Local["Nhà cung cấp"]:</span>'
+                + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.SupName + '</span>'
+                + '</div>') : '')
+            + '<div class="text-md text-dark">'
+            + '<span class="text-sm text-secondary">@Local["Ngày lập phiếu"]:</span>'
+            + '<span class="text-sm text-dark font-weight-bold ms-2">' + GetDateTime_String_DMYHM(item.DateCreated) + '</span>'
+            + '</div>'
+            + ((type != 8 && type != 9) ? (
+                '<div class="text-md text-dark">'
+                + '<span class="text-sm text-secondary">' + lbn + ':</span>'
+                + '<span class="text-sm text-dark font-weight-bold ms-2">' + GetDateTime_String_DMYHM(item.DateExe) + '</span>'
+                + '</div>') : '')
+            + ((type == 4)
+                ? ('<div class="text-md text-dark">'
+                    + '<span class="text-sm text-secondary">@Local["Lý do xuất"]:</span>'
+                    + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.Reason + '</span>'
+                    + '</div>') : '')
+            + '<div class="text-md text-dark">'
+            + '<span class="text-sm text-secondary">@Local["Nội dung"]:</span>'
+            + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.Note + '</span>'
+            + '</div>'
+            ;
+        return tr;
+    }
+    function ViewForm_ViewFormRenderBody(data, type, id) {
+        let tableheader = '', tablebody = '', totalrow = '';
+        let totalAmount = 0;
+        let isshowinput = 0;
+        if (id == 0 && (type == 2 || type == 3 || type == 4 || type == 5 || type == 8)) {
+            tableheader = '<thead><tr><th style="width:40px;">@Local["#"]</th>'
+                + '<th>@Local["Mã"]</th>'
+                + '<th>@Local["Tên"]</th>'
+                + `${(type != 8 && type != 9) ? '<th>@Local["Ngày hết hạn"]</th>' : ""}`
+                + '<th>@Local["Đơn giá"]</th>'
+                + '<th>@Local["Sl"]</th>'
+                + '<th>@Local["Đơn vị"]</th>'
+                + '<th>@Local["Sl kiểm kê"]</th>'
+                + '<th>@Local["Đơn vị kiểm kê"]</th>'
+                + '<th>@Local["Tồn"]</th>'
+                + '<th>@Local["Thành tiền"]</th>'
+                + '</tr></thead>';
+            isshowinput = 1;
+        }
+        else {
+            tableheader = '<thead><tr><th>@Local["#"]</th>'
+                + '<th>@Local["Mã"]</th>'
+                + '<th>@Local["Tên"]</th>'
+                + '<th>@Local["Sl"]</th>'
+                + '<th>@Local["Đơn vị"]</th>'
+                + '<th>@Local["Sl kiểm kê"]</th>'
+                + '<th>@Local["Đơn vị kiểm kê"]</th>'
+                + '<th>@Local["Tồn"]</th>'
+                + '</tr></thead>';
+        }
+        
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            let amountstring = '', unitprice = '';
+            let totalStock = dataProductStock[item.ProductID] != undefined
+                ? dataProductStock[item.ProductID].FinalNum
+                : 0;
+            totalAmount += item.Amount;
+            unitprice = '<span class="d-block">' + formatNumber(item.UnitPrice) + '</span>';
+            amountstring = '<span class="d-block">' + formatNumber(item.Amount) + '</span>';
+
+            let tr =
+                '<td class="vt-number-order"></td>'
+                + '<td>'
+                + '<a class="text-primary d-block fw-bold">' + item.ProductCode + '</a>'
+                + '</td>'
+                + '<td>'
+                + item.ProductName
+                + ((item.PackageNumber == '')
+                    ? ''
+                    : ('<span class="d-block text-sm opacity-5">' + item.PackageNumber + '</span>')
+                )
+                + '</td>'
+                + `${(isshowinput == 1 && (type != 8 && type != 9)) ? `<td>${ConvertDateTimeUTC_DMY_Remove1900(item.DateExpired)}</td>` : ""}`
+                + ((isshowinput == 0)
+                    ? ''
+                    : ('<td>' + unitprice + '</td>')
+                )
+
+                + '<td>' + formatNumber(Math.round(item.Number * 100) / 100) + '</td>'
+                + '<td>' + item.UnitName + '</td>'
+                + '<td>' + formatNumber(Math.round(item.NumberStandard * 100) / 100) + '</td>'
+                + '<td>' + item.UnitStandardName + '</td>'
+                + '<td>' + formatNumber(totalStock) + '</td>'
+
+                + ((isshowinput == 0)
+                    ? ''
+                    : '<td>' + amountstring + '</td>'
+                )
+                ;
+            tablebody = tablebody + '<tr class="vt-number ' + ((item.ProductID == id) ? " text-primary" : "") + '">' + tr + '</tr>';
+
+        }
+
+        if (id == 0 && (type == 2 || type == 3 || type == 8 || type == 4 || type == 5)) {
+            totalrow = `<div class="d-lg-flex mx-0 my-2">
+                         <div class="col-auto">
+                             <span class="text-end text-sm text-secondary text-decoration-underline">@Local["Tiền bằng chữ"]:</span>
+                             <span class="text-end text-dark fw-bold text-sm text-capitalize font-italic">${ConvertNumberToText_Vietnamese(totalAmount)}</span>
+                         </div>
+                         <div class="col-auto ms-auto my-auto">
+                             <span class="text-end text-sm text-secondary">@Local["Thành tiền"]:</span>
+                             <span class="text-end text-dark fw-bold text-sm">${formatNumber(totalAmount)}</span>
+                         </div>
+                     </div>`;
+        }
+        return '<div class="m-0 my-3 mobile-responsive"><table class="table vt-table my-3">'
+            + tableheader
+            + '<tbody>'
+            + tablebody
+            + '</tbody></table>'
+            + totalrow
+            + '</div>';
+    }
+    function ViewForm_ViewFormRenderCust(item) {
+        let tr = '';
+        if (item.CustCode != '') {
+            tr = '<div class="text-md text-dark">'
+                + '<span class="text-sm text-secondary">@Local["Khách hàng"]:</span>'
+                + '<span class="text-sm text-dark font-weight-bold ms-2">' + item.CustName + '</span>'
+                + '<span class="text-sm text-dark font-weight-bold ms-2">'
+                + '<a target="_blank" href="/Customer/MainCustomer?CustomerID=' + item.CustID + '">' + item.CustCode + '</a>'
+                + '</span>'
+                + '</div>'
+                + '<div class="text-md text-dark">'
+                + '<span class="text-sm text-dark font-weight-bold">' + item.ServiceName + '</span>'
+                + '</div>';
+        }
+        return tr;
+    }
+    function ViewForm_ViewFormRenderSign(type, item) {
+        let tr = '';
+        if (type != 8) {
+            if (item.SignName != '') {
+                tr = '<div class="text-center text-md text-dark" style="min-width: 250px;">'
+                    + '<span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Thủ kho"]</span>'
+                    + ((item.SignData != '' && item.SignData != null && item.SignData != undefined)
+                        ? '<div style="height: 100px;"><img style="height: 100px;" src="' + item.SignData + '" /></div>'
+                        : '<div style="height: 100px;"></div>')
+                    + '<span class="text-sm text-dark font-weight-bold">' + item.SignName + '</span>'
+                    + '<div class="text-center text-sm text-dark">' + ConvertDateTimeUTC_Time_DOWFULLDAY(item.SignDate) + '</div>'
+                    + '</div>';
+
+
+            }
+            else {
+                tr = '<div class="text-center text-md text-dark" style="min-width: 250px;">'
+                    + '<span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Thủ kho"]</span>'
+                    + '<div style="height: 100px;"></div>'
+                    + '<span class="text-sm text-dark font-weight-bold"></span>'
+                    + '</div>';
+            }
+        }
+        return tr;
+    }
+    function ViewForm_ViewFormRenderSignArrpove(type, item) {
+        let tr = '';
+        if (type == 8) {
+            if (item.Approved != 0) {
+                tr = '<div class="text-center text-md text-dark style="min-width: 250px;"">'
+                    + '<span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Người duyệt"]</span>'
+                    + ((item.ApproveSignData != '' && item.ApproveSignData != null && item.ApproveSignData != undefined)
+                        ? '<div style="height: 100px;"><img style="height: 100px;" src="' + item.ApproveSignData + '" /></div>'
+                        : '<div style="height: 100px;"></div>')
+
+                    + '<span class="text-sm text-dark font-weight-bold">' + item.ApproveSignName + '</span>'
+                    + '<div class="text-center text-sm text-dark">' + ConvertDateTimeUTC_Time_DOWFULLDAY(item.ApproveSignDate) + '</div>'
+                    + '</div>';
+            }
+            else {
+                tr = '<div class="text-center text-md text-dark" style="min-width: 250px;">'
+                    + '<span class="text-sm text-dark font-weight-bold my-2 d-block">@Local["Người duyệt"]</span>'
+                    + '<div style="height: 100px;"></div>'
+                    + '<span class="text-sm text-dark font-weight-bold"></span>'
+                    + '</div>';
+            }
+        }
+        return tr;
+    }
+    //#endregion
+
+    //#region // Print
+
+    function ViewForm_Print() {
+        let stringCodeType = code + ';' + type.toString();
+        syslog_whr('p', code);
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load('/Print/print?Type=import_exportform&DetailID=' + stringCodeType);
+        $('#DetailModal').modal('show');
+    }
+
+    function ViewForm_Close(ele) {
+        let btnContent = $(ele).closest(".btn-viewform-content");
+        let viewAwait = btnContent.siblings("._viewformwait");
+        let parentView = viewAwait.parent();
+        if (parentView && parentView.length != 0) parentView[0].remove();
+        if (typeof ViewForm_CloseCallback !== 'undefined') ViewForm_CloseCallback();
+        return true;
+    }
+    function ViewForm_Upload() {
+        let Code = encodeURIComponent(code);
+        let CreatedCode = encodeURIComponent(VF_DateCreated);
+        if (Code != "") {
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load(`/Library/LibraryAttach/LibraryAttachDetail?OriginID=${Code}&OriginCode=${Code}&CreatedCode=${CreatedCode}&ver=${versionofWebApplication}`
+                , function (responseTxt, statusTxt, xhr) {
+                    if (statusTxt == "success") {
+                        if (typeof LAD_Init === 'function')
+                            LAD_Init(StockListRender_AttachmentFile);
+                    }
+                    if (statusTxt == "error") {
+                        console.warn("error");
+                    }
+                })
+
+            $('#DetailModal').modal('show');
+        }
+        else {
+            notiWarning("@Local["Không có mã"]");
+        }
+        return true;
+    }
+            //#endregion
+
+</script>
+<style>
+</style>
+

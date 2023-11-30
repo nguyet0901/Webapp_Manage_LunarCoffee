@@ -1,0 +1,305 @@
+﻿@page
+@model MLunarCoffee.Pages.Mail.MailLessDetailModel
+@{ Layout=null;
+}
+
+@*<%--<div data-languagestatic="Mail_cus_header" id="header" class="header header_form_main">
+    Mail Khách Hàng
+</div>--*@
+<div class="row">
+    <div class="ui segments">
+        <form class="ui form segment form3">
+            <h2 data-languagestatic="mail_custcare_header" class="ui center aligned header header_form_main">Gửi Email Chăm Sóc Khách Hàng</h2>
+            <div class="sixteen wide tablet sixteen wide computer column" style="margin-top: 15px;">
+                <div class="ui grid">
+                    <div class="sixteen wide tablet six wide computer column" style="margin-bottom: 5px; padding-left: 1.5rem;">
+                        <div class="field">
+                            <div class="ui raised segment" style="">
+                                <a data-languagestatic="list_customer_header" class="ui red ribbon label" style="font-size: 12px;line-height: 1.5em;letter-spacing: 0.2px;">Danh Sách Khách Hàng</a>
+                                <div style="float:right;min-width:100px">
+                                    <a data-languagedyn="total" class="ui blue label label_total_header" id="lbTotalCust">Tổng: 0</a>
+                                </div>
+                                <div style="overflow-y: auto; height: calc(100vh - 250px);width:100%;margin-top:1em">
+                                    <table id="dtContentTicket" style="margin-top: 0px;" class="ui selectable celled table">
+                                        <thead class="hiddenCollapse">
+                                            <tr role="row">
+                                                <th style="display: none">ID</th>
+                                                <th style="width: 25px;">
+                                                    <div class="ui checkbox" style="transform: scale(1.23);">
+                                                        <input id="checkAllApp" type="checkbox" onchange="event.preventDefault(); return onCheckAllApp();" />
+                                                        <label class="coloring blue"></label>
+                                                    </div>
+                                                </th>
+                                                <th data-languagestatic="date">Ngày</th>
+                                                <th data-languagestatic="cust" class="no-sort" style="min-width: 80px">Khách Hàng</th>
+                                                @*<%--
+                                                <th style="width: 120px" class="no-sort">Email</th>--*@
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dtContentTicketBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sixteen wide tablet ten wide computer column" style="padding-left: 1.5rem;">
+                        <div class="ui raised segment" style="">
+                            <a id="EmailName" data-languagestatic="" class="ui red ribbon label" style="font-size: 12px;line-height: 1.5em;letter-spacing: 0.2px;">Email Mới</a>
+                            <div class="field" style="margin-top:1em;">
+                                <div class="ui fluid search selection dropdown disabled" id="TypeMailID" onchange="event.preventDefault();return LoadContentMail();">
+                                    <input type="hidden" name="typeMail" />
+                                    <i class="dropdown icon"></i>
+                                    <input class="search" autocomplete="off" tabindex="0" />
+                                    <div class="default text"></div>
+                                    <div id="ccbTypeMail" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label data-languagestatic="guide_title">Tiêu Đề Mail:</label>
+                                <input id="MailSubject" name="name" type="text" />
+                            </div>
+                            <div id="realsmsContent" class="field">
+                                <div class="field">
+                                    <label data-languagestatic="content">Nội Dung:</label>
+                                    @*<%--<textarea rows="2" id="txtbefore" name="name" type="text" />--*@
+                                    <div id="txtContentMail" style="margin: 10px 0; border-radius: 5px; border: 1px solid rgba(34,36,38,.15); padding: .78571429em 1em; background-color: rgba(34,36,38,.1)">
+                                    </div>
+                                    @*<%--<textarea rows="2" id="txtafter" name="name" type="text" />--*@
+                                    <textarea id="txtafter" rows="2" style="height: calc(100vh - 555px)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="actions" style="height:35px;margin-top:10px;">
+                <div style="float: right">
+                    <button id="SendEmailLess" data-languagestatic="button_send" class="ui teal button button_send" type="submit" onclick="event.preventDefault();return ExeSendMail()">Send</button>
+                </div>
+                <div style="float: right">
+                    <button data-languagestatic="button_cancel" class="ui greyli button cancelButton" onclick="event.preventDefault();return CloseDetail()">Cancel</button>
+                </div>
+                <div style="float: left; width: 80%; padding-top: 5px;">
+                    <div data-languagedyn="textShowMessage2" style="font-size: 12px; text-align: center; color: red" id="textShowMessage"></div>
+                </div>
+                <div id="divprogress" style="float: left; width: 80%; padding-top: 5px; padding-left: 20px; display: none;">
+                    <div class="ui green progress active" id="progress" data-percent="0">
+                        <div class="bar" style="transition-duration: 300ms; width: 0%;">
+                            <div class="progress">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+<script type="text/javascript">
+    $(".progress").progress();
+    var _CurrentType = "@Model._MailCurentType";
+    let dataAppSendMail_Choosen = [];
+    let isChangeHeightTextEdit = 0;
+    $(document).ready(function () {
+        Render_CustomerCareSendMail(DataRemindApp, "dtContentTicketBody");
+        AjaxLoad(url = "/Mail/MailLessDetail/?handler=LoadComboMain"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let dataComboType = JSON.parse(result);
+                Load_Combo(dataComboType, "ccbTypeMail", true);
+                $("#TypeMailID").dropdown("refresh");
+
+                if (dataComboType.length > 0) {
+                    $("#TypeMailID").dropdown("set selected", Number(_CurrentType));
+                }
+            });
+       
+    });
+
+    function Render_CustomerCareSendMail(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                DataRemindApp = data;
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    if (item.Email && item.Email != '') {
+                        let tr =
+                            '<td style="display:none !important">' + item.ID + '</td>'
+                            + '<td>'
+                            + ((item.Email && item.Email != '') ? (
+                                '<div class="ui checkbox" style="margin: 5px;transform: scale(1.23);">'
+                                + '<input type="checkbox" id="' + ((item.AppID != undefined) ? (item.AppID) : (item.CustID)) + '" class="checkSend" onchange="event.preventDefault(); return onCheckCustomerSendEmail();"/>'
+                                + '<label class="coloring red"></label></div>'
+                            ) : (""))
+                            + '</td>'
+                            + '<td style="color: #003964;">'
+                            + ((item.BirthdayString != undefined) ? (item.BirthdayString) : (item.DateFromString))
+                            + '</br><span  style="color: #00cd30;">' + item.BranchName + '</span>'
+                            + '</td>'
+                            + '<td><a target="_blank" href="/Customer/MainCustomer?CustomerID=' + Number(item.CustID) + '&ver=' + versionofWebApplication + '">' + item.CustCode + '</a><br>' + item.CustName
+                            + '<div class="extra content"><span style="color: darkblue;">' + item.Email + '</span></div>'
+                            + '</td>';
+
+                        stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                    }
+
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Checking_TabControl_Permission();
+    }
+    function LoadContentMail() {
+        let selecteType = (Number($('#TypeMailID').dropdown('get value')) ? Number($('#TypeMailID').dropdown('get value')) : 0)
+        let data = dataComboType.filter(word => word["ID"] == selecteType);
+        let content = data[0].Value;
+        let MailSubject = data[0].MailSubject;
+        let EmailName = data[0].Name;
+
+        $('#txtContentMail').html(content);
+        $('#MailSubject').val(MailSubject);
+
+
+    }
+    function ChangeHeightTextEdit() {
+        let heightContentMail = $('#txtContentMail').height() + 466;
+        $('#txtafter_ifr,#mceu_10').css({ height: 'calc(100vh - ' + heightContentMail + 'px)' });
+        isChangeHeightTextEdit = 1;
+    }
+    // checked all
+    function onCheckAllApp() {
+        let checked = $('#checkAllApp').is(":checked");
+        var y = document.getElementsByClassName("checkSend");
+        for (z = 0; z < y.length; z++) {
+            id = y[z].checked = checked;
+        }
+        $('#lbTotalCust').html('Tổng: ' + ((checked == true)? y.length : 0));
+        if (isChangeHeightTextEdit == 0) {
+            ChangeHeightTextEdit();
+        }
+    }
+    function onCheckCustomerSendEmail() {
+        var y = document.getElementsByClassName("checkSend");
+        let totalCheck = 0;
+        for (z = 0; z < y.length; z++) {
+            if (y[z].checked) {
+                totalCheck++;
+            }
+        }
+        $('#lbTotalCust').html('Tổng: ' + totalCheck);
+        if (totalCheck == y.length) $('#checkAllApp').prop('checked', true)
+        else $('#checkAllApp').prop('checked', false)
+        if (isChangeHeightTextEdit == 0) {
+            ChangeHeightTextEdit();
+        }
+    }
+    // lấy danh sách cần gửi tin nhắn
+    function ExeSendMail() {
+        let typeCare = _CurrentType;
+        var MailSubject = $('#MailSubject').val() ? $('#MailSubject').val() : "";
+        dataAppSendMail_Choosen = [];
+        var AppSend = document.getElementsByClassName("checkSend");
+        for (var i = 0; i < AppSend.length; i++) {
+            if (AppSend[i].checked) {
+                let idSend = AppSend[i].id;
+                for (var j = 0; j < DataRemindApp.length; j++) {
+                    var idrow = ((DataRemindApp[j].AppID != undefined) ? (DataRemindApp[j].AppID) : (DataRemindApp[j].CustID))
+                    if (idrow == idSend) {
+                        let element = DataRemindApp[j];
+                        dataAppSendMail_Choosen.push(element);
+                        break;
+                    }
+                }
+            }
+        }
+        let totalSend = 0;
+        //let txtContentMail = $('#txtbefore').val() + $('#txtContentMail').html() + $('#txtafter').val();
+        let txtContentMail = $('#txtContentMail').html() + $("#txtafter").val();
+
+
+        if (dataAppSendMail_Choosen.length > 0) {
+            $('#SendEmailLess').attr('disabled', true);
+            $('#divprogress').show();
+            $('#progress').progress('decrement', 100)
+            $('#textShowMessage').html("");
+            for (i = 0; i < dataAppSendMail_Choosen.length; i++) {
+                let item = dataAppSendMail_Choosen[i];
+                let bodyEmail_Send = "";
+                bodyEmail_Send = txtContentMail
+                    .replaceAll('#CustCode#', item.CustCode)
+                    .replaceAll('#CustName#', item.CustName)
+                    .replaceAll('#AppHour#', item.AppHour)
+                    .replaceAll('#AppDay#', item.AppDay)
+                    .replaceAll('#CompanyName#', item.CompanyName)
+                    .replaceAll('#BranchAddress#', item.BranchAddress)
+                    .replaceAll('#BranchHotline#', item.BranchHotline)
+                let Email_Send = item.Email;
+                AjaxLoad(url = "/Mail/MailLessDetail/?handler=SendData"
+                    , data = {
+                        mailSubject: MailSubject,
+                        bodyEmail: bodyEmail_Send,
+                        EmailTo: Email_Send
+                    }, async = true, error = null
+                    , success = function (result) {
+                        totalSend += 1;
+                        $('#progress').progress('increment', 100 / dataAppSendMail_Choosen.length);
+                        let progress = $('#progress').attr('data-percent');
+                        //if (progress == 100) {
+                        if (typeof LoadData_CustomerCare !== 'undefined' && $.isFunction(LoadData_CustomerCare)) {
+                            LoadData_CustomerCare();
+                            //        CloseDetail();
+                        }
+                        //}
+                        if (totalSend == dataAppSendMail_Choosen.length) $('#progress').progress('increment', 100);
+
+                    });
+
+            }
+            AjaxLoad(url = "/Mail/MailLessDetail/?handler=ExcuteData"
+                , data = {
+                    title: MailSubject
+                    , typeCare: typeCare
+                    , data: JSON.stringify(dataAppSendMail_Choosen)
+                }, async = true, error = null
+                , success = function (result) {
+                    if (typeof LoadData_CustomerCare !== 'undefined' && $.isFunction(LoadData_CustomerCare)) {
+                        LoadData_CustomerCare();// CloseDetail();
+                    }
+                });
+        } else {
+            $('#textShowMessage').html('Dữ liệu rỗng');
+        }
+        return false;
+    }
+    function CheckContentMail() {
+        var content = $('#txtContentMail').val();
+        AjaxLoad(url = "/Mail/MailLessDetail/?handler=CheckContent"
+            , data = {
+                content: content
+            }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    // Conten ok
+                    document.getElementById("checkContent").innerHTML = "";
+                    document.getElementById("checkContent").style.display = "none";
+                    document.getElementById("messageCheckSuccess").innerHTML = "Sẵn Sàng Gửi";
+                    document.getElementById("messageCheckSuccess").style.display = "block";
+
+                }
+                else {
+                    document.getElementById("checkContent").innerHTML = result;
+                    document.getElementById("checkContent").style.display = "block";
+                    document.getElementById("messageCheckSuccess").innerHTML = "";
+                    document.getElementById("messageCheckSuccess").style.display = "none";
+                }
+            });
+        return false;
+    }
+</script>

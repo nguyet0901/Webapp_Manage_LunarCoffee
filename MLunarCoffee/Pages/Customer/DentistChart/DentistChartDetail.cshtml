@@ -1,0 +1,258 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.DentistChart.DentistChartDetailModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/assests/js/fabric.js', true);</script>
+<script>js_require('/js/comon/ExecuteCanvasDentalChart.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script src="/js/comon/canvasteeth.js" type="text/javascript"></script>
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" id="detailContent_Dentist">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 id="lb_type_teeth_chart" class="mb-0"></h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết tình trạng răng"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 form3" id="formteeth">
+                    <div class="row">
+                        <ul id="dentist_chart_detail_disease" class="overflow-auto border-dashed border-radius-md  border-1 border-secondary row row-cols-1 row-cols-sm-3 row-cols-md-5 row-cols-lg-6 font-weight-normal disabledbutton mx-auto  p-4 m-0" style=" max-height: 463px;">
+                        </ul>
+                    </div>
+                    <div class="row">
+                        <div id="chartDetail" class="col-12 col-md-12 h-100 mt-2">
+                        </div>
+                       
+                    </div>
+                    <div class="row px-1 ">
+                        <div class="field col-12 px-1 mt-2">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea id="txtNoteTeethChart" name="name" class="form-control" rows="3" placeholder="eg .@Local["Ghi chú"]"></textarea>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0" id="dtContentDisease_Detail">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">diseaseid</th>
+                                    <th class="d-none">teethid</th>
+                                    <th class="d-none">type</th>
+                                    <th class="d-none">typecircle</th>
+                                    <th class="d-none">teethid</th>
+                                    <th class="d-none">userid</th>
+                                    <th style="text-align: center; width: 45px;">@Local["#"]</th>
+                                    <th style="text-align: center; width: 100px;">@Local["Cập nhật"]</th>
+                                    <th style="text-align: center; width: 70px;">@Local["Răng"]</th>
+                                    <th style="text-align: center; width: 150px;">@Local["Tình trạng"]</th>
+                                    <th style="text-align: center">@Local["Điều trị"]</th>
+                                    <th style="text-align: center;width: 100px;">@Local["Phân loại"]</th>
+                                    <th style="text-align: center">@Local["Ghi chú"]</th>
+                                    <th style="text-align: center; width: 30px;">@Local["#"]</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentDisease_DetailBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-body pt-2" id="dentist_chart_detail_PrintDiv" style="display:none;">
+                    <div class="overflow-auto border-dashed border-radius-md  border-1 border-secondary m-0 position-relative p-3">
+                        <div class="row w-100 d-flex justify-content-center" id="dentist_chart_detail_PrintForm">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer fixed-botombutton">
+                    <div class="action_Save">
+                        <div class="action_Save-Content">
+                            <button id="btPrint_exe_detail" class="btn btn-success" form="formteeth" onclick="dentist_chart_detail_Print()">@Local["In"]</button>
+                            <button class="btn btn-secondary" form="formteeth" onclick="CancelSaveDentistChart()">@Local["Đóng"]</button>
+                            <button id="btSave_exe_detail" form="formteeth" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="SaveDentistChart()">@Local["Lưu"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var ser_imageFeature_Disease = '@Model._imageFeature_Disease';
+    var ser_classification_date = [];
+    $(document).ready(function () {
+
+        $('#chartDetail').empty();
+        if (CurrentStatusTeeth_Type == 1) {
+            $("#chartDetail").load("/Customer/DentistChart/DentistChartCanvas?ver=" + versionofWebApplication);
+            $('#lb_type_teeth_chart').html("@Local["Răng người lớn"]");
+        }
+        else {
+            $("#chartDetail").load("/Customer/DentistChart/DentistChartDetail_TeethChart_Child?ver=" + versionofWebApplication);
+            $('#lb_type_teeth_chart').html("@Local["Răng trẻ em"]");
+        }
+
+
+        if (isCurrentView_Detail == 1) {
+            $('#btSave_exe_detail').hide();
+            $('#btSave_exe_detail').remove();
+            $('#btPrint_exe_detail').show();
+            $("#chartDetail").addClass("disabledbutton");
+            $("#dentist_chart_detail_disease").addClass("disabledbutton");
+            $("#detailContent_Dentist").addClass('disabled-pointer')
+        }
+        else {
+            $('#btSave_exe_detail').show();
+            $('#btPrint_exe_detail').hide();
+            $('#btPrint_exe_detail').remove();
+            $("#chartDetail").removeClass("disabledbutton");
+            $("#dentist_chart_detail_disease").removeClass("disabledbutton");
+            $("#detailContent_Dentist").removeClass('disabled-pointer')
+        }
+        LoadDetail_Content_ChartTeeth();
+
+    });
+
+    function LoadDetail_Content_ChartTeeth() {
+
+        AjaxLoad(url = "/Customer/DentistChart/DentistChartDetail/?handler=Load_Chart_Teeth_Detail_Info"
+            , data = { 'currentid': CurrentStatusTeethID }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result).Table;
+                    ser_classification_date = JSON.parse(result).Table1;
+                    if (data[0] != undefined)
+                        $('#txtNoteTeethChart').val(formatHTML(data[0].Note));
+
+
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+
+    }
+
+    function SaveDentistChart() {
+        $('#formteeth').form('validate form');
+        if ($('#formteeth').form('is valid')) {
+            let note = $('#txtNoteTeethChart').val() ? $('#txtNoteTeethChart').val() : "";
+            AjaxLoad(url = "/Customer/DentistChart/DentistChartDetail/?handler=Execute"
+                , data = {
+                    'data': JSON.stringify(CurrentDisease)
+                    , 'note': note
+                    , 'CurrentID': CurrentStatusTeethID
+                    , 'Type': CurrentStatusTeeth_Type
+                    , 'CustomerID': ser_MainCustomerID
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        syslog_cutteeth(CurrentStatusTeethID == 0 ? 'i' : 'u', ser_MainCustomerID, '');
+                        Dendis_Cancel();
+                        if (typeof MainCust_AcceptTeeth !== 'undefined' && $.isFunction(MainCust_AcceptTeeth)) {
+                            MainCust_AcceptTeeth();
+                        }
+                        Load_Status_Teeth_List();
+                    } else {
+                        notiError_SW();
+                    }
+                }, sender = $("#btSave_exe_detail")
+            );
+        }
+
+    }
+
+    function dentist_chart_detail_Print() {
+        $('#dentist_chart_detail_PrintDiv').show();
+        dentist_chart_detail_LoadDataTemplate();
+        fn_Print(printedid = "dentist_chart_detail_PrintForm"
+            , beforefun = function () {
+                $('#formteeth').hide();
+            }
+            , afterfun = function () {
+                $('#formteeth').show();
+                $('#dentist_chart_detail_PrintDiv').hide();
+                $('#chartDetail').append($(".div-statusteeth-canvas").children());
+            }
+        );
+    }
+    async function dentist_chart_detail_LoadDataTemplate() {
+        return new Promise((resolve, reject) => {
+            AjaxLoad(url = "/Customer/DentistChart/DentistChartDetail/?handler=LoadTemplate"
+                , data = {}
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        if (result != "[]") {
+                            let DataValue = JSON.parse(JSON.parse(result)[0].Form);
+                            dentist_chart_detail_LoadDataForm(DataValue, 'dentist_chart_detail_PrintForm')
+                        }
+                    }
+                });
+        });
+    }
+    async function dentist_chart_detail_LoadDataForm(DataValue, id) {
+        return new Promise((resolve, reject) => {
+            let datafield, dtTables = {};
+            AjaxLoad(url = "/Customer/DentistChart/DentistChartDetail/?handler=LoadDataForm"
+                , data = { 'commandid': 38, 'currentID': CurrentStatusTeethID }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "") {
+                        if (result == "[]") dentist_chart_detail_RenderForm(DataValue, datafield, dtTables, id);
+                        else {
+                            let data = JSON.parse(result);
+                            for (const [key, value] of Object.entries(data)) {
+                                if (key == 'Table') datafield = value;
+                                else {
+                                    dtTables[key] = value;
+                                }
+                            }
+                            if (datafield != undefined && datafield.length != 0) {
+                                dentist_chart_detail_RenderForm(DataValue, datafield, dtTables, id);
+                            }
+                        }
+                    }
+                });
+        });
+    }
+    async function dentist_chart_detail_RenderForm(data, datafield, dtTables, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id);
+                }
+                if (dtTables != undefined && Object.keys(dtTables).length > 0) {
+                    fn_FillTables(dtTables, item = datafield[0], id = id);
+                }
+            }
+            //$('.div-statusteeth-canvas').append($("#chartDetail"));
+            $('.div-statusteeth-canvas').append($("#chartDetail").children());
+        })
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+<style>
+    #detailContent_Dentist.disabled-pointer > :not(.fixed-botombutton) {
+        pointer-events: none;
+    }
+</style>

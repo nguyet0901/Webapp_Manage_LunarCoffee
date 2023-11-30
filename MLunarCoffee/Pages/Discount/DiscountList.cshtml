@@ -1,0 +1,386 @@
+﻿@page
+@model MLunarCoffee.Pages.Discount.DiscountListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+
+<div class="container-fluid p-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain" id="discountList">
+                <div class="vtcardheader card-header pb-0">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chương trình khuyến mãi"]</h6>
+                        <p class="text-sm mb-0">@Local["Chương trình khuyến mãi được áp dụng khi lên dịch vụ cho khách hàng"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="discountbtnadd" class="btn bg-gradient-primary btn-sm mt-1 _tab_control_" data-tab="add_tab_discount"
+                                onclick="event.preventDefault();return AddNewDiscount()">
+                            @Local["Thêm mới"]
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="vtcondition mt-n2 mt-md-0">
+                        <a class="sign" data-open="@Local["Hiển thị"]" data-close="@Local["Thu gọn"]" data-bs-toggle="collapse" aria-expanded="true"></a>
+                        <div class="fulllap collapse collapsesticky show">
+                            <div class="row px-2">
+                                <div class="col-12 col-sm-6 col-md-6 col-xl-4 p-1">
+                                    <lable id="totalDiscount" class="form-control bg-light">@Local["Tổng"]: 0</lable>
+                                </div>
+                                <div class="col-12 col-sm-6 col-md-6 col-xl-4 p-1">
+                                    <div class="ui fluid search selection dropdown" id="BranchFilterID" onchange="event.preventDefault();return LoadDiscountAjax()">
+                                        <input type="hidden" name="branch" />
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">@Local["Chi nhánh"]</div>
+                                        <div id="cbbBranchFilter" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12  col-xl-4 p-1">
+                                    <input id="dateFilter" class="flatpickr form-control" type="text" onchange="event.preventDefault();return LoadDiscountAjax();" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-0 my-3 mobile-responsive vt-header-sticky">
+                        <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table vt-table mb-0" id="dtContentDiscountList">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th style="text-align: center; width: 50px;">#</th>
+                                    <th style="text-align: center; max-width: 300px; min-width: 200px;">@Local["Tên CTKM"]</th>
+                                    <th style="text-align: center; width: 250px">@Local["Chi nhánh"]</th>
+                                    <th class="no-sort" style="text-align: center;">@Local["Áp dụng tất cả"]</th>
+                                    <th class="no-sort" style="text-align: center; min-width: 300px;">@Local["Áp dụng DV, nhóm DV/SP"]</th>
+                                    <th class="no-sort" style="text-align: center; width: 62px;">@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentDiscountListBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!--Detail-->
+            <div id="discountDetail" style="display: none;">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let IdComboMax = 0;
+    let flag_discountlist = 0;
+    let DataBranch, DataService, DataServiceType = {};
+
+    $(document).ready(function () {
+        $("#dateFilter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        var lastDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        $("#dateFilter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+
+        Master_IndexDB_Reads(_Session_Data, [_Session_Branch, _Session_Service]
+            , function (data) {
+                DataBranch = data[0];
+                DataService = data[1];
+                LoadInitializeDiscount();
+            })
+
+        $('#dtContentDiscountList tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditDiscount(ID);
+        });
+        $('#dtContentDiscountList tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteDiscount(ID);
+        });
+        // update less dateto
+        $('#dtContentDiscountList tbody').on('click', '.buttonUpdateLess', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            UpdateDiscountLess(ID)
+        });
+        $('#dtContentDiscountList').tablesort();
+    });
+
+    function LoadInitializeDiscount() {
+        AjaxLoad(url = "/Discount/DiscountList/?handler=LoadComboMain"
+            , data = {}, async = true, error = null
+            , success = function (result) {
+                let DataBranchFilter = JSON.parse(result).Branch;
+                let SerType = JSON.parse(result).ServiceType;
+                for (let i = 0; i < SerType.length; i++) {
+                    DataServiceType[SerType[i].ID] = SerType[i];
+                }
+                IdComboMax = Load_Combo(DataBranchFilter, "cbbBranchFilter", true, "All");
+
+                if (DataBranchFilter && DataBranchFilter.length > 0) {
+                    $("#BranchFilterID").dropdown("refresh");
+                    $("#BranchFilterID").dropdown("set selected", Number(@Model._branchID));
+                }
+                flag_discountlist = 1;
+                LoadDiscountAjax();
+            }
+        );
+    }
+
+    function LoadDiscountAjax() {
+        if (flag_discountlist == 1) {
+            let branchID = Number($('#BranchFilterID').dropdown('get value')) ? Number($('#BranchFilterID').dropdown('get value')) : 0;
+            if (IdComboMax == branchID) {
+                branchID = 0;
+            }
+            let date = $('#dateFilter').val() ? $('#dateFilter').val() : new Date()
+            AjaxLoad(url = "/Discount/DiscountList/?handler=LoadDataDiscount"
+                , data = {
+                    date: date,
+                    branchID: branchID
+                }, async = true, error = null
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    RenderDiscountList(Dectect_Data_Discounted(data), "dtContentDiscountListBody");
+                    if (data != undefined && data != null)
+                        $('#totalDiscount').html('@Local["Tổng"] : ' + data.length);
+                    else
+                        $('#totalDiscount').html('@Local["Tổng"] : ' + 0)
+
+                });
+        }
+    }
+    function Dectect_Data_Discounted(data) {
+        let dt = data;
+        if (dt != null && dt.length > 0) {
+            for (let i = 0; i < dt.length; i++) {
+                let item = dt[i];
+                let dataRule = item.Rule;
+                if (dataRule != "[]" && dataRule != "") {
+                    let dataMain = JSON.parse(dataRule);
+                    for (let j = 0; j < dataMain.length; j++) {
+                        let active = Number(dataMain[j].active);
+                        let type = dataMain[j].type;
+                        let value = dataMain[j].value;
+                        let percent = Number(dataMain[j].percent);
+                        let amount = Number(dataMain[j].amount);
+
+                        if (active === 1) {
+                            let result = "";
+                            let stringdetect = "";
+
+                            switch (type) {
+                                case "servicetype":
+                                    stringdetect = DectectDetail(DataServiceType, value);
+                                    if (stringdetect != "") {
+                                        result = '<div class="mb-2"><div class="pb-2"><h6 class="badge badge-sm bg-gradient-success ms-2 mb-0 fw-bold">@Local["Nhóm dịch vụ"]</h6>'
+                                            + stringdetect
+                                            + '</div></div>';
+                                    }
+                                    break;
+                                case "service":
+                                    stringdetect = DectectDetail(DataService, value);
+                                    if (stringdetect != "") {
+                                        result = '<div><div class="pb-2"><h6 class="badge badge-sm bg-gradient-info ms-2 mb-0 fw-bold">@Local["Dịch vụ"]</h6>'
+                                            + stringdetect
+                                            + '</div></div>';
+                                    }
+                                    break;
+                                case "all":
+                                    result =
+                                        ((percent > 0) ? ('<span class="percent">' + percent + '%</span>') : ('<span class="amount">' + formatNumber(amount) + ' </span>'))
+
+                            }
+                            if (type == "all") {
+                                item.TypeInfoAll = result;
+                            }
+                            else {
+                                item.TypeInfo = item.TypeInfo + result;
+                            }
+
+                        }
+                    }
+                }
+                if (Number(item.IsAllBranch) == 1) {
+                    item.Branch_Name = '<span class="text-sm fw-bold text-dark">@Local["Tất cả chi nhánh"]</span>';
+                } else {
+                    item.Branch_Name = DectectBranchToken(DataBranch, dt[i].Branch_Token);
+                }
+            }
+            return dt;
+        }
+    }
+
+    //#region //Dectect Service, ServiceType and Branch
+    function DectectDetail(data, dataRule) {
+        let result = "";
+        let count = 0;
+        for (let i = 0; i < dataRule.length; i++) {
+            let idRule = Number(dataRule[i].id);
+            if (i >= 10) {
+                break;
+            }
+            if (data[idRule] != undefined) {
+                let tr = "";
+                count++;
+                if (Number(dataRule[i].percent) > 0) {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-0"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        + '<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold">' + dataRule[i].percent + '%</span></p></div>'
+                }
+                else {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-0"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        + '<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold">' + formatNumber(dataRule[i].amount) + '</span></p></div>'
+                }
+                result = result + tr;
+                if (count == 10) {
+                    result = result + `<span class="ps-3">....</span>`
+                }
+            }
+        }
+        return result;
+    }
+    function DectectBranchToken(data, token) {
+        let result = "";
+        let dataToken = token.split(",");
+        for (let i = 0; i < dataToken.length; i++) {
+            let idRule = Number(dataToken[i]);
+            if (data[idRule] != undefined) {
+                if ((dataToken.length - 1) == i) {
+                    result = result + '<div class="text-sm fw-bold"><i class="fas fa-map-pin text-info" aria-hidden="true"></i><span class="ps-2 text-dark">' + data[idRule].Name + '</span></div>';
+                }
+                else {
+                    result = result + '<div class="text-sm fw-bold"><i class="fas fa-map-pin text-info" aria-hidden="true"></i><span class="ps-2 text-dark">' + data[idRule].Name + '</span></div>';
+                }
+            }
+        }
+        return result;
+    }
+    //#endregion
+
+    function RenderDiscountList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="text-center vt-number-order" data-sortvalue="' + i + '"></td>'
+                        + '<td>'
+                        + '<h6 class="mb-1 text-dark text-sm">' + item.NameInfo + '</h6>'
+                        + '<div class="text-primary text-sm">' + ConvertDateTimeUTC_DMY(item.TimeFrom) + ' - ' + ConvertDateTimeUTC_DMY(item.TimeTo)+ '</div>'
+                        + '</td>'
+                        + '<td class="text-center">' + item.Branch_Name + '</td>'
+                        + '<td class="text-center">' + item.TypeInfoAll + '</td>'
+                        + '<td>' + item.TypeInfo + '</td>'
+                        + '<td class="discountlist_rowBtnHandle">'
+                        + '<div class="text-nowrap">'
+                        + DiscountListRenderButton(item.ID, item.EditButton, item.DeleteButton)
+                        + '</div>'
+                        + '</td>'
+
+
+
+                    stringContent = stringContent + '<tr role="row" class="vt-number">' + tr + '</tr>';
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Checking_TabControl_Permission();
+    }
+
+    function DiscountListRenderButton(id, isEdit, isDelete) {
+        let buttons = [];
+        buttons.push('<button class="buttonGrid" value="' + id + '"><i title="@Local["Cập nhật ngày"]" class="buttonUpdateLess vtt-icon vttech-icon-action"></i></button>');
+        if (isEdit == 1) {
+            buttons.push('<button title="@Local["Chỉnh sửa"]" class="buttonGrid" value="' + id + '"><i class="buttonEditClass vtt-icon vttech-icon-edit"></i></button>');
+        }
+        if (isDelete == 1) {
+            buttons.push('<button class="buttonGrid" value="' + id + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>');
+        }
+        return Render_Button_Grid(buttons)
+    }
+
+    // delete item
+    function DeleteDiscount(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteDiscount(id); }, function () { });
+    }
+    function ExecuteDeleteDiscount (id) {
+        AjaxLoad(url = "/Discount/DiscountList/?handler=DeleteItem"
+            , data = {
+                'id': id
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadDiscountAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+ 
+        );
+    }
+
+
+
+    // update less
+    function UpdateDiscountLess(id) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Discount/DiscountLessDetail?CurrentID=" + id + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+
+    //
+    function EditDiscount(id) {
+        OpenDiscountDetail();
+        $("#discountDetail").load("/Discount/DiscountDetail?CurrentID=" + id + "&ver=" + versionofWebApplication);
+        $("#discountDetail").show();
+        return false;
+    }
+    function AddNewDiscount() {
+        OpenDiscountDetail();
+        $("#discountDetail").load("/Discount/DiscountDetail" + "?ver=" + versionofWebApplication);
+        $("#discountDetail").show();
+        return false;
+    }
+
+    function OpenDiscountDetail() {
+        $("#discountDetail").empty();
+        $("#discountList").hide();
+        document.getElementById("discountDetail").innerHTML = '';
+    }
+
+    function CloseDiscountDetail() {
+        $("#discountDetail").empty();
+        document.getElementById("discountDetail").innerHTML = '';
+        $("#discountList").show();
+        $("#discountDetail").hide();
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

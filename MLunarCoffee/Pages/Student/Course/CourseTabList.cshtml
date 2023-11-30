@@ -1,0 +1,572 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Course.CourseTabListModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="text-dark card card-plain mb-1 ">
+    <div class="card-header pb-0 pt-2">
+        <div class="d-flex align-items-center">
+            <div class="">
+                <ul class=" nav nav-pills p-1 ps-1 my-3 mt-0 bg-transparent mb-0" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="linkgroup nav-link cursor-pointer active"
+                           data-bs-toggle="pill" role="tab" data-bs-target="#clist_tabstudent">
+                            <i class="text-gradient text-info fas fa-users pe-2"></i>
+                            @Local["Học viên"]
+                        </a>
+                    </li>
+                    <li class="nav-item " role="presentation">
+                        <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab"
+                           data-bs-target="#clist_tabclass">
+                            <i class="far fa-credit-card text-gradient text-primary pe-2"></i>
+                            @Local["Thanh toán"]
+                        </a>
+                    </li>
+                    <li class="nav-item " role="presentation">
+                        <a class="linkgroup nav-link cursor-pointer" data-bs-toggle="pill" role="tab"
+                           data-bs-target="#clist_tabexam">
+                            <i class="fas fa-graduation-cap text-gradient text-warning pe-2"></i>
+                            @Local["Kỳ thi"]
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="ms-auto">
+                <button class="btn bg-dark text-white btn-sm m-0" onclick="event.preventDefault(); return CouListTab_NewExam();">@Local["Tạo kỳ thi"]</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body pt-2 pb-0">
+        <div class="nav-wrapper position-relative end-0">
+            <div class="tab-content">
+                <div class="tab-pane fade active show" role="tabpanel" id="clist_tabstudent">
+                    <div class="text-dark card mb-3 card-plain">
+                        <div class="card-body mt-0 p-2">
+                            <div class="row px-2 form3">
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">@Local["Chứng chỉ"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CourseStuCer" onchange="event.preventDefault(); return CourseTab_FilterStudent();">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Chứng chỉ"]</div>
+                                        <div class="menu" tabindex="-1">
+                                            <div class="item" data-value="0">@Local["Tất cả học viên"]</div>
+                                            <div class="item" data-value="1">@Local["Đã cấp chứng chỉ"]</div>
+                                            <div class="item" data-value="2">@Local["Chưa chứng chỉ"]</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">@Local["Tình trạng"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CourseStuRevi" onchange="event.preventDefault(); return CourseTab_FilterStudent();">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Tình trạng"]</div>
+                                        <div id="cbbCourseStuRevi" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">@Local["Đánh giá"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CourseStuLevel" onchange="event.preventDefault(); return CourseTab_FilterStudent();">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Đánh giá"]</div>
+                                        <div id="cbbCourseStuLevel" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                            </div>
+                            <div class="m-0 mobile-responsive">
+                                <table id="dtTableCourseStatus" class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-1" colspan="3">
+                                                <p class="mb-0 text-sm text-dark fw-bold">@Local["Tên học viên"]</p>
+                                            </th>
+                                            <th class="ps-1">
+                                                <div class="mb-0 text-sm text-dark fw-bold">@Local["Chứng chỉ"]</div>
+                                            </th>
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Tình trạng"]</span>
+                                            </th>
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Đánh giá"]</span>
+                                            </th>                                            
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Chữ ký"]</span>
+                                            </th>                                            
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Ngày ký"]</span>
+                                            </th>
+                                             <th class="px-1 text-center">
+                                                <span class="mb-0 text-sm text-dark fw-bold">#</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="CourseTab_studentlist">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" role="tabpanel" id="clist_tabclass">
+                    <div class="text-dark card mb-3 card-plain">
+                        <div class="card-body mt-0 p-2 position-relative">
+                            <div class="m-0 mobile-responsive">
+                                <table id="dtTableCourseStatus" class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-1" colspan="3">
+                                                <p class="mb-0 text-sm text-dark fw-bold">@Local["Học viên"]</p>
+                                            </th>
+                                            <th class="ps-1">
+                                                <div class="mb-0 text-sm text-dark fw-bold">@Local["Phát sinh"]</div>
+                                            </th>
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Thanh toán"]</span>
+                                            </th>
+                                            <th class="ps-1">
+                                                <span class="mb-0 text-sm text-dark fw-bold">@Local["Công nợ"]</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="CourseTab_studentPaymentlist">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" role="tabpanel" id="clist_tabexam">
+                    <div class="text-dark card mb-3 card-plain">
+                        <div class="card-body mt-0 p-2 position-relative">
+                            <div class="row px-2 form3">
+                          
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">@Local["Kỳ thi"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CourseExamID" onchange="event.preventDefault(); return CourseTab_FilterExam();">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Kỳ thi"]</div>
+                                        <div id="cbbCourseExam" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">@Local["Đánh giá"]</label>
+                                    <div class="ui fluid search selection dropdown form-control" id="CourseExamLevel" onchange="event.preventDefault(); return CourseTab_FilterExam();">
+                                        <input type="hidden" name="ware" />
+                                        <i class="dropdown icon"></i>
+                                        <input class="search" autocomplete="off" tabindex="0" />
+                                        <div class="default text">eg .@Local["Đánh giá"]</div>
+                                        <div id="cbbCourseExamLevel" class="menu" tabindex="-1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6 col-xl-4 p-1">
+                                    <label data-fontchanged="true">&nbsp;</label>
+                                    <div>
+                                        <button class="btn bg-dark text-white m-0" onclick="event.preventDefault(); return CouListTab_EditExam();">@Local["Cập nhật"]</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="m-0 mobile-responsive">
+                                <table id="dtTableCourseStatus" class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-1" colspan="3">
+                                                <p class="mb-0 text-sm text-dark fw-bold">@Local["Học viên"]</p>
+                                            </th>
+                                            <th class="ps-1">
+                                                <div class="mb-0 text-sm text-dark fw-bold">@Local["Đánh giá"]</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="CourseTab_studentExamlist">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    //#region // INIT
+    let CouListTab_CurrentID = "@Model._CourseCurrentID";
+    let CouListTab_DataStudent = [], CouListTab_DataExam = [];
+
+    $(document).ready(function () {
+        let dataRevi = JSON.parse(JSON.stringify(Object.values(DataReviStatus)));
+        dataRevi.unshift({ ID: -1, "Name": "@Local["Chưa có tình trạng"]" })
+        Load_Combo(dataRevi, 'cbbCourseStuRevi', true, '@Local["Tất cả tình trạng"]');
+
+        let dataLevel = JSON.parse(JSON.stringify(Object.values(DataLevelStatus)));
+        dataLevel.unshift({ ID: -1, "Name": "@Local["Chưa có đánh giá"]" })
+        Load_Combo(dataLevel, 'cbbCourseStuLevel', true, '@Local["Tất cả đánh giá"]');
+        Load_Combo(dataLevel, 'cbbCourseExamLevel', true, '@Local["Tất cả đánh giá"]');
+
+        $('#CourseStuRevi, #CourseStuLevel, #CourseExamLevel, #CourseStuCer').dropdown('refresh');
+        $('#CourseStuRevi, #CourseStuLevel, #CourseExamLevel, #CourseStuCer').dropdown('set selected', '0');
+
+        CourseTab_Load();
+    });
+
+    //#endregion
+
+    //#region //
+
+    function CourseTab_Load() {
+        if (CouListTab_CurrentID && CouListTab_CurrentID != 0) {
+            AjaxLoad(url = "/Student/Course/CourseTabList/?handler=LoadData"
+                , data = {
+                    "Currentid": CouListTab_CurrentID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != '0') {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0) {
+                            CouListTab_DataStudent = data.Table;
+                            let dataExam = data.Table1;
+                            CouListTab_DataExam = data.Table2;
+
+                            CourseTab_RenderStu(CouListTab_DataStudent, 'CourseTab_studentlist');
+                            CourseTab_RenderStuPay(CouListTab_DataStudent, 'CourseTab_studentPaymentlist');
+
+                            Load_Combo(dataExam, 'cbbCourseExam', true);
+                            $('#CourseExamID').dropdown('refresh');
+                            $('#CourseExamID').dropdown('set selected', dataExam.length > 0 ? dataExam[0].ID : '0');
+
+                        }
+                    }
+                    else notiError_SW();
+                }
+                , sender = null
+                , before = function (e) {
+                }
+                , complete = function (e) {
+                    $("#CourseViewDetail").fadeIn(100);
+                }
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region // RENDER
+
+    async function CourseTab_RenderStu(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let stringContent = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            stringContent += CourseTab_RenderStu_Each(item);
+                        }
+                    }
+                    myNode.insertAdjacentHTML('beforeend', stringContent);
+                    CourseTab_Event();
+                }
+            }, 100)
+        })
+    }
+
+    async function CourseTab_RenderStuPay(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let stringContent = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            stringContent += CourseTab_RenderStuPay_Each(item);
+                        }
+                    }
+                    myNode.insertAdjacentHTML('beforeend', stringContent);
+                }
+            }, 100)
+        })
+    }
+
+    function CourseTab_RenderStu_Each(item) {
+        try {
+            let strSign = item.SignValue !='' 
+                        ? `<img data-id="${item.CourseStuID}"src="${item.SignValue}" title="${ConvertDateTimeToStringDMY_HM(item.SignDate)}" class="avatar avatar-xl CourseTab_Cert_btnSign"/>`
+                        : `<a  data-id="${item.CourseStuID}" class="text-sm CourseTab_Cert_btnSign text-primary d-block">@Local["Ký tên"]</a>`;
+            let tr = `
+            <td class="ps-1" colspan="3">
+                <div class="my-auto">
+                    <h6 class="text-dark text-sm mb-0 fw-bold">
+                        <a class="cursor-pointer mb-0 fw-bold text-sm border-bottom border-primary" href="/Student/student/studentmain?studentid=${item.ID}&ver=${versionofWebApplication}" target="_blank">${item.Code}</a>
+                        <span> - </span>
+                        <span>${item.Name}</span>
+                    </h6>
+                    <span class="text-sm">${ConvertDateTimeUTC_DMYHM(item.Created)}</span>
+                </div>
+            </td>
+            <td class="text-dark text-sm">${item.IsCer == 1 ? `<i class="fas fa-certificate text-danger me-2"></i>${item.CerName}</br>${ConvertDateTimeUTC_DMY(item.CerDate)}` : `@Local["Chưa cấp"]"`}</td>
+            <td class="text-dark text-sm">${Fun_GetName_ByID(DataReviStatus, item.ReviStatus)}</td>
+            <td class="text-dark text-sm">${Fun_GetName_ByID(DataLevelStatus, item.LevelStatus)}</td>
+            <td data-name="sign">
+            ${strSign}
+            </td>
+            <td data-name="signdate" class="text-dark text-sm">
+            ${ConvertDateTimeUTC_DMYHM(ConvertToDateRemove1900(item.SignDate))}
+            </td>
+            <td class="text-dark text-sm text-center">
+                ${
+                    item.IsDelete == 1
+                    ? `<button class="buttonGrid">
+                            <i data-id="${item.ID}" class="buttonDeleteClass vtt-icon vttech-icon-delete"></i>
+                        </button>`
+                    : ''
+                }
+            </td>
+            `
+            return `<tr>${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function CourseTab_RenderStuPay_Each(item) {
+        try {
+            let classPrice = (item.Price - item.Paid > 0 ? "text-danger" : "text-dark");
+            let tr = `
+                <td class="ps-1" colspan="3">
+                    <div class="my-auto">
+                        <h6 class="text-dark text-sm mb-0 fw-bold">
+                            <a class="cursor-pointer mb-0 fw-bold text-sm border-bottom border-primary" href="/Student/student/studentmain?studentid=${item.ID}&ver=${versionofWebApplication}" target="_blank">${item.Code}</a>
+                            <span> - </span>
+                            <span>${item.Name}</span>
+                        </h6>
+                        <span class="text-sm">${ConvertDateTimeUTC_DMYHM(item.Created)}</span>
+                    </div>
+                </td>
+                <td class="text-dark text-sm">${formatNumber(item.Price)}</td>
+                <td class="text-dark text-sm">${formatNumber(item.Paid)}</td>
+                <td class="fw-bold text-sm ${classPrice}">${formatNumber(item.Price - item.Paid)}</td>
+            `
+            return `<tr>${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    async function CourseTab_RenderExam(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    myNode.innerHTML = '';
+                    let stringContent = ''; 
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            stringContent += CourseTab_RenderExam_Each(item);
+                        }
+                    }
+                    myNode.insertAdjacentHTML('beforeend', stringContent);
+                }
+            }, 100)
+        })
+    }
+
+    function CourseTab_RenderExam_Each(item) {
+        try {
+            
+            let tr = `
+            <td class="ps-1" colspan="3">
+                <div class="my-auto">
+                    <h6 class="text-dark text-sm mb-0 fw-bold">
+                        <a class="cursor-pointer mb-0 fw-bold text-sm border-bottom border-primary" href="/Student/student/studentmain?studentid=${item.ID}&ver=${versionofWebApplication}" target="_blank">${item.Code}</a>
+                        <span> - </span>
+                        <span>${item.Name}</span>
+                    </h6>
+                    <span class="text-sm">${ConvertDateTimeUTC_DMYHM(item.Created)}</span>
+                </div>
+            </td>
+                    <td class="text-dark text-sm">${Fun_GetName_ByID(DataLevelStatus, item.LevelStatus)}</td>
+            `
+            return `<tr>${tr}</tr>`;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+    //#region // HANDLE 
+
+    function CourseTab_Event(){
+        $("#CourseTab_studentlist .buttonDeleteClass").unbind('click').on('click', function(){
+            let stuid = Number($(this).attr('data-id'));
+            if (!isNaN(stuid) && stuid != 0) {
+                CourseTab_Delete(stuid);
+            }
+        })
+        $("#CourseTab_studentlist .CourseTab_Cert_btnSign").unbind('click').on('click', function (event)
+        {
+            let stuid = Number($(this).attr('data-id'));
+            CourseTab_Executed_CertSign(stuid);
+        });
+    }
+
+    async function CourseTab_Executed_CertSign(id)
+    {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/Student/Course/CourseTabList/?handler=UpdateSign"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation,
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result)
+                {
+                    if (result != "0") {
+                        CourseTab_Load();
+                    }
+                }
+            );
+        }
+
+    }
+
+    function CourseTab_Delete(stuid){
+        const promise = notiConfirm();
+        promise.then(function () { CourseTab_ExecuteDelete(stuid); }, function () { });
+    }
+    
+        
+
+    function CourseTab_ExecuteDelete(stuid) {
+        AjaxLoad(url = "/Student/Course/CourseTabList/?handler=DeleteItem"
+            , data = {
+                'courseid' : CouListTab_CurrentID,
+                'studentid': stuid
+            }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    if (typeof Course_LoadViewDetail === 'function') Course_LoadViewDetail();
+                    if (typeof Course_Close === 'function') Course_Close();
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endreigon 
+
+    //#region // HANDLE FILTER STUDENT
+
+    function CourseTab_FilterStudent() {
+        try {
+            let revi = $('#CourseStuRevi').dropdown('get value') ? Number($('#CourseStuRevi').dropdown('get value')) : 0;
+            let level = $('#CourseStuLevel').dropdown('get value') ? Number($('#CourseStuLevel').dropdown('get value')) : 0;
+            let cer = $('#CourseStuCer').dropdown('get value') ? Number($('#CourseStuCer').dropdown('get value')) : 0;
+            let dataFilter = CouListTab_DataStudent;
+            if ((revi && revi != 0) || (level && level != 0) || (cer && cer != 0)) {
+                dataFilter = dataFilter.filter((work) => {
+                    return ((revi == 0 || (revi == -1 && work.ReviStatus == 0) || revi == work.ReviStatus)
+                        && (level == 0 || (level == -1 && work.LevelStatus == 0) || level == work.LevelStatus)
+                        && (cer == 0 || (cer == 1 && work.IsCer == 1) || (cer == 2 && work.IsCer == 0)))
+                })
+            }
+            CourseTab_RenderStu(dataFilter, 'CourseTab_studentlist')
+        }
+        catch (ex) {
+
+        }
+    }
+
+
+    function CourseTab_FilterExam() {
+        try {
+            let exam = $('#CourseExamID').dropdown('get value') ? Number($('#CourseExamID').dropdown('get value')) : 0;
+            let level = $('#CourseExamLevel').dropdown('get value') ? Number($('#CourseExamLevel').dropdown('get value')) : 0;
+            let dataStudent = JSON.parse(JSON.stringify(CouListTab_DataStudent));
+            let dataFilter = CouListTab_DataExam;
+            if ((exam && exam != 0)) {
+                dataFilter = dataFilter.filter((work) => {return (work.ExamID == exam) });
+                dataStudent = dataStudent.reduce((pre, arr) => {
+                    let itemLevel = dataFilter.find((item) => item.StudentID === arr.ID);
+                    arr.LevelStatus = itemLevel != undefined ? itemLevel.LevelStatus : 0;
+                    pre.push(arr);
+                    return pre;
+                },[]).filter((word) =>{
+                    return (level == 0 || (level == -1 && word.LevelStatus == 0) || level == word.LevelStatus)
+                });
+                CourseTab_RenderExam(dataStudent, 'CourseTab_studentExamlist')
+            }
+        }
+        catch (ex) {
+        }
+    }
+
+    //#endregion
+
+
+    //#region //
+
+    function CouListTab_NewExam() {
+        let urlDetail = "/Student/General/Course/CourseExamination?CourseID=" + CouListTab_CurrentID + "&ver=" + versionofWebApplication;
+        if (typeof Course_OpenDetail === 'function') {
+            Course_OpenDetail();
+            $("#Course_Detail").load(urlDetail);
+            $('#Course_Detail').show();
+        }
+    } 
+
+    function CouListTab_EditExam() {
+        let examid = $('#CourseExamID').dropdown('get value') ? Number($('#CourseExamID').dropdown('get value')) : 0;
+        if(examid != '0'){
+            let urlDetail = "/Student/General/Course/CourseExamination?CourseID=" + CouListTab_CurrentID + "&AxamID=" + examid + "&ver=" + versionofWebApplication;
+            if (typeof Course_OpenDetail === 'function') {
+                Course_OpenDetail();
+                $("#Course_Detail").load(urlDetail);
+                $('#Course_Detail').show();
+            }
+        }
+        else{
+            notiWarning("@Local["Chưa có kỳ thi"]")
+        }
+    }
+
+    //#endregion
+
+
+</script>

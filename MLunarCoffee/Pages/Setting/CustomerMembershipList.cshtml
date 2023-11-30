@@ -1,0 +1,353 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.CustomerMembershipList
+@{
+    Layout = null;
+}
+
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Hạng thành viên"]</h6>
+                        <p class="text-sm mb-0">@Local["Giảm theo hạng thành viên"]</p>
+                    </div>
+                    <div class="right">
+                        <div class="wrap">
+                            <div class="wrapblock pb-0 mb-0">
+                                <div class="form-check me-3">
+                                    <input id="Custmem_CheckDis" class="form-check-input pr-2" type="checkbox">
+                                    <label>@Local["Ẩn"]</label>
+                                </div>
+                                <button class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" onclick="return CustmemAddNew()">@Local["Thêm mới"]</button>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div id="Custmemrange" class="d-none alert alert-dark alert-dismissible text-white" role="alert">
+                    </div>
+
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="dtContentCustmem" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width: 40px;">#</th>
+                                    <th>@Local["Hình ảnh"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Màu"]</th>
+                                    <th>@Local["Từ"]</th>
+                                    <th>@Local["Đến"]</th>
+                                    <th>@Local["Áp dụng khuyến mãi cho tất cả dịch vụ, sản phẩm"]</th>
+                                    <th>@Local["Thông tin giảm"]</th>
+                                    <th style="width:65px;" class="setting_projectclosure">@Local["Xử lý"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentCustmemBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    let DataService, DataServiceType = {};
+    let DataUser;
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Service]
+            , function (data) {
+                DataService = data[0];
+                CustmemLoad();
+            });
+
+        $('#dtContentCustmem tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustmemEdit(ID);
+        });
+        $('#dtContentCustmem tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustmemDelete(ID)
+        });
+        $('#dtContentCustmem tbody').on('click', '.buttonDisabledClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustmemDisabled(ID)
+        });
+
+        $('#dtContentCustmem tbody').on('click', '.buttonCloneClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            CustmemClone(ID);
+        });
+        $('#Custmem_CheckDis').unbind().change(function (event) {
+            if ($('#Custmem_CheckDis').is(':checked'))
+                $('#dtContentCustmemBody').addClass('showdis');
+            else $('#dtContentCustmemBody').removeClass('showdis');
+        });
+    });
+    function CustmemLoad() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Setting/CustomerMembershipList/?handler=Loadata"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        let data = JSON.parse(result).Group;
+                        let SerType = JSON.parse(result).ServiceType;
+                        for (let i = 0; i < SerType.length; i++) {
+                            DataServiceType[SerType[i].ID] = SerType[i];
+                        }
+
+                        CustmemRender(Custmem_Dectect_Data(data), "dtContentCustmemBody");
+                        Custmem_RenderHintRange(data);
+                    });
+            });
+
+
+    }
+    function Custmem_Dectect_Data(data) {
+        let dt = data;
+
+        if (dt != null && dt.length != 0) {
+            for (let i = 0; i < dt.length; i++) {
+                let dataRule = dt[i].DataRule;
+                let NumDiscount = 0;
+                let item = dt[i];
+                if (dataRule != "[]" && dataRule != "") {
+                    let dataMain = JSON.parse(dataRule);
+                    for (let j = 0; j < dataMain.length; j++) {
+                        let type = dataMain[j].type;
+                        let active = Number(dataMain[j].active);
+                        let value = dataMain[j].value;
+                        let percent = Number(dataMain[j].percent);
+                        let amount = Number(dataMain[j].amount);
+                        if (active === 1) {
+                            let result = "";
+                            let stringdetect = "";
+
+                            switch (type) {
+                                case "service":
+                                    stringdetect = Custmem_DectectDetail(DataService, value);
+                                    result = '<div class="card"><div class="class="pb-2""><h6 title="@Local["Dịch vụ"]" class="badge badge-sm bg-gradient-info ms-2">@Local["Dịch vụ"]</h6>'
+                                        + stringdetect
+                                        + '</div></div>';
+                                    NumDiscount++;
+                                    break;
+                                case "servicetype":
+                                    stringdetect = Custmem_DectectDetail(DataServiceType, value);
+                                    result = '<div class="mb-2 card" ><div class="pb-2"><h6 title="@Local["Nhóm dịch vụ"]" class="badge badge-sm bg-gradient-success ms-2">@Local["Nhóm dịch vụ"]</h6>'
+                                        + stringdetect
+                                        + '</div></div>';
+                                    NumDiscount++;
+                                    break;
+                                case "all":
+                                    result =
+                                        ((percent > 0) ? ('<span class="percent">' + percent + '%</span>') : ('<span class="amount">' + formatNumber(amount) + '</span>'))
+                            }
+                            if (type == "all") {
+                                item.DiscountInfoAll = result;
+                            }
+                            else {
+                                item.DiscountInfo = item.DiscountInfo + result;
+                            }
+                        }
+                    }
+                }
+                item.NumDiscount = NumDiscount;
+            }
+            return dt;
+        }
+    }
+    function Custmem_DectectDetail(data, dataRule) {
+        let result = "";
+        let count = 0;
+        for (let i = 0; i < dataRule.length; i++) {
+            let idRule = Number(dataRule[i].id);
+            if (i >= 10) {
+                break;
+            }
+            if (data[idRule] != undefined) {
+                let tr = "";
+                count++;
+                if (Number(dataRule[i].percent) > 0) {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-1"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        + '<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold me-1">' + dataRule[i].percent + '% </span></p></div>'
+                }
+                else {
+                    tr = '<div class="ps-2 mb-0"><p class="text-sm m-1"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>'
+                        + '<span class="pe-2">' + data[idRule].Name + '</span>'
+                        + '<span class="fw-bold me-1">' + formatNumber(dataRule[i].amount) + '</span></p></div>';
+                }
+                result = result + tr;
+                if (count == 10) {
+                    result = result + "<span>....</span>"
+                }
+            }
+        }
+        return result;
+    }
+    function CustmemDelete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { Custmem_ExecuteDelete(id); }, function () { });
+    }
+    function Custmem_ExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/CustomerMembershipList/?handler=DeleteItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CustmemLoad();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+
+    function CustmemDisabled(id) {
+        const promise = notiConfirm();
+        promise.then(function () { Custmem_ExecuteDisabled(id); }, function () { });
+    }
+    function Custmem_ExecuteDisabled(id) {
+        AjaxLoad(url = "/Setting/CustomerMembershipList/?handler=DisableItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CustmemLoad();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CustmemClone(id) {
+        const promise = notiConfirm();
+        promise.then(function () { Custmem_ExecuteClone(id); }, function () { });
+    }
+    function Custmem_ExecuteClone(id) {
+        AjaxLoad(url = "/Setting/CustomerMembershipList/?handler=CloneItem"
+            , data = { id: id }, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CustmemLoad();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CustmemRender(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td class="text-center  ">'
+                        + '<div class="avatar  avatar-sm position-relative"><img class="border-radius-md" src="' + ((item.Image != '') ? item.Image : Master_Default_Pic) + '" alt="label-image" /></div>'
+
+                        + '</td>'
+                        + '<td><a class="fw-bold ' + ((item.IsDisable == 1) ? '' : 'buttonEditClass border-bottom border-primary') + '" href="#">' + item.Name + '</a></td>'
+                        + '<td><div style="background:' + item.Color + ';color: white' + '">' + item.Color
+                        + '<div></td>'
+                        + '<td>' + formatNumber(item.AmountFrom) + '</td>'
+                        + '<td>' + formatNumber(item.AmountTo) + '</td>'
+                        + '<td>' + item.DiscountInfoAll + '</td>'
+
+                        + '<td>' + item.DiscountInfo + '</td>'
+                        + '<td class="setting_projectclosure">'
+                        + '<div class="text-nowrap cursor-pointer">'
+                        + Custmem_Render_Button(item.ID, item.IsDisable)
+                        + '</div>'
+                        + '</td>'
+                    stringContent = stringContent + `<tr class="vt-number  ${((item.IsDisable == 1) ? (' table-active') : (""))}" role="row">${tr}</tr>`;
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    function Custmem_Render_Button(id, isDisabled) {
+        try {
+            let buttons = [];
+
+
+            if (isDisabled == 0) {
+                buttons.push('<button class="buttonGrid" value="'
+                    + id
+                    + '"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>');
+                buttons.push(`
+                            <button class="buttonGrid" value="${id}"><i data-id="${id}" class="buttonDisabledClass vtt-icon vttech-icon-hide"></i></button>
+                        `);
+                buttons.push('<button class="buttonGrid" value="' + id + '">'
+                    + '<i data-id="' + id + '" class="buttonCloneClass fa fa-clone"></i>'
+                    + '</button>');
+            }
+            else {
+                buttons.push(`
+                            <button class="buttonGrid" value="${id}"><i data-id="${id}" class="buttonDisabledClass vtt-icon vttech-icon-nohide"></i></button>
+                        `)
+            }
+
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function CustmemEdit(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerMembershipDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+
+        return false;
+    }
+    function CustmemAddNew() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/CustomerMembershipDetail" + "?ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function Custmem_RenderHintRange(data) {
+        let result = ``;
+        if (data != undefined && data.length != 0) {
+            data.sort(function (a, b) { return a.AmountFrom - b.AmountFrom });
+            if (data.length != 0 && Number(data[0].AmountFrom) != 0) {
+                result = `@Local["Có lỗi xảy ra"] : @Local["Thông tin cấu hình"] @Local["Hạng thành viên"] @Local["Từ"] 0 @Local["Đến"] ${formatNumber(data[0].AmountFrom - 1)}`;
+            }
+        }
+        else {
+            result = '@Local["Không có dữ liệu"]';
+
+        }
+
+        if (result != '') {
+            $('#Custmemrange').removeClass('d-none');
+            $('#Custmemrange').html(result);
+        }
+        else {
+            $('#Custmemrange').addClass('d-none');
+        }
+    }
+</script>
+<script>js_require('/js/main.js');</script>
+
+<style>
+    .table-active {
+        display: none;
+    }
+
+    .showdis .table-active {
+        display: table-row;
+    }
+
+</style>

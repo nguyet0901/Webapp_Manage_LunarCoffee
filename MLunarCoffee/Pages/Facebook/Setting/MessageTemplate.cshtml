@@ -1,0 +1,153 @@
+﻿@page
+@model Fanpage.Pages.Facebook.Setting.MessageTemplateModel
+@{
+    Layout = null;
+}
+
+<div class="pusher">
+    <div class="row" style="background-color: white">
+        <div class="ui segments">
+            <div class="ui segment headerSegmentReport">
+                <div class="headerReport">
+                    <span data-languagestatic="list_comon_mess_header" class="header_form_main">Danh Sách Mẫu Tin Chat Fanpage</span>
+                    <a style="float: right; cursor: pointer" onclick="event.preventDefault();LoadMessageTemplateAjax()"><i class="refresh icon" title="refresh" style="font-size: 13px"></i></a>
+                </div>
+            </div>
+            <div class="ui segment">
+                <div style="height: 33px;">
+                    <button data-languagestatic="create_new" id="btnAddMessageTemplate" style="min-width: 100px; float: right" class="ui teal button _tab_control_ button_create_new" data-tab="add_tab_facebook_tag" data-value="fade up" onclick="return AddNewMessageTemplate()">Thêm Mới</button>
+                </div>
+                <div class="scrollx">
+                    <table id="dtContentMessageTemplate" class="ui selectable celled table">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th style="display: none">ID</th>
+                                <th data-languagestatic="no" style="width:5%">STT</th>
+                                <th data-languagestatic="title" style="width: 15%">Title</th>
+                                <th data-languagestatic="content" style="width: 60%">Nội Dung</th>
+                                <th data-languagestatic="handlelname" style="width: 15%;">Người Sửa</th>
+                                <th data-languagestatic="delete" style="width: 5%;">Xoá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentMessageTemplateBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    let DataUser;
+
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                LoadMessageTemplateAjax();
+            });
+
+        $('#dtContentMessageTemplate tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditMessageTemplate(ID);
+        });
+        $('#dtContentMessageTemplate tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteItem(ID)
+        });
+
+    });
+
+    function LoadMessageTemplateAjax() {
+        AjaxLoad(url = "/Facebook/Setting/MessageTemplate/?handler=LoadData"
+            , data = { }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result != "0") {
+                    let data = JSON.parse(result);
+                    RenderTableMessageTemplate(data, 'dtContentMessageTemplateBody');
+                }
+            }
+        );
+   
+    }
+
+    function RenderTableMessageTemplate(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_circleAvatar;
+
+                    let tr =
+                        '<td style="display:none !important">' + item.ID + '</td>'
+                        + '<td>' + item.STT + '</td>'
+                        + '<td><a class="buttonEditClass">' + item.Title + '</a></td>'
+                        + '<td>' + item.Description + '</td>'
+                        + '<td><div class="divEditor">'
+                        + '<img title="'
+                        + name + '" class="ui mini circular image" src="data:image/png;base64, ' + img + '" alt="label-image" />'
+                        + '<span title="' + GetDateTime_String_DMYHM(item.DayEditor) + '">'
+                        + GetDateTime_String_DMY(item.DayEditor) + '</span>'
+                        + '</div></td>'
+
+                        + '<td><button class="buttonGrid value="'
+                        + item.ID
+                        + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button></td>'
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+        Hover_Edit(id);
+        Checking_TabControl_Permission();
+    }
+
+    
+    function DeleteItem(id) {
+        const promise = notiConfirm();
+        promise.then(function () { DeleteMessageTemplate(id); }, function () { });
+    }
+    function DeleteMessageTemplate(id) {
+        AjaxLoad(url = "/Facebook/Setting/MessageTemplate/?handler=DeleteItem"
+            , data = { 'id': id }, async = true
+            , error = function () {
+                notiError_SW();
+            }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    LoadMessageTemplateAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+         
+    }
+    function EditMessageTemplate(CurrentID) {
+        document.getElementById("divDetailPopup").innerHTML = '';
+        $("#divDetailPopup").load("/Facebook/Setting/MessageTemplateDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#divDetailPopup').modal('show');
+        return false;
+    }
+    function AddNewMessageTemplate() {
+        document.getElementById("divDetailPopup").innerHTML = '';
+        $("#divDetailPopup").load("/Facebook/Setting/MessageTemplateDetail?ver=" + versionofWebApplication);
+        $('#divDetailPopup').modal('show');
+        return false;
+    }
+</script>
+<script>js_require('/js/main.js');</script>

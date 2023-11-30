@@ -1,0 +1,129 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Service.CustTabServiceSourceModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-0 px-0">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Nguồn dịch vụ"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="CT_SerSource_btnAddNew" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" data-value="fade up" onclick="return CT_SerSource_AddNew()">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table id="CT_SerSource_dtContent" class="table vt-table mb-0">
+                            <thead class="hiddenCollapse">
+                                <tr role="row">
+                                    <th class="d-none">ID</th>
+                                    <th style="width:40px;">@Local["#"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Ghi chú"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                    <th style="width:40px;" class="setting_projectclosure">@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="CT_SerSource_dtContentBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    let dataEmp;    
+    $(document).ready(function () {
+        CT_SerSource_LoadDataList();
+        CT_SerSource_Event();
+    });
+    function CT_SerSource_LoadDataList() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Employee]
+            , function (data) {
+                dataEmp = data[0];
+                AjaxLoad(url = "/Setting/Service/CustTabServiceSource/?handler=LoadData"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        let data = JSON.parse(result);
+                        CT_SerSource_RenderList(data, 'CT_SerSource_dtContentBody');
+                    });
+            });
+    }
+    function CT_SerSource_RenderList(data, id) {
+        let myNode = document.getElementById(id);
+        let string = '';
+        myNode.innerHTML='';
+        if(data && data.length){
+            for (let i = 0; i < data.length; i ++){
+                let item = data[i];
+                let tr = `<tr class="vt-number" role="row">
+                        <td class="d-none">${item.ID}</td>
+                        <td class="vt-number-order"></td>
+                        <td>
+                            <a href="#" class="text-decoration-underline fw-bold CT_SerSource_btnEdit" data-id="${item.ID}">${item.Name}</a>
+                        </td>                        
+                        <td>${item.Note}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-shape icon-sm me-2 text-center">
+                                    <img class="avatar avatar-xs mt-2" src="${Master_Default_Pic}" alt="label-image">
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <h6 class="text-dark text-sm mb-0">${dataEmp[item.Modified_by] != undefined ? dataEmp[item.Modified_by].Name : ""}</h6>
+                                    <span class="text-xs">${ConvertDateTimeUTC_DMY(item.Modified)}</span>
+                                </div>
+                            </div>
+                        </td>
+                            <td class="text-center setting_projectclosure">
+                            <button class="buttonGrid"><i class="CT_SerSource_btnDelete vtt-icon vttech-icon-delete" data-id="${item.ID}"></i></button>
+                        </td>
+                    </tr>
+                `;
+                string+= tr;
+            }
+        }
+        myNode.innerHTML = string;
+    }
+    function CT_SerSource_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { CT_SerSource_ExecuteDelete(id); }, function () { });
+    }
+    function CT_SerSource_ExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/Service/CustTabServiceSource?handler=DeleteItem"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    CT_SerSource_LoadDataList();
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+    function CT_SerSource_Event(){
+        $('#CT_SerSource_dtContent tbody').on('click', '.CT_SerSource_btnEdit', function () {
+            UnitID = Number($(this).attr('data-id'));
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Setting/Service/CustTabServiceSourceDetail?CurrentID=" + UnitID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+        });
+
+        $('#CT_SerSource_dtContent tbody').on('click', '.CT_SerSource_btnDelete', function () {
+            UnitID = Number($(this).attr('data-id'));
+            CT_SerSource_Delete(UnitID);
+        });
+
+    }
+    function CT_SerSource_AddNew(){
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Setting/Service/CustTabServiceSourceDetail?CurrentID=" + "0" + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+</script>

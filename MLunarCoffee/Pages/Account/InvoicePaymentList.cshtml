@@ -1,0 +1,338 @@
+﻿@page
+@model MLunarCoffee.Pages.Account.InvoicePaymentListModel
+@{
+    if (@Model.layout == "none") Layout = null;
+}
+@Html.AntiForgeryToken()
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row">
+    <div class="col-12">
+        <!--Master-->
+        <div class="card card-plain">
+            <div class="card-header pb-0">
+                <div class="d-lg-flex">
+                    <div class="w-50 col-auto my-auto">
+                        <div class="h-100">
+                            <!-- #region header -->
+                            <h6 class="mb-0"></h6>
+                            <p class="text-sm mb-0"></p>
+                            <!-- #endregion -->
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <!-- #region button -->
+                        <button class="btn bg-gradient-primary btn-sm mt-1" onclick="event.preventDefault();AddNewAccount()">@Local["Thêm mới"]</button>
+                        <button class="btn btn-dark btn-sm mt-1 _tab_control_" data-tab="export_excel" onclick="event.preventDefault();return exportFile();">@Local["Xuất"]</button>
+                        <!-- #endregion -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body pt-2 ">
+                <!-- #region control search-->
+                <div class="row px-2 form3">
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <a id="totalOut" class="ui label label_total_header"></a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="AccountReasonID" onchange="OnchangeFilterAccountReason();">
+                            <input type="hidden" name="reason" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text">@Local["Lý do thanh toán"]</div>
+                            <div id="cbbAccountReason" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <div class="ui fluid search selection dropdown form-control" id="BranchID" onchange="LoadAccountAjax()">
+                            <input type="hidden" name="branch" />
+                            <input class="search" autocomplete="off" tabindex="0" />
+                            <div class="default text"></div>
+                            <div id="cbbBranch" class="menu" tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3 p-1">
+                        <input id="dateFilter" class="flatpickr form-control" type="text" placeholder="eg .@Local["Ngày"]" onchange="LoadAccountAjax()" />
+                    </div>
+                </div>
+                <!-- #endregion -->
+                <!-- #region table-->
+                <div class="m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">@Local["Đang tải"]...</span>
+                        </div>
+                    </div>
+                    <table class="table vt-table mb-0" id="dtContentInvoiceList">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th>@Local["#"]</th>
+                                <th>@Local["Mã phiếu chi"]</th>
+                                <th>@Local["Thông tin tạo"]</th>
+                                <th>@Local["Khoản chi"]</th>
+                                <th>@Local["Nội dung"]</th>
+                                <th>@Local["Chữ ký"]</th>
+                                <th>@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentInvoiceListBody">
+                        </tbody>
+                    </table>
+                </div>
+                <!-- #endregion -->
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    let idComboMax;
+    let ser_DataInvoiceReceipst;
+
+    $(document).ready(function () {
+        $("#dateFilter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+
+        var date = new Date();
+        var firstDay = date;// new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = date;// new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#dateFilter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        LoadComboInitialize();
+
+        $('#dtContentInvoiceList tbody').on('click', '.buttonPrintClass', function () {
+            let ID = Number($(this).attr('data-id'));
+            let Code = $(this).attr('data-code');
+            syslog_acc('p', Code);
+            window.open("/Account/InvoicePrint?id=" + ID + "&Type=0&ver=" + versionofWebApplication, '_blank', 'location=yes,height=650,width=800,scrollbars=yes,status=yes');
+        });
+        $('#dtContentInvoiceList tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditAccount(ID);
+        });
+        $('#dtContentInvoiceList tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteAccountList(ID);
+        });
+        $("#dtContentInvoiceList tbody").on('click', '.buttonSignClass', function (event) {
+            let id = $(this).attr("dataid");
+            Signature_Executed_Account(id);
+        });
+        $('#dtContentInvoiceList').tablesort();
+    });
+
+    function LoadAccountAjax() {
+        var branchid = (Number($('#BranchID').dropdown('get value')) ? Number($('#BranchID').dropdown('get value')) : 0)
+        let date = $('#dateFilter').val() ? $('#dateFilter').val() : new Date()
+        AjaxLoad(url = "/Account/InvoicePaymentList/?handler=LoadataAccount"
+            , data = { 'date': date, 'branchid': branchid }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    ser_DataInvoicePayment = JSON.parse(result)["Table"];
+                    RenderInvoiceList(ser_DataInvoicePayment, "dtContentInvoiceListBody");
+                    OnchangeFilterAccountReason();
+                }
+                else {
+
+                }
+            }
+            , sender = null
+            ,
+            before = function (e) {
+                $("#dtContentInvoiceList").hide();
+                $("#loaderList").show();
+            },
+            complete = function (e) {
+                $("#dtContentInvoiceList").show();
+                $("#loaderList").hide();
+            }
+        );
+
+    }
+    function LoadComboInitialize() {
+        AjaxLoad(url = "/Account/InvoicePaymentList/?handler=LoadComboInitialize"
+            , data = {}
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let dataBranch = JSON.parse(result)["Branch"];
+                    let dataAccountReason = JSON.parse(result)["AccountReason"];
+                    Load_Combo(dataBranch, "cbbBranch", true);
+                    $("#BranchID").dropdown("refresh");
+                    $("#BranchID").dropdown("set selected", Number(Master_branchID));
+                    dataAccountReason = dataAccountReason.filter(word => word["Type"] == "0");
+                    idComboMax = Load_Combo(dataAccountReason, "cbbAccountReason", true, "All");
+                    $("#AccountReasonID").dropdown("refresh");
+                    $("#AccountReasonID").dropdown("set value", Number(idComboMax));
+                }
+                else {
+
+                }
+            }
+            , sender = null
+        );
+
+    }
+
+    function RenderInvoiceList(data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let TotalAmount = 0;
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td data-sortValue="' + Number(i) + '">' + (i + 1) + '</td>'
+                        + '<td data-sortValue="' + item.Code + '"><a class="text-decoration-underline fw-bold buttonEditClass" href="#">' + item.Code + '</a></td>'
+
+                        + '<td data-sortValue="' + Number(item.CreatedInfoNumber) + '">'
+                        + '<span>' + item.CreatedName + '</span></br>'
+                        + '<span>' + item.Created + '</span>'
+                        + '</td>'
+
+                        + '<td data-sortValue="' + Number(item.Amount) + '">'
+                        + '<span>' + formatNumber(item.Amount) + '</span></br>'
+                        + '<span>' + item.Method + '</span>'
+                        + '</td>'
+
+                        + '<td>'
+                        + '<span>' + item.Reason + '</span></br>'
+                        + '<span>' + item.Content + '</span>'
+                        + '</td>'
+                        + '<td>'
+                        + ((item.SignValue != '') ?
+                            (
+                                '<img title="' + (item.SignName + ',' + ConvertDateTimeToStringDMY_HM(item.SignDate)) + '" class="ui mini circular image" src="' + item.SignValue + '" alt="label-image" style="width: 40px; height: 40px" />'
+                            )
+                            : '')
+                        + '</td>'
+                        + '<td>'
+                        + '<div class="text-nowrap">'
+                        + RenderInvoiceList_Button(item.ID, item.Code, item.SignButton, item.DeleteButton)
+                        + '</div>'
+                        + '</td>'
+
+                    stringContent = stringContent + '<tr role="row">' + tr + '</tr>';
+                    TotalAmount = TotalAmount + Number(item.Amount);
+                }
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            $('#totalOut').html('@Local["Tổng"] : ' + formatNumber(TotalAmount));
+        }
+    }
+
+    function RenderInvoiceList_Button(id, code , isSign, isDelete) {
+        let button = [];
+        if (isSign == 1) {
+            button.push('<button class="buttonGrid"><i dataid=' + id + ' class="buttonSignClass vtt-icon vttech-icon-signature"></i></button>')
+        }
+        if (isDelete == 1) {
+            button.push('<button class="buttonGrid" value="'+ id + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+        }
+        button.push('<button class="buttonGrid"><i data-id="' + id + '" data-code="' + code +'" class="buttonPrintClass vtt-icon vttech-icon-print"></i></button>')
+        return Render_Button_Grid(button);
+    }
+
+
+    //#region // Onchange Filter Receipts Type
+    function OnchangeFilterAccountReason() {
+        try {
+            var reasonid = (Number($('#AccountReasonID').dropdown('get value')) ? Number($('#AccountReasonID').dropdown('get value')) : 0)
+            if (reasonid != 0) {
+                let data = ser_DataInvoicePayment;
+                if (reasonid == idComboMax) {
+                    RenderInvoiceList(ser_DataInvoicePayment, "dtContentInvoiceListBody");
+                }
+                else {
+                    data = data.filter(work => work["ReceiptsType"] == reasonid);
+                    RenderInvoiceList(data, "dtContentInvoiceListBody");
+                }
+            }
+            else {
+                RenderInvoiceList(ser_DataInvoicePayment, "dtContentInvoiceListBody");
+            }
+        }
+        catch {
+
+        }
+    }
+    //#endregion
+
+    //#region // Event Add, Edit & Delete
+    function AddNewAccount() {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Account/InvoiceDetail" + "?Type=0&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function EditAccount(CurrentID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Account/InvoiceDetail?Type=0&CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+        return false;
+    }
+    function DeleteAccountList(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ExecuteDeleteAccount(id); }, function () { });
+    }
+    function ExecuteDeleteAccount(id) {
+        AjaxLoad(url = "/Account/InvoicePaymentList/?handler=DeleteItem"
+            , data = { 'id': id }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "0") {
+                    notiSuccess();
+                    LoadAccountAjax();
+                    syslog_acc('d', result);
+                } else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+        );
+
+    }
+    //#endregion
+
+    function exportFile() {
+        exportToExcel("dtContentInvoiceList", Outlang['Danh_sach_phieu_chi']);
+        syslog_acc('e', '');
+        return false;
+    }
+    async function Signature_Executed_Account(id) {
+        await Signature_Action();
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/Account/InvoicePaymentList/?handler=UpdateSign"
+                , data = { 'id': id, 'sign': Signature_ResultSignation }
+                , async = true
+                , error = function () { notiError_SW(); }
+                , success = function (result) {
+                    if (result != "0") {
+                        LoadAccountAjax();
+                        syslog_acc('s', result);
+                    }
+                }
+                , sender = null
+            );
+        }
+    }
+</script>

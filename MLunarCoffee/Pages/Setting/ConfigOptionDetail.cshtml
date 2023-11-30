@@ -1,0 +1,186 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.ConfigOptionDetailModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Cấu hình Options"]</h6>
+                                <p class="text-sm mb-0">@Local["Danh sách cấu hình Options"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-1 form3" id="formConfigOption">
+                        <div class="field col-12 p-1">
+                            <div id="ConfigOptionName"></div>
+                        </div>
+                        <div class="field col-12 p-1" id="ContentConfig">
+                            <label>@Local["Thông tin cấu hình"]</label>
+                            <input id="ConfigValue" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Ghi chú"]</label>
+                            <textarea rows="2" class="form-control" id="ConfigOptionNote" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button form="formConfigOption" type="button" class="btn bg-gradient-dark mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                        <button form="formConfigOption" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_customer" onclick="event.preventDefault(); CFD_ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //#region //DEFINE - INIT
+    var ser_SourceDetailID;
+    $(document).ready(function () {
+        ser_SourceDetailID = @Model._DataDetailID;
+        if (ser_SourceDetailID != "0") CFD_Loaddata();
+        Checking_TabControl_Permission();
+
+    });
+
+    //#endregion
+
+    //#region //LOADDATA
+    function CFD_Loaddata() {
+        AjaxLoad(url = "/Setting/ConfigOptionDetail/?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, async = true, error = null
+            , success = function (result) {
+                let dataConfigOption = JSON.parse(result);
+                if (dataConfigOption) {
+                    let item = dataConfigOption[0];
+                    switch (item?.ValueType) {
+                        case "textpass": {
+                            $('#ConfigValue').attr('name', 'passwordUser');
+                            break;
+                        }
+                        case "text": {
+                            $('#ConfigValue').attr('name', 'name');
+                            break;
+                        }
+                        case "number": {
+                            $('#ConfigValue').attr('name', 'moneyAmount');
+                            break;
+                        }
+                        case "list": {
+                            let dataCbb = [];
+                            $('#ConfigValue').hide();
+                            switch (item?.Type) {
+                                case "sys_roundDiscountAmount": {
+                                    dataCbb = [{ ID: 1, Name: 1 }, { ID: 2, Name: 2 }, { ID: 3, Name: 3 }, { ID: 10, Name: 10 }, { ID: 100, Name: 100 }, { ID: 1000, Name: 1000 }];
+                                    CFD_RenderCombo(item, dataCbb);
+                                    break;
+                                }
+                                case "sys_Allowmultiappinday": {
+                                    dataCbb = [{ ID: 0, Name: 0 }, { ID: 1, Name: 1 }];
+                                    CFD_RenderCombo(item, dataCbb);
+                                    break;
+                                }
+                                case "sys_Allowappinday_past": {
+                                    dataCbb = [{ID: 0, Name: 0}, {ID: 1, Name: 1}];
+                                    CFD_RenderCombo(item, dataCbb);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        default: {
+                            $('#ConfigValue').hide();
+
+                            $('<div id="Check" class="d-flex"><div class= "form-check me-5"><input class="form-check-input pr-2" type="radio" id="true" name="radioName" value="1" />'
+                                + '<label class="custom-control-label" for="true">@Local["Bắt buộc"]</label></div>'
+                                + '<div class="form-check">'
+                                + '<input class="form-check-input pr-2" type="radio" id="false" name="radioName" value="0" />'
+                                + '<label class="custom-control-label" for="false">@Local["Không bắt buộc"]</label>'
+                                + '</div>'
+                                + '</div>').appendTo('#ContentConfig');
+                            $('input[name=radioName]').each(function () {
+                                if ($(this).val() == dataConfigOption[0].Value) {
+                                    $(this).attr('checked', 'checked');
+                                }
+                            });
+                            break;
+                        }
+                    }
+                    $('#ConfigValue').val((dataConfigOption[0].Value));
+                    document.getElementById("ConfigOptionName").innerHTML = dataConfigOption[0].Name;
+                    document.getElementById("ConfigOptionNote").innerHTML = dataConfigOption[0].Note;
+                    CFD_Event();
+                }
+            });
+    }
+    function CFD_RenderCombo(item, dataCbb){
+        if (item) {
+            let uiCombo = `<div class="ui fluid search selection dropdown form-control" id="CFD_ValueCombo">
+                                                                <input type="hidden" name="statusType" />
+                                                                <input class="search" autocomplete="off" tabindex="0" />
+                                                                <div class="default text">eg. @Local["Giá trị"]</div>
+                                                                    <div id="cbbValueCombo" class="menu" tabindex="-1">
+                                                                </div>
+                                                            </div>`;
+
+
+            $(uiCombo).appendTo('#ContentConfig');
+            Load_Combo(dataCbb, "cbbValueCombo", true);
+            $("#CFD_ValueCombo").dropdown("refresh");
+            $("#CFD_ValueCombo").dropdown("set selected", `${item?.Value}`);
+        }
+    }
+    //#endregion
+
+    //#region //EXCUTE
+    function CFD_ExcuteData() {
+        let data = new Object();
+        data.Value = $('#ConfigValue').val() ? $('#ConfigValue').val() : "";
+        $('#formConfigOption').form('validate form');
+        if ($('#formConfigOption').form('is valid')) {
+            AjaxLoad(url = "/Setting/ConfigOptionDetail/?handler=ExcuteData"
+                , data = {
+                    data: JSON.stringify(data),
+                    CurrentID: ser_SourceDetailID
+                }, async = true, error = null
+                , success = function (result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        OptionCobfigLoad();
+                    }
+                });
+            $('#DetailModal').modal('hide');
+            $("#DetailModal_Content").html('');
+        }
+        return false;
+    }
+    //#endregion
+
+    //#region //EVENT
+    function CFD_Event() {
+        $("#Check input").unbind().change(function () {
+            $('#ConfigValue').val($('input[name=radioName]:checked', '#Check').val());
+        });
+
+        $("#CFD_ValueCombo").unbind('#CFD_ValueCombo').change(function (e) {
+            let value = Number($(this).dropdown('get value')) ? Number($(this).dropdown('get value')) : 0;
+            $('#ConfigValue').val(value);
+        });
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

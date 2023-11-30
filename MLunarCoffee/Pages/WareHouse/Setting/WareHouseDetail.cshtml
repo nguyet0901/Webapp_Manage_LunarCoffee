@@ -1,0 +1,376 @@
+﻿@page
+@model MLunarCoffee.Pages.WareHouse.Setting.WareHouseDetailModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header p-3 pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Kho hàng"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết kho hàng"]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3 pt-2">
+                    <div class="row px-2 form3" id="form3">
+                        <div class="field col-12 p-1 col-md-6" id="codeWareHouse">
+                            <label>@Local["Mã kho"] (@Local["Tối đa"] 10 @Local["Kí tự"])</label>
+                            <input id="CodeWare" name="warecode" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1 col-md-6">
+                            <label>@Local["Tên kho"]</label>
+                            <input id="NameWare" name="name" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1">
+                            <label>@Local["Địa chỉ"]</label>
+                            <input id="Address" name="content" type="text" class="form-control" />
+                        </div>
+                        <div class="field col-12 p-1 mt-2 align-items-center">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkAllBranch">
+                                <label class="form-check-label pb-0 mb-0" for="checkAllBranch">@Local["Tất cả chi nhánh"]</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkIsPackageNumber">
+                                <label class="form-check-label pb-0 mb-0" for="checkIsPackageNumber">@Local["Sử dụng mã lô hàng"]</label>
+                            </div>
+                        </div>
+                        <div id="btnWarehouseExportAuto" class="field col-12 p-1 align-items-center"">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkIsAutosale">
+                                <label class="form-check-label text-danger pb-0 mb-0" for="checkIsAutosale">@Local["Xuất bán"] (@Local["Tự động"])  @Local["Khi xuất kho tự động có thể trừ âm số lượng trong kho"]</label>
+                            </div>
+                        </div>
+                    </div>
+                        <div class="m-0 my-3 mobile-responsive">
+                            <table id="dtTableDetailBranchList" class="table vt-table mb-0">
+                                <thead class="hiddenCollapse">
+                                    <tr role="row">
+                                        <th rowspan="2" class="d-none">ID</th>
+                                        <th rowspan="2" style="width: 50px;">@Local["#"]</th>
+                                        <th rowspan="2" style="width: 350px;">@Local["Chi nhánh"]</th>
+                                        <th style="width: 60px;">@Local["Bán hàng"]</th>
+                                        <th style="width: 60px;">@Local["Bán thuốc"]</th>
+                                        <th style="width: 60px;">@Local["Điều trị"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dtTableDetailBranchListBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="action_Save">
+                    <div class="text-danger text-gradient text-sm font-weight-bold" id="textShowMessage"></div>
+                    <div class="action_Save-Content">
+                        <button class="btn btn-secondary" form="form3" onclick="event.preventDefault(); return CloseWareHouseDetail()">@Local["Đóng"]</button>
+                        <button form="form3" type="button" class="btn bg-gradient-primary mt-2 me-2 _tab_control_" data-tab="edit_tab_ware_house" onclick="event.preventDefault();return ExcuteData()">@Local["Lưu"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var data_branch_selected = {};
+    var IsAllBranch = 0;
+    let ser_WareHouseID = "@Model._WareHouseID";
+
+    $(document).ready(function () {
+        LoadDataBranch_Warehouse();
+        $("#checkAllBranch").change(function () {
+            SetAllBranch();
+        });
+        SetAllBranch();
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model.CurrentPath');
+        Checking_TabControl_Permission();
+    });
+
+    function ExcuteData() {
+        document.getElementById("textShowMessage").innerHTML = "";
+        var data = new Object();
+        data.Code = $('#CodeWare').val() ? ($('#CodeWare').val()).trim() : "";
+        data.Name = $('#NameWare').val() ? $('#NameWare').val() : "";
+        data.Address = $('#Address').val() ? $('#Address').val() : "";
+        let BranchSale = "";
+        let BranchTreatment = "";
+        let BranchMedicine = "";
+        let BranchArea = "";
+        if (IsAllBranch == 0) {
+            for ([key, value] of Object.entries(data_branch_selected)) {
+                if (value.IsSale == 1) BranchSale += "," + key;
+                if (value.IsTreat == 1) BranchTreatment += "," + key;
+                if (value.IsMedicine == 1) BranchMedicine += "," + key;
+                if (value.IsCheckArea == 1) BranchArea += "," + key;
+            }
+        }
+        data.BranchSale = BranchSale + ",";
+        data.BranchTreatment = BranchTreatment + ",";
+        data.BranchMedicine = BranchMedicine + ",";
+        data.BranchArea = BranchArea + ",";
+        data.IsAllBranch = IsAllBranch;
+        data.IsPackageNum = $("#checkIsPackageNumber").is(":checked") ? 1 : 0;
+        data.IsAutoExportSale = $("#checkIsAutosale").is(":checked") ? 1 : 0;
+
+
+        if (IsAllBranch == 0 && BranchArea == '' && BranchTreatment == '' && BranchSale == '') {
+            document.getElementById("textShowMessage").innerHTML = "@Local["Phải chọn ít nhất 1 chi nhánh"]";
+            return;
+        }
+        $('#form3').form('validate form');
+        if ($('#form3').form('is valid')) {
+            AjaxLoad(url = "/WareHouse/Setting/WareHouseDetail/?handler=ExcuteData"
+                , data = {
+                    'data': JSON.stringify(data),
+                    'CurrentID': ser_WareHouseID
+                }
+                , async = true
+                , error = null
+                , success = function (result) {
+                    if (result != "1") {
+                        let data = JSON.parse(result);
+                        if (data && data.length != 0 && data[0].RESULT != '0') {
+                            notiSuccess();
+                            LoadWareHouseAjax();
+                            CloseWareHouseDetail();
+                            syslog_whr((ser_WareHouseID != '0' ? 'u' : 'i'), data[0].RESULT);
+                        }
+                        else {
+                            notiError("@Local["Trùng dữ liệu"]");
+                        }
+                    }
+                    else {
+                        notiError("@Local["Trùng dữ liệu"]");
+                    }
+                }
+            );
+        }
+        return false;
+    }
+
+    function LoadDataBranch_Warehouse() {
+        AjaxLoad(url = "/WareHouse/Setting/WareHouseDetail/?handler=WarehouseLoadBranch"
+            , data = { 'CurrentID': ser_WareHouseID }
+            , async = true
+            , error = null
+            , success = function (result) {
+                if (result != "0") {
+                    let data_branch = JSON.parse(result);
+                    for (let i = 0; i < data_branch.length; i++) {
+                        var item = data_branch[i];
+                        let element = {};
+                        element.BranchName = item.BranchName;
+                        element.IsSale = item.IsSale;
+                        element.IsTreat = item.IsTreat;
+                        element.IsMedicine = item.IsMedicine;
+                        element.IsCheckArea = item.IsCheckArea;
+                        data_branch_selected[item.BranchID] = element;
+                        RenderBranchList(item.BranchID, element, 'dtTableDetailBranchListBody');
+                    }
+                }
+                LoadDataUpdateWareHouse();
+            }
+        );
+    }
+
+    function LoadDataUpdateWareHouse() {
+        if (ser_WareHouseID && ser_WareHouseID != "0") {
+            AjaxLoad(url = "/WareHouse/Setting/WareHouseDetail/?handler=Load_Update"
+                , data = { 'id': ser_WareHouseID, }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        let dataWareHouse = JSON.parse(result);
+                        if (dataWareHouse.length > 0) {
+                            $('#CodeWare').val((dataWareHouse[0].Code));
+                            $('#NameWare').val((dataWareHouse[0].Name));
+                            $('#Address').val((dataWareHouse[0].Address));
+                            $('#checkIsPackageNumber').prop("checked", dataWareHouse[0].IsPackageNum == 1 ? true : false);
+                            $('#checkIsAutosale').prop("checked", dataWareHouse[0].IsAutoExportSale == 1 ? true : false);
+
+                            let AreaBranch = dataWareHouse[0].AreaBranch;
+                            if (AreaBranch == ',' || AreaBranch == '') {
+                                IsAllBranch = 1;
+                                $("#checkAllBranch")[0].checked = true;
+                                $("#dtTableDetailBranchList").hide();
+                            }
+                        }
+                    }
+
+                }
+            );
+        }
+    }
+    function RenderBranchList(key, value, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            let tr =
+                  '<td class="d-none">' + key + '</td>'
+                + '<td class="text-center">' + AddCell_CheckBox_Area(key) + '</td>'
+                + '<td ">' + value.BranchName + '</td>'
+                + '<td id="tdSale_' + key + '" class="bg-gray-200 text-center">' + AddCell_CheckBox_Sale(key) + '</td>'
+                + '<td id="tdMedicine_' + key + '" class="bg-gray-200 text-center">' + AddCell_CheckBox_Medicine(key) + '</td>'
+                + '<td id="tdTreat_' + key + '" class="bg-gray-200 text-center">' + AddCell_CheckBox_Treat(key) + '</td>'
+            tr = '<tr class="rowBranch bg-gray-200"id="row_' + key + '">' + tr + '</tr>';
+            myNode.innerHTML += tr;
+        }
+        Fill_data_branch(data_branch_selected);
+        Event_Element_Branch();
+    }
+
+    function AddCell_CheckBox_Area(randomNumber) {
+        let resulf = '<div class="form-check form-check-inline me-0">'
+            + '<input class="form-check-input checkedArea" type="checkbox" value="' + randomNumber + '" id="checkedArea_' + randomNumber + '" >'
+            + '<label class="form-check-label" for=""></label>'
+            + '</div >'
+        resulf = resulf;
+        return resulf;
+    }
+
+    function AddCell_CheckBox_Medicine(randomNumber) {
+        let resulf = '<div class="form-check form-check-inline me-0">'
+            + '<input class="form-check-input checkedMedicine" type="checkbox" value="' + randomNumber + '" id="checkedMedicine_' + randomNumber + '" disabled >'
+            + '<label class="form-check-label" for=""></label>'
+            + '</div >'
+        resulf = resulf;
+        return resulf;
+    }
+
+    function AddCell_CheckBox_Sale(randomNumber) {
+        let resulf = '<div class="form-check form-check-inline me-0">'
+            + '<input class="form-check-input checkedSale" type="checkbox" value="' + randomNumber + '" id="checkedSale_' + randomNumber + '" disabled >'
+            + '<label class="form-check-label" for=""></label>'
+            + '</div >'
+        resulf = resulf;
+        return resulf;
+    }
+
+
+    function AddCell_CheckBox_Treat(randomNumber) {
+        let resulf = '<div class="form-check form-check-inline me-0">'
+            + '<input class="form-check-input checkedTreat" type="checkbox" value="' + randomNumber + '" id="checkedTreat_' + randomNumber + '" disabled >'
+            + '<label class="form-check-label" for=""></label>'
+            + '</div >'
+        resulf = resulf;
+        return resulf;
+    }
+
+    function Fill_data_branch(data) {
+        for ([key, value] of Object.entries(data)) {
+
+            if (value.IsCheckArea == 1) {
+                $("#checkedSale_" + key).prop('disabled', false);
+                if (value.IsSale == 1) {
+                    $("#checkedSale_" + key)[0].checked = true;
+                }
+                document.getElementById('tdSale_' + key).classList.remove('bg-gray-200');
+            }
+
+            if (value.IsCheckArea == 1 ) {
+                $("#checkedTreat_" + key).prop('disabled', false);
+                if (value.IsTreat == 1) {
+                    $("#checkedTreat_" + key)[0].checked = true;
+                }
+                document.getElementById('tdTreat_' + key).classList.remove('bg-gray-200');
+            }
+            if (value.IsCheckArea == 1) {
+                $("#checkedMedicine_" + key).prop('disabled', false);
+                if (value.IsMedicine == 1) {
+                    $("#checkedMedicine_" + key)[0].checked = true;
+                }
+                document.getElementById('tdMedicine_' + key).classList.remove('bg-gray-200');
+            }
+
+            if (value.IsCheckArea == 1) {
+                $("#checkedArea_" + key)[0].checked = true;
+                document.getElementById('row_' + key).classList.remove('bg-gray-200');
+            }
+
+        }
+    }
+    function Event_Element_Branch() {
+        $(".checkedArea").change(function () {
+            let id = this.id.replace("checkedArea_", "");
+
+            if($("#checkedArea_" + id).is(":checked")){
+                $("#checkedSale_" + id).prop('disabled', false);
+                $('#tdSale_' + id).removeClass('bg-gray-200');
+
+                $("#checkedTreat_" + id).prop('disabled', false);
+                $('#tdTreat_' + id).removeClass('bg-gray-200');
+
+                $("#checkedMedicine_" + id).prop('disabled', false);
+                $('#tdMedicine_' + id).removeClass('bg-gray-200');
+
+                data_branch_selected[id].IsCheckArea = 1;
+                $('#row_' + id).removeClass('bg-gray-200');
+            }
+            else{
+                $("#checkedSale_" + id).prop('disabled', true);
+                $("#checkedSale_" + id).prop('checked', false);
+                $('#tdSale_' + id).addClass('bg-gray-200');
+
+                $("#checkedTreat_" + id).prop('disabled', true);
+                $("#checkedTreat_" + id).prop('checked', false);
+                $('#tdTreat_' + id).addClass('bg-gray-200');
+
+                $("#checkedMedicine_" + id).prop('disabled', true);
+                $("#checkedMedicine_" + id).prop('checked', false);
+                $('#tdMedicine_' + id).addClass('bg-gray-200');
+
+                data_branch_selected[id].IsCheckArea = 0;
+                data_branch_selected[id].IsSale = 0;
+                data_branch_selected[id].IsTreat = 0;
+                data_branch_selected[id].IsMedicine = 0;
+
+                $('#row_' + id).addClass('bg-gray-200');
+            }
+            
+
+            
+
+        });
+
+        $(".checkedTreat").change(function () {
+            let id = this.id.replace("checkedTreat_", "")
+            data_branch_selected[id].IsTreat = $("#checkedTreat_" + id).is(':checked') ? 1 : 0;
+        });  
+
+        $(".checkedMedicine").change(function () {
+            let id = this.id.replace("checkedMedicine_", "")
+            data_branch_selected[id].IsMedicine = $("#checkedMedicine_" + id).is(':checked') ? 1 : 0;
+        });
+
+        $(".checkedSale").change(function () {
+            let id = this.id.replace("checkedSale_", "");
+            data_branch_selected[id].IsSale = $("#checkedSale_" + id).is(':checked') ? 1 : 0;
+        });
+
+    }
+
+    function SetAllBranch() {
+
+        if ($("#checkAllBranch")[0].checked == true) {
+            IsAllBranch = 1;
+            $("#dtTableDetailBranchList").hide();
+        }
+        else {
+            IsAllBranch = 0;
+            $("#dtTableDetailBranchList").show();
+        }
+    }
+
+
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

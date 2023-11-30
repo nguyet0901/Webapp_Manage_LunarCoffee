@@ -1,0 +1,106 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Traffic.TrafficWeekLineModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="left">
+            <h6 class="mb-0">@Local["Lưu lượng trung bình trong ngày"]</h6>
+            <p class="text-sm mb-0">@Local["Trung bình theo khung giờ trong ngày, tỷ lệ lịch hẹn đến, chưa đến và hủy"]</p>
+        </div>
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#TrafficWeekLineDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadDataReport_TrafficLine()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="TrafficWeekLineDiv">
+        <div class="card-body p-0">
+            <div class="d-lg-flex mt-3">
+                <div class="col-w-400">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Trạng thái lịch hẹn"] :
+                        <span id="TSPieTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3" style="min-height: 150px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="TSPie" class="chart-canvas" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-2  table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <tbody id="TSPieList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="my-0 w-100" style="overflow-x: auto; overflow-y: hidden;">
+                    <div class="chart" style="height:300px;">
+                        <canvas id="TrafficWeekLine" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        ToolPopper();
+        LoadDataReport_TrafficLine();
+    });
+    function LoadDataReport_TrafficLine() {
+        let _branch = "@Model._branch";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/Traffic/TrafficWeekLine/?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo,
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result)["Table"];
+                    let cat = JSON.parse(result)["Table1"];
+                    let pie = JSON.parse(result)["Table2"];
+                    rp_mixbarline('TrafficWeekLine', data, cat);
+                    let Total = 0;
+                    for (let i = 0; i < pie.length; i++) {
+                        Total += Number(pie[i]['Total']);
+
+                    }
+                    $('#TSPieTotal').html(formatNumber(Total));
+                    ReportPie_Description(pie, 'Name', 'Total', 'TSPieList');
+                    rp_pie("TSPie", pie, 'Name', 'Total')
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+
+    }
+
+</script>
+
+

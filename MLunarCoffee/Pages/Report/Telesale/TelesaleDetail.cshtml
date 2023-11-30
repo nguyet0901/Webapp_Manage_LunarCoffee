@@ -1,0 +1,543 @@
+﻿@page
+@model MLunarCoffee.Pages.Report.Telesale.TelesaleDetailModel
+@{
+    Layout = null;
+}
+<div id="RTD_Container">
+    <div class="card card-plain">
+        <div class="vtcardheader card-header pb-0 px-0">
+            <div class="left d-sm-flex">
+                <div class="me-3">
+                    <div class="ui dropdown text-dark fw-bold text-sm border-0" id="RTD_IsCust" onchange="RTD_Filter();">
+                        <input type="hidden" />
+                        <div class="default text">eg .@Local["Có là khách hàng"]</div>
+                        <div id="cbbRTD_IsCust" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="ui dropdown text-dark fw-bold text-sm border-0" id="RTD_IsCustNew" onchange="RTD_Filter();">
+                        <input type="hidden" />
+                        <div class="default text">eg .@Local["Khách hàng mới cũ"]</div>
+                        <div id="cbbRTD_IsCustNew" class="menu" tabindex="-1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="wrap">
+                    <div class="wrapblock">
+                        <div class="text-primary fw-bold d-inline mx-2 text-nowrap mt-1">
+                            <span id="RTD_currentdata">0</span>
+                            <span class="mx-2">/</span>
+                            <span id="RTD_TotalData">0</span>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Thu gọn"]">
+                            <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                               data-bs-toggle="collapse" href="#RTD_GridArea" aria-expanded="true"></i>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["Tải lại"]">
+                            <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); return RTD_Load()"></i>
+                        </div>
+                        <div class="icon-hover mx-1 mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             data-bs-original-title="@Local["In báo cáo"]">
+                            <i class="vtt-icon vttech-icon-print text-lg text-primary cursor-pointer"
+                               onclick="event.preventDefault(); RTD_PrintReport()"></i>
+                        </div>
+                        <div class="flex-nowrap input-group rounded-0 vttech-input-group mt-1 _tab_control_" data-tab="export_excel">
+                            <div class="icon-hover mx-1 me-0 input-group-text vttech-input-item vttech-input-item-first"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 data-bs-original-title="@Local["Xuất excel"]">
+                                <i class="vtt-icon  vttech-icon-export-ex text-lg text-primary cursor-pointer"></i>
+                            </div>
+                            <div class="input-group-text icon-hover w-auto vttech-input-item">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RTD_Export(0)">@Local["Tất cả"]</i>
+                            </div>
+                            <div class="icon-hover input-group-text w-auto vttech-input-item vttech-input-item-last">
+                                <i class="text-xs text-primary fw-bold" onclick="event.preventDefault(); return RTD_Export(1)">@Local["Tùy chọn"]</i>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-sm mb-0 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                            @Local["Xem thêm"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="toggle">
+                <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                    <ul class="card card-body text-dark text-capitalize opacity-10">
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="doccode" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Mã hồ sơ"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="source" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nguồn khách hàng"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="staffold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Người phụ trách trước"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="executedold" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày xử lý trước"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="devideddate" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Ngày chia ticket"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="timerepeat" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Thời gian gọi lại"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="servicecare" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Dịch vụ quan tâm"]</p>
+                        </li>
+                        <li class="d-flex">
+                            <div class="form-check form-switch">
+                                <input class="shtoogle form-check-input" data-name="maremp" type="checkbox">
+                            </div>
+                            <p class="text-sm">@Local["Nhân viên marketing"]</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+        <div class="collapsesticky collapse show" id="RTD_GridArea">
+            <div class="card-body p-0 mt-3">
+                <div class="m-0 my-0 mobile-responsive vt-header-sticky">
+                    <div id="RTD_waiting" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x z-index-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">@Local["Đang tải"]...</span>
+                        </div>
+                    </div>
+                    <table data-name="RTD_Grid" class="table vt-table mb-0" id="RTD_Grid">
+                        <thead>
+                            <tr role="row">
+                                <th>#</th>
+                                <th style="min-width:200px;">@Local["Mã ticket"]</th>
+                                <th style="min-width:200px;">@Local["Khách hàng"]</th>
+                                <th data-name="doccode" style="min-width:120px;">@Local["Mã hồ sơ"]</th>
+                                <th style="min-width:200px;">@Local["Số điện thoại"]</th>
+                                <th style="min-width:200px;">@Local["Là khách hàng"]</th>
+                                <th style="min-width:200px;">@Local["Khách hàng mới"]</th>
+                                <th style="min-width:150px;" data-name="source">@Local["Nguồn khách hàng"]</th>
+                                <th style="min-width:200px;" data-name="staffold">@Local["Người phụ trách trước"]</th>
+                                <th style="min-width:200px;" data-name="executedold">@Local["Ngày xử lý trước"]</th>
+                                <th style="min-width:200px;" data-name="devideddate">@Local["Ngày chia ticket"]</th>
+                                <th style="min-width:160px;">@Local["Người phụ trách"]</th>
+                                <th style="min-width:160px;">@Local["Người xử lý"]</th>
+                                <th style="min-width:160px;">@Local["Ngày xử lý"]</th>
+                                <th style="min-width:250px;">@Local["Nội dung"]</th>
+                                <th style="min-width:200px;">@Local["Trạng thái gọi lại"]</th>
+                                <th style="min-width:200px;" data-name="timerepeat">@Local["Thời gian gọi lại"]</th>
+                                <th style="min-width:200px;">@Local["Trạng thái xử lý"]</th>
+                                <th data-name="servicecare" style="min-width:200px;">@Local["Dịch vụ quan tâm"]</th>
+                                <th data-name="maremp" style="min-width:200px;">@Local["Nhân viên marketing"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="RTD_GridBody">
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btnsysmore btn btn-secondary w-100 p-1 mt-1 mb-0 position-relative" onclick="event.preventDefault(); return RTD_RenderMore();">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    //#region // DECLARE & INIT LOAD LIST
+
+    let xhrLoadList;
+    let DataReportMainRoot, DataReportMain, DataReportMainSlice;
+    let IndexReport = 0;
+    let shtable;
+    let timeoutCount;
+    let RTD_DataIsCust = [{ 'ID': 0, 'Name': '@Local["Chưa là khách hàng"]' }
+        , { 'ID': 1, 'Name': '@Local["Là khách hàng"]' }
+        , { 'ID': 2, 'Name': '@Local["Có là khách hàng"]' }];
+    let RTD_DataIsCustNew = [{ 'ID': 0, 'Name': '@Local["Khách hàng cũ"]' }
+        , { 'ID': 1, 'Name': '@Local["Khách hàng mới"]' }
+        , { 'ID': 2, 'Name': '@Local["Khách hàng cũ mới"]' }];
+    $(document).ready(function () {
+        shtable = $("#RTD_Grid").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        ToolPopper();
+        Load_Combo(RTD_DataIsCust, "cbbRTD_IsCust", true);
+        Load_Combo(RTD_DataIsCustNew, "cbbRTD_IsCustNew", true);
+        $("#RTD_IsCust").dropdown("refresh");
+        $("#RTD_IsCust").dropdown("set selected", RTD_DataIsCust[RTD_DataIsCust.length - 1].ID);
+        $("#RTD_IsCustNew").dropdown("refresh");
+        $("#RTD_IsCustNew").dropdown("set selected", RTD_DataIsCustNew[RTD_DataIsCustNew.length - 1].ID);
+        RTD_Load();
+        Checking_TabControl_Permission();
+    });
+
+    function RTD_Load() {
+        if (xhrLoadList && xhrLoadList.readyState != 4) xhrLoadList.abort();
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        let _staffID = "@Model._staffID";
+        IndexReport = 0;
+        $("#RTD_GridBody, #RTD_GridFoot").empty();
+        xhrLoadList = AjaxLoad(url = "/Report/Telesale/TelesaleDetail/?handler=Loaddata"
+            , data = {
+                'dateFrom': _dateFrom
+                , 'dateTo': _dateTo
+                , 'staffID': _staffID
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "[]") {
+                    DataReportMainRoot = JSON.parse(result);
+                    if (DataReportMainRoot && DataReportMainRoot.length != 0) {
+                        DataReportMain = JSON.parse(result);
+                        DataReportMainSlice = sliceIntoChunks(JSON.parse(result), 500);
+                        fnRenderBlock(DataReportMainSlice[IndexReport], "RTD_GridBody"
+                            , blocknum = 100
+                            , fnrender = RTD_Render
+                            , fnsuccess = null
+                        );
+                        Count_Up("RTD_TotalData", DataReportMainRoot.length);
+                    }
+                }
+                else if (result == "[]") {
+                    notiWarning('@Local["Không có dữ liệu"]');
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = null
+            , before = function (e) {
+                $('#RTD_waiting').show();
+            }
+            , complete = function (e) {
+                $('#RTD_waiting').hide();
+            }
+        );
+        return false;
+    }
+
+    function RTD_RenderMore() {
+        IndexReport += 1;
+        if (DataReportMainSlice && DataReportMainSlice[IndexReport]) {
+            fnRenderBlock(DataReportMainSlice[IndexReport], "RTD_GridBody"
+                , blocknum = 100
+                , fnrender = RTD_Render
+                , fnsuccess = null
+            );
+        }
+    }
+
+    //#endregion
+
+    //#region //EVENT
+    function RTD_Filter() {
+        let iscust = Number($('#RTD_IsCust').dropdown('get value')) ? Number($('#RTD_IsCust').dropdown('get value')) : 0;
+        let iscustnew = Number($('#RTD_IsCustNew').dropdown('get value')) ? Number($('#RTD_IsCustNew').dropdown('get value')) : 0;
+        if (!DataReportMainRoot || DataReportMainRoot.length == 0) return;
+        DataReportMain = JSON.parse(JSON.stringify(DataReportMainRoot));
+
+        if (iscust == 0) {
+            $("#RTD_IsCustNew").addClass("disabled bg-white");
+            $("#RTD_IsCustNew .text").addClass("text-secondary");
+            $("#RTD_IsCustNew").dropdown("refresh");
+            $("#RTD_IsCustNew").dropdown("set selected", RTD_DataIsCustNew[RTD_DataIsCustNew.length - 1].ID);
+        }
+        else {
+            $("#RTD_IsCustNew").removeClass("disabled bg-white");
+            $("#RTD_IsCustNew .text").removeClass("text-secondary");
+        }
+
+        DataReportMain = DataReportMain.filter(function (el) {
+            return (iscust == 0 && Number(el.IsCust) == 0)
+                || ((Number(el.IsCust) == iscust || iscust == 2)
+                    && (Number(el.IsCustNew) == iscustnew || iscustnew == 2));
+        });
+
+        let _d = JSON.parse(JSON.stringify(DataReportMain));
+        Count_Up("RTD_TotalData", _d.length);
+        DataReportMainSlice = sliceIntoChunks(_d, 500);
+        IndexReport = 0;
+        $("#RTD_GridBody").empty();
+        fnRenderBlock(DataReportMainSlice[IndexReport], "RTD_GridBody"
+            , blocknum = 100
+            , fnrender = RTD_Render
+            , fnsuccess = null
+        );
+    }
+    //#endregion
+
+    //#region // RENDER
+
+    async function RTD_Render(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let type = item.Type;
+                            let custcode = item.CustID != 0
+                                ? `<a target="_blank" href="/Customer/MainCustomer?CustomerID=${item.CustID}&ver=${versionofWebApplication}"> ${item.CustCode}</a>`
+                                : '';
+                            let tr = `
+                                                  <td class="vt-number-order"></td>
+                                                  <td class="text-center">
+                                                          <a target="_blank" class="border-1 border-primary border-bottom " href="/Marketing/TicketAction?CustomerID=${0}&TicketID=${item.TicketID}&Type=${7}&MasterID=${0}">${RTD_RenderItem_GeneralCode(item.TicketID)}</a>
+                                                  </td>
+                                                  <td>
+                                                       ${custcode}
+                                                       <p class="mb-0 text-sm">${item.TicketName}</p>
+                                                  </td>
+                                                  <td data-name="doccode">${item.DocCode}</td>
+                                                  <td data-name="phone"> <span class="_tab_control_" data-tab="phone_customer">${item.Phone}</span></td>
+                                                  <td class="text-center">${(item.IsCust == 1) ? `<i class="fas fa-check text-success"></i>` : ``}</td>
+                                                  <td class="text-center">${(item.IsCustNew == 1) ? `<i class="fas fa-check text-success"></i>` : ``}</td>
+                                                  <td data-name="source" class="source">${RTD_Render_GetName(RP_DataCustomerSource, item.SourceID)}</td>
+                                                  <td data-name="staffold">${RTD_Render_GetName(RP_DataStaff, item.StaffIDOld)}</td>
+                                                  <td data-name="executedold">${ConvertDateTimeUTC_DMY_Remove1900(item.executedOld)}</td>
+                                                  <td data-name="devideddate">${ConvertDateTimeUTC_DMY_Remove1900(item.DevidedDate)}</td>
+                                                  <td>${RTD_Render_GetName(RP_DataStaff, item.StaffID)}</td>
+                                                  <td>${RTD_Render_GetName(RP_DataStaff, item.ExecutedUser)}</td>
+                                                  <td>${ConvertDateTimeUTC_DMY_Remove1900(item.ExecutedDate)}</td>
+                                                  <td>${item.ContentLast}</td>
+                                                  <td>${item.Status}</td>
+                                                  <td data-name="timerepeat">${ConvertToDateRemove1900(item.TimeRepeat) != '' ? GetDateTime_String_DMYHM(item.TimeRepeat) : ''}</td>
+                                                  <td>${item.StatusCall != '' ? item.StatusCall + '-' + item.StatusCallDetail : ''}</td>
+                                                  <td data-name="servicecare">${RTD_Render_GetName(RP_DataServiceCare, item.ServiceCare)}</td>
+                                                  <td data-name="maremp">${RTD_Render_GetName(RP_DataEmployee, item.MarID)}</td>
+                                                  `
+                            tr = `<tr class="vt-number" role="row">${tr}</tr>`;
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                        shtable.Refresh();
+                        Checking_TabControl_Permission();
+                        clearTimeout(timeoutCount);
+                        timeoutCount = setTimeout(() => {
+                            Count_Up("RTD_currentdata", $("#" + id).children().length);
+                        }, 300)
+                    }
+                }
+            }, 100);
+        })
+    }
+
+    function RTD_RenderItem_GeneralCode(id) {
+        try {
+            let result = '';
+            let stringTemm = '00000000';
+            stringTemm = stringTemm + id.toString();
+            let lengthTemp = stringTemm.length;
+            result = stringTemm.slice(lengthTemp - 8, lengthTemp)
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    function RTD_Render_GetName(data, id) {
+        try {
+            let result = '';
+            if (data && data[id] != undefined) {
+                result = data[id].Name;
+            }
+            return result;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region // EXPORT - PRINT
+    function RTD_Export(isOption = 0) {
+        try {
+            if (DataReportMainRoot && DataReportMainRoot.length != 0) {
+                let isAll = (isOption == 0);
+                let eleContainer = $('#RTD_Container');
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", (value, { }, index) => { return index + 1; }],
+                    "TicketID": ["@Local["Mã ticket"]", (value) => { return RTD_RenderItem_GeneralCode(value) }],
+                    "CustCode": ["@Local["Mã khách hàng"]"],
+                    "TicketName": ["@Local["Khách hàng"]"],
+                    "DocCode": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='doccode']`)).is(":checked"),
+                        data: ["@Local["Mã hồ sơ"]"]
+                    },
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]"]
+                    },
+                    "IsCust": ["@Local["Là khách hàng"]", (value) => { return (value == 1) ? 'x' : '' }],
+                    "IsCustNew": ["@Local["Khách hàng mới"]", (value) => { return (value == 1) ? 'x' : '' }],
+                    "SourceID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='source']`)).is(":checked"),
+                        data: ["@Local["Nguồn khách hàng"]", (value) => { return RTD_Render_GetName(RP_DataCustomerSource, value) }]
+                    },
+                    "StaffIDOld": ["@Local["Người phụ trách trước"]", (value) => { return RTD_Render_GetName(RP_DataStaff, value) }],
+                    "executedOld": ["@Local["Ngày xử lý trước"]", (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }],
+                    "DevidedDate": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='devidedate']`)).is(":checked"),
+                        data: ["@Local["Ngày chia ticket"]", (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }]
+                    },
+                    "StaffID": ["@Local["Người phụ trách"]", (value) => { return RTD_Render_GetName(RP_DataStaff, value) }],
+                    "ExecutedUser": ["@Local["Người xử lý"]", (value) => { return RTD_Render_GetName(RP_DataStaff, value) }],
+                    "ExecutedDate": ["@Local["Ngày xử lý"]", (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }],
+                    "ContentLast": ["@Local["Nội dung"]"],
+                    "Status": ["@Local["Trạng thái gọi lại"]"],
+                    "TimeRepeat": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='timerepeat']`)).is(":checked"),
+                        data: ["@Local["Thời gian gọi lại"]", (value) => { return ConvertToDateRemove1900(value) != '' ? GetDateTime_String_DMYHM(value) : '' }]
+                    },
+                    "StatusCall": ["@Local["Trạng thái xử lý"]", (value, { StatusCallDetail }) => { return value != '' ? value + '-' + StatusCallDetail : '' }],
+                    "ServiceCare": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='servicecare']`)).is(":checked"),
+                        data: ["@Local["Dịch vụ quan tâm"]", (value) => { return RTD_Render_GetName(RP_DataServiceCare, value) }]
+                    },
+                    "MarID": {
+                        isShow: isAll || (eleContainer.find(`.shtoogle[data-name='maremp']`)).is(":checked"),
+                        data: ["@Local["Nhân viên marketing"]", (value) => { return RTD_Render_GetName(RP_DataEmployee, value) }]
+                    }
+                }
+                dataHeader = Checking_TabControl_System_RebuildHeader(dataHeader, tableBodyId = 'RTD_GridBody', PermissionTable_TabControl);
+                syslog_ExpExcel('e', Outlang["Bao_cao_khach_hang_cu_moi"]);
+                exportJsonToExcel(Outlang["Bao_cao_khach_hang_cu_moi"], DataReportMain, dataHeader);
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu để xuất"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không xuất được file"]!');
+        }
+    }
+    async function RTD_PrintReport() {
+        try {
+            if (DataReportMainRoot && DataReportMainRoot.length != 0) {
+                let _branchID = "0";
+                let _dateFrom = "@Model._dateFrom";
+                let _dateTo = "@Model._dateTo";
+                var dataHeader = {
+                    "STT": ["@Local["STT"]", {
+                        callbackRenderValue: (value, { }, index) => { return index + 1; }
+                    }],
+                    "TicketID": ["@Local["Mã ticket"]", {
+                        callbackRenderValue: (value) => { return RTD_RenderItem_GeneralCode(value) }
+                    }],
+                    "TicketName": ["@Local["Khách hàng"]", (value) => {
+                        callbackRenderValue: (value, { CustCode }) => { return CustCode + `<p class="mb-0">${value}</p>` }
+                    }],
+                    "DocCode": ["@Local["Mã hồ sơ"]", {
+                        isShow: $(`.shtoogle[data-name='doccode']`).is(":checked"),
+                    }],
+                    "Phone": {
+                        dataNamePer: 'phone',
+                        data: ["@Local["Số điện thoại"]"]
+                    },
+                    "IsCust": ["@Local["Là khách hàng"]", {
+                        callbackRenderValue: (value) => { return (value == 1) ? 'x' : '' }
+                    }],
+                    "IsCustNew": ["@Local["Khách hàng mới"]", {
+                        callbackRenderValue: (value) => { return (value == 1) ? 'x' : '' }
+                    }],
+                    "SourceID": ["@Local["Nguồn khách hàng"]", {
+                        isShow: $(`.shtoogle[data-name='source']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataCustomerSource, value) }
+                    }],
+                    "StaffIDOld": ["@Local["Người phụ trách trước"]", {
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataStaff, value) }
+                    }],
+                    "executedOld": ["@Local["Ngày xử lý trước"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }
+                    }],
+                    "DevidedDate": ["@Local["Ngày chia ticket"]", {
+                        isShow: $(`.shtoogle[data-name='devideddate']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }
+                    }],
+                    "StaffID": ["@Local["Người phụ trách"]", {
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataStaff, value) }
+                    }],
+                    "ExecutedUser": ["@Local["Người xử lý"]", {
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataStaff, value) }
+                    }],
+                    "ExecutedDate": ["@Local["Ngày xử lý"]", {
+                        callbackRenderValue: (value) => { return ConvertDateTimeUTC_DMY_Remove1900(value) }
+                    }],
+                    "ContentLast": ["@Local["Nội dung"]"],
+                    "Status": ["@Local["Trạng thái gọi lại"]"],
+                    "TimeRepeat": ["@Local["Thời gian gọi lại"]", {
+                        isShow: $(`.shtoogle[data-name='timerepeat']`).is(":checked"),
+                        callbackRenderValue: (value) => { return ConvertToDateRemove1900(value) != '' ? GetDateTime_String_DMYHM(value) : '' }
+                    }],
+                    "StatusCall": ["@Local["Trạng thái xử lý"]", {
+                        callbackRenderValue: (value, { StatusCallDetail }) => { return value != '' ? value + '-' + StatusCallDetail : '' }
+                    }],
+                    "ServiceCare": ["@Local["Dịch vụ quan tâm"]", {
+                        isShow: $(`.shtoogle[data-name='servicecare']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataServiceCare, value) }
+                    }],
+                    "MarID": ["@Local["Nhân viên marketing"]", {
+                        isShow: $(`.shtoogle[data-name='maremp']`).is(":checked"),
+                        callbackRenderValue: (value) => { return RTD_Render_GetName(RP_DataEmployee, value) }
+                    }],
+                };
+                $("#MainSendMail_Content").empty();
+                $("#MainSendMail_Content").load('/Print/Reports/reportform?&dateFrom=' + _dateFrom + '&dateTo=' + _dateTo + '&branch=' + _branchID + '&ver=' + versionofWebApplication
+                    , function (responseTxt, statusTxt, xhr) {
+                        if (statusTxt == "success") {
+                            $("#MainSendMail").addClass('active');
+                            let options = {
+                                empName: sys_employeeName_Main
+                            }
+                            if (typeof PRF_CBPrintReport === 'function')
+                                PRF_CBPrintReport(namePrint = Outlang["Bao_cao_khach_hang_cu_moi"], DataReportMain, dataHeader, options);
+                        }
+                        if (statusTxt == "error") {
+                            console.warn("error");
+                        }
+                    })
+            }
+            else {
+                notiWarning('@Local["Không có dữ liệu"]!');
+            }
+        }
+        catch (ex) {
+            notiWarning('@Local["Không in được file"]!');
+        }
+    }
+                                                                    //#endregion
+
+</script>

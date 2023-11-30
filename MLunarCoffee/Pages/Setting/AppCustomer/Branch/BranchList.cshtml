@@ -1,0 +1,453 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.AppCustomer.Branch.BranchListModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="row" id="ABL_DivContainer">
+    <div class="col-12 px-0">
+        <div class="card card-plain">
+            <div class="vtcardheader card-header pb-0 pt-2">
+                <div class="left">
+                    <h6 class="mb-0">@Local["Danh sách chi nhánh"]</h6>
+                    <p id="ABL_LimitNote" class="text-sm mb-0">@Local["Chi nhánh hiển thị trong ứng dụng mobile"]</p>
+                </div>
+                <div class="right">
+                    <div class="form-check mt-2 me-3">
+                        <input id="ABL_ChkDisable" class="form-check-input pr-2" type="checkbox" checked="checked">
+                        <label>@Local["Chi nhánh ẩn"]</label>
+                    </div>
+                    <button id="btn_addBranch" class="btn bg-gradient-primary btn-sm mt-1" data-value="fade up" onclick="return ABL_AddNew()">
+                        @Local["Thêm mới"]
+                    </button>
+                    <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#colLists">
+                        @Local["Xem thêm"]
+                    </button>
+                </div>
+                <div class="toggle">
+                    <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                        <ul class="card card-body text-dark text-capitalize opacity-10">
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="location" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Tọa độ"]</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="zalo" type="checkbox">
+                                </div>
+                                <p class="text-sm">Zalo</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="facebook" type="checkbox">
+                                </div>
+                                <p class="text-sm">Facebook</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="messenger" type="checkbox">
+                                </div>
+                                <p class="text-sm">Messenger</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="website" type="checkbox">
+                                </div>
+                                <p class="text-sm">Website</p>
+                            </li>
+                            <li class="d-flex">
+                                <div class="form-check form-switch">
+                                    <input class="shtoogle form-check-input" data-name="description" type="checkbox">
+                                </div>
+                                <p class="text-sm">@Local["Mô tả"]</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div class=" m-0 my-3 mobile-responsive">
+                    <div id="loaderList" class="waitingdiv text-center w-100 mt-2 position-absolute top-0 start-50 translate-middle-x" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <table id="dtAppBranch" class="table vt-table mb-0">
+                        <thead class="hiddenCollapse">
+                            <tr role="row">
+                                <th class="d-none">ID</th>
+                                <th>#</th>
+                                <th style="min-width: 200px">@Local["Hình ảnh"]</th>
+                                <th>@Local["Tên chi nhánh"]</th>
+                                <th>@Local["Thời gian mở cửa"]</th>
+                                <th data-name="location">@Local["Tọa độ"] (Lat - Lon)</th>
+                                <th style="min-width: 250px">@Local["Địa chỉ"]</th>
+                                <th data-name="zalo">Zalo</th>
+                                <th data-name="facebook">Facebook</th>
+                                <th data-name="messenger">Messenger</th>
+                                <th data-name="website">Website</th>
+                                <th data-name="description">@Local["Mô tả"]</th>
+                                <th style="min-width: 200px">@Local["Người sửa"]</th>
+                                <th>Xử Lý</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtAppBranchBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row" id="BranchDetail"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="ABL_DivContainerDetail">
+
+</div>
+<script type="text/javascript">
+    let shtable;
+    let DataUser;
+    let ImageData = [];
+    let xhrBranchList;
+    let ABL_Data;
+    let ABL_LimitData = (ser_AcceptSettingApp['branch'] != undefined && ser_AcceptSettingApp['branch']['limit'] != undefined)
+                ? ser_AcceptSettingApp['branch']['limit']
+                : {
+                    Dimensions: "",
+                    Format: "",
+                    Key: "limit",
+                    Limit: 5,
+                    Size: 0,
+                    Type: "branch",
+                    format: [],
+                    height: 0,
+                    width: 0,
+                }
+    let ABL_LimitSlide = (ser_AcceptSettingApp['branch'] != undefined && ser_AcceptSettingApp['branch']['limitimage'] != undefined)
+                        ? ser_AcceptSettingApp['branch']['limitimage']
+                        : {
+                            Dimensions: "",
+                            Format: "",
+                            Key: "limitimage",
+                            Limit: 3,
+                            Size: 0,
+                            Type: "branch",
+                            format: [],
+                            height: 0,
+                            width: 0
+                        }
+    let ImageLimit = (ser_AcceptSettingApp['branch'] != undefined && ser_AcceptSettingApp['branch']['image'] != undefined) ? ser_AcceptSettingApp['branch']['limitimage'].Limit : 4;
+    $(document).ready(function () {
+        shtable = $("#dtAppBranch").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        $('#ABL_LimitNote').html(`@Local["Hiển thị tối đa"] ${ABL_LimitData.Limit} @Local["Chi nhánh"] - ${ImageLimit} @Local["Hình/chi nhánh"]`);
+        $('#ABL_ChkDisable').prop('checked', false);
+        ABL_LoadList();
+        ABL_Event();
+    });
+    function ABL_LoadList() {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Setting/AppCustomer/Branch/BranchList/?handler=LoadData"
+                    , data = {}, async = true, error = null
+                    , success = function (result) {
+                        if (result != "") {
+                            let data = JSON.parse(result)['Table'];
+                            ABL_Data = JSON.parse(result)['Table'];
+                            ImageData = JSON.parse(result)['Table1'];
+                            ABL_RenderList(data, "dtAppBranchBody");
+                            shtable.Refresh();
+                        }
+                        else {
+                            notiError_SW();
+                        }
+                    });
+            });
+    }
+
+    function ABL_RenderList(data, id) {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let itemContent = ABL_RenderItem(item);
+                    let tr = `<tr id="ABL_Content_${item.ID}" class="vt-number ${((item.IsDisabled === 1) ? ('table-active') : (""))}"" role="row" data-id="${item.ID}"> ${itemContent} </tr>`;
+                    stringContent = stringContent + tr;
+                }
+            }
+
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+
+    async function ABL_RenderByID(id = 0) {
+        return new Promise((resolve) => {
+            if (xhrBranchList && xhrBranchList.readyState != 4) xhrBranchList.abort();
+            xhrBranchList = AjaxLoad(url = "/Setting/AppCustomer/Branch/BranchDetail/?handler=Loadata"
+                , data = { CurrentID: id }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "") {
+                        let data = JSON.parse(result)['Table'];
+                        if (data && data.length != 0) {
+                            let objIndex = ABL_Data.findIndex((obj => obj.ID == id));
+                            ABL_Data[objIndex].IsDisabled = JSON.parse(result)['Table'][0].IsDisabled;
+                            let item = data[0];
+                            let itemContent = ABL_RenderItem(item);
+                            let tr = `<tr id="ABL_Content_${item.ID}" class="vt-number ${((item.IsDisabled === 1) ? ('table-active') : (""))}"" role="row" data-id="${item.ID}"> ${itemContent} </tr>`;
+                            let ABL_RowBranch = $("#ABL_Content_" + id);
+                            if (ABL_RowBranch && ABL_RowBranch.length != 0) {
+                                ABL_RowBranch.replaceWith(tr);
+                            }
+                            else {
+                                document.getElementById('dtContentBranchBody').insertAdjacentHTML('beforeend', tr);
+                            }
+                            ABL_Event();
+                            shtable.Refresh();
+                        }
+                        else {
+                            let ABL_RowBranch = $("#ABL_Content_" + id);
+                            if (ABL_RowBranch && ABL_RowBranch.length != 0) ABL_RowBranch.remove();
+                        }
+                    }
+                }
+                , sender = null
+                , before = function (e) {
+                    $("#loaderList").show();
+                }
+                , complete = function (e) {
+                    $("#loaderList").hide();
+                }
+            );
+        })
+    }
+
+    function ABL_RenderItem(item) {
+         let obj = Fun_GetObject_ByID(DataUser, item.ModifiedBy);
+         let name = (obj != null) ? obj.Name : 'unknown';
+         let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+         let tr = `<td class="d-none ABL_ID"> ${item.ID} </td>
+                   <td class="vt-number-order"></td>
+                   <td class="col col-md-2">${ABL_RenderCarousel(item.ID)}</td>
+                   <td class="col col-md-5 mx-auto">
+                       <div class="mx-2">
+                            <a class="text-decoration-underline fw-bold buttonEditClass" href="#"> ${item.BranchName} </a>
+                       </div>
+                   </td>
+                   <td class="col col-md-5 mx-auto" data-name="timeopen">${item.TimeOpen}</td>
+                   <td class="col col-md-5 mx-auto" data-name="location">${item.Lat} - ${item.Lon}</td>
+                   <td class="col col-md-5 mx-auto" data-name="address">${item.Address}</td>
+                   <td class="col col-md-5 mx-auto" data-name="zalo">${item.Zalo}</td>
+                   <td class="col col-md-5 mx-auto" data-name="facebook">${item.Facebook}</td>
+                   <td class="col col-md-5 mx-auto" data-name="messenger">${item.Mess}</td>
+                   <td class="col col-md-5 mx-auto" data-name="website">${item.Website}</td>
+                   <td class="col col-md-5 mx-auto" data-name="description">${item.Decription}</td>
+                   <td class="col col-md-3">
+                       <div class="d-flex f-md-right">
+                           <div class="icon icon-shape icon-sm me-2 text-center" >
+                               <img class="avatar avatar-xs mt-2 " src="${img}" alt="label-image" onerror="Master_OnLoad_Error_Image(this)">
+                               </div>
+                               <div class="d-flex flex-column">
+                               <h6 class="text-dark text-sm mb-0"> ${name} </h6>
+                               <span class="text-xs"> ${formatDateToDMYHM(item.Modified)} </span>
+                           </div>
+                       </div>
+                   </td>
+                   <td>
+                      <div class="text-nowrap cursor-pointer">
+                      ${ABL_RenderButton(item.ID, item.IsDisabled)}
+                      </div>
+                  </td>`;
+        return tr;
+    }
+
+    function ABL_RenderCarousel(branchid) {
+        let stringContent = '';
+        if (ImageData && ImageData.length > 0) {
+            let data = ImageData.filter(image => image.BranchID == branchid);
+            let itemContent = ABL_RenderCarouselItem(data, id = `ABL_CarouselImage${branchid}`);
+            stringContent = `<div id="ABL_CarouselImage${branchid}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
+                              ${itemContent}
+                                  <button class="carousel-control-prev" type="button" data-bs-target="#ABL_CarouselImage${branchid}" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                  </button>
+                                  <button class="carousel-control-next" type="button" data-bs-target="#ABL_CarouselImage${branchid}" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                  </button>
+                              </div>`;
+        }
+        return stringContent;
+    }
+
+    function ABL_RenderCarouselItem(data, id) {
+        let result = '';
+        if (data && data.length > 0) {
+            let imgContent = '';
+            let btnContent = '';
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                let isActive = i == 0 ? 'active' : '';
+                let isAreaCurrent = i == 0 ? 'true' : '';
+                let csimg = `
+                        <div class="carousel-item ${i == 0 ? 'active' : ''}">
+                            <div class="page-header border-radius-xl" style="background-image: url('${item.Image}'); min-height: 15vh;">
+                                <span class="mask bg-gradient-dark"></span>
+                            </div>
+                        </div>`;
+                let csbtn = `<button type="button" data-bs-target="#${id}" data-bs-slide-to="${i}" class="${isActive} btn bg-gradient-primary" aria-current="${isAreaCurrent}" aria-label="Slide ${i + 1}"></button>`;
+                btnContent += csbtn;
+                imgContent += csimg;
+            }
+            result += `<div class="carousel-indicators mb-n2 pb-2">${btnContent}</div>
+                       <div class="carousel-inner">${imgContent}</div>`;
+        }
+        return result;
+    }
+
+    function ABL_RenderButton(id, isdisabled) {
+        try {
+            let buttons = [];
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                        + '<i data-id="' + id + '" class="buttonDeleteClass vtt-icon vttech-icon-delete"></i>'
+                        + '</button>');
+            buttons.push('<button class="buttonGrid" value="' + id + '">'
+                        + ((isdisabled === 1)
+                            ? '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-hide"></i>'
+                            : '<i data-id="' + id + '" class="buttonDisabledClass vtt-icon vttech-icon-nohide"></i>')
+                        + '</button>');
+            return Render_Button_Grid(buttons);
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+     //#region // EVENT
+    function ABL_Disable(id, flag) {
+        const promise = notiConfirm();
+        promise.then(function () { ABL_ExecuteDisable(id, flag); }, function () { });
+    }
+
+    function ABL_ExecuteDisable(id, flag) {
+        let data = [...ABL_Data].filter(x => x.IsDisabled==0)
+        if(flag || (data && data.length >= 0 && data.length < ABL_LimitData.Limit))
+        {
+            AjaxLoad(url = "/Setting/AppCustomer/Branch/BranchList/?handler=DisableItem"
+                , data = { id: id }, async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        notiSuccess();
+                        ABL_RenderByID(id);
+                    } else {
+                        notiError_SW();
+                    }
+                }
+            );
+        }
+        else {
+            notiWarning('Quá giới hạn số lượng hiển thị chi nhánh');
+        }
+    }
+
+     function ABL_Delete(id) {
+        const promise = notiConfirm();
+        promise.then(function () { ABL_ExecuteDelete(id); }, function () { });
+    }
+
+    function ABL_ExecuteDelete(id) {
+        AjaxLoad(url = "/Setting/AppCustomer/Branch/BranchList/?handler=Delete"
+            , data = {id:id}, async = true, error = null
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    ABL_LoadList();
+                    syslog_mob("d", "@Local["Chi nhánh"]");
+                } else {
+                    notiError_SW();
+                }
+            });
+    }
+
+    function ABL_OpenDetail() {
+        $("#ABL_DivContainerDetail").empty();
+        $("#ABL_DivContainer").hide();
+        $("#ABL_DivContainerDetail").html('');
+    }
+
+    function ABL_Close() {
+        $("#ABL_DivContainerDetail").html('');
+        $("#ABL_DivContainer").show();
+        $("#ABL_DivContainerDetail").hide();
+    }
+
+    function ABL_Edit(CurrentID) {
+        ABL_OpenDetail();
+        $("#ABL_DivContainerDetail").load("/Setting/AppCustomer/Branch/BranchDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $('#ABL_DivContainerDetail').show();
+        return false;
+    }
+
+    function ABL_AddNew() {
+        let data = [...ABL_Data].filter(x => x.IsDisabled==0)
+        if(data && data.length >= 0 && data.length < ABL_LimitData.Limit)
+        {
+            ABL_OpenDetail();
+            $("#ABL_DivContainerDetail").load("/Setting/AppCustomer/Branch/BranchDetail" + "?ver=" + versionofWebApplication);
+            $('#ABL_DivContainerDetail').show();
+            return false;
+        }
+        else {
+            notiWarning('Quá giới hạn số lượng chi nhánh');
+            return false;
+        }
+    }
+
+    function ABL_Event() {
+        $('#ABL_ChkDisable').unbind().change(function (event) {
+            if ($('#ABL_ChkDisable').is(':checked'))
+                $('#dtAppBranch').addClass('showdis');
+            else $('#dtAppBranch').removeClass('showdis');
+        });
+        $('#dtAppBranch tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr').find('.ABL_ID')[0].innerHTML);
+            ABL_Edit(ID);
+        });
+
+        $('#dtAppBranch tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr').find('.ABL_ID')[0].innerHTML);
+            ABL_Delete(ID);
+        });
+        $('#dtAppBranch tbody').on('click', '.buttonDisabledClass', function () {
+            let ID = Number($(this).closest('tr').find('.ABL_ID')[0].innerHTML);
+            let flag = $(this).hasClass('vttech-icon-nohide');
+            ABL_Disable(ID, flag);
+        });
+    }
+    //#endregion
+</script>
+<style>
+    .table-active {
+        display: none;
+    }
+
+    .showdis .table-active {
+        display: table-row;
+    }
+
+    .vt-table tr td {
+        border-left: 1px solid var(--color--table--border) !important;
+        white-space: normal !important;
+    }
+</style>
+ 
+<script>js_require('/js/main.js');</script>
+ 

@@ -1,0 +1,99 @@
+﻿@page
+@model MLunarCoffee.Pages.Lock.Lockfunction
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+
+<div class="row  justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+        <div class="card-body text-center">
+
+            <h4 class="mb-0 font-weight-bolder">@Local["Mở khóa"]</h4>
+            <p class="mb-4">@Local["Mật khẩu ứng dụng"]</p>
+            <form role="form">
+                <div class="mb-3 mt-3">
+                    <div class="row px-1">
+                        <div class="field col-12 col-md-12 col-xl-12 px-1 mt-2">
+                            <label>@Local["Mật khẩu mới ( 6 - 15 kí tự )"]</label>
+                            <div class="form-group loclfun">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-eye-slash show_pass_icon"></i>
+                                    </span>
+                                    <input id="loclfun_password" name="passwordUser" type="text" class="sercu form-control"
+                                           placeholder="eg .@Local["Mật khẩu ứng dụng"]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="text-center mt-5">
+                    <button type="button" onclick="lockfunc_Close()" class="btn btn-secondary">@Local["Hủy"]</button>
+                    <button type="button" onclick="lockfunc_Save()" class="btn bg-gradient-primary me-2">@Local["Mở khóa"]</button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+
+    $(document).ready(function () {
+        $(".loclfun .show_pass_icon").unbind().on("click", function () {
+            let obj = $(this).parent().next();
+            if (obj != undefined) {
+                if (obj.hasClass('sercu')) {
+                    obj.removeClass('sercu');
+                    $(this).addClass('fa-eye');
+                    $(this).removeClass('fa-eye-slash');
+
+                }
+                else {
+                    obj.addClass('sercu')
+                    $(this).removeClass('fa-eye');
+                    $(this).addClass('fa-eye-slash');
+                }
+            }
+        })
+    });
+    function lockfunc_Save () {
+        let _password = $('#loclfun_password').val() ? $('#loclfun_password').val() : '';
+        if (_password != '') {
+            AjaxLoad(url = "/Lock/Lockfunction/?handler=Executed"
+                , data = {'password': _password}
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != "0") {
+                        author_set('syspass', result);
+                        lockfunc_Close();
+                        location.reload();
+                    }
+                    else {
+ 
+                        notiWarning('@Local["Kiểm tra lại mật khẩu"]');
+                    }
+                }
+            );
+        }
+    }
+    function lockfunc_Close () {
+        $('#DetailModal').modal('hide');
+        $("#DetailModal_Content").html('');
+    }
+
+</script>
+<style>
+    .sercu {
+        -webkit-text-security: disc;
+    }
+</style>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>

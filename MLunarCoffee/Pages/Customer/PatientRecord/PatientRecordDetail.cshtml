@@ -1,0 +1,714 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.PatientRecord.PatientRecordDetailModel
+@{
+    Layout = null;
+}
+<script>js_require_notasync('/assests/js/fabric.js', true);</script>
+<script>js_require_notasync('/js/comon/ExecuteCanvasDentalChart.js', true);</script>
+
+<div class="container-fluid py-3 px-0" id="print_content">
+    <div class="h-100 text-center" id="patient_record_header">
+        <h6 id="patient_record_name_detail" class="mb-0">@Local["Hồ sơ bệnh án"]</h6>
+        <p class="text-sm mb-0">@Local["Chi tiết hồ sơ bệnh án"]</p>
+    </div>
+    <div class="row">
+        <div class="mb-2">
+            <div class="mx-4 my-1">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-12">
+                            <ul id="patient_record_combo" class="nav nav-pills p-1 bg-gray-100 justify-content-end detailpatient" role="tablist">
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-lg-flex px-4" id="pr_generalinfo">
+        <div class="flex-grow-1 pb-2 overflow-auto" id="pr_eventHideTeeth">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="col-lg-3 col-sm-12 ">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Sơ đồ răng"]</h6>
+                                <p class="text-sm mb-0">@Local["Chi tiết sơ đồ răng"]</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-9 col-sm-12  ">
+                            <ul id="status_teeth_combo" class="nav nav-pills p-1 bg-transparent justify-content-end detailteeth" role="tablist">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div id="chartDetail" class="d-flex justify-content-center">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="pr_forminfo">
+        <div class="col-12 mb-2">
+            <div class="card mx-4 my-1">
+                <div class="card-body pt-2 ">
+                    <div class="border-dashed border-1 border-secondary border-radius-md p-3 text-dark font-weight-normal" id="template_content_body">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer fixed-botombutton">
+        <div class="action_Save mt-2">
+            <div id="PatientRecordButtons" class="action_Save-Content">
+                <button class="btn btn-secondary" onclick="Tab_List_Service_Close_Detail()">@Local["Đóng"]</button>
+                <button id="PR_btnPrint" class="btn bg-gradient-info" onclick="Print_Patient_RecordConfirm()">@Local["In"]</button>
+                <button id="delete_btn_patient_record" class="btn btn-danger" onclick="Patient_Record_Delete()">@Local["Xóa"]</button>
+                <button id="btSave_exe_detail" type="button" class="btn bg-gradient-primary mt-2 me-2" onclick="PR_MainEvent_Save()">@Local["Lưu"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+    let _obj_patient_record = {};
+    let _obj_status_teeth = {};
+    let _current_patient_record_id ='@Model._CurrentID' ;
+    let _customer_patient_record_id ='@Model._CustomerID';
+    let PR_DataTemplate = {};
+    let _data_template_answer_pr = [];
+    let PR_StogeSign = 0;
+    let PR_StogeName = '';
+    var CurrentStatusTeethID = 0;
+    var current_template_id = 0;
+    let _PR_DataCustomer = [];
+
+    $(document).ready(function () {
+        Patient_Record_Ini();
+        Checking_TabControl_Permission();
+    });
+
+    function Patient_Record_Ini() {
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=LoadInitializeData"
+            , data = {
+                "customerID": _customer_patient_record_id
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let dtPR = data.ComboPatientRecord;
+                    let dtST = data.ComboStatusTeeth;
+                    for (let i = 0; i < dtPR.length; i++) {
+                        _obj_patient_record[dtPR[i].ID] = dtPR[i];
+                    }
+                    for (let i = 0; i < dtST.length; i++) {
+                        _obj_status_teeth[dtST[i].ID] = dtST[i];
+                    }
+                    PR_Combo_Render(dtPR, "patient_record_combo");
+                    PR_Combo_Event();
+                    PR_ComboTeeth_Render(dtST, "status_teeth_combo");
+                    PR_ComboTeeth_Event();
+                    PR_LoadData();
+
+                }
+            }
+        );
+        return false;
+    }
+
+
+    //#region // Template Combo
+
+    function PR_Combo_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let isdisabled = (item.IsExist == 1) ? "disabled" : "";
+                    let tr = '<li class="d-inline-flex nav-item" role="presentation">'
+                        + '<a class="d-inline-flex nav-link mb-0 px-2 py-1 text-sm ' + isdisabled + '" data-bs-toggle="pill" data-id="' + item.ID + '" role="tab">'
+                        + '<img class="d-inline-flex icon-shape icon-xs me-2 bg-gradient-dark shadow text-center" src="' + ((item.Image != "") ? item.Image : Master_Default_Pic) + '"/>'
+                        + '<p class=" text-md mb-0">' + item.Name + '</p>'
+                        + '</a>'
+                        + '</li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+
+    function PR_Combo_Event() {
+
+        $('#patient_record_combo').delegate('a', 'click', function (event) {
+            event.preventDefault();
+            let tagTab = $(this).attr("data-id");
+            current_template_id = tagTab;
+            let data = _obj_patient_record[tagTab];
+            let formID = data.FormID;
+            PR_LoadForm(formID)
+        });
+
+    }
+
+    function PR_LoadForm (id) {
+        if (id && id != 0) {
+            AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=LoadForm"
+                , data = {
+                    "formID": id
+                }
+                , async = false
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    let data = JSON.parse(result);
+                    if (data && data.length != 0) {
+                        PR_DataTemplate = JSON.parse(data[0].Form);
+                        PR_StogeSign = data[0].StogeSign;
+                        PR_StogeName = data[0].StogeName;
+
+                        $('#patient_record_name_detail').html(data[0].Name)
+                        PR_Template_Render(PR_DataTemplate, "template_content_body");
+                        $('#PR_btnPrint').addClass('d-none');
+                        $('#template_content_body .vtprint-hiderow').addClass('d-none');
+                    }
+                }
+            );
+        }
+    }
+
+    async function PR_Template_Render(data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);
+                PR_Template_Event();
+            }
+        })
+    }
+
+    function PR_Template_Event() {
+        $("#template_content_body input[type='checkbox']").change(function (event) {
+            let answer = this.checked;
+            let id = $(this).attr("id");
+            fn_FormUpdate(id, answer, PR_DataTemplate);
+        });
+        $("#template_content_body input[type!='checkbox'][type!='radio'],#template_content_body textarea").change(function () {
+            let id = $(this).attr("id");
+            let answer = $(this).val();
+            fn_FormUpdate(id, answer, PR_DataTemplate);
+        })
+        $('#template_content_body textarea').each(function () {
+            let _height = (this.scrollHeight) >= 23 ? (this.scrollHeight) : 23;
+            this.setAttribute('style', 'height:' + _height + 'px;overflow-y:hidden;resize:none;');
+            }).on('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        $("#template_content_body input[type='radio']").change(function (event) {
+            let id = $(this).attr("id");
+            let name = $(this).attr("name");
+            let _obj = $('#template_content_body input[type="radio"][name="' + name + '"]');
+            if (_obj != undefined) {
+                _obj.each(function () {
+                    if ($(this).attr("id") == id) {
+                        fn_FormUpdate($(this).attr("id"), 'on', PR_DataTemplate);
+                    } else fn_FormUpdate($(this).attr("id"), '', PR_DataTemplate);
+                });
+            }
+        });
+    }
+
+    //#endregion
+
+
+    //#region // Teeth Combo
+    function PR_ComboTeeth_Render (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = '<li class="d-inline-flex nav-item" role="presentation">'
+                        + '<a class="d-inline-flex nav-link mb-0 px-2 py-1 text-sm" data-bs-toggle="pill" data-id="' + item.ID + '" role="tab">'
+                        + '<p class=" text-md mb-0">' + ConvertDateTimeUTC_DMY_Remove1900(item.Created) + '</p>'
+                        + '</a>'
+                        + '</li>';
+                    stringContent = stringContent + tr;
+                }
+            }
+            myNode.innerHTML = stringContent;
+        }
+    }
+    function PR_ComboTeeth_Event () {
+        $('#pr_eventHideTeeth').addClass('d-none');
+        $('#status_teeth_combo').delegate('a', 'click', function (event) {
+            $('#pr_eventHideTeeth').removeClass('d-none');
+            let ID = Number($(this).attr("data-id"));
+            $(this).addClass("active").siblings().removeClass("active");
+            PR_ComboTeeth_EventExecute(ID);
+        });
+    }
+    function PR_ComboTeeth_EventExecute (StatusTeethID) {
+
+        $('#chartDetail').empty();
+        let url = '/Customer/DentistChart/DentistChartDetail_';
+        CurrentStatusTeethID = StatusTeethID;
+        let data = _obj_status_teeth[StatusTeethID];
+        if (data != undefined && data != null) {
+            if (Number(data.Type) == 1) {
+                $('.chart_teeth').removeClass('chart_child').addClass('chart');
+                url += "TeethChart";
+            }
+            else {
+                $('.chart_teeth').addClass('chart_child').removeClass('chart');
+                url += "TeethChart_Child";
+            }
+            $("#chartDetail").load(url + "?ver=" + versionofWebApplication);
+        }
+    }
+    //#endregion
+
+    //#region // LoadData
+    function PR_LoadData() {
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=Loadata"
+            , data = {
+                "CurrentID": _current_patient_record_id,
+                'CustomerID': _customer_patient_record_id
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result != "") {
+                    let data = JSON.parse(result);
+                    let data_detail_PR = data.Table;
+                    let data_customer = data.Table1;
+
+                    let ele = {};
+                    ele.customer_name = data_customer[0].Cust_Name;
+                    ele.customer_birthday = data_customer[0].Cust_Birthday;
+                    ele.customer_age = data_customer[0].Cust_Age;
+                    ele.customer_gender = data_customer[0].Cust_Gender;
+                    ele.customer_carrer = data_customer[0].Cust_Carrer;
+                    ele.customer_ethnic = '';
+                    ele.customer_foreign = '';
+                    ele.customer_phone = data_customer[0].Cust_Phone;
+                    ele.customer_address = data_customer[0].Cust_Address;
+                    ele.customer_addresscontract = '';
+                    ele.customer_phone1 = data_customer[0].Cust_Phone1;
+
+                    ele.company_address = data_customer[0].Company_Address;
+                    ele.company_phone = data_customer[0].Company_Phone
+                    _PR_DataCustomer.push(ele);
+
+
+                    if (data_detail_PR && data_detail_PR.length > 0) {
+                        if (data_detail_PR[0].IsClose != 0) $('#btSave_exe_detail').remove();
+                        $('#patient_record_name_detail').html(data_detail_PR[0].Name);
+                        $("#patient_record_combo a").addClass("disabled");
+                        $('#patient_record_combo a[data-id="' + data_detail_PR[0].PatientRecord_Teamplate_ID + '"]').tab('show');
+                        $('#patient_record_combo a[data-id="' + data_detail_PR[0].PatientRecord_Teamplate_ID + '"]').trigger('click');
+                        $("#status_teeth_combo a").addClass("disabled");
+                        $('#status_teeth_combo a[data-id="' + data_detail_PR[0].StatusTeethID + '"]').tab('show');
+                        $('#status_teeth_combo a[data-id="' + data_detail_PR[0].StatusTeethID + '"]').trigger('click');
+                        $("#delete_btn_patient_record").show();
+
+
+                        if (jQuery.isEmptyObject(JSON.parse(data_detail_PR[0].DataTemplate)) == false) {
+                            PR_DataTemplate = JSON.parse(data_detail_PR[0].DataTemplate);
+                            if (Array.isArray(PR_DataTemplate) == true) {
+                                _data_template_answer_pr = JSON.parse(data_detail_PR[0].DataAnswer);
+                                PR_Template_RenderOld(PR_DataTemplate, "template_content_body");
+                                PR_Template_FillDataOld();
+                                $('#PR_btnPrint').removeClass('d-none');
+                                if (_PR_DataCustomer && _PR_DataCustomer.length > 0) {
+                                    $("#customer_name").html(_PR_DataCustomer[0].customer_name.toUpperCase());
+                                    $("#customer_birthday").html(_PR_DataCustomer[0].customer_birthday);
+                                    $("#customer_age").html(_PR_DataCustomer[0].customer_age);
+                                    $("#customer_gender").html(_PR_DataCustomer[0].customer_gender);
+                                    $("#customer_carrer").html(_PR_DataCustomer[0].customer_carrer);
+                                    $("#customer_ethnic").html(_PR_DataCustomer[0].customer_ethnic);
+                                    $("#customer_foreign").html(_PR_DataCustomer[0].customer_foreign);
+                                    $("#customer_phone").html(_PR_DataCustomer[0].customer_phone);
+                                    $("#customer_address").html(_PR_DataCustomer[0].customer_address);
+                                    $("#customer_addresscontract").html(_PR_DataCustomer[0].customer_addresscontract);
+                                    $("#customer_phone1").html(_PR_DataCustomer[0].customer_phone1);
+                                    $("#company_address").html(_PR_DataCustomer[0].company_address);
+                                    $("#company_phone").html(_PR_DataCustomer[0].company_phone);
+                                }
+                            }
+                            else {
+                                PR_Temlate_LoadValue(PR_DataTemplate, _current_patient_record_id);
+                                $('#PR_btnPrint').removeClass('d-none');
+                            }
+                        }
+                    }
+                    else {
+                        $('#patient_record_combo a:first').trigger("click");
+                        $('#patient_record_combo a:first').tab('show');
+                        $('#status_teeth_combo a:first').trigger("click");
+                        $('#status_teeth_combo a:first').tab('show');
+                        $("#delete_btn_patient_record").hide();
+                    }
+                }
+            }
+        );
+        return false;
+    }
+    function PR_Temlate_RenderFormInForm(){
+        let len = $("#template_content_body .row-forminform").length;
+        if(len > 0){
+            for(i = 0 ; i < len; i++){debugger
+                let thisEle = $("#template_content_body .row-forminform")[i];
+                if(thisEle.length != 0){
+                    let dataForm = thisEle.innerHTML == '' ? [] : JSON.parse(thisEle.innerHTML);
+                    thisEle.innerHTML = '';
+                    fn_RenderForm(thisEle.parentElement, dataForm);
+                }
+            }
+            $("#template_content_body .row-forminform input").attr('disabled',true);
+        }
+    }
+
+    function PR_Temlate_LoadValue (DataValue, id) {
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=LoadDataValue"
+            , data = {'commandid': 10, 'id': id}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) {
+                let datafield, dtTables = {};
+                if (result != "") {
+                    if (result == "{}") Printf_Render(DataValue, datafield, dtTables, "template_content_body");
+                    else {
+
+                        let data = JSON.parse(result);
+                        for (const [key, value] of Object.entries(data)) {
+                            if (key == 'Table') datafield = value;
+                            else {
+                                dtTables[key] = value;
+                            }
+                        }
+                        if (datafield != undefined && datafield.length != 0) {
+                            Printf_Render(DataValue, datafield, dtTables, "template_content_body");
+                        }
+                    }
+                    PR_Template_Event();
+                    PR_Temlate_RenderFormInForm();
+                }
+            }
+        );
+    }
+    async function Printf_Render (data, datafield, dtTables, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                myNode.innerHTML = '';
+                fn_RenderForm(myNode, data);
+                if (datafield != undefined && datafield.length == 1) {
+                    fn_FillForm(item = datafield[0], id = id);
+                }
+                if (dtTables != undefined && Object.keys(dtTables).length > 0) {
+                    fn_FillTables(dtTables, item = datafield[0], id = id);
+                }
+            }
+        })
+    }
+    //#endregion
+
+
+    //#region // Action
+
+    function Patient_Record_Delete() {
+        const promise = notiConfirm();
+        promise.then(function () { Execute_Patient_Record_Delete(); }, function () { });
+    }
+
+    function Execute_Patient_Record_Delete() {
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=ExcuteDelete"
+            , data = { 'id': _current_patient_record_id }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cutser( 'd'
+                        , _obj_patient_record[current_template_id].Name
+                        , _customer_patient_record_id, '');
+                    if (typeof Tab_List_Reload_PatientRecord !== 'undefined' && $.isFunction(Tab_List_Reload_PatientRecord)) {
+                        Tab_List_Reload_PatientRecord();
+                    }
+                    Tab_List_Service_Close_Detail();
+                } else {
+                    notiPopup_Type("delete_patient_record_error");
+                }
+            }
+        );
+    }
+
+    function Print_Patient_RecordConfirm () {
+        if (typeof ser_MainCustomerID != 'undefined' && ser_MainCustomerID != 0 && PR_StogeSign != 0) {
+            AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=CheckStogeSign"
+                , data = {
+                    "CustomerID": ser_MainCustomerID
+                    , "StogeRule": PR_StogeSign
+                }
+                , async = true
+                , error = function () {notiError_SW();}
+                , success = function (result) {
+                    if (result != '0') {
+                        const promise = notiConfirm("@Local["Xác nhận"] @Local["In"]: " + PR_StogeName);
+                        promise.then(function () {
+                            Print_Patient_Record();
+                            PR_SaveSign(PR_StogeSign);
+                        }, function () { });
+
+                    } else {
+                        Print_Patient_Record();
+                    }
+                }
+            );
+        } else {
+            Print_Patient_Record();
+        }
+    }
+
+    function Print_Patient_Record () {
+        syslog_cutser('p'
+            , _obj_patient_record[current_template_id]?.Name
+            , _customer_patient_record_id, '');
+        fn_Print(printedid = "template_content_body"
+            , beforefun = function () {
+                $("#chartDetail").closest('.card').hide();
+                $("#print_content > .multisteps-form__progress").hide();
+                $("#patient_record_combo").hide();
+                $("#PatientRecordButtons,#patient_record_combo,#patient_record_header").hide();
+                $("#template_content_body").removeClass("border-dashed border-1 border-secondary border-radius-md")
+            }
+            , afterfun = function () {
+                $("#chartDetail").closest('.card').show();
+                $("#patient_record_combo").show();
+                $("#print_content > .multisteps-form__progress").show();
+                $("#PatientRecordButtons,#patient_record_combo,#patient_record_header").show();
+                $("#template_content_body").addClass("border-dashed border-1 border-secondary border-radius-md")
+            }
+        );
+    }
+    function PR_SaveSign (StogeSign) {
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=SaveStogeSign"
+            , data = {"CustomerID": ser_MainCustomerID, "StogeSign": StogeSign}
+            , async = true
+            , error = function () {notiError_SW();}
+            , success = function (result) { }
+        );
+    }
+
+    function PR_MainEvent_Save () {
+        var data = new Object();
+        data.TemplateID = current_template_id;
+        data.StatusTeethID = CurrentStatusTeethID;
+        data.DataTemplate = JSON.stringify(PR_DataTemplate);
+        if (_data_template_answer_pr && _data_template_answer_pr.length > 0) {
+            data.DataAnswer = JSON.stringify(_data_template_answer_pr);
+        }
+        AjaxLoad(url = "/Customer/PatientRecord/PatientRecordDetail/?handler=ExcuteData"
+            , data = {
+                'data': JSON.stringify(data),
+                'CurrentID': _current_patient_record_id,
+                'CustomerID': _customer_patient_record_id
+            }
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != "0" && result != "2") {
+                    notiSuccess();
+                    syslog_cutser(_current_patient_record_id == 0 ? 'i' : 'u'
+                        , _obj_patient_record[current_template_id].Name
+                        , _customer_patient_record_id, '');
+                    if (typeof Tab_List_Reload_PatientRecord === 'function') Tab_List_Reload_PatientRecord();
+                    if (typeof Tab_List_Service_Close_Detail === 'function') Tab_List_Service_Close_Detail();
+                }
+                else if (result == "2") {
+                    notiError("Enter prehistory first time");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+            , sender = $("#btSave_exe_detail")
+        );
+        return false;
+    }
+
+    //#endregion
+
+    //#region // Template
+    function PR_Template_RenderOld (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let tr = `<div style="${item.style}; display: flex;">
+                                <span class="text-dark text-sm font-weight-bold">${item.title}</span>
+                                ${PR_Template_RenderBlockOld(item.Quiz)}
+                            </div>
+                        `;
+                    myNode.insertAdjacentHTML('beforeend', tr);
+                }
+                PR_Template_EventOld();
+            }
+        }
+    }
+    function PR_Template_RenderBlockOld (item) {
+        try {
+            let tr = '';
+            if (item && item.length > 0) {
+                for (let i = 0; i < item.length; i++) {
+                    let itemQuiz = item[i];
+                    let vector = "";
+                    if (itemQuiz.vector == "vit") vector = "display: flex;";
+                    else if (itemQuiz.vector == "hor") vector = "display: block";
+                    tr += `
+                        <div style="width: ${itemQuiz.percent}%; ${itemQuiz.style};">
+                            <span class="text-dark text-sm font-weight-bold">${itemQuiz.title}</span>
+                            <div style="${vector}">${RenderItemCheckList(itemQuiz.listitems)}</div>
+                        </div>
+                    `;
+                }
+            }
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    function RenderItemCheckList (ListItems) {
+        try {
+            let tr = '';
+            if (ListItems && ListItems.length > 0) {
+                for (let i = 0; i < ListItems.length; i++) {
+                    let item = ListItems[i];
+                    switch (item.type) {
+                        case 'img': tr += `
+                        <div class="form-check" style="${item.style}">
+                            <img src="${item.src}" style="${item.styleImg}">
+                        </div>`
+                            break;
+                        case 'checkbox': tr += `
+                        <div class="form-check" style="${item.style}">
+                            <input class="btn-OldCheckbox form-check-input pr-2" type="checkbox" style="${item.styleCheckbox}" id="${item.id}">
+                            <label style="${item.styleLabel}">${item.label}</label>
+                        </div>`
+                            break;
+                        case 'label_fillnumber': tr += `
+                        <div style="${item.style}">
+                            <label style="${item.styleLabel}">${item.label}</label>
+                            <input class="form-control btn-OldNote" id="${item.id}" style="${item.styleInput}">
+                            <span style="${item.styleUnit}">${item.unit}</span>
+                        </div>`
+                            break;
+                        case 'text': tr += `
+                            <div style="${item.style}">
+                                <label class="text-sm text-dark text-normal" style="${item.styleLabel}">${item.text}</label>
+                                <label class="text-sm text-dark text-normal" id="${item.id}" style="${item.styleContent}"></label>
+                            </div>`
+                            break;
+                        case 'lable_note': tr += `
+                            <div>
+                                <label style="${item.styleLabel}">${item.label}</label>
+                                <input class="form-control btn-OldNote" id="${item.id}" style="${item.style}">
+                            </div>`
+                            break;
+                        case 'textarea': tr += `
+                            <textarea class="form-control btn-OldNote" id="${item.id}" style="${item.styleTextarea}"></textarea>`
+                            break;
+                        default: break;
+                    }
+                }
+            }
+            return tr;
+        }
+        catch (ex) {
+            return '';
+        }
+    }
+    //#endregion
+
+
+    //#region // Fill Data
+    function PR_Template_FillDataOld () {
+        if (_data_template_answer_pr != undefined && _data_template_answer_pr != null && _data_template_answer_pr.length > 0) {
+            for (i = 0; i < _data_template_answer_pr.length; i++) {
+                var item = _data_template_answer_pr[i];
+                switch (item.type) {
+                    case "checkbox":
+                        $("#" + item.id).prop("checked", true);
+                        break;
+                    case "note":
+                        $("#" + item.id).val(item.text);
+                        break;
+                    default: break;
+                }
+            }
+        }
+    }
+    function PR_Template_EventOld () {
+        $(".btn-OldCheckbox").unbind("click").click(function (event) {
+            var id = $(this).attr("id");
+            if (this.checked == false) {
+                for (let i = _data_template_answer_pr.length - 1; i >= 0; i--) {
+                    if (_data_template_answer_pr[i].id == id) {
+                        _data_template_answer_pr.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            else {
+                var myEle = document.getElementById("other" + id);
+                if (myEle) {
+                    var answer = $('#other' + id).val() ? $('#other' + id).val() : "";
+                    if (answer != "") {
+                        let itemCheckedOther = {type: "checkother", id: id, text: answer};
+                        _data_template_answer_pr.push(itemCheckedOther);
+                    }
+                }
+                else {
+                    let itemChecked = {type: "checkbox", id: id};
+                    _data_template_answer_pr.push(itemChecked);
+                }
+            }
+        });
+
+        $(".btn-OldNote").unbind("change").change(function () {
+            let ID = Number($(this).attr("id"));
+            let Value = $('#' + ID).val() ? $('#' + ID).val() : "";
+            let itemnote = {type: "note", id: ID, text: Value};
+            _data_template_answer_pr.push(itemnote);
+        })
+    }
+
+    //#endregion
+
+</script>
+<style>
+    #template_content_body textarea {
+        border: 1px solid #e2e2e2 !important;
+        resize: none;
+    }
+</style>
+<script>js_require('/js/main.js', true);</script>
+<script>js_require('/js/customjs/custom-validation.js', true);</script>
+@*<script>js_require('/js/Print/PrintElement.js', true);</script>*@

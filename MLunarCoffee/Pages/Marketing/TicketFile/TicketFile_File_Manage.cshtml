@@ -1,0 +1,415 @@
+﻿@page
+@model MLunarCoffee.Pages.Marketing.TicketFile.TicketFile_File_ManageModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="card card-plain" id="TF_IM_Main">
+    <div class="card-header pb-0 pt-0 px-2">
+        <div class="d-lg-flex">
+            <div class="w-50 col-auto my-auto">
+                <div class="h-100">
+                    <h6 class="mb-0">@Local["Quản lý tập tin"]</h6>
+                    <p class="text-sm mb-0">@Local["Quản lý tập tin, xử lý và chia cho cá nhân hoặc nhân viên"]</p>
+                </div>
+            </div>
+             
+        </div>
+    </div>
+    <div class="card-body pt-2 px-2">
+        <div class="row px-2 ">
+            <div class="col-12 col-md-6 col-xl-6  p-1">
+                <input id="datefilter" class="flatpickr form-control" type="text" onchange="TF_IM_Load()" />
+            </div>
+            <div class="col-12 col-md-6 col-xl-6 p-1">
+                <div class="ui fluid search selection dropdown form-control" id="TicketSource" onchange="TF_IM_Load()">
+                    <input type="hidden" name="branch" readonly="readonly" />
+                    <input class="search" autocomplete="off" tabindex="0" readonly="readonly" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">eg .@Local["Nguồn"]</div>
+                    <div id="cbbTicketSource" class="menu" tabindex="-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="TF_IM_Waiting" class="waitingdiv text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="position-relative">
+
+
+            <div id="TF_IM_POS" class="position-relative overflow-auto" style="max-height:500px;">
+                <table class="table align-items-center mb-0 ">
+                    <thead>
+                        <tr>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">@Local["Tên"]</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">@Local["Nguồn"]</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">@Local["Ngày"]</th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">@Local["Dữ liệu"]</th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="TF_IM_Folder_Main">
+                    </tbody>
+                </table>
+
+
+            </div>
+            <div id="TF_IM_Popup" class="dropdown-menu dropdown-menu-end me-sm-n4 me-n3 p-2 py-3 shadow-lg">
+                <a id="TF_IM_Devide_Item" class="text-dark dropdown-item py-2 rounded-1" href="#" onclick="TF_IM_Divide()">
+                    <span>@Local["Chia cho nhân viên"]</span>
+                </a>
+                <span id="per_ticket_file_move_item" class="item">
+                    <a id="TF_IM_Move_Item" class="text-dark dropdown-item py-2 rounded-1" href="#" onclick="TF_IM_Move()">
+                        <span>@Local["Chia tập tin cho nhân viên"]</span>
+                    </a>
+                </span>
+                <span id="per_ticket_file_tocustomer" class="item">
+                    <a id="TF_IM_ConverCust_Item" class="text-dark dropdown-item py-2 rounded-1" href="#" onclick="TF_IM_ConvertCust()">
+                        <span>@Local["Tạo khách hàng"]</span>
+                    </a>
+                </span>
+                <a id="TF_IM_Remove_Item" class="text-dark dropdown-item py-2 rounded-1" href="#" onclick="TF_IM_Delete()">
+                    <span>@Local["Xóa"]</span>
+                </a>
+            </div>
+        </div>
+        <button class="btnsysmore btn btn-secondary w-100 p-1 mt-2 mb-0" onclick="return TF_IM_Load(1)">@Local["Xem thêm"]</button>
+    </div>
+</div>
+
+<script>js_require_notasync('/js/TicketFile/file_manage.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+<script type="text/javascript">
+
+    var TF_IM_CurrentID = 0;
+    var TF_IM_Type = 0;
+    let TM_IM_Data = [];
+    let TF_IM_FlagLoad = 0
+    let TF_IM_DataSource = [];
+    let TF_IM_CurrentName = "";
+    let TF_IM_BeginID = 0;
+    let TF_IM_BeginFileID = 0;
+    let TF_IM_Limit = 50;
+
+    $(document).ready(function () {
+        $("#datefilter").flatpickr({
+            mode: "range",
+            dateFormat: 'd-m-Y',
+            enableTime: false,
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length == 1) {
+                    instance.setDate([selectedDates[0], selectedDates[0]], true);
+                }
+            }
+        });
+        var date = new Date();
+        var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        $("#datefilter").val(formatDateClient(firstDay) + ' to ' + formatDateClient(lastDay));
+        TF_IM_LoadCombo();
+        CheckPermissionControlInPage(sys_PerControlMH,'@Model.CurrentPath');
+    });
+
+    function TF_IM_LoadCombo() {
+        AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_Manage/?handler=LoadComboMain"
+            , data = { }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                TF_IM_DataSource = data.Source;
+                Load_Combo(TF_IM_DataSource, "cbbTicketSource", true, '@Local["Tất cả nguồn"]');
+                $("#TicketSource").dropdown("refresh");
+                $("#TicketSource").dropdown("set selected", "0");
+                TF_IM_FlagLoad = 1;
+                TF_IM_Load();
+            }
+        );
+    }
+
+    async function TF_IM_Load(isLoadMore = 0) {
+        return new Promise((resolve, reject) => {
+            if (TF_IM_FlagLoad == 1) {
+                let sourceID = Number($('#TicketSource').dropdown('get value')) ? Number($('#TicketSource').dropdown('get value')) : 0;
+                let date = $('#datefilter').val() ? $('#datefilter').val() : new Date();
+                if (isLoadMore == 0) {
+                    TM_IM_Data = [];
+                    TF_IM_BeginID = 0;
+                    TF_IM_BeginFileID = 0;
+                    $("#TF_IM_Folder_Main").empty();
+                }
+                AjaxLoad(url = "/Marketing/TicketFile/TicketFile_File_Manage/?handler=LoadTicketImportList"
+                    , data = {
+                        "date": date,
+                        "sourceid": sourceID,
+                        "beginID": TF_IM_BeginID,
+                        "beginFileID": TF_IM_BeginFileID,
+                        "limit": TF_IM_Limit
+                    }
+                    , async = true
+                    , error = function () { notiError_SW(); }
+                    , success = function (result) {
+                        if (result != "0") {
+                            let data = JSON.parse(result);
+                            TM_IM_Data = TM_IM_Data.concat(data);
+                            TF_IM_Render(data, "TF_IM_Folder_Main");
+                            if (data && data.length != 0) {
+                                TF_IM_BeginID = TF_IM_GetBeginID(1);
+                                TF_IM_BeginFileID = TF_IM_GetBeginID(2);
+                            }
+                        }
+                    }
+                    , sender = null
+                    , before = function () {
+                        $("#TF_IM_Folder_Main").hide();
+                        $("#TF_IM_Waiting").show();
+                    }
+                    , complete = function (e) {
+                        $("#TF_IM_Folder_Main").show();
+                        $("#TF_IM_Waiting").hide();
+                    }
+                );
+            }
+        });
+    }
+
+    function TF_IM_GetBeginID(type) {
+        let result = 0;
+        if (TM_IM_Data && TM_IM_Data.length != 0) {
+            let dataFilter = TM_IM_Data.filter((word) => word["Type"] == type);
+            if (dataFilter && dataFilter.length != 0) {
+                result = dataFilter[dataFilter.length - 1].ID;
+            }
+        }
+        return result;
+    }
+    //#region // RENDER DATA
+
+    function TF_IM_ResetPopup() {
+        $("#TF_IM_Popup .item").removeClass("active selected").show();
+    }
+
+    function TF_IM_Event() {
+        $("#TF_IM_Folder_Main .folder_file_ticket_icon").bind("click", function (event) {
+            TF_IM_ResetPopup();
+            let offSet = $(this).offset();
+            let offSetParent = $("#TF_IM_POS").offset();
+            let pos_top = 0;
+            let pos_left = 0
+            pos_top = offSet.top - offSetParent.top;
+            pos_left = ($(window).width() < offSet.left + $("#TF_IM_Popup").width())
+                ? (offSet.left - offSetParent.left - $("#TF_IM_Popup").width())
+                : (offSet.left - offSetParent.left);
+            $("#TF_IM_Popup").css({
+                "display": "block"
+                , "top": pos_top
+                , "left": pos_left
+            });
+            let _id = $(this).attr("data-id");
+            let _type = Number($(this).attr("data-type"));
+            let _Total = Number($(this).attr("data-total"));
+            let _NumDevide = Number($(this).attr("data-totalDevide"));
+            let _IsDevide = Number($(this).attr("data-isDevide"));
+            let _IsSameUser = Number($(this).attr("data-isSameUser"));
+            let _IsLeftTicket = Number($(this).attr("data-isLeftTicket"));
+            if (_type == 1) {
+                if (_IsSameUser == 0 || _IsDevide == 1) {
+                    $("#TF_IM_Remove_Item").hide();
+                    $("#TF_IM_Move_Item").hide();
+                    $("#TF_IM_ConverCust_Item").hide();
+                }
+                else {
+                    $("#TF_IM_Remove_Item").show();
+                    $("#TF_IM_Move_Item").show();
+                    if(_IsLeftTicket != 0) $("#TF_IM_ConverCust_Item").show();
+                    else $("#TF_IM_ConverCust_Item").hide();
+
+                }
+                if (_IsSameUser == 0 || _Total == _NumDevide || _Total == 0) {
+                    $("#TF_IM_Devide_Item").hide();
+                }
+                else {
+                    $("#TF_IM_Devide_Item").show();
+                }
+            }
+            else {
+                if (_IsDevide == 1) {
+                    $("#TF_IM_Devide_Item").hide();
+                }
+                else {
+                    $("#TF_IM_Devide_Item").show();
+                }
+                $("#TF_IM_Move_Item").hide();
+                $("#TF_IM_ConverCust_Item").hide();
+                $("#TF_IM_Remove_Item").hide();
+            }
+
+            TF_IM_CurrentID = Number(_id);
+            TF_IM_Type = Number(_type);
+
+            if ($('#folder_ticket_name_' + _id).length)
+                TF_IM_CurrentName = $('#folder_ticket_name_' + _id).attr("data-name");
+            else TF_IM_CurrentName = "";
+
+            event.stopPropagation();
+        });
+
+        $("#TF_IM_Folder_Main .filtr_item_file_excel").bind('click').on('click', function (event) {
+            let _id = $(this).attr("data-id");
+            let _name = $(this).attr("data-name");
+            let _type = $(this).attr("data-type");
+            if (_type == "1") {
+                if (typeof TFM_ViewTable === 'function') {
+                    $("#TFM_DetailContent").load("/Marketing/TicketFile/TicketFile_File_Detail?CurrentID=" + _id + "&ver=" + versionofWebApplication,
+                        () => {
+                            TFM_ViewTable(_name)
+                        }
+                    );
+                }
+            }
+            else {
+                if (typeof TFM_ViewTable === 'function') {
+                    $("#TFM_DetailContent").load("/Marketing/TicketFile/TicketFile_Folder_Detail?CurrentID=" + _id + "&ver=" + versionofWebApplication,
+                        () => {
+                            TFM_ViewTable(_name)
+                        }
+                    );
+                }
+
+            }
+        });
+
+        document.addEventListener("click", function () {
+            $("#TF_IM_Popup").hide();
+        });
+
+    }
+
+    //#endregion
+
+
+
+    //#region // RENDER DATA
+
+    async function TF_IM_Render(data, id) {
+        return new Promise((resolve, reject) => {
+            var myNode = document.getElementById(id);
+            if (myNode != null) {
+                //myNode.innerHTML = '';
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        let bgColorFile = item.Type == 1
+                            ? `<i class="fs-5 text-primary fw-bold me-2 fas fa-upload"></i>`
+                            : `<i class="fs-5 text-warning fw-bold me-2 fas fa-folder"></i>`;
+                        let div =
+                            `<tr>
+                                <td>
+                                    <div class="text-sm d-flex px-2 py-1">
+                                        ${bgColorFile}
+                                        <div class="d-flex flex-column justify-content-center">
+                                            <a class="mb-0 pe-2 filtr_item_file_excel" id="folder_ticket_name_${item.ID}"
+                                               data-source="${item.SourceID}" data-id="${item.ID}" data-type="${item.Type}"
+                                               data-name="${item.NameFile}">
+                                                ${item.NameFile}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="text-sm text-dark mb-0">${TF_IM_Render_GetSource(item.SourceID)}</p>
+                                </td>
+                                <td class="align-middle text-dark text-sm">
+                                    ${GetDateTime_String_DMYHM(item.Created)}
+                                </td>
+                                <td class="align-middle text-dark text-center">
+                                    ${formatNumber(item.Success)}
+                                </td>
+                                <td class="align-middle text-dark text-center">
+                                    ${TF_IM_Render_Button(item.ID, item.Type, item.IsDevide, item.IsMove, item.IsSameUser, item.Success, item.NumDevide ,item.IsLeftTicket )}
+                                </td>
+                            </tr>`
+                        myNode.insertAdjacentHTML("beforeend", div);
+                    }
+                }
+            }
+            TF_IM_Event();
+        });
+    }
+
+    function TF_IM_Render_GetSource(SourceID) {
+        var result = "";
+        if (SourceID != 0) {
+            var dataFilter = TF_IM_DataSource.filter((word) => { return word.ID == SourceID });
+            if (dataFilter && dataFilter.length != 0) {
+                result = dataFilter[0].Name;
+            }
+        }
+        return result;
+    }
+
+    function TF_IM_Render_Button(id, type, isDevide, isMove, isSameUser, totalSuccess, totalDevide, isLeftTicket) {
+        let result = '';
+        if (type == 1 && isMove == 0 && isSameUser == 1 && (isDevide == 0 || (isDevide == 1 && totalSuccess != totalDevide))) {
+            result = `
+                <button class="btn btn-link text-secondary ps-0 pe-2 mb-0 folder_file_ticket_icon"
+                    data-type="${type}"
+                    data-id="${id}"
+                    data-isMove="${isMove}"
+                    data-isDevide="${isDevide}"
+                    data-total="${totalSuccess}"
+                    data-isSameUser="${isSameUser}"
+                    data-isLeftTicket="${isLeftTicket}"
+                    data-totalDevide="${totalDevide}" >
+                        <i class="fa fa-ellipsis-v text-lg"></i>
+                </button>`
+        }
+        else if (type == 2 && isDevide == 0 ){
+            result = `
+                    <button class="btn btn-link text-secondary ps-0 pe-2 mb-0 folder_file_ticket_icon"
+                        data-type="${type}"
+                        data-id="${id}" data-isMove="${isMove}"
+                        data-isDevide="${isDevide}"
+                        data-total="${totalSuccess}"
+                        data-totalDevide="${totalDevide}" >
+                         <i class="fa fa-ellipsis-v text-lg"></i>
+                    </button>`
+        }
+
+        return result;
+    }
+    //#endregion
+
+</script>
+<style>
+
+    .folder_ticket_unseen {
+        height: 10px;
+        background: #2185d0;
+        width: 10px;
+        position: absolute;
+        border-radius: 30px;
+        top: 5px;
+        left: 26px;
+    }
+
+    .folder_ticket_img:before {
+        font-size: 40px;
+    }
+
+    #TF_IM_Popup {
+        display: none;
+    }
+
+    #TF_IM_Detail {
+        display: none;
+    }
+
+    #TF_IM_Folder_Main .icon-shape {
+        min-width: 48px;
+    }
+</style>

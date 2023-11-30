@@ -1,0 +1,281 @@
+﻿@page
+@model MLunarCoffee.Pages.Student.Settings.Discount.DiscountListModel
+@{
+    Layout = null;
+}
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12 px-0">
+            <div class="card card-plain" id="DL_DivMaster">
+                <div class="vtcardheader card-header pb-0 pt-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Chương trình khuyến mãi"]</h6>
+                        <p class="text-sm mb-0">@Local["Chương trình khuyến mãi được áp dụng khi lên dịch vụ cho khách hàng"]</p>
+                    </div>
+                    <div class="right">
+                        <button class="btn bg-gradient-primary btn-sm mt-1 _tab_control_" data-tab="add_tab_discount" onclick="event.preventDefault();return AddNewDiscount()">
+                            @Local["Thêm mới"]
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body pt-2 ">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>#</th>
+                                    <th>@Local["Mã"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>@Local["Chi nhánh"]</th>
+                                    <th>@Local["Áp dụng tất cả"]</th>
+                                    <th>@Local["Khoá học"]</th>
+                                    <th>@Local["Xóa"]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="DL_BodyMaster">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="DL_DivDetail" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    let DL_DTBranch = {};
+    let DL_DTListCourse = {};
+
+    //#region //Load
+    $(document).ready(function () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_Branch]
+            , function (data) {
+                DL_DTBranch = data[0];
+                DList_LoadInit();
+            }
+        )
+    });
+    function DList_LoadInit () {
+        AjaxLoad(url = "/Student/Settings/Discount/DiscountList/?handler=LoadInit"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+                    DL_DTListCourse = (data).reduce((pre, arr) => {
+                        if (arr.ID) pre[arr.ID] = arr;
+                        return pre;
+                    }, {})
+                    DList_Load();
+                } else {
+                    notiError();
+                }
+            }, sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+
+    }
+
+    function DList_Load () {
+        AjaxLoad(url = "/Student/Settings/Discount/DiscountList/?handler=Loaddata"
+            , data = {}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != '0') {
+                    let data = JSON.parse(result);
+
+
+                    $('#DL_BodyMaster').empty();
+                    DList_Render(data, "DL_BodyMaster");
+                } else {
+                    notiError();
+                }
+            }, sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+    //#endregion
+
+    //#region //Render
+
+    async function DList_Render (data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    if (data && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            let item = data[i];
+                            let tr = `
+                                <td class="d-none">${item.ID}</td>
+                                <td class="vt-number-order text-center"></td>
+                                <td><div class="mx-2"><a class="text-decoration-underline fw-bold btn-Edit" href="#">${item.Code}</a></div></td>
+                                <td>${item.Name}</td>
+                                <td>${DList_RenderBranch(item.BranchToken, item.IsAllBranch)}</td>
+                                <td>${DList_RenderRuleAll(JSON.parse(item.Rule))}</td>
+                                <td>${DList_RenderRuleDetail(JSON.parse(item.Rule))}</td>
+                                <td class="text-center"><button class="buttonGrid _tab_control_ btnDelete"><i class="vtt-icon vttech-icon-delete"></i></button></td>
+                            `
+                            tr = `<tr class="vt-number eventRow" data-id="${item.ID}">${tr}</tr>`
+                            myNode.insertAdjacentHTML('beforeend', tr);
+                        }
+                    }
+                    DList_Event();
+                }
+                resolve();
+            }, 30)
+        })
+    }
+    function DList_RenderBranch (BranchToken, IsAllBranch) {
+        try {
+            let result = '';
+
+            if (Number(IsAllBranch) == 1) {
+                result = `<span class="text-sm fw-bold text-dark">@Local["Tất cả chi nhánh"]</span>`;
+            } else {
+                if (BranchToken != '') {
+                    let dataToken = BranchToken.split(",");
+                    for (let i = 0; i < dataToken.length; i++) {
+                        let item = Number(dataToken[i]);
+                        if (DL_DTBranch[item] != undefined) {
+                            result = result + '<div class="text-sm fw-bold"><i class="fas fa-map-pin text-info" aria-hidden="true"></i><span class="ps-2 text-dark">' + DL_DTBranch[item]["Name"] + '</span></div>';
+                        }
+                    }
+                }
+            }
+            return result;
+        } catch {
+            return '';
+        }
+    }
+
+    function DList_RenderRuleAll (Rule) {
+        try {
+            let result = ``;
+
+            if (Rule[0]['active'] == 1) {
+                result = `
+                    <span>${Rule[0]["percent"] > 0 ? formatNumber(Rule[0]["percent"]) + ' %' : formatNumber(Rule[0]["amount"]) + ' VND'}</span>
+                `;
+            }
+            return result;
+        } catch {
+            return '';
+        }
+    }
+
+    function DList_RenderRuleDetail (Rule) {
+        try {
+            let result = '';
+
+            if (Rule[1]["active"] == 1) {
+                let DetailCourse = '';
+                for (let i = 0; i < Rule[1]["value"].length; i++) {
+                    let item = Rule[1]["value"][i];
+
+                    DetailCourse = DetailCourse + `
+                        <div class="ps-2 mb-0">
+                            <p class="text-sm m-0"><i class="vtt-icon vttech-icon-Arrow-rights text-success text-xxs"></i>
+                                <span class="pe-2">${DL_DTListCourse[Number(item['id'])]["Name"]}</span>
+                                <span class="fw-bold">${item["percent"] > 0 ? formatNumber(item["percent"]) + ' %' : formatNumber(item["amount"])}</span>
+                            </p>
+                        </div>
+                    `;
+                }
+                result = `
+                    <div class="mb-2 card">
+                        <div class="pb-2">
+                            <h6 class="badge badge-sm bg-gradient-success ms-2">@Local["Khoá học"]</h6>
+                            ${DetailCourse}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return result;
+        } catch {
+            return '';
+        }
+    }
+
+    //#endregion
+
+    //#region //Event
+
+    function DList_Event () {
+        $("#DL_BodyMaster .btn-Edit").unbind('click').click(function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            DList_Edit(ID);
+        })
+
+        $("#DL_BodyMaster .btnDelete").unbind('click').click(function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            DList_DeleteConfirm(ID);
+        })
+    }
+
+    //#endregion
+
+    //#region //Detail
+
+    function DList_Edit (id) {
+        DList_OpenDetail();
+        $("#DL_DivDetail").load("/Student/Settings/Discount/DiscountDetail?CurrentID=" + id + "&ver=" + versionofWebApplication);
+        $("#DL_DivDetail").show();
+        return false;
+    }
+    function AddNewDiscount () {
+        DList_OpenDetail();
+        $("#DL_DivDetail").load("/Student/Settings/Discount/DiscountDetail?CurrentID=" + 0 + "&ver=" + versionofWebApplication);
+        $("#DL_DivDetail").show();
+        return false;
+    }
+
+    function DList_OpenDetail () {
+        $("#DL_DivDetail").empty();
+        $("#DL_DivMaster").hide();
+        document.getElementById("DL_DivDetail").innerHTML = '';
+    }
+
+    function DList_CloseDetail () {
+        $("#DL_DivDetail").empty();
+        document.getElementById("DL_DivDetail").innerHTML = '';
+        $("#DL_DivMaster").show();
+        $("#DL_DivDetail").hide();
+    }
+
+    //#endregion
+
+    //#region //Delete
+    function DList_DeleteConfirm (ID) {
+        const promise = notiConfirm();
+        promise.then(function () {DList_Delete(ID);}, function () { });
+    }
+
+    function DList_Delete (ID) {
+        AjaxLoad(url = "/Student/Settings/Discount/DiscountList/?handler=Delete"
+            , data = {"CurrentID" : ID}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result != '0') {
+                    $(".eventRow[data-id=" + ID + "]").remove();
+                    notiSuccess();
+                } else {
+                    notiError();
+                }
+            }, sender = null
+            , before = function (e) { }
+            , complete = function (e) { }
+        );
+    }
+
+    //#endregion
+</script>

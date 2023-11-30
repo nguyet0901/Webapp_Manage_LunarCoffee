@@ -1,0 +1,88 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.Service.ServiceReasonDiscount.ServiceReasonDiscountDetail
+@{
+    Layout = null;
+}
+<div class="container-fluid px-0 ">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0 text-capitalize">@Local["Lý do giảm giá dịch vụ"]</h6>
+                                <span class="text-sm mb-0">@Local["Chi tiết lý do giảm giá dịch vụ"]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card-body p-3 pt-2">
+                        <div class="row px-1 form3" id="formSerReasonDiscount">
+                            <div class="field col-12">
+                                <label >@Local["Tên lý do"]</label>
+                                <input id="SerReasonDiscountName" name="name" type="text" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed-botombutton">
+                <div class="text-danger text-gadient text-sm font-weight-bold" id="textShowMessage">
+                </div>
+                <div class="action_Save-Content mt-2">
+                    <button class="btn btn-secondary" form="formSerReasonDiscount" onclick=" event.preventDefault(); return CloseModal()">@Local["Đóng"]</button>
+                    <button id="SerReasonDiscountbtnDetail" form="formSerReasonDiscount" type="button" class="btn bg-gradient-primary _tab_control_ setting_projectclosure" onclick="event.preventDefault();SerReasonDiscountExcuteDetail()">@Local["Lưu"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var ser_SourceDetailID;
+    $(document).ready(function() {
+        ser_SourceDetailID = @Model._DataDetailID;
+        if (ser_SourceDetailID != "0") SerReasonDiscount_LoadDataUpdate();
+    });
+    //#region // LOAD DETAIL
+    function SerReasonDiscount_LoadDataUpdate() {
+        AjaxLoad(url = "/Setting/Service/ServiceReasonDiscount/ServiceReasonDiscountDetail/?handler=Loadata"
+            , data = { id: ser_SourceDetailID }, asyns = true, error = null
+            , success = function(result) {
+                DataSerReasonDiscountDetail = JSON.parse(result);
+                $('#SerReasonDiscountName').val((DataSerReasonDiscountDetail[0].Name))
+            }
+        )
+
+    }
+    //#endregion
+    //#region // EXECUTE
+    function SerReasonDiscountExcuteDetail() {
+        var data = new Object();
+        data.Name = $('#SerReasonDiscountName').val() ? $('#SerReasonDiscountName').val() : "";
+        $('#formSerReasonDiscount').form('validate form');
+        if ($('#formSerReasonDiscount').form('is valid')) {
+            AjaxLoad(url = "/Setting/Service/ServiceReasonDiscount/ServiceReasonDiscountDetail/?handler=ExcuteData"
+                , data = { data: JSON.stringify(data), CurrentID: ser_SourceDetailID }, async = true, error = null
+                , success = function(result) {
+                    if (result == "1") {
+                        notiSuccess();
+                        SerReasonDiscountLoadList();
+                        CloseModal();
+                    } else if (result == "-1") {
+                        $('#textShowMessage').html('@Local["Trùng dữ liệu"]');
+                    } else {
+                        notiError_SW();
+                    }
+                });
+        }
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>
+<script>js_require('/js/customjs/custom-validation.js');</script>
+
+
+

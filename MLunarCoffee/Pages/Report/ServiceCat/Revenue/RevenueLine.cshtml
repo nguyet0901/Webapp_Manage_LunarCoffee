@@ -1,0 +1,114 @@
+﻿@page
+@model Report.ServiceCat.Revenue.RevenueLine
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="card card-plain">
+    <div class="vtcardheader card-header pb-0 px-0">
+        <div class="right">
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Thu gọn"]">
+                <i class="vtt-icon vttech-icon-all text-lg text-primary cursor-pointer"
+                   data-bs-toggle="collapse" href="#SercatLineDiv" aria-expanded="true"></i>
+            </div>
+            <div class="icon-hover mx-1"
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 data-bs-original-title="@Local["Tải lại"]">
+                <i class="vtt-icon  vttech-icon-refesh text-lg text-primary cursor-pointer"
+                   onclick="event.preventDefault(); return LoadDataReport_SercatLine()"></i>
+            </div>
+        </div>
+    </div>
+    <div class="collapsesticky collapse show" id="SercatLineDiv">
+        <div class="card-body p-0">
+            <div class="row px-2">
+                <div class="col-12 col-sm-12 col-md-6 col-xl-4 p-1">
+                    <div class="fw-bold text-center text-dark mb-1 text-sm">
+                        @Local["Theo nhóm dịch vụ"]:
+                        <span id="SercatPieTotal" class="fw-bolder"></span>
+                    </div>
+                    <div class="position-relative mt-3 mb-2" style="min-height: 200px;">
+                        <div class="chart position-absolute top-50 start-50 translate-middle">
+                            <canvas id="SercatPie" class="chart-canvas" height="200"></canvas>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-12 col-sm-12 col-md-6 col-xl-8 p-1">
+                    <div class="mt-2  table-responsive">
+                        <div class="mt-2  table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <tbody id="SercatPieList">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        ToolPopper();
+        LoadDataReport_SercatLine();
+    });
+    function LoadDataReport_SercatLine () {
+        let _branch = "@Model._branch";
+        let _dateFrom = "@Model._dateFrom";
+        let _dateTo = "@Model._dateTo";
+        AjaxLoad(url = "/Report/ServiceCat/Revenue/RevenueLine/?handler=Loadata"
+            , data = {
+                'branchID': _branch,
+                'dateFrom': _dateFrom,
+                'dateTo': _dateTo
+            }
+            , async = true
+            , error = function () { notiError_SW(); }
+            , success = function (result) {
+                if (result != "") {
+                    let dataSercat = JSON.parse(result).Table;
+                    let Total = 0, TotalService = 0, TotalCard = 0, TotalMed = 0, TotalDeposit = 0;
+                    for (let i = 0; i < dataSercat.length; i++) {
+                        if (dataSercat[i].Type == 1) {
+                            dataSercat[i].Name = decodeHtml('@Local["Dịch vụ"]');
+                        };
+                        if (dataSercat[i].Type == 5) {
+                            dataSercat[i].Name = decodeHtml('@Local["Sản phẩm"]');
+                        };
+                        if (dataSercat[i].Type == 2) {
+                            dataSercat[i].Name = decodeHtml('@Local["Tiền cọc"]');
+                        };
+                        if (dataSercat[i].Type == 3) {
+                            dataSercat[i].Name = decodeHtml('@Local["Đơn thuốc"]');
+                        }
+                        if (dataSercat[i].Type == 4) {
+                            dataSercat[i].Name = decodeHtml('@Local["Thẻ trả trước"]');
+                        }
+                        Total += Number(dataSercat[i]['Amount']);
+                    }
+                    ReportPie_Description(dataSercat, 'Name', 'Amount', 'SercatPieList');
+                    rp_pie("SercatPie", dataSercat, 'Name', 'Amount')
+                    $('#SercatPieTotal').html(formatNumberToMilion(Number(Total)));
+                    $('#SercatPieSer').html(formatNumberToMilion(TotalService));
+                    $('#SercatPieCard').html(formatNumberToMilion(TotalCard));
+                    $('#SercatPieMed').html(formatNumberToMilion(TotalMed));
+                    $('#SercatPieDeposit').html(formatNumberToMilion(TotalDeposit));
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+        return false;
+
+    }
+
+</script>
+
+

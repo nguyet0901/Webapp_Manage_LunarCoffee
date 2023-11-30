@@ -1,0 +1,315 @@
+﻿@page
+@model MLunarCoffee.Pages.Setting.EmailSettingModel
+@{
+    Layout = null;
+}
+<script>js_require('/js/comon/initialize_setting.js');</script>
+<div class="container-fluid py-0 px-0" id="DivEmailSetting">
+    <div class="row m-0">
+        <div class="col-12 px-0">
+            <div class="card card-plain">
+                <div class="vtcardheader card-header pb-0 pt-3 px-2">
+                    <div class="left">
+                        <h6 class="mb-0">@Local["Cài đặt email"]</h6>
+                        <p class="text-sm mb-0">@Local["Danh sách email đã cấu hình"]</p>
+                    </div>
+                    <div class="right">
+                        <button id="ES_New" class="btn bg-gradient-primary btn-sm mt-1 setting_projectclosure" onclick="event.preventDefault();return EmailSetting_New();">@Local["Thêm mới"]</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0 px-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0" id="ES_RenderTable">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th style="width:40px;">@Local["#"]</th>
+                                    <th>@Local["Tên"]</th>
+                                    <th>Email</th>
+                                    <th>Host</th>
+                                    <th>Port</th>
+                                    <th style="width:40px;" class="setting_projectclosure">#</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ES_RenderTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="DivEmailSettingDetail"></div>
+<script type="text/javascript">
+
+    $(document).ready(function ()
+    {
+        EmailSetting_Load();
+    });
+
+    //#region //LOAD
+    function EmailSetting_Load()
+    {
+        AjaxLoad(url = "/Setting/EmailSetting/?handler=LoadData"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != 0) {
+                    let data = JSON.parse(result);
+                    EmailSetiting_Render(data, 'ES_RenderTableBody');
+                }
+                else { notiError_SW() }
+            }
+        )
+    }
+    //#endregion
+
+    //#region //RENDER
+
+    function EmailSetiting_Render(data, id)
+    {
+        let myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let styleValid = (item.IsCheck ?? 0) == 0 ? 'text-secondary opacity-3' : 'text-primary';
+                    let waitngValid = '<div class="MailSetting_WaitingDiv text-center" id="MailSetting_WaitingDiv_' + item.ID + '" style="display: none">'
+                            + '<div class="spinner-border spinner-border-sm text-primary" role="status">'
+                            + '<span class="sr-only">Loading...</span>'
+                            + '</div>'
+                            + '</div>';
+                    let tr = `
+                            <td class="d-none">${item.ID}</td>
+                            <td class="vt-number-order"></td>
+                            <td>
+                            <div class="d-flex">
+                            ${waitngValid}
+                            <i class="fas fa-check-circle ${styleValid} mt-1" id="MSetting_Icon_${item.ID}"></i>
+                            <span class="text-sm ms-1"> ${item.Name}</span>
+                            </div>
+                            </td>
+                            
+                            <td><a class="text-decoration-underline fw-bold buttonEditMail ESL_Mail">${item.Mail}</a></td>
+                            <td>${item.Host}</td>
+                            <td>${item.Port}</td>
+                            <td class="text-nowrap">${EmailSetting_RenderButtonGroup(item.State, item.IsCheck)}</td>
+                        `
+                    stringContent = stringContent + `<tr role="row"  data-check="${item.IsCheck ?? 0}" class="${(item.State == 0) ? 'bg-gray-200' : ''} vt-number">${tr}</tr>`
+                }
+                ToolPopper();
+            }
+            document.getElementById(id).innerHTML = stringContent;
+            EmailSetting_Event();
+        }
+    }
+
+    //#endregion
+
+    //#region //EVENT
+    function EmailSetting_Event()
+    {
+        $("#ES_RenderTable .buttonEditMail").unbind('click').on('click', function ()
+        {
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            EmailSetting_Edit(ID);
+        });
+
+        $("#ES_RenderTable .buttonDeleteClass").unbind('click').on('click', function ()
+        {
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            EmailSetting_Delete(ID);
+        });
+
+        $("#ES_RenderTable .buttonCheckMail").unbind('click').on('click', function ()
+        {
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            EmailSetting_CheckMail(ID);
+        });
+        $("#ES_RenderTable .buttonTurnoffClass").unbind('click').on('click', function ()
+        {
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            EmailSetting_TurnMail(ID, 0);
+        });
+        $("#ES_RenderTable .buttonTurnonClass").unbind('click').on('click', function ()
+        {
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            EmailSetting_TurnMail(ID, 1);
+        });
+        $("#ES_RenderTable .buttonCheckValid").unbind('click').on('click', function ()
+        {
+            let ischeck = $(this).closest('tr').attr('data-check') ?? 0;
+            let ID = Number($(this).closest("tr")[0].children[0].innerHTML);
+            if(ischeck == 0) {
+                $(`#MailSetting_WaitingDiv_${ID}`).show();
+                $(`#MSetting_Icon_${ID}`).hide();
+                let mail = $(this).closest('tr').find('.ESL_Mail')[0].innerHTML;
+                EmailSetting_ValidMail(mail, ID);
+            }
+        });
+    }
+    //#endregion
+
+    //#region //HANDLE
+    function EmailSetting_Delete(ID)
+    {
+        const promise = notiConfirm();
+        promise.then(function ()
+        {
+            MailSetting_ExecutedDelete(ID);
+        }, function () { });
+    }
+    function EmailSetting_TurnMail(ID, State)
+    {
+        AjaxLoad(url = "/Setting/EmailSetting/?handler=TurnEmail"
+            , data = { CurrentID: ID, State: State }
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != "0") {
+                    notiSuccess();
+                    EmailSetting_Load();
+                    EmailSetting_UpdateGlo();
+                }
+                else { notiError_SW() }
+            }
+        )
+    }
+    function EmailSetting_UpdateGlo()
+    {
+        AjaxLoad(url = "/Setting/EmailSetting/?handler=UpdateEmailGlo"
+            , data = {}
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                AjaxJWT(url = "/api/Author/BaseData"
+                    , data = JSON.stringify({})
+                    , async = true
+                    , success = function (result)
+                    {
+                        localstorage_set(session_base, JSON.parse(result));
+                    }
+                );
+            }
+        )
+    }
+    function EmailSetting_RenderButtonGroup(state, ischeck)
+    {
+        let buttons = []
+        buttons.push(`<button class="buttonGrid ${ischeck == 1 ? 'text-secondary' : ''}" title="@Local["Xác thực email"]" data-bs-toggle="tooltip"><i class="buttonCheckValid fas fa-tasks"></i></button>`)
+        buttons.push('<button class="buttonGrid" title="@Local["Kiểm tra thông tin"]" data-bs-toggle="tooltip"><i class="buttonCheckMail fas fa-check"></i></button>')
+        buttons.push('<button class="buttonGrid setting_projectclosure" title="@Local["Xóa email"]" data-bs-toggle="tooltip"><i class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>')
+        if (state == 1)
+            buttons.push('<button class="buttonGrid" title="@Local["Tắt"]" data-bs-toggle="tooltip"><i class="buttonTurnoffClass fas fa-eye-slash"></i></button>')
+        else
+            buttons.push('<button class="buttonGrid" title="@Local["Bật"]" data-bs-toggle="tooltip"><i class="buttonTurnonClass fas fa-eye"></i></button>')
+        return Render_Button_Grid(buttons)
+    }
+
+    function EmailSetting_CheckMail(ID)
+    {
+        $("#DetailModal_Content").html("");
+        $("#DetailModal_Content").load("/Setting/EmailSettingCheck?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $("#DetailModal").modal("show");
+        return false;
+    }
+    function EmailSetting_ValidMail(mail, id)
+    {
+        if (mail != '') {
+            Email_CheckValid(mail).then((result)=>{
+                $(`#MailSetting_WaitingDiv_${id}`).hide();
+                if(result == "1") {
+                    $(`#MSetting_Icon_${id}`).removeClass("opacity-3 text-secondary").addClass("text-primary");
+                    MailSetting_ExecutedCheckValid(id)
+                    confirmf_initialize('Xác thực', 'Thông tin hợp lệ', true, false, 'success', 'OK');
+                }
+                else{
+                    $(`#MSetting_Icon_${id}`).addClass("opacity-3 text-secondary").removeClass("text-primary");
+                    confirmf_initialize('Xác thực', 'Thông tin không hợp lệ', true, false, 'error', 'OK');
+                }
+                $(`#MSetting_Icon_${id}`).show();
+            });
+        }
+        else {
+            notiWarning("@Local["Email không hợp lệ"]");
+        }
+        
+        return false;
+    }
+    //#endregion
+
+    //#region //EXECUTED
+    function MailSetting_ExecutedDelete(ID)
+    {
+        AjaxLoad(url = "/Setting/EmailSetting/?handler=Delete"
+            , data = { CurrentID: ID }
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != "0") {
+                    notiSuccess();
+                    EmailSetting_Load();
+                    EmailSetting_UpdateGlo();
+                }
+                else { notiError_SW() }
+            }
+        )
+    }
+
+    function MailSetting_ExecutedCheckValid(ID)
+    {
+        AjaxLoad(url = "/Setting/EmailSetting/?handler=CheckValid"
+            , data = { CurrentID: ID }
+            , async = true
+            , error = null
+            , success = function (result)
+            {
+                if (result != "0") {
+                    console.log(result);
+                    EmailSetting_Load();
+                    //notiSuccess();
+                }
+                else { notiError_SW() }
+            }
+        )
+    }
+    //#endregion
+
+
+    //#region //SHOW DETAIL
+    function EmailSetting_New()
+    {
+        EmailSetting_OpenDetail();
+        $("#DivEmailSettingDetail").load("/Setting/EmailSettingDetail?CurrentID=" + 0 + "&ver=" + versionofWebApplication);
+        $("#DivEmailSettingDetail").show();
+        return false;
+    }
+    function EmailSetting_Edit(ID)
+    {
+        EmailSetting_OpenDetail();
+        $("#DivEmailSettingDetail").load("/Setting/EmailSettingDetail?CurrentID=" + ID + "&ver=" + versionofWebApplication);
+        $("#DivEmailSettingDetail").show();
+        return false;
+    }
+    function EmailSetting_OpenDetail()
+    {
+        $("#DivEmailSettingDetail").empty();
+        $("#DivEmailSetting").hide();
+    }
+    function EmailSetting_CloseDetail()
+    {
+        $("#DivEmailSettingDetail").empty();
+        $("#DivEmailSetting").show();
+        $("#DivEmailSettingDetail").hide();
+    }
+    //#endregion
+</script>
+<script>js_require('/js/main.js');</script>

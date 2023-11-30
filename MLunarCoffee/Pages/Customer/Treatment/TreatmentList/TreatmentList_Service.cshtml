@@ -1,0 +1,1153 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.Treatment.TreatmentList.TreatmentList_ServiceModel
+@{
+    Layout = null;
+}
+
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<div class="row">
+    <div class="col-12 position-relative">
+
+        <div id="Div_Treament_List_Master">
+            <div class="card-header py-0">
+                <div class="d-sm-flex pt-0">
+                    <div class="position-relative">
+                        <ul class="nav nav-pills p-1 bg-transparent permissionlist" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#trl_filterarea">
+                                    <i class="text-gradient text-primary fas fa-filter"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link cursor-pointer" data-bs-toggle="collapse" href="#dtContentTreatmentinfodes">
+                                    <i class="text-gradient text-lg text-primary fas fa-info-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div id="trl_filterarea" class="collapse collapsesticky top-100 card p-3 pb-0 position-absolute z-index-3 end-1 mt-1 shadow-lg" style="min-width:250px;">
+                            <div class="my-1" id="FilterPatientRecord">
+                                <div class="ui fluid search selection dropdown form-control" id="CustomerRecordID" onchange="changePatientRecord();">
+                                    <input type="hidden" />
+                                    <i class="dropdown icon"></i>
+                                    <div class="default text">eg .@Local["Bệnh án"]</div>
+                                    <div id="cbbPatientRecordID" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="my-1" id="FilterTreatmentPlan">
+                                <div class="ui fluid search selection dropdown form-control" id="CustomerTreatmentPlanID">
+                                    <input type="hidden" />
+                                    <i class="dropdown icon"></i>
+                                    <div class="default text">eg .@Local["Kế hoạch điều trị"]</div>
+                                    <div id="cbbTreatmentPlanID" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="my-1" id="FilterServiceTab">
+                                <div class="ui fluid search selection dropdown form-control" id="CustomerServiceTabID">
+                                    <input type="hidden" />
+                                    <i class="dropdown icon"></i>
+                                    <div class="default text">eg .@Local["Dịch vụ"]</div>
+                                    <div id="cbbCustomerServiceTabID" class="menu" tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="my-3 d-flex justify-content-end" id="actionFilter">
+                                <button class="btn btn-sm badge bg-gradient-dark ms-2" onclick="event.preventDefault();return Treatment_List_CloseFilter();">@Local["Đóng"]</button>
+                                <button class="btn btn-sm badge bg-gradient-dark ms-2" onclick="event.preventDefault();return Treatment_List_ResetFilter();">@Local["Tải lại"]</button>
+                                <button class="btn btn-sm badge bg-gradient-primary ms-2" onclick="event.preventDefault();return Treatment_List_Service_Load();">Ok</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ms-auto my-auto mt-1">
+                        <button class="btn bg-gradient-primary btn-sm mt-1 _tab_control_ px-3" id="per_CustPrintTreatmentByDate" onclick="Treatment_List_Service_PrintList()">
+                            @Local["In theo ngày"]
+                        </button>
+                        <button data-tab="add_tab_multi_treat"
+                                class="btn bg-gradient-primary btn-sm mt-1 _tab_control_ px-3" onclick="Treatment_List_Service_Add()">
+                            @Local["Điều trị"]
+                        </button>
+                        <button id="btnAddNoteTreatment" class="btn btn-dark btn-sm mt-1 _tab_control_ px-3"
+                                data-tab="add_tab_multi_treat" onclick="Treatment_List_Service_Record_Add()">
+                            @Local["Công việc"]
+                        </button>
+                        <button id="btnPrintProfileTreatmentNew" class="btn btn-dark btn-sm mt-1 px-3"
+                                onclick="PrintTreatment(ser_MainCustomerID)">
+                            @Local["In"]
+                        </button>
+                        <div class="position-relative d-inline">
+                            <button class="btn btn-dark btn-sm mt-1 position-relative dropdown-toggle px-3" data-bs-toggle="collapse" data-bs-target="#colLists">
+                                @Local["Xem thêm"]
+                            </button>
+                            <div class="collapse position-absolute z-index-3 end-1 top-100 mt-2" id="colLists" style="min-width:250px;">
+                                <ul class="card card-body text-dark text-capitalize opacity-10">
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="branch" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chi nhánh"]</p>
+                                    </li>
+
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="created" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thông tin tạo"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="editor" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chỉnh sửa"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="file" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["File"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="doctor" type="checkbox" checked>
+                                        </div>
+                                        <p class="text-sm">@Local["Bác sĩ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="doctor2" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Bác sĩ"] 2</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="doctor3" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Bác sĩ"] 3</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="doctor4" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Bác sĩ"] 4</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="assistant" type="checkbox" checked>
+                                        </div>
+                                        <p class="text-sm">@Local["PT/KTV"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="assistant2" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["PT/KTV"] 2</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="assistant3" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["PT/KTV"] 3</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="assistant4" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["PT/KTV"] 4</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="tech" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Hỗ trợ chuyên môn"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="tech2" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Hỗ trợ chuyên môn"] 2</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="PriceDiscount" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Thành tiền"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="Amountequal" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Tiền tương ứng"]</p>
+                                    </li>
+ 
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="detail" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chi tiết"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="send_sms" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["SMS"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="created_app" type="checkbox" checked>
+                                        </div>
+                                        <p class="text-sm">@Local["Tạo lịch hẹn"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="takecare" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Tạo chăm sóc"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="content_next" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Nội dung kế tiếp"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="note" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ghi chú"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="symptoms" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Đặc điểm bệnh"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="treatdatenext" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Ngày điều trị kế tiếp"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="evaluate" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Đánh giá"]</p>
+                                    </li>
+
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="tabservicecode" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Mã đơn dịch vụ"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="personres" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Người chịu trách nhiệm"]</p>
+                                    </li>
+                                    <li class="d-flex">
+                                        <div class="form-check form-switch">
+                                            <input class="shtoogle form-check-input" data-name="sign" type="checkbox">
+                                        </div>
+                                        <p class="text-sm">@Local["Chữ ký"]</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="dtContentTreatmentinfodes" class="border-dashed border-1 border-secondary border-radius-md p-3 text-sm text-dark ms-1 mb-4 mt-2 multi-collapse collapse">
+                    <h6 class="mb-0">@Local["Quy định chỉnh sửa"]</h6>
+                    <p class="text-sm mb-0">@Local["Chỉnh sửa và xóa trong ngày. Chỉ người tạo mới được quyền sửa và xóa"]</p>
+                    <p class="text-sm mb-0">@Local["Điều trị làm phát sinh dịch vụ tiêu hao không thể xóa. Dịch vụ đã được thay đổi,hoặc khóa thì điều trị của dịch vụ đó không thể chỉnh sửa hoặc xóa"] </p>
+                </div>
+            </div>
+            <div class="card-body pt-1">
+                <div class="m-0 mb-3 mobile-responsive position-relative" style="max-height: 80vh; min-height: 35vh;">
+                    <div id="div_customer_waiting" class="waitingdiv text-center position-absolute top-0 start-50 translate-middle-x">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+
+                    </div>
+                    <table data-name="ContentTreatment" class="table vt-table mb-0" id="dtContentTreatment">
+                        <thead>
+                            <tr>
+                                <th class="d-none">ID</th>
+                                <th class="d-none">TypeTreat</th>
+                                <th class="d-none">CreatedDate</th>
+                                <th>@Local["#"]</th>
+                                <th style="min-width: 80px;">@Local["Ngày điều trị"]</th>
+                                <th data-name="tabservicecode">@Local["Mã đơn"]</th>
+                                <th>@Local["Dịch vụ"]</th>
+                                <th data-name="PriceDiscount">@Local["Thành tiền"]</th>
+                                <th data-name="Amountequal">@Local["Tiền tương ứng"]</th>
+                                <th data-name="detail">@Local["Chi tiết"]</th>
+                                <th data-name="doctor" style="min-width:100px;">@Local["Bác sĩ"]</th>
+                                <th data-name="doctor2" style="min-width:100px;">@Local["Bác sĩ"] 2</th>
+                                <th data-name="doctor3" style="min-width:100px;">@Local["Bác sĩ"] 3</th>
+                                <th data-name="doctor4" style="min-width:100px;">@Local["Bác sĩ"] 4</th>
+                                <th data-name="assistant" style="min-width:100px;">@Local["PT/KTV"]</th>
+                                <th data-name="assistant2" style="min-width:100px;">@Local["PT/KTV"] 2</th>
+                                <th data-name="assistant3" style="min-width:100px;">@Local["PT/KTV"] 3</th>
+                                <th data-name="assistant4" style="min-width:100px;">@Local["PT/KTV"] 4</th>
+                                <th data-name="tech" style="min-width:160px;">@Local["Hỗ trợ chuyên môn"]</th>
+                                <th data-name="tech2" style="min-width:160px;">@Local["Hỗ trợ chuyên môn"] 2</th>
+                                <th style="min-width:100px;">@Local["Nội dung"]</th>
+                                <th data-name="content_next" style="min-width:70px;">@Local["Nội dung kế tiếp"]</th>
+                                <th data-name="note" style="min-width:70px;">@Local["Ghi chú"]</th>
+                                <th data-name="symptoms" style="min-width:70px;">@Local["Đặc điểm bệnh"]</th>
+                                <th data-name="treatdatenext" style="min-width:70px;">@Local["Ngày điều trị kế tiếp"]</th>
+                                <th data-name="evaluate">@Local["Đánh giá"]</th>
+                                <th data-name="branch">@Local["Chi nhánh"]</th>
+                                <th data-name="created" style="min-width:100px;">@Local["Thông tin tạo"]</th>
+                                <th data-name="editor">@Local["Chỉnh sửa"]</th>
+                                <th data-name="file">@Local["File"]</th>
+                                <th data-name="send_sms" style="min-width: 50px;">@Local["SMS"]</th>
+                                <th data-name="created_app" style="min-width: 50px;">@Local["Lịch hẹn"]</th>
+                                <th data-name="takecare" style="width: 150px;">@Local["Chăm sóc"]</th>
+                                <th data-name="personres">@Local["Người chịu trách nhiệm"]</th>
+                                <th data-name="sign">@Local["Chữ ký"]</th>
+                                <th>@Local["Xử lý"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtContentTreatmentBody">
+                        </tbody>
+                    </table>
+
+                </div>
+                <button id="TLshowmore" class="btn btn-secondary w-100 p-1 btnsysmore" onclick="Treatment_List_Service_LoadMore()" style="display: none;">
+                    @Local["Xem thêm"]
+                </button>
+            </div>
+        </div>
+        <div id="Div_Treament_List_Detail">
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let data_list_treatment = [];
+    let data_list_teethDetail = [];
+    let data_patient_record_combo;
+    let data_treatmentPlan_combo;
+    var ser_PatientRecordID = '@Model._PatientRecordID';
+    var ser_sys_Patient_Record = '@Model._sys_Patient_Record';
+    var ser_sys_Treatment_Plan = '@Model._sys_Treatment_Plan';
+    var ser_TreatServiceView = Number(@Model._ViewAll);
+    let TL_beginid = 0;
+    let TL_beginidless = 0;
+    let TL_limit = 50;
+    var DataServiceStage = {}, DataTeeth, DataUser, DataEmployee;
+    let shtable;
+    //#region // Load
+    $(document).ready(function () {
+        shtable = $("#dtContentTreatment").TableExpandColumn({
+            shtoogle: $('.shtoogle')
+        });
+        Master_IndexDB_Reads(_Session_Data, [_Session_Teeth, _Session_User, _Session_Employee]
+            , function (data) {
+                DataTeeth = data[0];
+                DataUser = data[1];
+                DataEmployee = data[2];
+                Load_Initialize_Treatment_List();
+                Treatment_List_Service_Load();
+            })
+        if (Number(ser_sys_Patient_Record) == 0) {
+            $('#FilterPatientRecord').remove();
+        }
+        if (Number(ser_sys_Treatment_Plan) == 0) {
+            $('#FilterTreatmentPlan').remove();
+        }
+        //if (Number(ser_sys_Patient_Record) == 0 && Number(ser_sys_Treatment_Plan) == 0) {
+        //    $('#actionFilter').remove();
+        //}
+        CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+        Checking_TabControl_Permission();
+    });
+
+    function Load_Initialize_Treatment_List() {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=LoadComboMain"
+            , data = { 'CustomerID': ser_MainCustomerID }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                data_patient_record_combo = data.PatientRecord;
+                data_treatmentPlan_combo = data.TreatmentPlan;
+                data_servicetab_combo = data.ServiceTab;
+
+                if ($("#CustomerRecordID").length && data_patient_record_combo.length > 0) {
+                    Load_Combo(data_patient_record_combo, "cbbPatientRecordID", true, "@Local["Tất cả bệnh án"]");
+                    $("#CustomerRecordID").dropdown("refresh");
+                    $("#CustomerRecordID").dropdown("set selected", "0");
+                }
+                if ($("#CustomerTreatmentPlanID").length && data_treatmentPlan_combo.length > 0) {
+                    Load_Combo(data_treatmentPlan_combo, "cbbTreatmentPlanID", true, "@Local["Tất cả kế hoạch"]");
+                    $("#CustomerTreatmentPlanID").dropdown("refresh");
+                    $("#CustomerTreatmentPlanID").dropdown("set selected", "0");
+                }
+                if ($("#CustomerServiceTabID").length && data_servicetab_combo.length > 0) {
+                    Load_Combo(data_servicetab_combo, "cbbCustomerServiceTabID", true, "@Local["Tất cả dịch vụ"]");
+                    $("#CustomerServiceTabID").dropdown("refresh");
+                    $("#CustomerServiceTabID").dropdown("set selected", "0");
+                }
+            }
+        );
+
+    }
+    function changePatientRecord() {
+        if (data_patient_record_combo.length > 0) {
+            let patientRecordID = Number($('#CustomerRecordID').dropdown('get value')) ? Number($('#CustomerRecordID').dropdown('get value')) : 0;
+            if (patientRecordID != 0) {
+                let dataTreatmentPlan = data_treatmentPlan_combo.filter(word => word['PatientRecordID'] == patientRecordID)
+                Load_Combo(dataTreatmentPlan, "cbbTreatmentPlanID", true, "All Treatment Plan");
+                $("#CustomerTreatmentPlanID").dropdown("clear");
+                $("#CustomerTreatmentPlanID").dropdown("refresh");
+                $("#CustomerTreatmentPlanID").dropdown("set selected", "0");
+            }
+        }
+    }
+    // #endregion
+
+    //#region // Service Treatment
+    function Treatment_List_Service_LoadMore() {
+        Treatment_List_Service_Load(TL_beginid, TL_beginidless);
+    }
+    function Treatment_List_Service_Load(_idbegin, _idbeginless) {
+        let PatientRecordID = Number($('#CustomerRecordID').dropdown('get value')) ? Number($('#CustomerRecordID').dropdown('get value')) : 0;
+        let TreatmentPlanID = Number($('#CustomerTreatmentPlanID').dropdown('get value')) ? Number($('#CustomerTreatmentPlanID').dropdown('get value')) : 0;
+        let ServiceTabID = Number($('#CustomerServiceTabID').dropdown('get value')) ? Number($('#CustomerServiceTabID').dropdown('get value')) : 0;
+        let idbegin = _idbegin != undefined ? _idbegin : 0;
+        let idbeginless = _idbeginless != undefined ? _idbeginless : 0;
+        AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=LoadataTreatment"
+            , data = {
+                'CustomerID': ser_MainCustomerID,
+                'PatientRecordID': PatientRecordID,
+                'TreatmentPlanID': TreatmentPlanID,
+                'ServiceTabID': ServiceTabID,
+                'idbegin': idbegin,
+                'idbeginless': idbeginless,
+                'limit': TL_limit
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                let data = JSON.parse(result);
+                data_list_treatment = data.Table;
+                data_list_teethDetail = data.Table1;
+
+                if (data_list_treatment.length > 0) {
+                    if (data_list_treatment.length < TL_limit) $('#TLshowmore').hide();
+                    else $('#TLshowmore').show();
+                    if (idbegin == 0 && idbeginless == 0) $('#dtContentTreatmentBody').html('');
+                    fnRenderBlock(data_list_treatment, "dtContentTreatmentBody"
+                        , blocknum = 30
+                        , fnrender = RenderTableTreatment
+                        , fnsuccess = function (e) { }
+                        , fnbegin = function (e) { }
+                    );
+                    let treatless = data_list_treatment.filter(function (el) {
+                        return Number(el.IsTreatLess) == 1
+                    });;
+                    let treat = data_list_treatment.filter(function (el) {
+                        return Number(el.IsTreatLess) == 0
+                    });
+                    if (treatless.length > 0) TL_beginidless = treatless[treatless.length - 1].ID;
+                    if (treat.length > 0) TL_beginid = treat[treat.length - 1].ID;
+                }
+                else {
+                    $('#TLshowmore').hide();
+                    if (idbegin == 0 && idbeginless == 0) $('#dtContentTreatmentBody').html('');
+                }
+            }, sender = null
+            , before = function () {
+                $("#div_customer_waiting").show();
+            }
+            , complete = function (e) {
+                $("#div_customer_waiting").hide();
+            }
+        );
+
+    }
+    function Treatment_List_Service_Add() {
+
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatMultiv2?PatientRecordID=" + ser_PatientRecordID + "&ver=" + versionofWebApplication, function (e) {
+            if (document.getElementById("Div_Treament_List_Master"))
+                document.getElementById("Div_Treament_List_Master").style.display = "none";
+            if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+            document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        });
+    }
+    function Treatment_List_Service_View(ID, TabID) {
+        if (document.getElementById("Div_Treament_List_Master"))
+            document.getElementById("Div_Treament_List_Master").style.display = "none";
+        if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+        document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatMultiv2?Type=view&CurrentID=" + ID + "&TabID=" + TabID + "&ver=" + versionofWebApplication);
+    }
+    function Treatment_List_Service_Edit(ID, TabID) {
+        if (document.getElementById("Div_Treament_List_Master"))
+            document.getElementById("Div_Treament_List_Master").style.display = "none";
+        if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+        document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatMultiv2?CurrentID=" + ID + "&TabID=" + TabID + "&ver=" + versionofWebApplication);
+    }
+    function Delete_Treatment_Service(id, tabid) {
+        const promise = notiConfirm();
+        promise.then(function () { Execute_Delete_Treatment_Service(id, tabid); }, function () { });
+    }
+    function Execute_Delete_Treatment_Service(id, tabid) {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=DeleteItem_Treat_Service"
+            , data = {
+                'id': id, 'tabid': tabid
+                , 'dencos': ser_sys_DentistCosmetic
+                , 'CustomerID': ser_MainCustomerID
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cuttreat('d', ser_MainCustomerID, '');
+                    Treatment_List_Service_Load();
+                    if (typeof LoadCustomerPaymentInfo !== 'undefined' && $.isFunction(LoadCustomerPaymentInfo)) {
+                        LoadCustomerPaymentInfo();
+                    }
+                }
+                else if (result == "0") {
+                    notiWarning("@Local["Xóa điều trị thất bại"]!");
+                }
+                else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+    //#endregion
+
+    //#region // Record Treatment
+    function Treatment_List_Service_Record_Add() {
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatLessDetail?CustomerID=" + ser_MainCustomerID + "&PatientRecordID=" + ser_PatientRecordID + "&ver=" + versionofWebApplication, function (e) {
+            if (document.getElementById("Div_Treament_List_Master"))
+                document.getElementById("Div_Treament_List_Master").style.display = "none";
+            if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+            document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        });
+    }
+    function Treatment_List_Service_Record_Edit(ID, TreatCustomerID) {
+        if (document.getElementById("Div_Treament_List_Master"))
+            document.getElementById("Div_Treament_List_Master").style.display = "none";
+        if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+        document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatLessDetail?CurrentID=" + ID + "&CustomerID=" + TreatCustomerID + "&ver=" + versionofWebApplication);
+    }
+    function Treatment_List_Service_Record_View(ID, TreatCustomerID) {
+        if (document.getElementById("Div_Treament_List_Master"))
+            document.getElementById("Div_Treament_List_Master").style.display = "none";
+        if (document.getElementById("treatheader")) document.getElementById("treatheader").style.display = "none";
+        document.getElementById("Div_Treament_List_Detail").style.display = "block";
+        $("#Div_Treament_List_Detail").empty();
+        $("#Div_Treament_List_Detail").load("/Customer/Treatment/TreatLessDetail?Type=view&CurrentID=" + ID + "&CustomerID=" + TreatCustomerID + "&ver=" + versionofWebApplication);
+
+    }
+    function Delete_Treatment_Record(id) {
+        const promise = notiConfirm();
+        promise.then(function () { Execute_Delete_Treatment_Record(id); }, function () { });
+    }
+    function Execute_Delete_Treatment_Record(id) {
+        AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=DeleteItem_Treat_Record"
+            , data = {
+                'id': id
+                , 'CustomerId': ser_MainCustomerID
+            }
+            , async = true
+            , error = function () { notiError_SW() }
+            , success = function (result) {
+                if (result == "1") {
+                    notiSuccess();
+                    syslog_cuttreat('d', ser_MainCustomerID, '');
+                    Treatment_List_Service_Load();
+                    if (typeof LoadCustomerPaymentInfo !== 'undefined' && $.isFunction(LoadCustomerPaymentInfo)) {
+                        LoadCustomerPaymentInfo();
+                    }
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+    //#endregion
+
+    // #region // Render
+    function Render_Table_Treatment_Detail(ID, TeethTreat, TeethType, Percent, PercentNew, datateeth) {
+        let detailteeth = '';
+        if (Percent == 0 && PercentNew == 0) {
+            let data = datateeth.filter(word => Number(word.TreatID) == Number(ID));
+            if (data != undefined && data.length != 0) {
+                for (i = 0; i < data.length; i++) {
+                    let _namestage = data[i].StageName;
+                    let _nameteeth = Fun_GetTeeth_ByToken(DataTeeth, data[i].TeethID + ',', TeethType);
+                    let _classname = '';
+                    if (Number(data[i].PerComplete) == 100) _classname = 'bg-success';
+                    else _classname = 'bg-dark';
+                    detailteeth = detailteeth
+                        + '<span class="badge bg-light p-1 my-2 me-1 text-sm text-dark">'
+                        + '<span class="text-lowercase font-weight-normal px-2">' + _namestage + '</span>'
+                        + '<span class="badge ' + _classname + '">'
+                        + '<span class="pe-0">'
+
+                        + _nameteeth
+                        + '</span>'
+                        + '<span class="">'+' - ' + data[i].PerComplete + ' %' + '</span>'
+
+                        + '</span>'
+                        + '</span>';
+                }
+            }
+        }
+        else {
+            detailteeth = Fun_GetTeeth_ByToken(DataTeeth, TeethTreat, TeethType);
+
+        }
+        return detailteeth;
+    }
+    function Render_Table_Treatment_Service_Name(ID, TabID, dencos, istreatless, serviceName
+        , TimeToTreatment, TimeTreatIndex
+        , TeethChoosing, Percent, PercentNew
+        , PercentNewDetail, PercentCurentDetail, Quantity, HavingStage) {
+        let servicename = '<a data-id="' + ID + '" data-tab="' + TabID + '" data-less="' + istreatless + '" class="_treat_service cursor-pointer '
+            + ((dencos == 0 || istreatless != 0) ? 'left_none' : '') + '">' + serviceName + '</a>';
+        let per_total_pro = '';
+        let index_label = '', index_time = '';
+
+        if (istreatless == 0) {
+            if (dencos == 0 && HavingStage ==0) {
+                index_label = '@Local["Lần điều trị"]: ' + TimeTreatIndex + ' | ' + TimeToTreatment;
+                index_time = '<div class="d-grid" style="grid-template-columns: repeat(15, 30px);">' + index_time + '</div></div>';
+
+            }
+            else {
+
+                let per_new = 0, percurrent = 0;
+                if (Percent == 0 && PercentNew == 0) {
+                    if (TeethChoosing == '') {
+                        per_new = (Quantity == 0) ? 0 : PercentNewDetail;
+                        percurrent = (Quantity == 0) ? 0 : PercentCurentDetail;
+                    }
+                    else {
+                        per_new = (Quantity == 0) ? 0 : PercentNewDetail / Quantity;
+                        percurrent = (Quantity == 0) ? 0 : PercentCurentDetail / Quantity;
+                    }
+                }
+                else { per_new = PercentNew; percurrent = Percent };
+                per_new = Math.round(per_new * 100) / 100;
+                percurrent = Math.round(percurrent * 100) / 100;
+                per_total_pro = '<div class="">@Local["Hoàn thành"]:'
+                    + '<span class="ms-2 fw-bold" title="@Local["Hoàn thành"]">' + percurrent + ' %</span>'
+                    + '<span class="ms-2 text-danger" title="@Local["Điều trị"]">(' + per_new + ' %)</span>'
+                    + '</div>';
+            }
+        }
+
+        let serpro =
+
+            '<div class="ms-2 d-flex flex-column">'
+            + '<h6 class="mb-1 text-dark text-sm">'
+            + servicename
+            + '</h6>'
+            + '<div class="text-dark text-sm">'
+            + '<span class="col-w-200 text-muted">' + index_label + '</span>'
+            + index_time
+            + '</div>'
+            + per_total_pro;
+
+
+        return serpro;
+
+
+    }
+
+
+    function RenderTreatment_AmountEqual (dencos,istreatless
+        , TimeToTreatment
+        , TeethChoosing
+        , Percent, PercentNew
+        , PercentNewDetail, Quantity, HavingStage, priceDiscounted) {
+        let amountequal = 0;
+
+        if (istreatless == 0) {
+            if (dencos == 0 && HavingStage == 0) {
+                if (TimeToTreatment != 0) {
+                    amountequal = priceDiscounted / TimeToTreatment;
+
+                }
+            }
+            else {
+                let per_new = 0;
+                if (Percent == 0 && PercentNew == 0) {
+                    if (TeethChoosing == '') {
+                        per_new = (Quantity == 0) ? 0 : PercentNewDetail;
+                    }
+                    else {
+                        per_new = (Quantity == 0) ? 0 : PercentNewDetail / Quantity;
+                    }
+                }
+                else {
+                    per_new = PercentNew
+                }
+                amountequal = (priceDiscounted * per_new) / 100;
+            }
+        }
+        amountequal = formatNumber(amountequal.toFixed(0));
+        return amountequal
+    }
+
+
+
+    function Render_Table_Treatment_Execute(dencos, id, tabid, printbutton, istreatless, sameuser, samedate
+        , exporttreat, ischaned, islocked, ispassingdate
+        , TreatIndex, TotalTimeIndex
+    ) {
+        let buttons = [];
+        if (printbutton) {
+            buttons.push('<button class="buttonGrid" value="' + id + '"><i title="@Local["In"]" class="buttonPrintClass vtt-icon vttech-icon-print"></i></button>')
+        }
+
+
+        if (((sameuser == 1 && samedate == 1) || ispassingdate == 1) && ischaned == 0 && islocked == 0) {
+            buttons.push('<button class="buttonGrid"  value="' + id + '"><i title="@Local["Sửa"]" data-tab="' + tabid + '" class="buttonEditClass vtt-icon vttech-icon-edit"></i> </button>')
+
+        }
+
+        if (((sameuser == 1 && samedate == 1) || ispassingdate == 1) && ischaned == 0 && exporttreat == 0 && islocked == 0
+            && (istreatless == 1 || dencos == 1 || (dencos == 0 && (TreatIndex == TotalTimeIndex || sys_Noruletreatindex == 1)))
+        ) {
+            buttons.push('<button class="buttonGrid" value="' + id + '"><i title="@Local["Xoá"]" data-tab="' + tabid + '" class="buttonDeleteClass vtt-icon vttech-icon-delete"></i> </button>')
+        }
+
+        return Render_Button_Grid(buttons)
+    }
+
+    function Render_CustomerCare(ID, ISCreatedCare) {
+        let result = '';
+        if (ISCreatedCare != null && ISCreatedCare !== "") {
+            result = '<i class="take-care text-gradient text-success buttonHavingCC vtt-icon vttech-icon-cctreat"  data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top" data-bs-original-title="@Local["Đã chăm sóc"]<br> ' + ConvertDateTimeUTC_DMY(ISCreatedCare) + '"></i>'
+        } else {
+            result = '<button class="align-items-center justify-content-center buttonGrid" value="' + ID + '">'
+                + '<i class="take-care text-gradient text-warning buttonNoneCC vtt-icon vttech-icon-nonecctreat" data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top" data-bs-original-title="@Local["Tạo chăm sóc"]"></i>'
+                + '</button>'
+        }
+        return result;
+    }
+
+    function RenderTreatment_Created(id, date) {
+        if (id == "0") return '';
+        let obj = Fun_GetObject_ByID(DataUser, id);
+        let name = (obj != null && obj.EmployeeName != undefined) ? obj.EmployeeName : 'unknown';
+        let img = (obj != null && obj.Avatar != "") ? obj.Avatar : Master_Default_Pic;
+        let result = '<div class="d-flex ms-2">'
+            + '<div class="icon icon-shape icon-sm me-2   text-center">'
+            + '<img class="avatar avatar-xs mt-2" src="' + img + '" alt="label-image">'
+            + '</div>'
+            + '<div class="d-flex flex-column">'
+            + '<h6 class="text-dark text-sm mb-0">' + name + '</h6>'
+            + '<span class="text-xs">' + GetDateTime_String_DMYHM(date) + '</span>'
+            + '</div>'
+            + '</div>';
+
+        return result;
+
+    }
+
+
+    function RenderTreatment_Join(id) {
+        if (id == "0") return '';
+        let obj = Fun_GetObject_ByID(DataEmployee, id);
+        let name = (obj != null) ? obj.Name : 'unknown';
+        let img = (obj != null && obj.Avatar != "") ? obj.Avatar : Master_Default_Pic;
+        let result = '<div class="p-2"><div class="d-inline">'
+            + '<img class="avatar avatar-xs me-2" src="' + img + '" alt="label-image" />'
+            + '<span>' + name + '</span></div></div>';
+
+        return result;
+
+    }
+    async function RenderTableTreatment(data, id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                let datateeth = data_list_teethDetail;
+                var myNode = document.getElementById(id);
+                if (myNode != null) {
+                    let stringContent = '';
+                    let TreatDateString = '', btnSendMsg = '';
+                    if (data && data.length > 0) {
+                        for (let i = 0; i < data.length; i++) {
+
+                            let item = data[i];
+                            let stringDivSign = '';
+                            let TreatDate = GetDateTime_String_DMY(item.Created);
+                            if (i > 0 && GetDateTime_String_DMY(item.Created) == GetDateTime_String_DMY(data[i - 1].Created)) {
+                                TreatDateString = "";
+                                btnSendMsg = "";
+                            }
+                            else {
+                                let rowspan = data.filter(word => GetDateTime_String_DMY(word['Created']) == TreatDate).length;
+                                TreatDateString = `<td rowspan="${rowspan}">${GetDateTime_String_DMY(item.Created)}</td>`;
+                                btnSendMsg =    '<td  rowspan="' + rowspan + '" data-name="send_sms">'
+                                                + Render_Button_Grid(['<button class="buttonGrid btnSendSMS" data-datetreat="' + ConvertDateTimeUTC_YMD(item.Created) + '" data-custid="' + item.Customer_ID + '"><i title="@Local["Gửi tin nhắn"]" class="text-lg fas fa-sms"></i></button>'])
+                                                + '</td>';
+                            }
+
+                            let guide = item.GuideDocument != ""
+                                ? '<a target="_blank" class="d-flex justify-content-center" href=' + item.GuideDocument + '><i class="vtt-icon vttech-icon-pdf"></i></a>'
+                                : ''
+                            let evaluate = (item.IsTreatLess == 0) ? (item.MeasureID != 0
+                                ? `<a data-id="${item.MeasureID}" data-treat="${item.ID}" class="text-primary text-sm cursor-pointer CustTreatList_btnEval">${ConvertYMDInt_ToDate(item.MeasureDate)}</a>
+                                    `
+                                : `<a data-id="0" data-treat="${item.ID}" class="text-secondary text-sm cursor-pointer CustTreatList_btnEval">@Local["Đánh giá"]</a>`)
+                                : '';
+                            if (item.IsTreatLess == 0) {
+                                if (item.IsSign != 0) {
+                                    stringDivSign =
+                                        `
+                                                <a data-id="${item.ID}" class="text-sm buttonTreatSign py-2 text-primary d-block text-center">@Local["Đã ký tên"]</a>
+                                                <a data-id=${item.ID} class="cursor-pointer buttonTreatSignall opacity-0 text-sm text-primary position-absolute top-0 end-0">@Local["Sao chép"]</a>
+                                            `;
+                                }
+                                else {
+                                    stringDivSign =
+                                        ` <a data-id=${item.ID} class="cursor-pointer text-center d-block buttonTreatSign">@Local["Ký tên"]</a>`;
+                                }
+                            }
+                            let amountequal = 0;
+                            if (sys_TreatManualamount == 1) amountequal = formatNumber(item.ManualAmount);
+                            else {
+                                amountequal=RenderTreatment_AmountEqual(ser_sys_DentistCosmetic, item.IsTreatLess
+                                    , item.TimeToTreatment
+                                    , item.TeethChoosing
+                                    , item.Percent, item.PercentNew
+                                    , item.PercentNewDetail, item.Quantity, item.HavingStage, item.PriceDiscounted);
+                            }
+
+
+                            let tr =
+                                '<td class="d-none">' + item.ID + '</td>'
+                                + '<td class="d-none">' + item.IsTreatLess + '</td>'
+                                + '<td class="d-none">' + item.Created + '</td>'
+                                + '<td class="vt-number-order"></td>'
+                                + TreatDateString
+                                + '<td data-name="tabservicecode"><span>' + item.TabServiceCode + '</span></td>'
+                                + '<td>'
+                                + (Render_Table_Treatment_Service_Name(item.ID, item.TabID, ser_sys_DentistCosmetic, item.IsTreatLess, item.ServiceName
+                                    , item.TimeToTreatment
+                                    , item.TimeTreatIndex
+                                    , item.TeethChoosing
+                                    , item.Percent, item.PercentNew
+                                    , item.PercentNewDetail, item.PercentCurentDetail, item.Quantity, item.HavingStage
+                                ))
+                                + '</td>'
+                                + '<td data-name="PriceDiscount">'
+                                +formatNumber(item.PriceDiscounted) 
+                                + '</td>'
+                                + '<td data-name="Amountequal">' + amountequal
+                                + '</td>'
+
+                                + '<td data-name="detail">' + Render_Table_Treatment_Detail(item.ID, item.TeethTreat, item.TeethType, item.Percent, item.PercentNew, datateeth) + '</td>'
+
+                                + '<td data-name="doctor">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Doc) + '</div>'
+                                + '</td>'
+                                + '<td data-name="doctor2">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Doc2) + '</div>'
+                                + '</td>'
+                                + '<td data-name="doctor3">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Doc3) + '</div>'
+                                + '</td>'
+                                + '<td data-name="doctor4">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Doc4) + '</div>'
+                                + '</td>'
+
+                                + '<td data-name="assistant">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Assist) + '</div>'
+                                + '</td>'
+                                + '<td data-name="assistant2">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Assist2) + '</div>'
+                                + '</td>'
+                                + '<td data-name="assistant3">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Assist3) + '</div>'
+                                + '</td>'
+                                + '<td data-name="assistant4">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Assist4) + '</div>'
+                                + '</td>'
+                                + '<td data-name="tech">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Tech) + '</div>'
+                                + '</td>'
+                                + '<td data-name="tech2">'
+                                + '<div class="d-block">' + RenderTreatment_Join(item.Tech2) + '</div>'
+                                + '</td>'
+
+                                + '<td class="position-relative"><div class="text-pre-wrap content_line_clamp">' + Remove_Char_Tiny_Useless(item.Content) + '</div></td>'
+                                + '<td data-name="content_next"><div class="text-pre-wrap content_line_clamp">' + Remove_Char_Tiny_Useless(item.ContentNext) + '</div></td>'
+                                + '<td data-name="note"><div class="text-pre-wrap content_line_clamp">' + Remove_Char_Tiny_Useless(item.Note) + '</div></td>'
+                                + '<td data-name="symptoms"><div class="text-pre-wrap content_line_clamp">' + Remove_Char_Tiny_Useless(item.Symptoms) + '</div></td>'
+                                + '<td data-name="treatdatenext">' + ConvertDateTimeUTC_DMY_Remove1900(item.TreatDateNext) + '</td>'
+                                + '<td data-name="evaluate">' + evaluate + '</td>'
+                                + '<td data-name="branch">' + item.BranchName + '</td>'
+                                + '<td data-name="created">'
+                                + RenderTreatment_Created(item.CreatedBy, item.Created)
+                                + '</td>'
+                                + '<td data-name="editor">'
+                                + RenderTreatment_Created(item.ModifiedBy, item.Modified)
+                                + '</td>'
+
+                                + '<td data-name="file">'
+                                + guide
+                                + '</td>'
+                                + btnSendMsg
+                                + '<td data-name="created_app">'
+                                + Render_Button_Grid(['<button class="buttonGrid buttonCreateAppTreat" data-datetreatnext="' + item.TreatDateNext + '" data-isless="' + item.IsTreatLess + '" value="' + item.ID + '"><i title="@Local["Tạo lịch hẹn"]" class="vtt-icon vttech-icon-booking"></i></button>'])
+                                + '</td>'
+
+                                + '<td data-name="takecare" class="text-center">'
+                                + Render_CustomerCare(item.ID, item.ISCreatedCare)
+                                + '</td>'
+                                + '<td data-name="personres">' + Fun_GetName_ByID(DataEmployee, item.PersonResID) + '</td>'
+                                + '<td data-name="sign" class="signarea position-relative text-center py-2">' + stringDivSign + '</td>'
+                                + '<td>'
+                                + '<div class="text-nowrap">'
+                                + Render_Table_Treatment_Execute(ser_sys_DentistCosmetic, item.ID, item.TabID, item.PrintButton, item.IsTreatLess
+                                    , item.Per_Same_User, item.Per_Same_Date, item.Per_Export_Treat, item.Per_Changed, item.Per_Locked
+                                    , item.Per_Passing_Date
+                                    , item.TimeTreatIndex, item.TotalTimeIndex)
+                                + '</div>'
+                                + '</td>'
+
+                                + '</td>'
+                            stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+
+                        }
+                    }
+                    document.getElementById(id).innerHTML = document.getElementById(id).innerHTML + stringContent;
+                    $('.dateStringCollaped').addClass('d-none');
+                }
+                Treatment_List_Event();
+                CheckPermissionControlInPage(sys_PerControlMH, '@Model._dtPermissionCurrentPage');
+                Checking_TabControl_Permission();
+                $('.take-care').tooltip();
+                shtable.Refresh();
+                resolve();
+            }, 100)
+        })
+    }
+
+
+    function Treatment_List_Event() {
+        $(".info_modified,.buttonGrid,.buttonGrid i,.hoverpopup,.treat_stage_group").popup({
+            transition: "scale up",
+            position: "left center"
+        });
+        $("._treat_service").unbind().click(function (e) {
+            let treatid = $(this).attr('data-id');
+            let less = $(this).attr('data-less');
+            let tabid = $(this).attr('data-tab');
+            if (Number(less) == 1)
+                Treatment_List_Service_Record_View(treatid, ser_MainCustomerID);
+            else
+                Treatment_List_Service_View(treatid, tabid);
+        });
+        $('#dtContentTreatment tbody').unbind().on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let Type = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            let TabID = $(this).attr('data-tab');
+            if (Number(Type) == 1)
+                Treatment_List_Service_Record_Edit(ID, ser_MainCustomerID);
+            else
+                Treatment_List_Service_Edit(ID, TabID);
+        });
+        $('#dtContentTreatment tbody .CustTreatList_btnEval').unbind().click(function () {
+            let ID = $(this).attr('data-id');
+            let treatID = $(this).attr('data-treat');
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load("/Customer/Treatment/TreatmentMesure/MesDetail?TreatmentID=" + treatID +"&Current=" + ID + "&ver=" + versionofWebApplication);
+            $('#DetailModal').modal('show');
+        });
+
+
+        $('#dtContentTreatment tbody .buttonDeleteClass').unbind().click(function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let Type = Number($(this).closest('tr')[0].childNodes[1].innerHTML);
+            let TabID = $(this).attr('data-tab');
+            if (Number(Type) == 1)
+                Delete_Treatment_Record(ID, Type);
+            else
+                Delete_Treatment_Service(ID, TabID);
+
+        });
+        $('#dtContentTreatment .buttonTreatSign').unbind().click(function () {
+            let id = $(this).attr('data-id');
+            AjaxLoad(url = "Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=GetSign_Treatment"
+                , data = {
+                    'id': id
+                }
+                , async = true
+                , error = function () { notiError_SW() }
+                , success = function (result) {
+                    if (result != "0") {
+                        let _sigdata = JSON.parse(result);
+                        let _datasign = '';
+                        if (_sigdata != undefined && _sigdata.length == 1) _datasign = _sigdata[0].SignData;
+                        TreatList_Sign(id, _datasign);
+                    }
+                }
+            );
+
+        });
+        $('#dtContentTreatment .buttonTreatSignall').unbind().click(function () {
+            let id = $(this).attr('data-id');
+            TreatList_SignAll(id, ser_MainCustomerID);
+        });
+        // add app  next
+        $('#dtContentTreatment tbody .buttonCreateAppTreat').unbind().click(function () {
+            let treatID = $(this).attr("value");
+            let isTreatLess = $(this).data("isless");
+            let dateTreatNext = ConvertToDateRemove1900($(this).data("datetreatnext")) || new Date();
+            dateTreatNext = ConvertDateTimeUTC_DMYHM(dateTreatNext);
+            dateTreatNext = dateTreatNext.split(' ')[1] + 'x' + dateTreatNext.split(' ')[0];
+            AddNewAppTreatment(treatID, isTreatLess, dateTreatNext);
+        });
+        $('#dtContentTreatment tbody .btnSendSMS').unbind().click(function () {
+            let custID = $(this).data("custid");
+            let created = $(this).data("datetreat");
+            SendSMSTreatment(custID, created);
+        });
+        $('#dtContentTreatment tbody .buttonPrintClass').unbind().click(function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            syslog_cuttreat('p', ser_MainCustomerID, '');
+            $("#DetailModal_Content").html('');
+            $("#DetailModal_Content").load('/Print/print?Type=form_treatment&DetailID=' + ID);
+            $('#DetailModal').modal('show');
+        });
+        // add care
+        $('#dtContentTreatment tbody').on('click', '.buttonNoneCC', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            let CreatDate = $(this).closest('tr')[0].childNodes[2].innerHTML;
+            addNewTakeCare(ConvertDT_To_StringYMD(CreatDate), ID);
+        });
+    }
+    async function TreatList_Sign(id, signdata) {
+        await Signature_Action(signdata, 0);
+        if (Signature_ResultSignation != "") {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=UpdateSignTreatment"
+                , data = {
+                    'id': id,
+                    'sign': Signature_ResultSignation,
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        Treatment_List_Service_Load();
+                        syslog_cuttreat('s', ser_MainCustomerID, result);
+                    }
+                }
+            );
+        }
+    }
+    async function TreatList_SignAll(id, customerid) {
+        const promise = notiConfirm();
+        promise.then(function () {
+            AjaxLoad(url = "/Customer/Treatment/TreatmentList/TreatmentList_Service/?handler=UpdateSignAllday"
+                , data = {
+                    'id': id
+                    , 'customerid': customerid
+                }
+                , async = true, error = null
+                , success = function (result) {
+                    if (result != "0") {
+                        Treatment_List_Service_Load();
+                        syslog_cuttreat('s', ser_MainCustomerID, result);
+                    }
+                }
+            );
+
+
+        }, function () { });
+
+    }
+    //#endregion
+
+    // #region // Execute
+    function Treatment_List_Detail_Cancel() {
+        if ($('#Div_Treament_List_Master').length)
+            $("#Div_Treament_List_Master").css("display", "block");
+        if ($('#Div_Treament_List_Detail').length) {
+            $("#Div_Treament_List_Detail").css("display", "none");
+            $("#Div_Treament_List_Detail").empty();
+        }
+    }
+
+    function PrintTreatment() {
+        syslog_cuttreat('p', ser_MainCustomerID, '');
+        let ID = Number(ser_MainCustomerID);
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load('/Print/print?Type=treatment_records&DetailID=' + ID);
+        $('#DetailModal').modal('show');
+    }
+    function SendSMSTreatment(custid, created) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Sms/SmsDetail?TypeCare=" + "5" + "&CustomerID=" + ser_MainCustomerID + "&Date=" + created + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    function AddNewAppTreatment(treatID, isTreatLess, dateTreatNext) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Appointment/AppointmentDetail?CustomerID=" + ser_MainCustomerID + "&IsTreatLess=" + isTreatLess + "&Date_from=" + dateTreatNext + "&treatID=" + treatID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    function addNewTakeCare(date, ID) {
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Customer/TakeCareDetail?CustomerID=" + ser_MainCustomerID + "&Date=" + date + "&TreatID=" + ID + "&ver=" + versionofWebApplication);
+        $('#DetailModal').modal('show');
+    }
+    function Treatment_List_Service_PrintList() {
+        syslog_cuttreat('p', ser_MainCustomerID, '');
+        $("#DetailModal_Content").html('');
+        $("#DetailModal_Content").load("/Print/Condi/SelectTime", function () {
+            prtime_assignlink(`/Print/print?Type=treatbyday&DetailID=${ser_MainCustomerID}`);
+        });
+        $('#DetailModal').modal('show');
+    }
+    function Treatment_List_CloseFilter () {
+        $('#trl_filterarea').collapse('hide');
+    }
+    function Treatment_List_ResetFilter () {
+        $("#CustomerRecordID").dropdown("refresh");
+        $("#CustomerRecordID").dropdown("set selected", "0");
+        $("#CustomerTreatmentPlanID").dropdown("refresh");
+        $("#CustomerTreatmentPlanID").dropdown("set selected", "0");
+        $("#CustomerServiceTabID").dropdown("refresh");
+        $("#CustomerServiceTabID").dropdown("set selected", "0");
+        Treatment_List_Service_Load();
+
+
+    }
+    //#endregion
+
+
+    
+
+</script>
+<script>js_require('/js/main.js');</script>
+<style>
+    #dtContentTreatmentBody .signarea .buttonTreatSignall:hover {
+        opacity: 10 !important;
+    }
+</style>

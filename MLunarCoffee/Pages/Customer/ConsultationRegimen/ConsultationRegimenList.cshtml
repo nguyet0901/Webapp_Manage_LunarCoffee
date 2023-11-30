@@ -1,0 +1,173 @@
+﻿@page
+@model MLunarCoffee.Pages.Customer.ConsultationRegimen.ConsultationRegimenListModel
+@{
+    Layout = null;
+}
+<div class="container-fluid py-3 px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" id="RegimenList">
+                <div class="card-header pb-0">
+                    <div class="d-lg-flex">
+                        <div class="w-50 col-auto my-auto">
+                            <div class="h-100">
+                                <h6 class="mb-0">@Local["Danh sách mẫu khảo sát"] </h6>
+                                <p class="text-sm mb-0">@Local["Không đặt trùng tên với mẫu đã có"]</p>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-1">
+                            <button id="btnNewTypeAccount" class="btn bg-gradient-primary btn-sm mt-1" onclick="AddRegimen()">@Local["Thêm mới"]</button>
+                            <button class="btn btn-dark btn-sm mt-1" onclick="LoadDataRegimenAjax()">@Local["Tải lại"]</button>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body pt-2">
+                    <div class="m-0 my-3 mobile-responsive">
+                        <table class="table vt-table mb-0" id="dtContentRegimen">
+                            <thead>
+                                <tr>
+                                    <th class="d-none">ID</th>
+                                    <th>@Local["#"]</th>
+                                    <th>@Local["Mẫu"]</th>
+                                    <th>@Local["Người sửa"]</th>
+                                    <th style="width: 70px;">@Local["Xóa"]</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="dtContentRegimenBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card" id="RegimenDetail" style="display: none;" >
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>js_require('/js/comon/initialize_setting.js');</script>
+
+<script type="text/javascript">
+
+    let DataUser;
+    function LoadDataRegimenAjax () {
+        Master_IndexDB_Reads(_Session_Data, [_Session_User]
+            , function (data) {
+                DataUser = data[0];
+                AjaxLoad(url = "/Customer/ConsultationRegimen/ConsultationRegimenList/?handler=LoadData"
+                    , data = {}
+                    , async = true
+                    , error = function () {notiError_SW()}
+                    , success = function (result) {
+                        data = JSON.parse(result);
+                        RenderTableRegimen(data, "dtContentRegimenBody");
+                    }
+                );
+            });
+    }
+
+    function RenderTableRegimen (data, id) {
+        var myNode = document.getElementById(id);
+        if (myNode != null) {
+            myNode.innerHTML = '';
+            let stringContent = '';
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    let item = data[i];
+
+                    let obj = Fun_GetObject_ByID(DataUser, item.PerEditor);
+                    let name = (obj != null) ? obj.Name : 'unknown';
+                    let img = (obj != null) ? obj.Avatar : Master_Default_Pic;
+
+                    let tr =
+                        '<td class="d-none">' + item.ID + '</td>'
+                        + '<td class="vt-number-order"></td>'
+                        + '<td><a class="text-decoration-underline fw-bold buttonEditClass">'
+                        + item.Name + '</a></td>'
+
+                        + '<td>'
+                        + '<div class="d-inline"><img class="avatar avatar-xs me-2" src="' + img + '" alt="label-image" /><span>' + GetDateTime_String_DMY(item.DayEditor) + '</span></div>'
+                        + '</td>'
+                        +'<td>'
+                        + ((item.DeleteButton === 1)
+                            ? Render_Button_Grid(['<button class="buttonGrid" value="'
+                                + item.ID
+                                + '"><i  class="buttonDeleteClass vtt-icon vttech-icon-delete"></i></button>'])
+                            : '')
+                        + '</td>'
+                    stringContent = stringContent + '<tr class="vt-number" role="row">' + tr + '</tr>';
+                }
+            }
+            $("#dtContentRegimenBody img,#dtContentRegimenBody span").popup({
+                transition: "scale up",
+                position: "top right"
+            });
+            document.getElementById(id).innerHTML = stringContent;
+        }
+    }
+    $(document).ready(function () {
+        LoadDataRegimenAjax();
+        $('#dtContentRegimen tbody').on('click', '.buttonEditClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            EditRegimen(ID);
+        });
+        $('#dtContentRegimen tbody').on('click', '.buttonDeleteClass', function () {
+            let ID = Number($(this).closest('tr')[0].childNodes[0].innerHTML);
+            DeleteRegimen(ID)
+        });
+    });
+
+    function OpenRegimenDetail () {
+        $("#RegimenDetail").empty();
+        $("#RegimenList").hide();
+        document.getElementById("RegimenDetail").innerHTML = '';
+    }
+    function CloseRegimenDetail () {
+        document.getElementById("RegimenDetail").innerHTML = '';
+        $("#RegimenList").show();
+        $("#RegimenDetail").hide();
+    }
+
+    function EditRegimen (CurrentID) {
+        OpenRegimenDetail();
+        $("#RegimenDetail").load("/Customer/ConsultationRegimen/ConsultationRegimenDetail?CurrentID=" + CurrentID + "&ver=" + versionofWebApplication);
+        $("#RegimenDetail").show();
+        return false;
+    }
+    function AddRegimen () {
+        OpenRegimenDetail();
+        $("#RegimenDetail").load("/Customer/ConsultationRegimen/ConsultationRegimenDetail?ver=" + versionofWebApplication);
+        $('#RegimenDetail').show();
+        return false;
+    }
+
+    function DeleteRegimen (id) {
+        const promise = notiConfirm();
+        promise.then(function () {ExecuteDeleteRegimen(id);}, function () { });
+    }
+
+    function ExecuteDeleteRegimen (id) {
+        AjaxLoad(url = "/Customer/ConsultationRegimen/ConsultationRegimenList/?handler=DeleteItem"
+            , data = {'id': id}
+            , async = true
+            , error = function () {notiError_SW()}
+            , success = function (result) {
+                if (result) {
+                    notiSuccess();
+                    LoadDataRegimenAjax();
+                } else {
+                    notiError_SW();
+                }
+            }
+        );
+    }
+
+</script>
+
+<script>js_require('/js/main.js');</script>

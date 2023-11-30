@@ -85,9 +85,9 @@
         "en": "Patient records that exist for the service cannot be deleted"
     },
     {
-        "title": "re_register_SourceMain_software",
-        "vn": "Thời gian khai báo SourceMain với phần mềm đã hết hiệu lực",
-        "en": "Time to declare SourceMain with software has expired"
+        "title": "re_register_MLunarCoffee_software",
+        "vn": "Thời gian khai báo MLunarCoffee với phần mềm đã hết hiệu lực",
+        "en": "Time to declare MLunarCoffee with software has expired"
     },
     {
         "title": "delete_treatment_plan_error",
