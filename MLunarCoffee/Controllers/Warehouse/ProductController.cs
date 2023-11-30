@@ -24,7 +24,7 @@ namespace MLunarCoffee.Controllers
             try
             {
                 string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
                 if (AccessToken != shareKey)
                 {
@@ -66,7 +66,7 @@ namespace MLunarCoffee.Controllers
             try
             {
                 string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
                 if (AccessToken != shareKey)
                 {
@@ -98,7 +98,7 @@ namespace MLunarCoffee.Controllers
             try
             {
                 string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
                 if (AccessToken != shareKey)
                 {
@@ -132,7 +132,7 @@ namespace MLunarCoffee.Controllers
         //    try
         //    {
         //        string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-        //        var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+        //        var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
         //        string shareKey = DateTime.Now.ToString("yyyyMMdd");
         //        if (AccessToken != shareKey)
         //        {
@@ -214,7 +214,7 @@ namespace MLunarCoffee.Controllers
             try
             {
                 string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
                 if (AccessToken != shareKey)
                 {
@@ -247,7 +247,7 @@ namespace MLunarCoffee.Controllers
             try
             {
                 string ciphertext = Request.Headers["AccessToken"].Count() > 0 ? Request.Headers["AccessToken"] : "";
-                var AccessToken = Encrypt.DecryptString(ciphertext ,Settings.PrivateKey);
+                var AccessToken = Encrypt.AESDecryptString(ciphertext ,Settings.PrivateKey);
                 string shareKey = DateTime.Now.ToString("yyyyMMdd");
                 if (AccessToken != shareKey)
                 {
